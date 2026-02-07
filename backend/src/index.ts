@@ -197,6 +197,11 @@ app.post('/api/simulate-growth', (req, res) => {
     res.json({ message: 'Data growing...', currentCount: liveDataCount });
 });
 
+// Health check
+app.get('/health', (req, res) => {
+    res.json({ status: 'healthy', timestamp: new Date() });
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
     res.json({
@@ -233,9 +238,8 @@ const startServer = async () => {
         // Start server
         httpServer.listen(Number(PORT), '0.0.0.0', () => {
             console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`🔗 API: http://0.0.0.0:${PORT}`);
-            console.log(`💚 Health: http://0.0.0.0:${PORT}/health`);
+            console.log(`📝 Environment: ${process.env.NODE_ENV}`);
+            console.log(`💚 Health: /health`);
         });
     } catch (error) {
         console.error('Failed to start server:', error);
