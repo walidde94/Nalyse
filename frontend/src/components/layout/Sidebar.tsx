@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
 
     return (
         <aside
-            className="glass-morphism inner-highlight"
+            className="glass-morphism inner-highlight sidebar-responsive"
             style={{
                 width: collapsed ? '72px' : '260px',
                 height: '100%',
@@ -75,7 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 zIndex: 20
             }}
         >
-            <div style={{
+            <div className="desktop-only" style={{
                 padding: '16px',
                 display: 'flex',
                 justifyContent: collapsed ? 'center' : 'flex-end',
@@ -106,13 +106,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     }}
                 >
                     <Home size={20} />
-                    {!collapsed && <span style={{ fontSize: '14px', fontWeight: currentView === 'landing' ? 700 : 600 }}>{t('nav.home')}</span>}
+                    {!collapsed && <span className="sidebar-label" style={{ fontSize: '14px', fontWeight: currentView === 'landing' ? 700 : 600 }}>{t('nav.home')}</span>}
                 </button>
 
                 {NAV_GROUPS.map((group, gIdx) => (
                     <div key={gIdx} className="nav-group" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {!collapsed && (
-                            <div style={{
+                            <div className="nav-group-title" style={{
                                 padding: '0 12px 8px',
                                 fontSize: '10px',
                                 fontWeight: 800,
@@ -167,7 +167,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                                         {item.icon}
                                     </span>
                                     {!collapsed && (
-                                        <span style={{ fontSize: '14px', fontWeight: isActive ? 700 : 600, whiteSpace: 'nowrap' }}>
+                                        <span className="sidebar-label" style={{ fontSize: '14px', fontWeight: isActive ? 700 : 600, whiteSpace: 'nowrap' }}>
                                             {item.label}
                                         </span>
                                     )}
@@ -182,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '8px 12px', opacity: 0.5 }}></div>
 
                 {!collapsed && (
-                    <div style={{ padding: '0 12px 12px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)' }}>
+                    <div className="nav-group-title" style={{ padding: '0 12px 12px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)' }}>
                         Preferences
                     </div>
                 )}
@@ -199,7 +199,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     }}
                 >
                     <Settings size={20} />
-                    {!collapsed && <span style={{ fontSize: '14px', fontWeight: 600 }}>{t('nav.settings')}</span>}
+                    {!collapsed && <span className="sidebar-label" style={{ fontSize: '14px', fontWeight: 600 }}>{t('nav.settings')}</span>}
                 </button>
 
                 <button
@@ -214,11 +214,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     }}
                     title={collapsed ? "Work Instructions" : ""}
                 >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifySelf: 'center' }}>
                         <FileCheck size={20} />
                     </span>
                     {!collapsed && (
-                        <span style={{ fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        <span className="sidebar-label" style={{ fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap' }}>
                             Work Instructions
                         </span>
                     )}

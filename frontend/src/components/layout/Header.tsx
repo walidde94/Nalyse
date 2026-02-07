@@ -8,9 +8,10 @@ import { UserProfile } from '../UserProfile';
 interface HeaderProps {
     theme: 'dark' | 'light';
     onThemeToggle: () => void;
+    onMenuToggle?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
+export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuToggle }) => {
     const { user } = useAuth();
     const { language, setLanguage, t } = useLanguage();
     const [showProfile, setShowProfile] = useState(false);
@@ -45,10 +46,17 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
                     boxShadow: 'var(--shadow-sm)'
                 }}
             >
-                <div className="left-section" style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                <div className="left-section" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <button
+                        className="mobile-only btn btn-icon btn-ghost"
+                        onClick={onMenuToggle}
+                        style={{ padding: '8px' }}
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
                     <div className="magnetic-wrap" style={{ display: 'flex', alignItems: 'center' }}>
                         <Logo />
-                        <div style={{ marginLeft: '12px', display: 'flex', flexDirection: 'column' }}>
+                        <div className="desktop-only" style={{ marginLeft: '12px', display: 'flex', flexDirection: 'column' }}>
                             <span className="tech-text" style={{ fontSize: '9px', opacity: 0.5 }}>Nexus Enterprise</span>
                             <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                                 {greeting}, <span style={{ color: 'var(--text-primary)' }}>{user?.firstName}</span>
@@ -56,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
                         </div>
                     </div>
 
-                    <div id="tour-nexus-ai" className="search-bar" style={{ position: 'relative', width: '380px', display: 'flex', alignItems: 'center' }}>
+                    <div id="tour-nexus-ai" className="search-bar desktop-only" style={{ position: 'relative', width: '380px', display: 'flex', alignItems: 'center' }}>
                         <Search
                             size={16}
                             style={{ position: 'absolute', left: '12px', color: 'var(--text-tertiary)', pointerEvents: 'none' }}
@@ -93,40 +101,44 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
                 </div>
 
                 {/* Right Side Controls */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {/* SM-03: Connectivity Indicator */}
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
-                        <div className={`w-2 h-2 rounded-full ${connStatus === 'online' ? 'bg-[var(--success)] pulse-success' : 'bg-[var(--warning)]'}`}></div>
-                        <span className="tech-text" style={{ fontSize: '9px' }}>API {connStatus.toUpperCase()}</span>
+                    <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
+                            <div className={`w-2 h-2 rounded-full ${connStatus === 'online' ? 'bg-[var(--success)] pulse-success' : 'bg-[var(--warning)]'}`}></div>
+                            <span className="tech-text" style={{ fontSize: '9px' }}>API {connStatus.toUpperCase()}</span>
+                        </div>
                     </div>
 
                     {/* Language Switcher */}
-                    <div className="flex p-0.5 bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-lg shadow-inner">
-                        {['en', 'de'].map((lang) => (
-                            <button
-                                key={lang}
-                                onClick={() => setLanguage(lang as 'en' | 'de')}
-                                style={{
-                                    fontSize: '11px',
-                                    fontWeight: 700,
-                                    padding: '6px 10px',
-                                    borderRadius: '6px',
-                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    background: language === lang ? 'var(--primary)' : 'transparent',
-                                    color: language === lang ? 'white' : 'var(--text-secondary)',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                }}
-                            >
-                                <span>{lang.toUpperCase()}</span>
-                            </button>
-                        ))}
+                    <div className="desktop-only" style={{ display: 'flex' }}>
+                        <div className="flex p-0.5 bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-lg shadow-inner">
+                            {['en', 'de'].map((lang) => (
+                                <button
+                                    key={lang}
+                                    onClick={() => setLanguage(lang as 'en' | 'de')}
+                                    style={{
+                                        fontSize: '11px',
+                                        fontWeight: 700,
+                                        padding: '6px 10px',
+                                        borderRadius: '6px',
+                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        background: language === lang ? 'var(--primary)' : 'transparent',
+                                        color: language === lang ? 'white' : 'var(--text-secondary)',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                    }}
+                                >
+                                    <span>{lang.toUpperCase()}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    <div style={{ width: '1px', height: '28px', background: 'var(--border-default)', opacity: 0.6 }}></div>
+                    <div className="desktop-only" style={{ width: '1px', height: '28px', background: 'var(--border-default)', opacity: 0.6 }}></div>
 
                     {/* Theme Toggle */}
                     <button

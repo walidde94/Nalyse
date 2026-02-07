@@ -804,12 +804,11 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
         // Standard Chart Container
         return (
-            <div key={index} id={`chart-${index}`} className="card card-hover flex-col" style={{
-                minHeight: '420px', // Taller for better proportion
+            <div key={index} id={`chart-${index}`} className="card card-hover flex-col chart-container-mobile" style={{
+                minHeight: '420px',
                 height: activeTab === 'presentation' ? '100%' : undefined,
                 flex: activeTab === 'presentation' ? '1' : undefined,
                 background: activeTab === 'presentation' ? 'transparent' : 'var(--bg-card)',
-                // border: activeTab === 'presentation' ? 'none' : '1px solid var(--border-default)', 
                 border: 'none',
                 borderRadius: '16px',
                 padding: '24px',
@@ -1038,7 +1037,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
             {/* Sidebar Navigation */}
             <div
-                className={`flex-col ${activeTab === 'presentation' ? 'hidden' : 'flex'}`}
+                className={`flex-col sidebar-mobile-hidden ${activeTab === 'presentation' ? 'hidden' : 'flex'}`}
                 style={{
                     width: isSidebarCollapsed ? '80px' : '260px',
                     borderRight: '1px solid var(--border-default)',
@@ -1318,7 +1317,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                     <h1 style={{ fontSize: '24px', color: '#fff' }}>Nalyse Intelligence Report</h1>
                                     <p style={{ color: '#ccc' }}>Generated on {new Date().toLocaleString()}</p>
                                 </div>
-                                <div className="flex gap-4">
+                                <div className="flex-responsive gap-4">
                                     <motion.div
                                         key={`rows-${analysis.summary?.rows}`}
                                         initial={{ scale: 0.95, filter: 'brightness(1.5)' }}

@@ -72,11 +72,11 @@ export const DashboardView = ({
     });
 
     return (
-        <div className="flex-col gap-6 fade-in" style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto', width: '100%', fontFamily: 'Dubai, sans-serif', position: 'relative' }}>
+        <div className="flex-col gap-6 fade-in main-content-mobile" style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto', width: '100%', fontFamily: 'Dubai, sans-serif', position: 'relative' }}>
             <div className="bg-mesh"></div>
 
             <header className="mb-10">
-                <div className="flex justify-between items-end mb-8">
+                <div className="flex flex-responsive justify-between items-start md:items-end mb-8 gap-4">
                     <div>
                         <span className="text-xs font-black tracking-[0.2em] text-[var(--primary)] uppercase mb-2 block">Enterprise Workspace</span>
                         <h1 className="text-h1" style={{ fontSize: '38px', letterSpacing: '-0.03em' }}>
@@ -92,8 +92,8 @@ export const DashboardView = ({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="card hover-glow p-6 border-l-4 border-l-[var(--primary)]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <div className="card hover-glow p-4 md:p-6 border-l-4 border-l-[var(--primary)]">
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-[var(--primary-subtle)] rounded-lg text-[var(--primary)]"><LayoutGrid size={20} /></div>
                             <span className="text-[10px] font-black opacity-30 uppercase">Analysis</span>
@@ -102,7 +102,7 @@ export const DashboardView = ({
                         <div className="text-h2 font-black">{fileCount}</div>
                     </div>
 
-                    <div className="card hover-glow p-6 border-l-4 border-l-[#8b5cf6]">
+                    <div className="card hover-glow p-4 md:p-6 border-l-4 border-l-[#8b5cf6]">
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-[#8b5cf61a] rounded-lg text-[#8b5cf6]"><BrainCircuit size={20} /></div>
                             <span className="text-[10px] font-black opacity-30 uppercase">Science</span>
@@ -111,7 +111,7 @@ export const DashboardView = ({
                         <div className="text-h2 font-black">24</div>
                     </div>
 
-                    <div className="card hover-glow p-6 border-l-4 border-l-[#ec4899]">
+                    <div className="card hover-glow p-4 md:p-6 border-l-4 border-l-[#ec4899]">
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-[#ec48991a] rounded-lg text-[#ec4899]"><BarChart3 size={20} /></div>
                             <span className="text-[10px] font-black opacity-30 uppercase">Business BI</span>
@@ -120,7 +120,7 @@ export const DashboardView = ({
                         <div className="text-h2 font-black">12</div>
                     </div>
 
-                    <div className="card hover-glow p-6 border-l-4 border-l-[#fbbf24]">
+                    <div className="card hover-glow p-4 md:p-6 border-l-4 border-l-[#fbbf24]">
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-[#fbbf241a] rounded-lg text-[#fbbf24]"><Zap size={20} /></div>
                             <span className="text-[10px] font-black opacity-30 uppercase">Data Mesh</span>
@@ -135,8 +135,8 @@ export const DashboardView = ({
             </header>
 
             {/* Main Action Bar */}
-            <div className="flex justify-between items-center mb-6">
-                <div className="flex gap-4 items-center">
+            <div className="flex flex-responsive justify-between items-start md:items-center mb-6 gap-4">
+                <div className="flex flex-wrap gap-4 items-center w-full md:w-auto">
                     <div className="flex p-0.5 bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-lg shadow-inner">
                         <button
                             onClick={() => setViewMode('list')}
@@ -173,24 +173,24 @@ export const DashboardView = ({
                             <LayoutGrid size={18} />
                         </button>
                     </div>
-                    <div className="relative">
+                    <div className="relative flex-1 md:flex-initial">
                         <input
                             type="text"
                             placeholder="Filter datasets..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input h-10 w-64 text-sm"
+                            className="input h-10 w-full md:w-64 text-sm"
                         />
                     </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3 w-full md:w-auto">
                     {isOverLimit && <button className="btn btn-ghost btn-sm text-[var(--danger)]" onClick={onUpgrade}>Upgrade Plan</button>}
-                    <button className="btn btn-secondary h-10" onClick={() => setShowCreateGroup(true)}>
+                    <button className="btn btn-secondary h-10 flex-1 md:flex-initial" onClick={() => setShowCreateGroup(true)}>
                         <Folder size={16} /> New Group
                     </button>
                     <button
                         id="tour-upload-btn"
-                        className={`btn btn-primary shimmer-effect h-10 gap-2 ${dragActive ? 'scale-105 ring-2 ring-[var(--primary)]' : ''}`}
+                        className={`btn btn-primary shimmer-effect h-10 gap-2 flex-1 md:flex-initial ${dragActive ? 'scale-105 ring-2 ring-[var(--primary)]' : ''}`}
                         onClick={() => document.getElementById('file-input')?.click()}
                         onDragEnter={handleDrag}
                         onDragOver={handleDrag}
@@ -199,7 +199,8 @@ export const DashboardView = ({
                         disabled={isOverLimit}
                     >
                         <CloudUpload size={18} />
-                        {dragActive ? 'Drop File Here' : 'Upload Data'}
+                        <span className="hidden sm:inline">{dragActive ? 'Drop File Here' : 'Upload Data'}</span>
+                        <span className="sm:hidden">Upload</span>
                     </button>
                 </div>
             </div>

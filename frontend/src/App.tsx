@@ -99,6 +99,7 @@ function AppContent() {
 
   // --- Onboarding State ---
   const [showTour, setShowTour] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && localStorage.getItem('is_new_user') === 'true' && !localStorage.getItem('nalyse_onboarding_completed')) {
@@ -643,10 +644,16 @@ function AppContent() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <div className="noise-overlay"></div>
-      <Header theme={theme} onThemeToggle={handleThemeToggle} />
+      <Header
+        theme={theme}
+        onThemeToggle={handleThemeToggle}
+        onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      />
 
       <RootLayout
         currentView={currentViewType}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
         onViewChange={(viewType) => {
           const title = viewType === 'nexus' ? 'Nexus AI' :
             viewType === 'logistics' ? 'Road Intelligence' :

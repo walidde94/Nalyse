@@ -82,7 +82,7 @@ export const ElasticSearch = ({
                     </button>
 
                     {showTimePicker && (
-                        <div className="absolute top-12 right-0 w-[680px] z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right shadow-2xl">
+                        <div className="absolute top-12 right-0 w-[90vw] md:w-[680px] z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right shadow-2xl" style={{ maxWidth: 'calc(100vw - 32px)' }}>
                             <TimePicker onSelect={handleTimeSelect} onClose={() => setShowTimePicker(false)} />
                         </div>
                     )}

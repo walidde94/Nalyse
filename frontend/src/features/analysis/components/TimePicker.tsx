@@ -45,17 +45,18 @@ export const TimePicker = ({ onSelect, onClose }: TimePickerProps) => {
 
     return (
         <div
-            className="flex w-full h-[440px] rounded-2xl border shadow-2xl overflow-hidden glass-noise"
+            className="flex flex-responsive w-full md:h-[440px] rounded-2xl border shadow-2xl overflow-hidden glass-noise"
             style={{
                 background: 'var(--bg-secondary)',
                 borderColor: 'var(--border-default)',
                 color: 'var(--text-primary)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                minHeight: 'fit-content'
             }}
         >
             {/* Sidebar: Quick Select */}
             <div
-                className="w-[240px] flex flex-col border-r"
+                className="w-full md:w-[240px] flex flex-col border-b md:border-b-0 md:border-r"
                 style={{
                     background: 'rgba(0,0,0,0.15)',
                     borderColor: 'var(--border-subtle)'

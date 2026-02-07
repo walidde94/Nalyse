@@ -46,17 +46,17 @@ export const ExecutiveFindings = ({ reasoning, onDeploy }: ExecutiveFindingsProp
                 </div>
 
                 <div className="flex-col gap-6">
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-responsive justify-between items-start gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="icon-glass" style={{ width: '48px', height: '48px', background: 'var(--primary)', color: 'white', boxShadow: '0 8px 16px var(--primary-glow)' }}>
+                            <div className="icon-glass" style={{ width: '48px', height: '48px', background: 'var(--primary)', color: 'white', boxShadow: '0 8px 16px var(--primary-glow)', flexShrink: 0 }}>
                                 <Target size={24} />
                             </div>
                             <div>
                                 <h2 className="text-h2 tracking-tight-titles" style={{ fontSize: '24px', fontWeight: 800 }}>Executive Intelligence Summary</h2>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="label-premium italic animate-breathe" style={{ color: 'var(--primary)' }}>Synthesized Expert Analysis</span>
+                                    <span className="label-premium italic animate-breathe" style={{ color: 'var(--primary)' }}>Expert Analysis</span>
                                     <span className="opacity-20">•</span>
-                                    <span className="label-premium opacity-40">Field: General Enterprise Intelligence</span>
+                                    <span className="label-premium opacity-40">Nexus AI</span>
                                 </div>
                             </div>
                         </div>
@@ -64,7 +64,7 @@ export const ExecutiveFindings = ({ reasoning, onDeploy }: ExecutiveFindingsProp
                         {onDeploy && (
                             <button
                                 onClick={onDeploy}
-                                className="btn btn-primary btn-sm flex items-center gap-2 shadow-glow-primary hover:scale-105 transition-transform"
+                                className="btn btn-primary btn-sm flex items-center gap-2 shadow-glow-primary hover:scale-105 transition-transform w-full md:w-auto"
                                 style={{ borderRadius: '12px', padding: '0 16px', height: '36px' }}
                             >
                                 <Zap size={14} fill="currentColor" />
@@ -80,7 +80,7 @@ export const ExecutiveFindings = ({ reasoning, onDeploy }: ExecutiveFindingsProp
             </motion.div>
 
             {(safeReasoning.strategicAdvice.length > 0 || safeReasoning.priorityMatrix.length > 0) && (
-                <div className="grid gap-6" style={{ gridTemplateColumns: safeReasoning.strategicAdvice.length > 0 && safeReasoning.priorityMatrix.length > 0 ? '1.2fr 1fr' : '1fr' }}>
+                <div className="grid gap-6 grid-responsive" style={{ gridTemplateColumns: safeReasoning.strategicAdvice.length > 0 && safeReasoning.priorityMatrix.length > 0 ? '1.2fr 1fr' : '1fr' }}>
                     {/* Strategic Advice */}
                     {safeReasoning.strategicAdvice.length > 0 && (
                         <motion.div
