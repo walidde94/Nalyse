@@ -1037,7 +1037,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
             {/* Sidebar Navigation */}
             <div
-                className={`flex-col sidebar-mobile-hidden ${activeTab === 'presentation' ? 'hidden' : 'flex'}`}
+                className={`flex-col sidebar-mobile-hidden sidebar-responsive ${activeTab === 'presentation' ? 'hidden' : 'flex'}`}
                 style={{
                     width: isSidebarCollapsed ? '80px' : '260px',
                     borderRight: '1px solid var(--border-default)',

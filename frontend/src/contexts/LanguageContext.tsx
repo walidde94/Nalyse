@@ -33,6 +33,9 @@ const translations = {
 
         // Header
         'header.welcome': 'Welcome back',
+        'header.goodMorning': 'Good morning',
+        'header.goodAfternoon': 'Good afternoon',
+        'header.goodEvening': 'Good evening',
         'header.profile': 'Profile',
         'header.logout': 'Logout',
         'header.signedInAs': 'Signed in as',
@@ -74,6 +77,9 @@ const translations = {
 
         // Header
         'header.welcome': 'Willkommen zurück',
+        'header.goodMorning': 'Guten Morgen',
+        'header.goodAfternoon': 'Guten Tag',
+        'header.goodEvening': 'Guten Abend',
         'header.profile': 'Profil',
         'header.logout': 'Abmelden',
         'header.signedInAs': 'Angemeldet als',

@@ -50,16 +50,16 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     <button
                         className="mobile-only btn btn-icon btn-ghost"
                         onClick={onMenuToggle}
-                        style={{ padding: '8px' }}
+                        style={{ padding: '8px', marginRight: '8px' }}
                     >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
                     <div className="magnetic-wrap" style={{ display: 'flex', alignItems: 'center' }}>
                         <Logo />
-                        <div className="desktop-only" style={{ marginLeft: '12px', display: 'flex', flexDirection: 'column' }}>
-                            <span className="tech-text" style={{ fontSize: '9px', opacity: 0.5 }}>Nexus Enterprise</span>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                {greeting}, <span style={{ color: 'var(--text-primary)' }}>{user?.firstName}</span>
+                        <div className="desktop-only" style={{ marginLeft: '12px', display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border-subtle)', paddingLeft: '12px' }}>
+                            <span className="tech-text" style={{ fontSize: '9px', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nexus Enterprise</span>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                {greeting.includes('header.') ? t('header.welcome') : greeting}, <span style={{ color: 'var(--text-primary)' }}>{user?.firstName}</span>
                             </span>
                         </div>
                     </div>

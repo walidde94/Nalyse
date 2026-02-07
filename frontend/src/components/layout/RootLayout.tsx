@@ -23,24 +23,23 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, currentView, o
 
             {isMobileMenuOpen && (
                 <div
-                    className="mobile-only"
+                    className="mobile-overlay"
                     onClick={onCloseMobileMenu}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.5)',
-                        zIndex: 999,
-                        backdropFilter: 'blur(4px)'
-                    }}
                 />
             )}
 
-            <main className="flex-col w-full" style={{ overflow: 'hidden' }}>
+            <main className="flex-col w-full mobile-full-width" style={{
+                overflow: 'hidden',
+                height: '100%',
+                background: 'var(--bg-app)'
+            }}>
                 {tabBar}
                 <div className="flex-col w-full h-full main-content-mobile" style={{
                     overflowY: 'auto',
                     position: 'relative',
-                    padding: '0'
+                    padding: '0',
+                    display: 'flex',
+                    flex: 1
                 }}>
                     <div style={{ width: '100%', height: '100%' }}>
                         {children}

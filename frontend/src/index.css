@@ -1012,22 +1012,35 @@ html {
 }
 
 @media (max-width: 1024px) {
-  .sidebar-responsive {
-    width: 72px !important;
+
+  .sidebar-responsive,
+  .sidebar-mobile-hidden {
+    width: 0 !important;
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 
   .sidebar-label {
-    display: none;
+    display: none !important;
+  }
+
+  .nav-group-title {
+    display: none !important;
+  }
+
+  .desktop-visible {
+    display: none !important;
   }
 }
 
 @media (max-width: 768px) {
   .mobile-only {
-    display: block;
+    display: block !important;
   }
 
   .desktop-only {
-    display: none;
+    display: none !important;
   }
 
   .text-h1 {
@@ -1054,35 +1067,38 @@ html {
     grid-template-columns: 1fr !important;
   }
 
-  .sidebar-mobile-hidden {
-    display: none !important;
-  }
-
   .main-content-mobile {
     padding: 16px !important;
   }
-}
 
-.desktop-visible {
-  display: block;
-}
-
-@media (max-width: 768px) {
-  .desktop-visible {
-    display: none;
+  .mobile-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px !important;
   }
 }
 
 .mobile-sidebar-open {
   display: block !important;
-  position: fixed;
-  top: 64px;
-  left: 0;
-  bottom: 0;
-  width: 260px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-default);
-  animation: slideIn 0.3s ease-out;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 280px !important;
+  background: var(--bg-sidebar) !important;
+  border-right: 1px solid var(--border-default) !important;
+  z-index: 9999 !important;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5) !important;
+}
+
+.mobile-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+  z-index: 9998 !important;
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes slideIn {
@@ -1092,6 +1108,16 @@ html {
 
   to {
     transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
 
