@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <img id="source" src="temp_line_logo.png" style="display:none;" crossOrigin="Anonymous" />
+    <div id="result">Waiting...</div>
+
+    <script>
+        window.onload = function () {
+            const img = document.getElementById('source');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Strategy: Keep white/bright pixels, remove dark ones.
+            // Image is white lines on dark grey.
+            // We also want to crop out the text "NALYSE" at the bottom if possible, 
+            // but the user said "remove nalyse", which might mean the text in the code, or the text in the logo image.
+            // The prompt says "add it as logo remove nalyse which existing now".
+            // The uploaded image HAS the text "NALYSE" in it. 
+            // I should attempt to crop it out or mask it out.
+            // Looking at the image, the icon is top 60-70%, text is bottom.
+            // Let's just create opacity based on brightness.
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                // Calculate brightness (simple average)
+                const brightness = (r + g + b) / 3;
+
+                // If processed pixel is dark, make it transparent.
+                // Background seems to be around rgb(50,50,50). 
+                // White lines are rgb(255,255,255).
+
+                // Opacity map: 
+                // brightness < 100 -> alpha 0
+                // brightness > 200 -> alpha 255
+                // Smooth transition in between to keep anti-aliasing.
+
+                if (brightness < 120) {
+                    data[i + 3] = 0;
+                } else {
+                    // It's part of the logo. 
+                    // Make sure it's pure white for the icon part.
+                    data[i] = 255;
+                    data[i + 1] = 255;
+                    data[i + 2] = 255;
+                    data[i + 3] = 255;
+                }
+            }
+
+            // Now let's try to aggressive crop the bottom 25% to remove the "NALYSE" text from the image itself
+            // strictly if the user wants just the icon.
+            // The user said "remove nalyse which existing now", referring to the website text.
+            // But the image also has text. It is safer to remove the text from the image too if it exists.
+            // Let's blank out the bottom 30% of the canvas just in case.
+            // The icon is centered.
+
+            // Get height
+            const h = canvas.height;
+            const w = canvas.width;
+
+            // Clear bottom 30% (Text Area)
+            // ctx.putImageData(imageData, 0, 0) put the modified pixels back first
+            ctx.putImageData(imageData, 0, 0);
+
+            // Clear rect for bottom text
+            ctx.clearRect(0, h * 0.65, w, h * 0.35);
+
+            const base64 = canvas.toDataURL('image/png');
+            document.getElementById('result').innerText = base64;
+        };
+    </script>
+</body>
+
+</html>

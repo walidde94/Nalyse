@@ -1,0 +1,250 @@
+import 'dotenv/config';
+import 'reflect-metadata'; // Required for TypeORM
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { initializeDatabase } from './config/database';
+import authRoutes from './routes/auth';
+import fileRoutes from './routes/files';
+import reportRoutes from './routes/reports';
+import biRoutes from './routes/bi';
+import organizationRoutes from './routes/organization';
+import apiKeyRoutes from './routes/apikeys';
+import groupRoutes from './routes/groups';
+import projectRoutes from './routes/projects';
+import v1Routes from './routes/v1';
+import sourceRoutes from './routes/sources';
+import agentRoutes from './routes/agents';
+import pulseRoutes from './routes/pulse';
+
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:5176',
+    process.env.FRONTEND_URL
+].filter(Boolean) as string[];
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(null, true); // Allow all for now to ensure mobile access works smoothly
+            }
+        },
+        methods: ["GET", "POST"]
+    }
+});
+
+let liveDataCount = 252; // Starting count
+
+// Broadcast helper
+export const broadcastUpdate = (entity: string, data: any) => {
+    io.emit('live_update', { entity, data, timestamp: new Date() });
+};
+
+io.on('connection', (socket) => {
+    console.log(`🔌 Client connected: ${socket.id}`);
+    socket.on('disconnect', () => console.log(`🔌 Client disconnected: ${socket.id}`));
+});
+
+const PORT = process.env.PORT || 3000;
+
+// Rate limiting for External API
+const externalApiLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 1000, // Limit each IP to 1000 requests per windowMs
+    message: { error: 'Too many requests', message: 'Rate limit exceeded. Please contact enterprise support for higher limits.' }
+});
+
+// Security middleware
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Fallback to all to prevent mobile issues
+        }
+    },
+    credentials: true
+}));
+
+// Logging
+app.use(morgan('dev'));
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+
+app.use('/api/', limiter);
+
+// Stricter rate limit for auth endpoints
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100, // Increased for development
+    message: 'Too many authentication attempts, please try again later.'
+});
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/bi', biRoutes);
+app.use('/api/organization', organizationRoutes);
+app.use('/api/apikeys', apiKeyRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/v1', externalApiLimiter, v1Routes);
+app.use('/api/sources', sourceRoutes);
+app.use('/api/agents', agentRoutes);
+app.use('/api/pulse', pulseRoutes);
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Health check
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Mock Live Data for Testing Connectors
+app.get('/api/mock-live-data', (req, res) => {
+    const isIndustrial = req.query.scale === 'industrial';
+    const isPerformance = req.query.type === 'performance';
+
+    let responseData: any[] = [];
+
+    if (isIndustrial) {
+        const hubs = [
+            { city: 'Berlin', lat: 52.5200, lng: 13.4050, region: 'Europe' },
+            { city: 'New York', lat: 40.7128, lng: -74.0060, region: 'North America' },
+            { city: 'Tokyo', lat: 35.6762, lng: 139.6503, region: 'Asia' },
+            { city: 'London', lat: 51.5074, lng: -0.1278, region: 'Europe' },
+            { city: 'Sydney', lat: -33.8688, lng: 151.2093, region: 'Australia' }
+        ];
+        const products = ['Omega', 'Sigma', 'Zetta', 'Xenon', 'Quantum'];
+
+        for (let i = 0; i < hubs.length; i++) {
+            responseData.push({
+                id: i + 1,
+                city: hubs[i].city,
+                lat: hubs[i].lat,
+                lng: hubs[i].lng,
+                region: hubs[i].region,
+                product: products[i % products.length] + ' V-Series',
+                sales: Math.floor(Math.random() * 5000) + 1000,
+                timestamp: new Date().toISOString()
+            });
+        }
+    } else if (isPerformance) {
+        const clusters = ['CRISIS-ZONE-A', 'CRISIS-ZONE-B', 'FAILOVER-ALPHA'];
+        for (let i = 0; i < liveDataCount; i++) {
+            responseData.push({
+                id: i + 1,
+                service: `LegacyNode-${i + 1}`,
+                latency_ms: Math.floor(Math.random() * 1200) + 500, // Extreme latency
+                throughput: Math.floor(Math.random() * 500), // Collapsed throughput
+                memory_usage: Math.floor(Math.random() * 20) + 80, // Maxed memory
+                cluster: clusters[i % clusters.length]
+            });
+        }
+    } else {
+        responseData = [
+            { id: 1, product: "Alpha Unit", sales: 12500, region: "North" },
+            { id: 2, product: "Beta Unit", sales: 150, region: "South" },
+            { id: 3, product: "Gamma Core", sales: 8400, region: "West" },
+            { id: 4, product: "Delta Prime", sales: 11000, region: "North" },
+            { id: 5, product: "Epsilon Next", sales: 9500, region: "West" },
+            { id: 6, product: "Zeta Final", sales: 200, region: "East" },
+            { id: 7, product: "Supernova", sales: 18000, region: "Global" }
+        ];
+    }
+
+    // Trigger instant signal
+    broadcastUpdate('source_data', { count: responseData.length });
+
+    return res.json(responseData);
+});
+
+// Endpoint to simulate data growth
+app.post('/api/simulate-growth', (req, res) => {
+    liveDataCount += 10;
+    broadcastUpdate('source_data', { count: liveDataCount });
+    res.json({ message: 'Data growing...', currentCount: liveDataCount });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Welcome to Nalyse API',
+        version: '1.0.0',
+        docs: '/api/docs'
+    });
+});
+
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('Error:', err);
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+});
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+});
+
+// Initialize database and start server
+const startServer = async () => {
+    try {
+        // Initialize database connection
+        await initializeDatabase();
+
+        // Start Analytical Workers
+        const { initAnalysisWorker } = require('./services/workers/analysisWorker');
+        initAnalysisWorker();
+
+        // Start server
+        httpServer.listen(Number(PORT), '0.0.0.0', () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`🔗 API: http://0.0.0.0:${PORT}`);
+            console.log(`💚 Health: http://0.0.0.0:${PORT}/health`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+if (process.env.NODE_ENV !== 'test') {
+    startServer();
+}
+
+export default app;

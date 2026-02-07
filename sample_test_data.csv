@@ -1,0 +1,16 @@
+Date,Customer Name,Status,Subscription,Cost,Usage
+2024-01-01,Alpha Corp,Active,Premium,1200,850
+2024-01-02,Beta Solutions,Active,Basic,450,300
+2024-01-03,Gamma Systems,Pending,Premium,890,600
+2024-01-04,Delta Services,Inactive,Standard,0,0
+2024-01-05,Epsilon Industries,Active,Premium,1500,1200
+2024-01-06,Zeta Tech,Active,Basic,320,250
+2024-01-07,Eta Global,Pending,Standard,680,450
+2024-01-08,Theta LLC,Active,Premium,2100,1800
+2024-01-09,Iota Partners,Active,Basic,290,200
+2024-01-10,Kappa Dynamics,Active,Premium,1100,900
+2024-01-11,Lambda Works,Inactive,Standard,0,0
+2024-01-12,Mu Engineering,Active,Premium,1350,1100
+2024-01-13,Nu Ventures,Pending,Basic,210,150
+2024-01-14,Xi Analytics,Active,Premium,1750,1400
+2024-01-15,Omicron Ltd,Active,Standard,550,400

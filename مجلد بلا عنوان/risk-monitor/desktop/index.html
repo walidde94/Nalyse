@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nalyse Risk Monitor - Enterprise Website Monitoring</title>
+    <meta name="description"
+        content="Professional website monitoring with SSL tracking, performance metrics, security analysis, and compliance scanning">
+    <link rel="stylesheet" href="styles.css">
+    <script src="assets/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+                <div class="brand-text">NALYSE</div>
+            </div>
+
+            <nav class="nav">
+                <div class="nav-item active" onclick="showDashboard()">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="showSettings()">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M12 1v6m0 6v6m8.66-15.66l-4.24 4.24m-4.24 4.24l-4.24 4.24m15.66-8.66l-4.24-4.24m-4.24-4.24l-4.24-4.24">
+                        </path>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+            </nav>
+
+            <div class="user-profile">
+                <div class="user-name" id="user-name">Loading...</div>
+                <div class="user-email" id="user-email"></div>
+            </div>
+
+            <div class="nav-item" onclick="logout()" style="margin-top: 16px; color: var(--danger);">
+                <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Logout</span>
+            </div>
+        </div>
+
+        <div class="main">
+            <!-- Dashboard View -->
+            <div id="dashboard-view">
+                <div class="header">
+                    <div class="header-content">
+                        <div class="header-subtitle">Overview</div>
+                        <h1>Dashboard</h1>
+                    </div>
+                    <button class="btn btn-primary" onclick="toggleAddForm()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Website
+                    </button>
+                </div>
+
+                <div id="add-panel" style="display:none; margin-bottom:30px;">
+                    <div class="input-group">
+                        <input type="text" id="new-url" placeholder="https://example.com">
+                        <button class="btn btn-primary" onclick="submitWebsite()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Monitor
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Monitored Sites</div>
+                                <div class="stat-value" id="stats-total">-</div>
+                            </div>
+                            <div class="stat-icon"
+                                style="background: rgba(59, 130, 246, 0.1); color: var(--accent-primary);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path
+                                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Avg. Uptime</div>
+                                <div class="stat-value" style="color:var(--success)">100%</div>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Critical Issues</div>
+                                <div class="stat-value" id="stats-issues" style="color:var(--danger)">-</div>
+                            </div>
+                            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                                    </path>
+                                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom:20px; color:var(--text-muted); font-weight:600; font-size:1.1rem;">Active
+                    Monitors</h3>
+                <div id="grid" class="websites-grid">
+                    <!-- Cards -->
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="settings-view" style="display:none;">
+                <div class="header">
+                    <div>
+                        <div style="color:var(--text-muted); font-size:0.9rem">Configuration</div>
+                        <h1>Settings</h1>
+                    </div>
+                </div>
+
+                <div style="max-width:800px;">
+                    <div class="stat-card" style="margin-bottom:24px;">
+                        <h3 style="margin:0 0 20px 0;">Profile Information</h3>
+                        <div class="form-group" style="margin-bottom:16px;">
+                            <label
+                                style="display:block; color:var(--text-muted); font-size:0.85rem; margin-bottom:8px;">Full
+                                Name</label>
+                            <input type="text" id="settings-fullname"
+                                style="width:100%; padding:12px; background:var(--bg-body); border:1px solid var(--border); border-radius:8px; color:var(--text-main);">
+                        </div>
+                        <div class="form-group" style="margin-bottom:16px;">
+                            <label
+                                style="display:block; color:var(--text-muted); font-size:0.85rem; margin-bottom:8px;">Company</label>
+                            <input type="text" id="settings-company"
+                                style="width:100%; padding:12px; background:var(--bg-body); border:1px solid var(--border); border-radius:8px; color:var(--text-main);">
+                        </div>
+                        <button class="btn" onclick="saveProfile()" style="padding:10px 24px; width:auto;">Save
+                            Profile</button>
+                    </div>
+
+                    <div class="stat-card" style="margin-bottom:24px;">
+                        <h3 style="margin:0 0 20px 0;">Preferences</h3>
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding:12px; background:rgba(56,189,248,0.05); border-radius:8px;">
+                            <div>
+                                <div style="font-weight:600;">Email Notifications</div>
+                                <div style="font-size:0.85rem; color:var(--text-muted);">Receive alerts for critical
+                                    issues
+                                </div>
+                            </div>
+                            <label style="position:relative; display:inline-block; width:50px; height:24px;">
+                                <input type="checkbox" id="settings-email-notif" style="opacity:0; width:0; height:0;">
+                                <span
+                                    style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#334155; border-radius:24px; transition:0.3s;"></span>
+                            </label>
+                        </div>
+                        <div class="form-group" style="margin-bottom:16px;">
+                            <label
+                                style="display:block; color:var(--text-muted); font-size:0.85rem; margin-bottom:8px;">Default
+                                Scan Interval (minutes)</label>
+                            <input type="number" id="settings-scan-interval" value="1440"
+                                style="width:100%; padding:12px; background:var(--bg-body); border:1px solid var(--border); border-radius:8px; color:var(--text-main);">
+                        </div>
+                        <button class="btn" onclick="saveSettings()" style="padding:10px 24px; width:auto;">Save
+                            Preferences</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- End app-container -->
+
+    <!-- DETAILS MODAL -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+                <div>
+                    <h2 id="modal-title" style="margin:0; font-size:2rem">Domain.com</h2>
+                    <div id="modal-last-scan" style="color:var(--text-muted)">Last scanned: Just now</div>
+                </div>
+                <button class="btn-outline" style="padding:8px 15px; border-radius:6px; cursor:pointer"
+                    onclick="closeModal()">Close</button>
+            </div>
+
+            <div style="display:flex; gap:20px; height:100%; overflow:hidden;">
+                <!-- Left: Stats & History -->
+                <div style="flex:2; display:flex; flex-direction:column; overflow-y:auto; padding-right:10px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+                        <div class="stat-card">
+                            <div class="stat-label">Health Score</div>
+                            <div class="stat-value" id="modal-score">98%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Broken Links</div>
+                            <div class="stat-value" id="modal-broken" style="color:var(--danger)">0</div>
+                        </div>
+                    </div>
+
+                    <h3>Issues Trend</h3>
+                    <div class="chart-container">
+                        <canvas id="historyChart"></canvas>
+                    </div>
+
+                    <h3 style="margin-top:30px">Cookie Compliance</h3>
+                    <div id="cookie-status"
+                        style="background:#1e293b; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        Loading...
+                    </div>
+
+                    <!-- NEW: Enterprise Features -->
+                    <h3 style="margin-top:30px">🔒 SSL/TLS Certificate</h3>
+                    <div id="ssl-info"
+                        style="background:#1e293b; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        Loading...
+                    </div>
+
+                    <h3 style="margin-top:30px">⚡ Performance Metrics</h3>
+                    <div id="performance-info"
+                        style="background:#1e293b; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        Loading...
+                    </div>
+
+                    <h3 style="margin-top:30px">🛡️ Security Headers</h3>
+                    <div id="security-headers"
+                        style="background:#1e293b; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        Loading...
+                    </div>
+
+                    <h3 style="margin-top:30px">📊 SEO Analysis</h3>
+                    <div id="seo-info"
+                        style="background:#1e293b; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        Loading...
+                    </div>
+
+                    <h3 style="margin-top:30px">⚖️ Legal Compliance</h3>
+                    <div id="legal-info"
+                        style="background:#1e293b; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        Loading...
+                    </div>
+                </div>
+
+                <!-- Right: Issues List -->
+                <div
+                    style="flex:1; background:#1e293b; border-radius:12px; border:1px solid var(--border); padding:20px; display:flex; flex-direction:column;">
+                    <h3 style="margin-top:0">Critical Issues</h3>
+                    <div id="issues-list" style="flex:1; overflow-y:auto;">
+                        <!-- List -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = "http://localhost:8080/api/v1";
+        let historyChart = null;
+        let currentUser = null;
+
+        // Auth Check
+        function checkAuth() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Get Auth Headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('accessToken');
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Load Current User
+        async function loadCurrentUser() {
+            try {
+                const res = await fetch(`${API}/auth/me`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        logout();
+                        return;
+                    }
+                    throw new Error('Failed to load user');
+                }
+
+                currentUser = await res.json();
+                document.getElementById('user-name').textContent = currentUser.full_name || 'User';
+                document.getElementById('user-email').textContent = currentUser.email;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Show Dashboard
+        function showDashboard() {
+            document.querySelector('.nav-item.active')?.classList.remove('active');
+            document.querySelectorAll('.nav-item')[0].classList.add('active');
+            document.getElementById('dashboard-view').style.display = 'block';
+            document.getElementById('settings-view').style.display = 'none';
+        }
+
+        // Show Settings
+        function showSettings() {
+            document.querySelector('.nav-item.active')?.classList.remove('active');
+            document.querySelectorAll('.nav-item')[1].classList.add('active');
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('settings-view').style.display = 'block';
+            loadSettings();
+        }
+
+        async function init() {
+            if (!checkAuth()) return;
+            await loadCurrentUser();
+            await loadWebsites();
+            setInterval(loadWebsites, 10000);
+        }
+
+        async function loadWebsites() {
+            try {
+                const res = await fetch(`${API}/websites`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        logout();
+                        return;
+                    }
+                    throw new Error('Failed to load websites');
+                }
+
+                const sites = await res.json();
+                renderGrid(sites);
+                updateStats(sites);
+            } catch (e) { console.error(e); }
+        }
+
+        async function renderGrid(sites) {
+            const grid = document.getElementById('grid');
+
+            // Parallel fetch for statuses
+            const cards = await Promise.all(sites.map(async s => {
+                let status = 'gray';
+                let lastScan = 'Never';
+                let issues = 0;
+                let healthScore = 0;
+
+                try {
+                    const scanRes = await fetch(`${API}/websites/${s.id}/latest-scan`, {
+                        headers: getAuthHeaders()
+                    });
+                    if (scanRes.ok) {
+                        const scan = await scanRes.json();
+                        issues = scan.url_checks.filter(u => u.error_type !== 'none').length;
+                        status = issues > 0 || !scan.cookie_check?.banner_detected ? 'error' : 'online';
+                        lastScan = new Date(scan.finished_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        healthScore = issues === 0 ? 100 : Math.max(0, 100 - (issues * 5));
+                    }
+                } catch (e) { }
+
+                const statusClass = status === 'online' ? 'online' : (status === 'error' ? 'error' : 'warning');
+                const statusColor = status === 'online' ? 'var(--success)' : (status === 'error' ? 'var(--danger)' : 'var(--warning)');
+
+                return `
+                    <div class="web-card">
+                        <div class="web-card-header">
+                            <div>
+                                <h3 class="web-card-title">${s.url.replace(/https?:\/\/(www\.)?/, '')}</h3>
+                                <div class="web-card-meta">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:middle; margin-right:4px;">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    Last scan: ${lastScan}
+                                </div>
+                            </div>
+                            <div class="web-status ${statusClass}"></div>
+                        </div>
+
+                        ${healthScore > 0 ? `
+                        <div style="margin: 16px 0; padding: 12px; background: rgba(59, 130, 246, 0.05); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Health Score</span>
+                                <span style="font-size: 1.25rem; font-weight: 700; color: ${healthScore >= 90 ? 'var(--success)' : healthScore >= 70 ? 'var(--warning)' : 'var(--danger)'};">${healthScore}%</span>
+                            </div>
+                            <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                                <div style="height: 100%; width: ${healthScore}%; background: ${healthScore >= 90 ? 'var(--success)' : healthScore >= 70 ? 'var(--warning)' : 'var(--danger)'}; border-radius: 2px; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="web-card-actions">
+                            <button class="btn btn-outline btn-sm" onclick="openDetails('${s.id}', '${s.url}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                Report
+                            </button>
+                            ${localStorage.getItem('scanning_' + s.id) ?
+                        `<button class="btn btn-primary btn-sm" disabled style="background:rgba(59, 130, 246, 0.1); color:var(--accent-primary); border:1px solid var(--accent-primary);">
+                                    <div class="spinner"></div>
+                                    Scanning
+                                </button>` :
+                        `<button class="btn btn-primary btn-sm" onclick="triggerScan('${s.id}', this)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                                    </svg>
+                                    Scan
+                                </button>`
+                    }
+                        </div>
+
+                        <button onclick="deleteSite('${s.id}')" class="btn btn-sm" style="position:absolute; top:16px; right:48px; background:transparent; border:none; color:var(--danger); opacity:0.6; padding:4px; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    `;
+                // Load Scan Data
+                const scanRes = await fetch(`${API}/websites/${id}/latest-scan`, {
+                    headers: getAuthHeaders()
+                });
+                const histRes = await fetch(`${API}/websites/${id}/history`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (scanRes.ok && histRes.ok) {
+                    const scan = await scanRes.json();
+                    const history = await histRes.json();
+
+                    // Stats
+                    const broken = scan.url_checks.filter(u => u.error_type !== 'none');
+                    document.getElementById('modal-broken').innerText = broken.length;
+                    document.getElementById('modal-score').innerText = broken.length === 0 ? '100%' : Math.max(0, 100 - (broken.length * 5)) + '%';
+
+                    // Chart
+                    renderChart(history);
+
+                    // Cookie
+                    document.getElementById('cookie-status').innerHTML = `
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <span style="font-size:2rem">${scan.cookie_check?.banner_detected ? '✅' : '❌'}</span>
+                        <div>
+                            <div style="font-weight:bold">${scan.cookie_check?.banner_detected ? 'Compliant' : 'Non-Compliant'}</div>
+                            <div style="color:var(--text-muted); font-size:0.9rem">Cookie banner ${scan.cookie_check?.banner_detected ? 'was successfully detected' : 'could NOT be found'}.</div>
+                        </div>
+                    </div>
+                    ${scan.cookie_check?.screenshot_path ? `<img src="http://localhost:8080/${scan.cookie_check.screenshot_path}" style="width:100%; margin-top:15px; border-radius:8px; border:1px solid var(--border)">` : ''}
+                `;
+
+                    // Issues List
+                    const list = document.getElementById('issues-list');
+                    if (broken.length === 0) list.innerHTML = '<div style="color:var(--success); padding:20px; text-align:center;">✅ No broken links found.</div>';
+                    else {
+                        list.innerHTML = broken.map(b => `
+                        <div style="margin-bottom:12px; padding:12px; background:rgba(239, 68, 68, 0.05); border-left:3px solid #ef4444; border-radius:4px;">
+                            <div style="color:#ef4444; font-family:monospace; word-break:break-all; font-size:0.85rem; font-weight:600; margin-bottom:4px;">${b.url}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between;">
+                                <span>${b.error_type.toUpperCase().replace('_', ' ')}</span>
+                                <span style="font-family:monospace">HTTP ${b.http_status}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    }
+
+                    // NEW: Enterprise Features Display
+                    renderSSLInfo(scan.ssl_info);
+                    renderPerformanceMetrics(scan.performance_metrics);
+                    renderSecurityHeaders(scan.security_headers);
+                    renderSEOInfo(scan.seo_meta);
+                    renderLegalCompliance(scan.legal_compliance);
+                }
+            }
+
+            function renderSSLInfo(ssl) {
+                    const el = document.getElementById('ssl-info');
+                    if (!ssl) {
+                        el.innerHTML = '<div style="color:var(--text-muted)">No SSL/TLS data available</div>';
+                        return;
+                    }
+                    const daysColor = ssl.daysUntilExpiry < 30 ? 'var(--danger)' : (ssl.daysUntilExpiry < 90 ? '#f59e0b' : 'var(--success)');
+                    el.innerHTML = `
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.9rem;">
+                    <div><strong>Protocol:</strong> ${ssl.protocol}</div>
+                    <div><strong>Issuer:</strong> ${ssl.issuer}</div>
+                    <div><strong>Subject:</strong> ${ssl.subjectName}</div>
+                    <div style="color:${daysColor}"><strong>Expires in:</strong> ${ssl.daysUntilExpiry} days</div>
+                </div>
+            `;
+                }
+
+            function renderPerformanceMetrics(perf) {
+                    const el = document.getElementById('performance-info');
+                    if (!perf) {
+                        el.innerHTML = '<div style="color:var(--text-muted)">No performance data available</div>';
+                        return;
+                    }
+                    el.innerHTML = `
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.9rem;">
+                    <div><strong>TTFB:</strong> ${Math.round(perf.ttfb)}ms</div>
+                    <div><strong>FCP:</strong> ${Math.round(perf.fcp)}ms</div>
+                    <div><strong>DOM Loaded:</strong> ${Math.round(perf.domContentLoaded)}ms</div>
+                    <div><strong>Load Complete:</strong> ${Math.round(perf.loadComplete)}ms</div>
+                </div>
+            `;
+                }
+
+            function renderSecurityHeaders(sec) {
+                    const el = document.getElementById('security-headers');
+                    if (!sec) {
+                        el.innerHTML = '<div style="color:var(--text-muted)">No security header data available</div>';
+                        return;
+                    }
+                    const scoreColor = sec.score >= 75 ? 'var(--success)' : (sec.score >= 50 ? '#f59e0b' : 'var(--danger)');
+                    el.innerHTML = `
+                <div style="margin-bottom:15px;"><strong>Security Score:</strong> <span style="color:${scoreColor}; font-size:1.5rem; font-weight:700;">${sec.score}/100</span></div>
+                <div style="display:grid; gap:8px; font-size:0.85rem;">
+                    <div>${sec.csp ? '✅' : '❌'} Content-Security-Policy</div>
+                    <div>${sec.xFrameOptions ? '✅' : '❌'} X-Frame-Options</div>
+                    <div>${sec.hsts ? '✅' : '❌'} Strict-Transport-Security</div>
+                    <div>${sec.xContentType ? '✅' : '❌'} X-Content-Type-Options</div>
+                </div>
+            `;
+                }
+
+            function renderSEOInfo(seo) {
+                    const el = document.getElementById('seo-info');
+                    if (!seo) {
+                        el.innerHTML = '<div style="color:var(--text-muted)">No SEO data available</div>';
+                        return;
+                    }
+                    el.innerHTML = `
+                <div style="display:grid; gap:8px; font-size:0.85rem;">
+                    <div>${seo.title ? '✅' : '❌'} Page Title ${seo.title ? `(${seo.title.length} chars)` : ''}</div>
+                    <div>${seo.description ? '✅' : '❌'} Meta Description</div>
+                    <div>${seo.ogTitle ? '✅' : '❌'} Open Graph Title</div>
+                    <div>${seo.ogImage ? '✅' : '❌'} Open Graph Image</div>
+                    <div>${seo.canonical ? '✅' : '❌'} Canonical URL</div>
+                </div>
+            `;
+                }
+
+            function renderLegalCompliance(legal) {
+                    const el = document.getElementById('legal-info');
+                    if (!legal) {
+                        el.innerHTML = '<div style="color:var(--text-muted)">No legal compliance data available</div>';
+                        return;
+                    }
+                    el.innerHTML = `
+                <div style="display:grid; gap:8px; font-size:0.85rem;">
+                    <div>${legal.privacyPolicy ? '✅' : '❌'} Privacy Policy Link</div>
+                    <div>${legal.termsOfService ? '✅' : '❌'} Terms of Service Link</div>
+                    <div>${legal.imprint ? '✅' : '❌'} Imprint/Legal Notice</div>
+                    <div>${legal.cookiePolicy ? '✅' : '❌'} Cookie Policy Link</div>
+                </div>
+            `;
+                }
+
+            function renderChart(history) {
+                    const ctx = document.getElementById('historyChart').getContext('2d');
+                    if (historyChart) historyChart.destroy();
+
+                    const labels = history.map(h => new Date(h.finished_at).toLocaleDateString());
+                    const data = history.map(h => h.broken_links_count);
+
+                    historyChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Broken Links',
+                                data: data,
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#334155' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+
+            function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+            function toggleAddForm() {
+                    const el = document.getElementById('add-panel');
+                    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                }
+
+            async function submitWebsite() {
+                    const url = document.getElementById('new-url').value;
+                    if (!url) return;
+                    await fetch(`${API}/websites`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ url: url.startsWith('http') ? url : 'https://' + url })
+                    });
+                    document.getElementById('new-url').value = '';
+                    toggleAddForm();
+                    loadWebsites();
+                }
+
+            async function triggerScan(id, btn) {
+                    localStorage.setItem('scanning_' + id, 'true');
+                    loadWebsites(); // Re-render immediately
+
+                    try {
+                        const res = await fetch(`${API}/websites/${id}/scan`, {
+                            method: 'POST',
+                            headers: getAuthHeaders()
+                        });
+                        const data = await res.json();
+
+                        if (data.scan_id) {
+                            pollScanStatus(id, data.scan_id);
+                        } else {
+                            throw new Error("No scan ID");
+                        }
+                    } catch (e) {
+                        localStorage.removeItem('scanning_' + id);
+                        loadWebsites();
+                        alert("Scan failed to start: " + e.message);
+                    }
+                }
+
+            async function pollScanStatus(webId, scanId) {
+                    const interval = setInterval(async () => {
+                        try {
+                            const res = await fetch(`${API}/websites/${webId}/latest-scan`);
+                            if (res.ok) {
+                                const scan = await res.json();
+                                // If the latest completed scan ID matches our started scan ID
+                                if (scan.id === scanId) {
+                                    clearInterval(interval);
+                                    localStorage.removeItem('scanning_' + webId);
+                                    loadWebsites(); // Refresh UI with new data
+                                }
+                            }
+                        } catch (e) { }
+                    }, 2000); // Check every 2s
+
+                    // Safety Timeout (60s)
+                    setTimeout(() => {
+                        clearInterval(interval);
+                        if (localStorage.getItem('scanning_' + webId)) {
+                            localStorage.removeItem('scanning_' + webId);
+                            loadWebsites();
+                        }
+                    }, 60000);
+                }
+
+            async function deleteSite(id) {
+                    if (confirm('Delete site?')) {
+                        await fetch(`${API}/websites/${id}`, {
+                            method: 'DELETE',
+                            headers: getAuthHeaders()
+                        });
+                        loadWebsites();
+                    }
+                }
+
+            // Settings Functions
+            async function loadSettings() {
+                    try {
+                        const [userRes, settingsRes] = await Promise.all([
+                            fetch(`${API}/auth/me`, { headers: getAuthHeaders() }),
+                            fetch(`${API}/auth/settings`, { headers: getAuthHeaders() })
+                        ]);
+
+                        if (userRes.ok) {
+                            const user = await userRes.json();
+                            document.getElementById('settings-fullname').value = user.full_name || '';
+                            document.getElementById('settings-company').value = user.company || '';
+                        }
+
+                        if (settingsRes.ok) {
+                            const settings = await settingsRes.json();
+                            document.getElementById('settings-email-notif').checked = settings.email_notifications;
+                            document.getElementById('settings-scan-interval').value = settings.scan_interval_default;
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+
+            async function saveProfile() {
+                    const fullName = document.getElementById('settings-fullname').value;
+                    const company = document.getElementById('settings-company').value;
+
+                    try {
+                        const res = await fetch(`${API}/auth/profile`, {
+                            method: 'PUT',
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify({ fullName, company })
+                        });
+
+                        if (res.ok) {
+                            alert('Profile updated successfully!');
+                            await loadCurrentUser();
+                        } else {
+                            alert('Failed to update profile');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Error updating profile');
+                    }
+                }
+
+            async function saveSettings() {
+                    const emailNotifications = document.getElementById('settings-email-notif').checked;
+                    const scanIntervalDefault = parseInt(document.getElementById('settings-scan-interval').value);
+
+                    try {
+                        const res = await fetch(`${API}/auth/settings`, {
+                            method: 'PUT',
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify({
+                                emailNotifications,
+                                scanIntervalDefault,
+                                theme: 'dark',
+                                timezone: 'UTC',
+                                language: 'en'
+                            })
+                        });
+
+                        if (res.ok) {
+                            alert('Settings saved successfully!');
+                        } else {
+                            alert('Failed to save settings');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Error saving settings');
+                    }
+                }
+
+            init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,26 @@
+# Common
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.log
+.DS_Store
+
+# Backend specific
+backend/dist/
+backend/node_modules/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Frontend specific
+frontend/node_modules/
+frontend/dist/
+
+# System
+.idea/
+.vscode/
+.agent/
