@@ -1163,7 +1163,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                 <div className="flex-1" style={{ overflowY: 'auto' }} id="analysis-content">
                     {/* Top Header - Moved Inside for Scrollbar Alignment */}
                     {/* ===== Enterprise Global Header (Parity with Kibana) ===== */}
-                    <div className={`flex justify-between items-center ${activeTab === 'presentation' ? 'hidden' : 'flex'}`} style={{
+                    <div className={`flex justify-between items-center mobile-hidden ${activeTab === 'presentation' ? 'hidden' : 'flex'}`} style={{
                         height: '48px',
                         padding: '0 24px',
                         background: 'var(--bg-sidebar)',
@@ -1209,7 +1209,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
                     <div className={`flex justify-between items-center ${activeTab === 'presentation' ? 'hidden' : 'flex'}`} style={{
                         height: '72px',
-                        padding: '0 24px',
+                        padding: '0 16px', // Reduced padding
                         borderBottom: '1px solid var(--border-subtle)',
                         backdropFilter: 'blur(12px)',
                         background: 'var(--bg-surface)',
@@ -1227,12 +1227,12 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                             >
                                 <ArrowLeft size={16} className="group-hover/back2:-translate-x-1 transition-transform" />
                             </button>
-                            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>
+                            <div className="mobile-hidden" style={{ padding: '8px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>
                                 <FileText size={20} />
                             </div>
                             <div>
                                 <h2 className="text-h3" style={{ fontSize: '18px', marginBottom: '2px' }}>Analysis Report</h2>
-                                <p className="text-sm text-secondary" style={{ fontSize: '12px' }}>Generated {new Date().toLocaleDateString()}</p>
+                                <p className="text-sm text-secondary mobile-hidden" style={{ fontSize: '12px' }}>Generated {new Date().toLocaleDateString()}</p>
                             </div>
                         </div>
 
@@ -1309,7 +1309,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                         />
                     </div>
 
-                    <div style={{ width: '100%', padding: '24px' }}>
+                    <div className="w-full p-4 md:p-6" style={{ width: '100%' }}>
 
                         {activeTab === 'overview' && (
                             <div className="flex-col gap-6 fade-in">
@@ -1452,11 +1452,11 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                         {analysis.summary.columnTypes && Object.entries(analysis.summary.columnTypes).some(([_, type]) => type === 'date') && (
                                             <div className="mt-6">
                                                 <h4 className="text-h3 mb-4">Filter by Date Range</h4>
-                                                <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                                                <div className="grid gap-4 mobile-full-width" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
                                                     <div className="flex-col gap-2">
                                                         <label className="text-sm font-medium">Date Column</label>
                                                         <select
-                                                            className="input"
+                                                            className="input w-full"
                                                             value={dateRange.column || ''}
                                                             onChange={(e) => setDateRange(prev => ({ ...prev, column: e.target.value }))}
                                                         >

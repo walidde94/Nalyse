@@ -71,6 +71,8 @@ export const DashboardView = ({
         }
     });
 
+    // ... (previous code)
+
     return (
         <div className="flex-col gap-6 fade-in main-content-mobile" style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto', width: '100%', fontFamily: 'Dubai, sans-serif', position: 'relative' }}>
             <div className="bg-mesh"></div>
@@ -79,13 +81,13 @@ export const DashboardView = ({
                 <div className="flex flex-responsive justify-between items-start md:items-end mb-8 gap-4">
                     <div>
                         <span className="text-xs font-black tracking-[0.2em] text-[var(--primary)] uppercase mb-2 block">Enterprise Workspace</span>
-                        <h1 className="text-h1" style={{ fontSize: '38px', letterSpacing: '-0.03em' }}>
+                        <h1 className="text-h1 mobile-text-scale" style={{ fontSize: 'clamp(24px, 4vw, 38px)', letterSpacing: '-0.03em', lineHeight: '1.2' }}>
                             Welcome, <span className="text-gradient font-black">{firstName || userEmail?.split('@')[0]}</span>
                         </h1>
                         <p className="text-secondary mt-1">Orchestrating intelligence across {fileCount} core datasets.</p>
                     </div>
-                    <div className="flex gap-4">
-                        <div className="card glass-morphism py-2 px-4 flex items-center gap-3">
+                    <div className="flex gap-4 mobile-full-width">
+                        <div className="card glass-morphism py-2 px-4 flex items-center gap-3 w-full">
                             <ShieldCheck size={16} className="text-success" />
                             <span className="text-xs font-bold">Node Security Level: <span className="text-success">Maximum</span></span>
                         </div>
@@ -93,6 +95,7 @@ export const DashboardView = ({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    {/* stats cards remain same but ensuring grid-cols-1 on mobile handles it */}
                     <div className="card hover-glow p-4 md:p-6 border-l-4 border-l-[var(--primary)]">
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-[var(--primary-subtle)] rounded-lg text-[var(--primary)]"><LayoutGrid size={20} /></div>
@@ -137,7 +140,7 @@ export const DashboardView = ({
             {/* Main Action Bar */}
             <div className="flex flex-responsive justify-between items-start md:items-center mb-6 gap-4">
                 <div className="flex flex-wrap gap-4 items-center w-full md:w-auto">
-                    <div className="flex p-0.5 bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-lg shadow-inner">
+                    <div className="flex p-0.5 bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-lg shadow-inner mobile-hidden">
                         <button
                             onClick={() => setViewMode('list')}
                             style={{
@@ -173,38 +176,33 @@ export const DashboardView = ({
                             <LayoutGrid size={18} />
                         </button>
                     </div>
-                    <div className="relative flex-1 md:flex-initial">
+                    <div className="relative flex-1 w-full md:w-64">
                         <input
                             type="text"
                             placeholder="Filter datasets..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input h-10 w-full md:w-64 text-sm"
+                            className="input h-10 w-full text-sm"
                         />
                     </div>
                 </div>
                 <div className="flex flex-wrap gap-3 w-full md:w-auto">
                     {isOverLimit && <button className="btn btn-ghost btn-sm text-[var(--danger)]" onClick={onUpgrade}>Upgrade Plan</button>}
                     <button className="btn btn-secondary h-10 flex-1 md:flex-initial" onClick={() => setShowCreateGroup(true)}>
-                        <Folder size={16} /> New Group
+                        <Folder size={16} /> <span className="whitespace-nowrap">New Group</span>
                     </button>
                     <button
                         id="tour-upload-btn"
                         className={`btn btn-primary shimmer-effect h-10 gap-2 flex-1 md:flex-initial ${dragActive ? 'scale-105 ring-2 ring-[var(--primary)]' : ''}`}
                         onClick={() => document.getElementById('file-input')?.click()}
-                        onDragEnter={handleDrag}
-                        onDragOver={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDrop={handleDrop}
-                        disabled={isOverLimit}
                     >
                         <CloudUpload size={18} />
-                        <span className="hidden sm:inline">{dragActive ? 'Drop File Here' : 'Upload Data'}</span>
-                        <span className="sm:hidden">Upload</span>
+                        <span className="whitespace-nowrap">{dragActive ? 'Drop File' : 'Upload Data'}</span>
                     </button>
                 </div>
             </div>
 
+            {/* ... (Create Group Modal remains same) ... */}
             {showCreateGroup && (
                 <div className="card fade-in mb-6" style={{ border: '1px solid var(--primary)', padding: '24px' }}>
                     <div className="flex justify-between items-center mb-4">
@@ -215,12 +213,12 @@ export const DashboardView = ({
                         <input
                             className="input"
                             style={{ flex: 1 }}
-                            placeholder="Group Name (e.g. Sales Q1, Marketing...)"
+                            placeholder="Group Name"
                             value={newGroupName}
                             onChange={e => setNewGroupName(e.target.value)}
                             autoFocus
                         />
-                        <button className="btn btn-primary" onClick={handleCreateGroup}>Create Group</button>
+                        <button className="btn btn-primary" onClick={handleCreateGroup}>Create</button>
                     </div>
                 </div>
             )}
@@ -228,7 +226,7 @@ export const DashboardView = ({
             <input type="file" id="file-input" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])} />
 
             {/* Content Area */}
-            <div className="flex-col gap-8">
+            <div className="flex-col gap-8 pb-10">
                 {groups.map((group: any) => {
                     const groupFiles = groupedFiles[group.id] || [];
                     if (groupFiles.length === 0 && searchTerm) return null;
@@ -238,8 +236,8 @@ export const DashboardView = ({
                             <div className="flex justify-between items-center px-2">
                                 <div className="flex items-center gap-3">
                                     <Folder size={20} className="text-primary" />
-                                    <h3 className="text-h3" style={{ fontSize: '18px' }}>{group.name}</h3>
-                                    <span className="text-sm text-tertiary">({groupFiles.length} files)</span>
+                                    <h3 className="text-h3 border-none" style={{ fontSize: '18px' }}>{group.name}</h3>
+                                    <span className="text-sm text-tertiary">({groupFiles.length})</span>
                                 </div>
                                 <button className="btn btn-icon btn-ghost btn-sm" onClick={() => confirm('Delete group?') && onDeleteGroup(group.id)}>
                                     <Trash2 size={16} />
@@ -248,20 +246,24 @@ export const DashboardView = ({
 
                             {viewMode === 'list' ? (
                                 <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                                    {groupFiles.length === 0 ? (
-                                        <div style={{ padding: '32px', textAlign: 'center', opacity: 0.5, fontSize: '14px' }}>
-                                            No files in this group. Move files here using the dropdown below.
-                                        </div>
-                                    ) : (
-                                        <FileTable
-                                            files={groupFiles}
-                                            groups={groups}
-                                            onFileSelect={onFileSelect}
-                                            onToggleFavorite={onToggleFavorite}
-                                            onDeleteFile={onDeleteFile}
-                                            onUpdateFileGroup={onUpdateFileGroup}
-                                        />
-                                    )}
+                                    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                                        {groupFiles.length === 0 ? (
+                                            <div style={{ padding: '32px', textAlign: 'center', opacity: 0.5, fontSize: '14px' }}>
+                                                No files in this group.
+                                            </div>
+                                        ) : (
+                                            <div style={{ minWidth: '600px' }}> {/* Force min width for table */}
+                                                <FileTable
+                                                    files={groupFiles}
+                                                    groups={groups}
+                                                    onFileSelect={onFileSelect}
+                                                    onToggleFavorite={onToggleFavorite}
+                                                    onDeleteFile={onDeleteFile}
+                                                    onUpdateFileGroup={onUpdateFileGroup}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             ) : (
                                 <FileGrid
@@ -280,25 +282,29 @@ export const DashboardView = ({
                     <div className="flex items-center gap-3 px-2">
                         <FileText size={20} className="text-tertiary" />
                         <h3 className="text-h3" style={{ fontSize: '18px' }}>Ungrouped Datasets</h3>
-                        <span className="text-sm text-tertiary">({groupedFiles['ungrouped'].length} files)</span>
+                        <span className="text-sm text-tertiary">({groupedFiles['ungrouped'].length})</span>
                     </div>
 
                     {viewMode === 'list' ? (
                         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                            {groupedFiles['ungrouped'].length === 0 ? (
-                                <div style={{ padding: '32px', textAlign: 'center', opacity: 0.5, fontSize: '14px' }}>
-                                    All files are organized!
-                                </div>
-                            ) : (
-                                <FileTable
-                                    files={groupedFiles['ungrouped']}
-                                    groups={groups}
-                                    onFileSelect={onFileSelect}
-                                    onToggleFavorite={onToggleFavorite}
-                                    onDeleteFile={onDeleteFile}
-                                    onUpdateFileGroup={onUpdateFileGroup}
-                                />
-                            )}
+                            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                                {groupedFiles['ungrouped'].length === 0 ? (
+                                    <div style={{ padding: '32px', textAlign: 'center', opacity: 0.5, fontSize: '14px' }}>
+                                        All files are organized!
+                                    </div>
+                                ) : (
+                                    <div style={{ minWidth: '600px' }}>
+                                        <FileTable
+                                            files={groupedFiles['ungrouped']}
+                                            groups={groups}
+                                            onFileSelect={onFileSelect}
+                                            onToggleFavorite={onToggleFavorite}
+                                            onDeleteFile={onDeleteFile}
+                                            onUpdateFileGroup={onUpdateFileGroup}
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <FileGrid
@@ -324,7 +330,7 @@ const FileGrid = ({ files, onFileSelect, onDeleteFile, onToggleFavorite }: any) 
     }
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
+        <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
             {files.map((f: any) => (
                 <div
                     key={f.id}
@@ -339,8 +345,6 @@ const FileGrid = ({ files, onFileSelect, onDeleteFile, onToggleFavorite }: any) 
                         transition: 'transform 0.2s, box-shadow 0.2s',
                         position: 'relative'
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 20px -5px rgba(0,0,0,0.3)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
                     <div className="flex justify-between items-start">
                         <div style={{
@@ -373,7 +377,7 @@ const FileGrid = ({ files, onFileSelect, onDeleteFile, onToggleFavorite }: any) 
                         </p>
                     </div>
 
-                    <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-2 mt-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button className="btn btn-primary btn-sm w-full" onClick={(e) => { e.stopPropagation(); onFileSelect(f); }}>Analyze</button>
                         <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); onDeleteFile(f); }}>
                             <Trash2 size={14} />
@@ -392,8 +396,8 @@ const FileTable = ({ files, groups, onFileSelect, onToggleFavorite, onDeleteFile
                 <th style={{ width: '50px', paddingLeft: '24px' }}><Star size={14} /></th>
                 <th style={{ paddingLeft: '12px' }}>DATASET NAME</th>
                 <th>SIZE</th>
-                <th>CREATED</th>
-                <th>MOVE TO GROUP</th>
+                <th className="mobile-hidden">CREATED</th>
+                <th className="mobile-hidden">GROUP</th>
                 <th style={{ textAlign: 'right', paddingRight: '24px' }}>ACTIONS</th>
             </tr>
         </thead>
@@ -408,15 +412,15 @@ const FileTable = ({ files, groups, onFileSelect, onToggleFavorite, onDeleteFile
                             <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
                                 {f.filename.endsWith('.csv') ? <FileSpreadsheet size={18} /> : <FileText size={18} />}
                             </div>
-                            <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>{f.filename}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px', whiteSpace: 'nowrap', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{f.filename}</span>
                         </div>
                     </td>
                     <td style={{ fontFamily: 'monospace', fontSize: '13px', color: 'var(--text-secondary)' }}>{(f.size / 1024).toFixed(1)} KB</td>
-                    <td style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{new Date(f.createdAt).toLocaleDateString()}</td>
-                    <td onClick={e => e.stopPropagation()}>
+                    <td className="mobile-hidden" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{new Date(f.createdAt).toLocaleDateString()}</td>
+                    <td className="mobile-hidden" onClick={e => e.stopPropagation()}>
                         <select
                             className="input"
-                            style={{ height: '30px', fontSize: '12px', width: '140px', padding: '0 8px' }}
+                            style={{ height: '30px', fontSize: '12px', width: '120px', padding: '0 8px' }}
                             value={f.groupId || ''}
                             onChange={(e) => onUpdateFileGroup(f.id, e.target.value || null)}
                         >
@@ -427,9 +431,9 @@ const FileTable = ({ files, groups, onFileSelect, onToggleFavorite, onDeleteFile
                         </select>
                     </td>
                     <td style={{ textAlign: 'right', paddingRight: '24px' }}>
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex justify-end gap-2">
                             <button className="btn btn-primary btn-sm shimmer-effect" onClick={(e) => { e.stopPropagation(); onFileSelect(f); }}>Analyze</button>
-                            <button className="btn btn-danger btn-sm" style={{ width: '32px' }} onClick={(e) => { e.stopPropagation(); onDeleteFile(f); }}>
+                            <button className="btn btn-danger btn-sm mobile-hidden" style={{ width: '32px' }} onClick={(e) => { e.stopPropagation(); onDeleteFile(f); }}>
                                 <Trash2 size={14} />
                             </button>
                         </div>

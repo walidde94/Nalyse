@@ -1039,7 +1039,8 @@ html {
     display: block !important;
   }
 
-  .desktop-only {
+  .desktop-only,
+  .mobile-hidden {
     display: none !important;
   }
 
@@ -1053,6 +1054,10 @@ html {
 
   .text-h3 {
     font-size: 1.1rem !important;
+  }
+
+  .mobile-text-scale {
+    font-size: clamp(24px, 5vw, 32px) !important;
   }
 
   .card {
