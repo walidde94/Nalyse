@@ -1,0 +1,101 @@
+raw_material_id,name,supplier_id,unit_cost,unit
+RM001,Tomato Paste,S001,2.50,kg
+RM002,Garlic Powder,S009,8.75,kg
+RM003,Onion Powder,S001,6.20,kg
+RM004,Basil Leaves,S002,15.30,kg
+RM005,Oregano,S010,12.80,kg
+RM006,Black Pepper,S009,18.50,kg
+RM007,Red Chili Powder,S003,11.20,kg
+RM008,Cumin Seeds,S009,9.80,kg
+RM009,Coriander Powder,S009,7.90,kg
+RM010,Paprika,S012,10.50,kg
+RM011,Olive Oil,S002,4.20,liter
+RM012,Sunflower Oil,S004,2.80,liter
+RM013,Vinegar,S010,1.90,liter
+RM014,Sugar,S014,1.20,kg
+RM015,Salt,S019,0.80,kg
+RM016,Lemon Juice,S016,3.50,liter
+RM017,Soy Sauce,S015,5.60,liter
+RM018,Fish Sauce,S017,6.80,liter
+RM019,Worcestershire Sauce,S006,7.20,liter
+RM020,Mustard Seeds,S004,8.90,kg
+RM021,Turmeric,S009,9.50,kg
+RM022,Ginger Powder,S009,11.80,kg
+RM023,Cayenne Pepper,S005,13.20,kg
+RM024,Thyme,S010,14.50,kg
+RM025,Rosemary,S010,16.20,kg
+RM026,Bay Leaves,S012,10.80,kg
+RM027,Celery Salt,S001,7.40,kg
+RM028,Honey,S014,12.50,kg
+RM029,Brown Sugar,S014,1.80,kg
+RM030,White Pepper,S003,17.30,kg
+RM031,Green Chili,S005,4.80,kg
+RM032,Jalapeño Peppers,S005,5.20,kg
+RM033,Habanero Peppers,S013,8.60,kg
+RM034,Bell Peppers,S001,3.20,kg
+RM035,Carrots,S001,1.50,kg
+RM036,Celery,S001,2.10,kg
+RM037,Parsley,S004,6.50,kg
+RM038,Cilantro,S005,5.80,kg
+RM039,Mint Leaves,S016,7.20,kg
+RM040,Dill,S007,8.30,kg
+RM041,Tarragon,S010,11.90,kg
+RM042,Sage,S002,10.20,kg
+RM043,Fennel Seeds,S009,9.20,kg
+RM044,Cardamom,S009,28.50,kg
+RM045,Cloves,S008,22.80,kg
+RM046,Cinnamon,S003,14.60,kg
+RM047,Nutmeg,S008,19.40,kg
+RM048,Allspice,S012,12.30,kg
+RM049,Star Anise,S003,16.80,kg
+RM050,Sesame Seeds,S003,7.60,kg
+RM051,Coconut Milk,S003,3.80,liter
+RM052,Tamarind Paste,S009,6.90,kg
+RM053,Miso Paste,S015,9.40,kg
+RM054,Anchovy Paste,S002,11.20,kg
+RM055,Capers,S016,13.50,kg
+RM056,Olives,S016,8.80,kg
+RM057,Sun-dried Tomatoes,S002,12.40,kg
+RM058,Roasted Red Peppers,S011,7.80,kg
+RM059,Chipotle Peppers,S005,10.60,kg
+RM060,Smoked Paprika,S011,14.20,kg
+RM061,Liquid Smoke,S001,8.50,liter
+RM062,Maple Syrup,S014,18.90,liter
+RM063,Molasses,S013,5.40,liter
+RM064,Balsamic Vinegar,S002,9.80,liter
+RM065,Rice Vinegar,S015,4.60,liter
+RM066,Apple Cider Vinegar,S001,3.90,liter
+RM067,Sherry Vinegar,S011,8.20,liter
+RM068,Red Wine,S010,6.50,liter
+RM069,White Wine,S010,5.80,liter
+RM070,Brandy,S010,15.60,liter
+RM071,Rum,S013,12.80,liter
+RM072,Bourbon,S001,18.40,liter
+RM073,Cornstarch,S014,2.40,kg
+RM074,Xanthan Gum,S019,24.50,kg
+RM075,Pectin,S010,16.80,kg
+RM076,Citric Acid,S004,5.60,kg
+RM077,Ascorbic Acid,S004,7.20,kg
+RM078,Sodium Benzoate,S019,4.80,kg
+RM079,Potassium Sorbate,S019,5.20,kg
+RM080,Calcium Chloride,S019,3.40,kg
+RM081,Garlic Fresh,S001,4.20,kg
+RM082,Onion Fresh,S001,2.80,kg
+RM083,Shallots,S010,5.60,kg
+RM084,Leeks,S004,4.40,kg
+RM085,Scallions,S001,3.80,kg
+RM086,Chives,S007,8.60,kg
+RM087,Horseradish,S020,7.40,kg
+RM088,Wasabi Powder,S015,32.50,kg
+RM089,Dijon Mustard,S010,6.80,kg
+RM090,Yellow Mustard,S001,4.20,kg
+RM091,Whole Grain Mustard,S004,7.60,kg
+RM092,Ketchup Base,S001,3.20,kg
+RM093,Tomato Puree,S001,2.80,kg
+RM094,Crushed Tomatoes,S002,3.40,kg
+RM095,Diced Tomatoes,S001,3.60,kg
+RM096,Cherry Tomatoes,S002,5.80,kg
+RM097,Plum Tomatoes,S002,4.60,kg
+RM098,Heirloom Tomatoes,S001,7.20,kg
+RM099,Tomatillos,S005,5.40,kg
+RM100,Passion Fruit Pulp,S013,9.80,kg

@@ -37,6 +37,7 @@ const DeveloperView = React.lazy(() => import('./features/developer/DeveloperVie
 const RoadGraphView = React.lazy(() => import('./features/logistics/RoadGraphView'));
 const AgenticSystemsView = React.lazy(() => import('./features/agentic/AgenticSystemsView').then(m => ({ default: m.AgenticSystemsView })));
 const SelfServiceStudio = React.lazy(() => import('./features/democratization/SelfServiceStudio').then(m => ({ default: m.SelfServiceStudio })));
+const MultiAnalysisView = React.lazy(() => import('./features/analysis/MultiAnalysisView').then(m => ({ default: m.MultiAnalysisView })));
 // const RoadView = React.lazy(() => import('./features/logistics/RoadView').then(m => ({ default: m.RoadView })));
 
 // Loading Component
@@ -768,6 +769,10 @@ function AppContent() {
 
                 {tab.type === 'democracy' && (
                   <SelfServiceStudio files={files} token={token || ''} apiUrl={API_URL} />
+                )}
+
+                {tab.type === 'multi-analysis' && (
+                  <MultiAnalysisView onClose={() => openTab('dashboard', 'Dashboard')} />
                 )}
 
                 {tab.type === 'settings' && (

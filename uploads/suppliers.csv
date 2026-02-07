@@ -1,0 +1,21 @@
+supplier_id,name,country,reliability_score
+S001,FreshFarms Co.,USA,0.95
+S002,Mediterranean Imports,Italy,0.92
+S003,Asian Spice Traders,Thailand,0.88
+S004,European Organics,Germany,0.94
+S005,Latin Harvest,Mexico,0.85
+S006,Pacific Ingredients,Australia,0.91
+S007,Nordic Naturals,Sweden,0.96
+S008,African Exotics,Kenya,0.82
+S009,Indian Spice House,India,0.89
+S010,French Delicacies,France,0.93
+S011,Spanish Essentials,Spain,0.90
+S012,Turkish Treasures,Turkey,0.87
+S013,Brazilian Bounty,Brazil,0.84
+S014,Canadian Crops,Canada,0.94
+S015,Japanese Quality,Japan,0.97
+S016,Greek Goodness,Greece,0.91
+S017,Vietnamese Flavors,Vietnam,0.86
+S018,Moroccan Markets,Morocco,0.83
+S019,Dutch Distributors,Netherlands,0.95
+S020,Polish Produce,Poland,0.88

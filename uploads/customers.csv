@@ -1,0 +1,21 @@
+customer_id,name,segment,region
+C001,Whole Foods Market,Retail,Northeast
+C002,Trader Joe's,Retail,West
+C003,Kroger Supermarkets,Retail,Midwest
+C004,Safeway Stores,Retail,West
+C005,Publix Super Markets,Retail,Southeast
+C006,Restaurant Depot,Foodservice,National
+C007,Sysco Corporation,Foodservice,National
+C008,US Foods,Foodservice,National
+C009,Gordon Food Service,Foodservice,Midwest
+C010,Performance Food Group,Foodservice,Southeast
+C011,Costco Wholesale,Wholesale,National
+C012,Sam's Club,Wholesale,National
+C013,BJ's Wholesale,Wholesale,Northeast
+C014,Amazon Fresh,E-commerce,National
+C015,Instacart Partners,E-commerce,National
+C016,Thrive Market,E-commerce,National
+C017,Regional Grocery Chain,Retail,Southwest
+C018,Specialty Foods Distributor,Specialty,West
+C019,Gourmet Market Group,Specialty,Northeast
+C020,International Export Partners,Export,International

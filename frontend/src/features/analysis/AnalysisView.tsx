@@ -1163,20 +1163,21 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                 <div className="flex-1" style={{ overflowY: 'auto' }} id="analysis-content">
                     {/* Top Header - Moved Inside for Scrollbar Alignment */}
                     {/* ===== Enterprise Global Header (Parity with Kibana) ===== */}
-                    <div className={`flex justify-between items-center ${activeTab === 'presentation' ? 'hidden' : 'flex'}`} style={{
-                        height: '48px',
-                        padding: '0 24px',
+                    <div className={`flex flex-col md:flex-row justify-between items-start md:items-center ${activeTab === 'presentation' ? 'hidden' : 'flex'}`} style={{
+                        minHeight: '48px',
+                        padding: '8px 16px',
                         background: 'var(--bg-sidebar)',
                         borderBottom: '1px solid var(--border-subtle)',
                         fontSize: '11px',
                         fontWeight: 'bold',
                         color: 'var(--text-tertiary)',
-                        letterSpacing: '0.05em'
+                        letterSpacing: '0.05em',
+                        gap: '8px'
                     }}>
-                        <div className="flex items-center gap-6">
+                        <div className="flex flex-wrap items-center gap-4 md:gap-6">
                             <button
                                 onClick={onClose}
-                                className="btn btn-ghost hover-lift active-press flex items-center gap-2 mr-4 group/back"
+                                className="btn btn-ghost hover-lift active-press flex items-center gap-2 mr-0 group/back"
                                 style={{
                                     border: '1px solid rgba(255,255,255,0.1)',
                                     borderRadius: '12px',
@@ -1186,47 +1187,40 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                 }}
                             >
                                 <ArrowLeft size={16} className="group-hover/back:-translate-x-1 transition-transform" />
-                                <span className="label-premium !opacity-100 !text-[12px]">Back to Files</span>
+                                <span className="label-premium !opacity-100 !text-[12px]">Back</span>
                             </button>
                             <div className="flex items-center gap-2 mr-4 group cursor-default">
                                 <div className="w-5 h-5 bg-[var(--primary)] rounded flex items-center justify-center text-white font-black active-press transition-transform group-hover:scale-110">N</div>
-                                <span className="label-premium" style={{ color: 'var(--text-primary)' }}>STRATEGIC ANALYTICS</span>
+                                <span className="label-premium hidden sm:inline" style={{ color: 'var(--text-primary)' }}>STRATEGIC ANALYTICS</span>
                             </div>
-                            <div className="flex items-center gap-4 opacity-50">
+                            <div className="flex items-center gap-4 opacity-50 hidden sm:flex">
                                 <span className="label-premium">WORKSPACE</span>
                                 <div className="w-1 h-1 rounded-full bg-current opacity-20"></div>
                                 <span className="label-premium text-[var(--text-primary)]">CORE ANALYZER</span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <span className="label-premium opacity-40">ENGINE VERSION: 2.1.0-ENTERPRISE</span>
+                        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+                            <span className="label-premium opacity-40 hidden md:inline">VERSION: 2.1.0-E</span>
                             <div className="flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded border border-success/20">
                                 <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-[0_0_5px_var(--success)]"></div>
-                                <span className="label-premium !opacity-100 italic animate-breathe">LIVE CONNECTION</span>
+                                <span className="label-premium !opacity-100 italic animate-breathe">LIVE</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className={`flex justify-between items-center ${activeTab === 'presentation' ? 'hidden' : 'flex'}`} style={{
-                        height: '72px',
-                        padding: '0 24px',
+                    <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center ${activeTab === 'presentation' ? 'hidden' : 'flex'}`} style={{
+                        minHeight: '72px',
+                        padding: '12px 16px',
                         borderBottom: '1px solid var(--border-subtle)',
                         backdropFilter: 'blur(12px)',
                         background: 'var(--bg-surface)',
                         position: 'sticky',
                         top: 0,
                         zIndex: 10,
-                        width: '100%'
+                        width: '100%',
+                        gap: '12px'
                     }}>
                         <div className="flex items-center gap-4">
-                            <button
-                                onClick={onClose}
-                                className="btn btn-ghost btn-sm hover-lift active-press flex items-center justify-center !w-8 !h-8 mr-2 group/back2"
-                                style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px' }}
-                                title="Back to Files"
-                            >
-                                <ArrowLeft size={16} className="group-hover/back2:-translate-x-1 transition-transform" />
-                            </button>
                             <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>
                                 <FileText size={20} />
                             </div>
@@ -1236,9 +1230,9 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                             <button
-                                className="btn btn-secondary btn-sm hover-lift active-press"
+                                className="btn btn-secondary btn-sm hover-lift active-press whitespace-nowrap"
                                 onClick={() => {
                                     if (!localData || localData.length === 0) return alert('No data to export');
                                     const csvContent = "data:text/csv;charset=utf-8,"
@@ -1257,7 +1251,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                             </button>
 
                             <button
-                                className="btn btn-primary btn-sm hover-lift active-press shadow-glow-primary"
+                                className="btn btn-primary btn-sm hover-lift active-press shadow-glow-primary whitespace-nowrap"
                                 onClick={() => exportToPDF(analysis, 'Nalyse_Report')}
                             >
                                 <Download size={14} className="mr-1" />
@@ -1309,7 +1303,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                         />
                     </div>
 
-                    <div style={{ width: '100%', padding: '24px' }}>
+                    <div style={{ width: '100%', padding: 'clamp(16px, 3vw, 24px)' }}>
 
                         {activeTab === 'overview' && (
                             <div className="flex-col gap-6 fade-in">
@@ -1452,11 +1446,11 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                         {analysis.summary.columnTypes && Object.entries(analysis.summary.columnTypes).some(([_, type]) => type === 'date') && (
                                             <div className="mt-6">
                                                 <h4 className="text-h3 mb-4">Filter by Date Range</h4>
-                                                <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                                                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
                                                     <div className="flex-col gap-2">
                                                         <label className="text-sm font-medium">Date Column</label>
                                                         <select
-                                                            className="input"
+                                                            className="input w-full"
                                                             value={dateRange.column || ''}
                                                             onChange={(e) => setDateRange(prev => ({ ...prev, column: e.target.value }))}
                                                         >
@@ -1473,7 +1467,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                                         <label className="text-sm font-medium">Start Date</label>
                                                         <input
                                                             type="date"
-                                                            className="input"
+                                                            className="input w-full"
                                                             value={dateRange.start || ''}
                                                             onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
                                                             disabled={!dateRange.column}
@@ -1483,7 +1477,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                                         <label className="text-sm font-medium">End Date</label>
                                                         <input
                                                             type="date"
-                                                            className="input"
+                                                            className="input w-full"
                                                             value={dateRange.end || ''}
                                                             onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
                                                             disabled={!dateRange.column}

@@ -1,0 +1,51 @@
+sauce_id,name,category,selling_price
+SC001,Classic Marinara,Italian,8.99
+SC002,Spicy Arrabbiata,Italian,9.49
+SC003,Creamy Alfredo,Italian,10.99
+SC004,Pesto Genovese,Italian,12.49
+SC005,Bolognese Meat Sauce,Italian,11.99
+SC006,Sweet BBQ Original,BBQ,7.99
+SC007,Smoky BBQ Mesquite,BBQ,8.49
+SC008,Spicy Chipotle BBQ,BBQ,8.99
+SC009,Honey Mustard BBQ,BBQ,9.49
+SC010,Carolina Gold BBQ,BBQ,9.99
+SC011,Mild Salsa Verde,Mexican,6.99
+SC012,Medium Salsa Roja,Mexican,6.99
+SC013,Hot Habanero Salsa,Mexican,7.49
+SC014,Mango Habanero,Mexican,8.99
+SC015,Chipotle Lime,Mexican,7.99
+SC016,Sweet Chili Thai,Asian,7.49
+SC017,Sriracha Hot Sauce,Asian,6.49
+SC018,Teriyaki Glaze,Asian,8.99
+SC019,Hoisin Sauce,Asian,7.99
+SC020,Pad Thai Sauce,Asian,9.49
+SC021,Garlic Aioli,Gourmet,11.49
+SC022,Truffle Cream,Gourmet,15.99
+SC023,Roasted Red Pepper,Gourmet,10.49
+SC024,Sun-dried Tomato Pesto,Gourmet,13.49
+SC025,Lemon Herb,Gourmet,9.99
+SC026,Classic Ketchup,American,4.99
+SC027,Spicy Ketchup,American,5.49
+SC028,Yellow Mustard,American,3.99
+SC029,Dijon Mustard,American,5.99
+SC030,Honey Mustard,American,6.49
+SC031,Ranch Dressing,American,6.99
+SC032,Buffalo Wing Sauce,American,7.49
+SC033,Thousand Island,American,6.49
+SC034,Blue Cheese Dressing,American,7.99
+SC035,Caesar Dressing,American,7.49
+SC036,Tikka Masala,Indian,9.99
+SC037,Butter Chicken,Indian,10.49
+SC038,Vindaloo Curry,Indian,9.49
+SC039,Korma Sauce,Indian,10.99
+SC040,Tandoori Marinade,Indian,8.99
+SC041,Peri Peri Hot,African,8.49
+SC042,Harissa Paste,African,9.99
+SC043,Chimichurri,South American,8.99
+SC044,Aji Verde,South American,7.99
+SC045,Mole Poblano,Mexican,12.99
+SC046,Ponzu Sauce,Asian,9.99
+SC047,Gochujang Sauce,Asian,10.49
+SC048,Satay Peanut Sauce,Asian,8.49
+SC049,Tzatziki Sauce,Mediterranean,7.99
+SC050,Romesco Sauce,Mediterranean,11.99

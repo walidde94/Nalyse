@@ -16,7 +16,8 @@ import {
     FileCheck,
     PanelLeftClose,
     PanelLeftOpen,
-    Sparkles
+    Sparkles,
+    Network
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -35,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 { id: 'dashboard', label: t('nav.workspace'), icon: <LayoutDashboard size={20} /> },
                 { id: 'sources', label: 'Data Connectors', icon: <Database size={20} /> },
                 { id: 'correlate', label: t('nav.correlation'), icon: <Link2 size={20} /> },
+                { id: 'multi-analysis', label: 'Multi-Dataset Analysis', icon: <Network size={20} /> },
                 { id: 'migration', label: 'Data Migration', icon: <ArrowRightLeft size={20} /> },
             ]
         },
