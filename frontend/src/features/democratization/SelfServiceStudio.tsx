@@ -76,7 +76,7 @@ const DEPARTMENTS: Department[] = [
     }
 ];
 
-export const SelfServiceStudio = ({ files, token, apiUrl }: { files: any[], token: string, apiUrl: string }) => {
+export const SelfServiceStudio = ({ files, token, apiUrl, runWithProgress }: { files: any[], token: string, apiUrl: string, runWithProgress?: (fn: () => Promise<void | { type: string; title: string; data: any }>) => Promise<void> }) => {
     const [selectedDept, setSelectedDept] = useState<Department | null>(null);
     const [selectedFileId, setSelectedFileId] = useState<string>('');
     const [query, setQuery] = useState('');
@@ -102,68 +102,68 @@ export const SelfServiceStudio = ({ files, token, apiUrl }: { files: any[], toke
 
     const fetchAnalysis = async (customQuery?: string) => {
         if (!selectedFileId) return;
-        setIsGenerating(true);
-        setInsight(null);
 
-        try {
-            const file = files.find(f => f.id === selectedFileId);
-            if (!file) return;
+        const worker = async () => {
+            setIsGenerating(true);
+            setInsight(null);
 
-            addToast(`Synthesizing intelligence from ${file.filename}...`, 'info');
+            try {
+                const file = files.find(f => f.id === selectedFileId);
+                if (!file) return;
 
-            const response = await fetch(`${apiUrl}/api/files/${selectedFileId}/analyze`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) throw new Error('Neural formulation interrupted.');
-
-            const analysis = await response.json();
-            setActiveAnalysis(analysis);
-            setFileStats({ rows: analysis.summary?.rows || 0, cols: analysis.summary?.columns || 0 });
-
-            // Intelligent Matching Strategy
-            let targetOption = null;
-
-            if (customQuery) {
-                // If query is provided, fuzzy match against options
-                const terms = [customQuery.toLowerCase(), ...getSynonyms(customQuery.toLowerCase())];
-                targetOption = analysis.options?.find((opt: any) =>
-                    terms.some(term => opt.title.toLowerCase().includes(term) || opt.description?.toLowerCase().includes(term))
-                );
-            }
-
-            // Default to the highest confidence insight if no query or no match
-            if (!targetOption && analysis.options?.length > 0) {
-                targetOption = analysis.options[0]; // Best insight by default
-            }
-
-            if (targetOption) {
-                setInsight({
-                    data: targetOption.data,
-                    type: targetOption.chartType === 'line' ? 'area' : targetOption.chartType,
-                    title: targetOption.title,
-                    description: targetOption.description
+                const response = await fetch(`${apiUrl}/api/files/${selectedFileId}/analyze`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                addToast('Real-time intelligence dashboard active.', 'success');
-            } else {
-                addToast('Analysis complete. No visual patterns detected in this dataset.', 'info');
-            }
 
-        } catch (err: any) {
-            console.error('Analysis failed:', err);
-            addToast('Failed to analyze dataset. Please ensure file format is valid.', 'error');
-        } finally {
-            setIsGenerating(false);
+                if (!response.ok) throw new Error('Neural formulation interrupted.');
+
+                const analysis = await response.json();
+                setActiveAnalysis(analysis);
+                setFileStats({ rows: analysis.summary?.rows || 0, cols: analysis.summary?.columns || 0 });
+
+                let targetOption = null;
+                if (customQuery) {
+                    const terms = [customQuery.toLowerCase(), ...getSynonyms(customQuery.toLowerCase())];
+                    targetOption = analysis.options?.find((opt: any) =>
+                        terms.some(term => opt.title.toLowerCase().includes(term) || opt.description?.toLowerCase().includes(term))
+                    );
+                }
+
+                if (!targetOption && analysis.options?.length > 0) {
+                    targetOption = analysis.options[0];
+                }
+
+                if (targetOption) {
+                    setInsight({
+                        data: targetOption.data,
+                        type: targetOption.chartType === 'line' ? 'area' : targetOption.chartType,
+                        title: targetOption.title,
+                        description: targetOption.description
+                    });
+                } else {
+                    addToast('Analysis complete. No visual patterns detected.', 'info');
+                }
+            } catch (err: any) {
+                console.error('Analysis failed:', err);
+                addToast('Failed to analyze dataset.', 'error');
+            } finally {
+                setIsGenerating(false);
+            }
+        };
+
+        if (runWithProgress) {
+            await runWithProgress(worker);
+        } else {
+            await worker();
         }
     };
 
     const handleRunAudit = async () => {
         if (!selectedFileId) return;
-        setIsAuditing(true);
-        addToast('Running multi-dimensional integrity audit...', 'info');
 
-        // Simulate deep audit
-        setTimeout(() => {
+        const worker = async () => {
+            setIsAuditing(true);
+            await new Promise(r => setTimeout(r, 2000));
             setAuditResults({
                 completeness: 98.4,
                 anomalies: 12,
@@ -175,7 +175,13 @@ export const SelfServiceStudio = ({ files, token, apiUrl }: { files: any[], toke
             });
             setIsAuditing(false);
             addToast('Audit complete. Intelligence quality verified.', 'success');
-        }, 2000);
+        };
+
+        if (runWithProgress) {
+            await runWithProgress(worker);
+        } else {
+            await worker();
+        }
     };
 
     // Load analysis immediately when file is selected

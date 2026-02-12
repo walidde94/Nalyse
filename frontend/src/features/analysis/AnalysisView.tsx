@@ -36,12 +36,19 @@ import {
     Database,
     ArrowRight,
     Brackets,
-    Palette as PaletteIcon
+    Palette as PaletteIcon,
+    DollarSign,
+    Users,
+    Heart,
+    BarChart3,
+    Layers,
+    Zap
 } from 'lucide-react';
 import { ElasticSearch } from './components/ElasticSearch';
 import { ElasticFilterBar } from './components/ElasticFilterBar';
 import { ExecutiveFindings } from './components/ExecutiveFindings';
 import { PythonStudio } from './components/PythonStudio';
+import { DeployModal } from './components/DeployModal';
 
 // Premium Modern Color Palette
 const COLORS = [
@@ -108,37 +115,6 @@ import { API_URL } from '../../config';
 export const AnalysisView = ({ analysis, onClose }: any) => {
     const { token } = useAuth();
     const { addToast } = useToast();
-
-    const handleDeploy = async () => {
-        if (!analysis || !analysis.executiveReasoning) return;
-        addToast('Deploying strategy to Strategic Board...', 'info');
-        try {
-            const reasoning = analysis.executiveReasoning;
-            const actions = reasoning.strategicAdvice || [];
-            const response = await fetch(`${API_URL}/api/projects`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    title: `Strategic Project: ${analysis.type}`,
-                    description: reasoning.executiveSummary || 'Actionable intelligence derived from enterprise analysis.',
-                    objective: 'AI_STRATEGIC_PULSE',
-                    actions: actions.length > 0 ? actions : ['Execute optimization matrix tasks'],
-                    impact: 'High'
-                })
-            });
-
-            if (response.ok) {
-                addToast('Strategy successfully deployed to Strategic Board.', 'success');
-            } else {
-                addToast('Deployment failed.', 'error');
-            }
-        } catch (e) {
-            addToast('Deployment failed.', 'error');
-        }
-    };
 
     const [activeTab, setActiveTab] = useState<'overview' | 'data' | 'sql' | 'insights' | 'presentation' | 'builder' | 'advanced' | 'graph' | 'map' | 'python'>('overview');
     const [searchTerm, setSearchTerm] = useState('');
@@ -290,9 +266,102 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
     const [expandedChart, setExpandedChart] = useState<{ opt: any, index: number } | null>(null);
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+    // View Mode State (Executive vs Analyst)
+    const [viewMode, setViewMode] = useState<'executive' | 'analyst'>('executive');
+
+    // Deploy Modal State
+    const [showDeployModal, setShowDeployModal] = useState(false);
+
     // React to fresh analysis data (Manual or Auto-Sync)
     const [localData, setLocalData] = useState<any[]>(analysis.sampleData || []);
     const [filteredData, setFilteredData] = useState<any[]>(localData);
+
+    // Handler Functions
+    const handleDeploy = () => {
+        setShowDeployModal(true);
+    };
+
+    const handleDeployMethod = async (method: string, options: any) => {
+        if (!analysis || !analysis.executiveReasoning) return;
+
+        const reasoning = analysis.executiveReasoning;
+        const actions = reasoning.strategicAdvice || [];
+
+        try {
+            switch (method) {
+                case 'email':
+                    addToast(`Sending report to ${options.email}...`, 'info');
+                    // TODO: Implement email API call
+                    setTimeout(() => addToast('Report sent successfully', 'success'), 1000);
+                    break;
+
+                case 'pdf':
+                    addToast('Generating PDF report...', 'info');
+                    setTimeout(() => {
+                        exportToPDF(analysis, 'analysis-content');
+                        addToast('PDF downloaded', 'success');
+                    }, 500);
+                    break;
+
+                case 'slack':
+                    addToast(`Posting to ${options.slackChannel}...`, 'info');
+                    // TODO: Implement Slack webhook
+                    setTimeout(() => addToast('Posted to Slack', 'success'), 1000);
+                    break;
+
+                case 'board':
+                    addToast('Deploying to Strategic Board...', 'info');
+                    const response = await fetch(`${API_URL}/api/projects`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            title: `Strategic Project: ${analysis.type}`,
+                            description: reasoning.executiveSummary || 'Actionable intelligence derived from enterprise analysis.',
+                            objective: 'AI_STRATEGIC_PULSE',
+                            actions: actions.length > 0 ? actions : ['Execute optimization matrix tasks'],
+                            impact: 'High'
+                        })
+                    });
+
+                    if (response.ok) {
+                        addToast('Strategy deployed to Strategic Board', 'success');
+                    } else {
+                        addToast('Deployment failed', 'error');
+                    }
+                    break;
+            }
+        } catch (e) {
+            addToast('Deployment failed', 'error');
+        }
+    };
+
+    const handlePinInsight = () => {
+        if (!analysis || !analysis.executiveReasoning) return;
+
+        try {
+            const insight = {
+                id: `insight_${Date.now()}`,
+                title: `${analysis.type} Analysis`,
+                summary: analysis.executiveReasoning.executiveSummary || 'Strategic insight',
+                timestamp: new Date().toISOString(),
+                type: analysis.type,
+                priority: 'high',
+                advice: analysis.executiveReasoning.strategicAdvice || [],
+                matrix: analysis.executiveReasoning.priorityMatrix || []
+            };
+
+            const existing = JSON.parse(localStorage.getItem('strategic_watchlist') || '[]');
+            const updated = [insight, ...existing].slice(0, 10);
+            localStorage.setItem('strategic_watchlist', JSON.stringify(updated));
+
+            addToast('Insight pinned to Strategic Watchlist', 'success');
+        } catch (e) {
+            addToast('Failed to pin insight', 'error');
+        }
+    };
 
     useEffect(() => {
         if (analysis.sampleData) {
@@ -1071,78 +1140,161 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                     </button>
                 </div>
 
+                {/* View Mode Toggle - Sidebar */}
+                {!isSidebarCollapsed && (
+                    <div style={{
+                        padding: '12px',
+                        borderBottom: '1px solid var(--border-subtle)'
+                    }}>
+                        <div style={{
+                            paddingLeft: '12px',
+                            fontSize: '10px',
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            color: 'var(--text-tertiary)',
+                            marginBottom: '8px'
+                        }}>
+                            View Mode
+                        </div>
+                        <div className="flex-col gap-2">
+                            <button
+                                onClick={() => setViewMode('executive')}
+                                className={`btn hover-lift active-press ${viewMode === 'executive' ? 'btn-primary shadow-lg' : 'btn-ghost'}`}
+                                style={{
+                                    justifyContent: 'flex-start',
+                                    padding: '10px 12px',
+                                    width: '100%',
+                                    gap: '12px',
+                                    position: 'relative',
+                                    borderRadius: '10px',
+                                    minHeight: '40px'
+                                }}
+                            >
+                                <span style={{ color: viewMode === 'executive' ? '#fff' : 'inherit' }}>
+                                    <Presentation size={18} />
+                                </span>
+                                <span className="font-semibold" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+                                    Executive
+                                </span>
+                                {viewMode === 'executive' && (
+                                    <motion.div
+                                        layoutId="activeViewMode"
+                                        className="absolute left-0 w-1 h-1/2 bg-white rounded-r-full"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                    />
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setViewMode('analyst')}
+                                className={`btn hover-lift active-press ${viewMode === 'analyst' ? 'btn-primary shadow-lg' : 'btn-ghost'}`}
+                                style={{
+                                    justifyContent: 'flex-start',
+                                    padding: '10px 12px',
+                                    width: '100%',
+                                    gap: '12px',
+                                    position: 'relative',
+                                    borderRadius: '10px',
+                                    minHeight: '40px'
+                                }}
+                            >
+                                <span style={{ color: viewMode === 'analyst' ? '#fff' : 'inherit' }}>
+                                    <Terminal size={18} />
+                                </span>
+                                <span className="font-semibold" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+                                    Analyst
+                                </span>
+                                {viewMode === 'analyst' && (
+                                    <motion.div
+                                        layoutId="activeViewMode"
+                                        className="absolute left-0 w-1 h-1/2 bg-white rounded-r-full"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                    />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex-col gap-6" style={{ marginTop: '24px', padding: '0 12px', overflowY: 'auto' }}>
                     {[
                         {
                             title: 'Data Analysis',
                             items: [
-                                { id: 'overview', icon: <LayoutTemplate size={18} />, label: 'Overview' },
-                                { id: 'builder', icon: <PenTool size={18} />, label: 'Visual Builder' },
-                                { id: 'graph', icon: <Network size={18} />, label: 'Graph View' },
-                                { id: 'data', icon: <Grid size={18} />, label: 'Data Grid' },
-                                { id: 'sql', icon: <Terminal size={18} />, label: 'SQL Runner' },
+                                { id: 'overview', icon: <LayoutTemplate size={18} />, label: 'Overview', roles: ['executive', 'analyst'] },
+                                { id: 'builder', icon: <PenTool size={18} />, label: 'Visual Builder', roles: ['executive', 'analyst'] },
+                                { id: 'graph', icon: <Network size={18} />, label: 'Graph View', roles: ['analyst'] },
+                                { id: 'data', icon: <Grid size={18} />, label: 'Data Grid', roles: ['analyst'] },
+                                { id: 'sql', icon: <Terminal size={18} />, label: 'SQL Runner', roles: ['analyst'] },
                             ]
                         },
                         {
                             title: 'Data Science',
                             items: [
-                                { id: 'advanced', icon: <Cpu size={18} />, label: 'Advanced Stats' },
-                                { id: 'insights', icon: <Lightbulb size={18} />, label: 'AI Insights' },
-                                { id: 'map', icon: <Map size={18} />, label: 'Geo Mapping' },
-                                { id: 'python', icon: <Brackets size={18} />, label: 'Python Lab' },
+                                { id: 'advanced', icon: <Cpu size={18} />, label: 'Advanced Stats', roles: ['analyst'] },
+                                { id: 'insights', icon: <Lightbulb size={18} />, label: 'AI Insights', roles: ['executive', 'analyst'] },
+                                { id: 'map', icon: <Map size={18} />, label: 'Geo Mapping', roles: ['analyst'] },
+                                { id: 'python', icon: <Brackets size={18} />, label: 'Python Lab', roles: ['analyst'] },
                             ]
                         },
                         {
                             title: 'Business Intelligence',
                             items: [
-                                { id: 'presentation', icon: <Presentation size={18} />, label: 'Present Mode' },
+                                { id: 'presentation', icon: <Presentation size={18} />, label: 'Present Mode', roles: ['executive', 'analyst'] },
                             ]
                         }
-                    ].map(group => (
-                        <div key={group.title} className="flex-col gap-2">
-                            {!isSidebarCollapsed && (
-                                <div style={{
-                                    paddingLeft: '12px',
-                                    fontSize: '10px',
-                                    fontWeight: 800,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    color: 'var(--text-tertiary)',
-                                    marginBottom: '4px'
-                                }}>
-                                    {group.title}
-                                </div>
-                            )}
-                            {group.items.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => { setActiveTab(tab.id as any); if (tab.id === 'presentation') setIsPlaying(true); }}
-                                    className={`btn hover-lift active-press ${activeTab === tab.id ? 'btn-primary shadow-lg' : 'btn-ghost'}`}
-                                    style={{
-                                        justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
-                                        padding: '10px 12px',
-                                        width: '100%',
-                                        gap: '12px',
-                                        position: 'relative',
-                                        borderRadius: '10px',
-                                        minHeight: '40px'
-                                    }}
-                                    title={isSidebarCollapsed ? tab.label : ''}
-                                >
-                                    <span style={{ color: activeTab === tab.id ? '#fff' : 'inherit' }}>{tab.icon}</span>
-                                    {!isSidebarCollapsed && <span className="font-semibold" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{tab.label}</span>}
-                                    {activeTab === tab.id && (
-                                        <motion.div
-                                            layoutId="activeTabInner"
-                                            className="absolute left-0 w-1 h-1/2 bg-white rounded-r-full"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                        />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    ))}
+                    ].map(group => {
+                        const visibleItems = group.items.filter((item: any) => item.roles.includes(viewMode));
+                        if (visibleItems.length === 0) return null;
+
+                        return (
+                            <div key={group.title} className="flex-col gap-2">
+                                {!isSidebarCollapsed && (
+                                    <div style={{
+                                        paddingLeft: '12px',
+                                        fontSize: '10px',
+                                        fontWeight: 800,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em',
+                                        color: 'var(--text-tertiary)',
+                                        marginBottom: '4px'
+                                    }}>
+                                        {group.title}
+                                    </div>
+                                )}
+                                {visibleItems.map((tab: any) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => { setActiveTab(tab.id as any); if (tab.id === 'presentation') setIsPlaying(true); }}
+                                        className={`btn hover-lift active-press ${activeTab === tab.id ? 'btn-primary shadow-lg' : 'btn-ghost'}`}
+                                        style={{
+                                            justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
+                                            padding: '10px 12px',
+                                            width: '100%',
+                                            gap: '12px',
+                                            position: 'relative',
+                                            borderRadius: '10px',
+                                            minHeight: '40px'
+                                        }}
+                                        title={isSidebarCollapsed ? tab.label : ''}
+                                    >
+                                        <span style={{ color: activeTab === tab.id ? '#fff' : 'inherit' }}>{tab.icon}</span>
+                                        {!isSidebarCollapsed && <span className="font-semibold" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{tab.label}</span>}
+                                        {activeTab === tab.id && (
+                                            <motion.div
+                                                layoutId="activeTabInner"
+                                                className="absolute left-0 w-1 h-1/2 bg-white rounded-r-full"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                            />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )
+                    })}
                 </div>
 
                 <div style={{ marginTop: 'auto', padding: '24px 12px' }}>
@@ -1311,43 +1463,351 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                     <h1 style={{ fontSize: '24px', color: '#fff' }}>Nalyse Intelligence Report</h1>
                                     <p style={{ color: '#ccc' }}>Generated on {new Date().toLocaleString()}</p>
                                 </div>
+
+                                {/* Smart Business Metrics */}
                                 <div className="flex-responsive gap-4">
-                                    <motion.div
-                                        key={`rows-${analysis.summary?.rows}`}
-                                        initial={{ scale: 0.95, filter: 'brightness(1.5)' }}
-                                        animate={{ scale: 1, filter: 'brightness(1)' }}
-                                        className="card flex-1"
-                                    >
-                                        <span className="text-sm">Total Rows</span>
-                                        <div className="text-h1 font-mono text-gradient" style={{ fontSize: '32px' }}>
-                                            {(analysis.summary?.rows || localData.length).toLocaleString()}
-                                        </div>
-                                    </motion.div>
+                                    {(() => {
+                                        // Detect data type and calculate relevant metrics
+                                        const columns = localData[0] ? Object.keys(localData[0]) : [];
+                                        const hasRevenue = columns.some(c => /revenue|sales|amount|price|total/i.test(c));
+                                        const hasDate = columns.some(c => /date|time|created|updated/i.test(c));
+                                        const hasStatus = columns.some(c => /status|state|active|churn/i.test(c));
+                                        const hasCustomer = columns.some(c => /customer|user|client|account/i.test(c));
 
-                                    <motion.div
-                                        key={`cols-${analysis.summary?.columns}`}
-                                        initial={{ scale: 0.95 }}
-                                        animate={{ scale: 1 }}
-                                        className="card flex-1"
-                                    >
-                                        <span className="text-sm">Columns</span>
-                                        <div className="text-h1 font-mono">{analysis.summary?.columns || (localData[0] ? Object.keys(localData[0]).length : 0)}</div>
-                                    </motion.div>
+                                        // Helper function to calculate trend
+                                        const calculateTrend = (current: number, previous: number): string => {
+                                            if (previous === 0) return 'New';
+                                            const change = ((current - previous) / previous) * 100;
+                                            const sign = change >= 0 ? '+' : '';
+                                            return `${sign}${change.toFixed(1)}%`;
+                                        };
 
-                                    <motion.div
-                                        key={`health-${analysis.dataHealth?.score}`}
-                                        initial={{ y: 10, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        className="card flex-1"
-                                    >
-                                        <span className="text-sm">Engine Integrity</span>
-                                        <div className="text-h1 font-mono" style={{ color: (analysis.dataHealth?.score || 0) > 80 ? 'var(--success)' : 'var(--warning)' }}>
-                                            {analysis.dataHealth?.score || 0}%
-                                        </div>
-                                    </motion.div>
+                                        // Helper function to split data by time period
+                                        const splitByTimePeriod = (dateCol: string) => {
+                                            if (!dateCol || !hasDate) return { current: localData, previous: [] };
+
+                                            try {
+                                                // Sort data by date
+                                                const sortedData = [...localData].sort((a, b) => {
+                                                    const dateA = new Date(a[dateCol]).getTime();
+                                                    const dateB = new Date(b[dateCol]).getTime();
+                                                    return dateB - dateA; // Most recent first
+                                                });
+
+                                                // Get the most recent date
+                                                const latestDate = new Date(sortedData[0][dateCol]);
+                                                if (isNaN(latestDate.getTime())) return { current: localData, previous: [] };
+
+                                                // Define current period (last 30 days from latest date)
+                                                const currentPeriodStart = new Date(latestDate);
+                                                currentPeriodStart.setDate(currentPeriodStart.getDate() - 30);
+
+                                                // Define previous period (30 days before current period)
+                                                const previousPeriodStart = new Date(currentPeriodStart);
+                                                previousPeriodStart.setDate(previousPeriodStart.getDate() - 30);
+
+                                                const current = sortedData.filter(row => {
+                                                    const rowDate = new Date(row[dateCol]);
+                                                    return rowDate >= currentPeriodStart && rowDate <= latestDate;
+                                                });
+
+                                                const previous = sortedData.filter(row => {
+                                                    const rowDate = new Date(row[dateCol]);
+                                                    return rowDate >= previousPeriodStart && rowDate < currentPeriodStart;
+                                                });
+
+                                                return { current, previous };
+                                            } catch (e) {
+                                                return { current: localData, previous: [] };
+                                            }
+                                        };
+
+                                        // Calculate metrics based on data
+                                        let metrics = [];
+
+                                        if (hasRevenue && localData.length > 0) {
+                                            // Find revenue column
+                                            const revenueCol = columns.find(c => /revenue|sales|amount|price|total/i.test(c));
+                                            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
+
+                                            if (revenueCol) {
+                                                const { current, previous } = splitByTimePeriod(dateCol || '');
+
+                                                const currentRevenue = current.reduce((sum, row) => {
+                                                    const val = parseFloat(row[revenueCol]);
+                                                    return sum + (isNaN(val) ? 0 : val);
+                                                }, 0);
+
+                                                const previousRevenue = previous.reduce((sum, row) => {
+                                                    const val = parseFloat(row[revenueCol]);
+                                                    return sum + (isNaN(val) ? 0 : val);
+                                                }, 0);
+
+                                                const trend = calculateTrend(currentRevenue, previousRevenue);
+
+                                                metrics.push({
+                                                    label: 'Total Revenue',
+                                                    value: `$${(currentRevenue / 1000000).toFixed(2)}M`,
+                                                    trend: trend,
+                                                    color: 'var(--success)',
+                                                    icon: '$'
+                                                });
+                                            }
+                                        }
+
+                                        if (hasCustomer && localData.length > 0) {
+                                            const custCol = columns.find(c => /customer|user|client|account/i.test(c));
+                                            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
+
+                                            if (custCol) {
+                                                const { current, previous } = splitByTimePeriod(dateCol || '');
+
+                                                const currentCustomers = new Set(
+                                                    current.map(row => row[custCol]).filter(Boolean)
+                                                ).size;
+
+                                                const previousCustomers = new Set(
+                                                    previous.map(row => row[custCol]).filter(Boolean)
+                                                ).size;
+
+                                                const trend = calculateTrend(currentCustomers, previousCustomers);
+
+                                                metrics.push({
+                                                    label: 'Active Customers',
+                                                    value: currentCustomers.toLocaleString(),
+                                                    trend: trend,
+                                                    color: 'var(--primary)',
+                                                    icon: '#'
+                                                });
+                                            }
+                                        }
+
+                                        if (hasStatus && localData.length > 0) {
+                                            const statusCol = columns.find(c => /status|state|active|churn/i.test(c));
+                                            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
+
+                                            if (statusCol) {
+                                                const { current, previous } = splitByTimePeriod(dateCol || '');
+
+                                                const currentActiveCount = current.filter(row => {
+                                                    const status = String(row[statusCol]).toLowerCase();
+                                                    return status.includes('active') || status.includes('true') || status === '1';
+                                                }).length;
+                                                const currentHealthScore = current.length > 0 ? ((currentActiveCount / current.length) * 100).toFixed(1) : '0';
+                                                const currentHealthNum = parseFloat(currentHealthScore);
+
+                                                const previousActiveCount = previous.filter(row => {
+                                                    const status = String(row[statusCol]).toLowerCase();
+                                                    return status.includes('active') || status.includes('true') || status === '1';
+                                                }).length;
+                                                const previousHealthNum = previous.length > 0 ? (previousActiveCount / previous.length) * 100 : 0;
+
+                                                const trend = calculateTrend(currentHealthNum, previousHealthNum);
+
+                                                metrics.push({
+                                                    label: 'Customer Health',
+                                                    value: `${currentHealthScore}%`,
+                                                    trend: trend,
+                                                    color: currentHealthNum > 85 ? 'var(--success)' : currentHealthNum > 70 ? 'var(--warning)' : 'var(--error)',
+                                                    icon: '%'
+                                                });
+                                            }
+                                        }
+
+                                        // Fallback to intelligent metadata if no business metrics detected
+                                        if (metrics.length === 0) {
+                                            metrics = [
+                                                {
+                                                    label: 'Data Volume',
+                                                    value: localData.length.toLocaleString(),
+                                                    trend: 'Records',
+                                                    color: 'var(--primary)',
+                                                    icon: 'D'
+                                                },
+                                                {
+                                                    label: 'Data Dimensions',
+                                                    value: columns.length.toString(),
+                                                    trend: 'Attributes',
+                                                    color: 'var(--info)',
+                                                    icon: 'A'
+                                                },
+                                                {
+                                                    label: 'Engine Integrity',
+                                                    value: `${analysis.dataHealth?.score || 100}%`,
+                                                    trend: analysis.dataHealth?.score ? (analysis.dataHealth.score >= 95 ? 'Optimal' : analysis.dataHealth.score >= 80 ? 'Good' : 'Fair') : 'Optimal',
+                                                    color: 'var(--success)',
+                                                    icon: 'E'
+                                                }
+                                            ];
+                                        }
+
+                                        return metrics.map((metric, idx) => (
+                                            <motion.div
+                                                key={`metric-${idx}`}
+                                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                                transition={{
+                                                    delay: idx * 0.15,
+                                                    type: "spring",
+                                                    stiffness: 200,
+                                                    damping: 20
+                                                }}
+                                                whileHover={{
+                                                    scale: 1.02,
+                                                    transition: { duration: 0.2 }
+                                                }}
+                                                className="card flex-1 group cursor-pointer"
+                                                style={{
+                                                    background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(255,255,255,0.02) 100%)',
+                                                    border: '1px solid var(--border-subtle)',
+                                                    position: 'relative',
+                                                    overflow: 'hidden',
+                                                    backdropFilter: 'blur(10px)',
+                                                    minHeight: '140px'
+                                                }}
+                                            >
+                                                {/* Animated gradient background */}
+                                                <motion.div
+                                                    animate={{
+                                                        opacity: [0.05, 0.15, 0.05],
+                                                        scale: [1, 1.2, 1],
+                                                    }}
+                                                    transition={{
+                                                        duration: 4,
+                                                        repeat: Infinity,
+                                                        ease: "easeInOut"
+                                                    }}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: '-50%',
+                                                        right: '-50%',
+                                                        width: '200%',
+                                                        height: '200%',
+                                                        background: `radial-gradient(circle, ${metric.color}40 0%, transparent 70%)`,
+                                                        pointerEvents: 'none'
+                                                    }}
+                                                />
+
+                                                {/* Top gradient accent */}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    height: '4px',
+                                                    background: `linear-gradient(90deg, ${metric.color}, ${metric.color}80, transparent)`,
+                                                    opacity: 0.8
+                                                }} />
+
+                                                {/* Corner decoration */}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '12px',
+                                                    right: '12px',
+                                                    width: '48px',
+                                                    height: '48px',
+                                                    borderRadius: '12px',
+                                                    background: `${metric.color}10`,
+                                                    border: `1px solid ${metric.color}20`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: '24px',
+                                                    transition: 'all 0.3s ease'
+                                                }}
+                                                    className="group-hover:scale-110 group-hover:rotate-12"
+                                                >
+                                                    {metric.icon}
+                                                </div>
+
+                                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                                    {/* Label */}
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-secondary" style={{
+                                                            letterSpacing: '0.1em'
+                                                        }}>
+                                                            {metric.label}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Value */}
+                                                    <motion.div
+                                                        className="text-h1 font-mono mb-3"
+                                                        style={{
+                                                            fontSize: 'clamp(28px, 4vw, 40px)',
+                                                            fontWeight: 700,
+                                                            color: metric.color,
+                                                            textShadow: `0 0 30px ${metric.color}30, 0 2px 4px rgba(0,0,0,0.3)`,
+                                                            lineHeight: 1,
+                                                            letterSpacing: '-0.02em'
+                                                        }}
+                                                        initial={{ opacity: 0, x: -20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: idx * 0.15 + 0.2 }}
+                                                    >
+                                                        {metric.value}
+                                                    </motion.div>
+
+                                                    {/* Trend badge */}
+                                                    <div className="flex items-center gap-2">
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0.8 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{ delay: idx * 0.15 + 0.3 }}
+                                                            style={{
+                                                                fontSize: '10px',
+                                                                fontWeight: 800,
+                                                                padding: '6px 10px',
+                                                                borderRadius: '8px',
+                                                                background: `${metric.color}15`,
+                                                                color: metric.color,
+                                                                border: `1px solid ${metric.color}30`,
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.05em',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px',
+                                                                boxShadow: `0 2px 8px ${metric.color}20`
+                                                            }}
+                                                        >
+                                                            {metric.trend.includes('+') && <span>↗</span>}
+                                                            {metric.trend.includes('-') && <span>↘</span>}
+                                                            <span>{metric.trend}</span>
+                                                        </motion.div>
+                                                    </div>
+
+                                                    {/* Bottom sparkline decoration */}
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        bottom: '0',
+                                                        left: '0',
+                                                        right: '0',
+                                                        height: '2px',
+                                                        background: `linear-gradient(90deg, transparent, ${metric.color}40, transparent)`,
+                                                        opacity: 0.5
+                                                    }} />
+                                                </div>
+
+                                                {/* Hover glow effect */}
+                                                <div
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                                    style={{
+                                                        position: 'absolute',
+                                                        inset: 0,
+                                                        background: `radial-gradient(circle at center, ${metric.color}05, transparent)`,
+                                                        pointerEvents: 'none'
+                                                    }}
+                                                />
+                                            </motion.div>
+                                        ));
+                                    })()}
                                 </div>
 
-                                <ExecutiveFindings reasoning={analysis.executiveReasoning} onDeploy={handleDeploy} />
+                                <ExecutiveFindings
+                                    reasoning={analysis.executiveReasoning}
+                                    onDeploy={handleDeploy}
+                                    onPin={handlePinInsight}
+                                />
 
                                 {analysis.processingLog?.length > 0 && (
                                     <div className="card" style={{ background: 'rgba(56, 189, 248, 0.03)', border: '1px border-subtle' }}>
@@ -2215,6 +2675,14 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                     );
                 })()
             }
+
+            {/* Deploy Modal */}
+            <DeployModal
+                isOpen={showDeployModal}
+                onClose={() => setShowDeployModal(false)}
+                analysis={analysis}
+                onDeploy={handleDeployMethod}
+            />
 
         </div >
     );

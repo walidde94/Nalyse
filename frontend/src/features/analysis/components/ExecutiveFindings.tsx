@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Target, TrendingUp, AlertTriangle, ChevronRight, BarChart2 } from 'lucide-react';
+import { Target, TrendingUp, AlertTriangle, ChevronRight, BarChart2, Pin } from 'lucide-react';
 
 import { Zap } from 'lucide-react';
 
@@ -10,9 +10,12 @@ interface ExecutiveFindingsProps {
         priorityMatrix: Array<{ task: string; impact: string; effort: string }>;
     };
     onDeploy?: () => void;
+    onDrillDown?: (text: string) => void;
+    onCreateTask?: (task: any) => void;
+    onPin?: () => void;
 }
 
-export const ExecutiveFindings = ({ reasoning, onDeploy }: ExecutiveFindingsProps) => {
+export const ExecutiveFindings = ({ reasoning, onDeploy, onDrillDown, onCreateTask, onPin }: ExecutiveFindingsProps) => {
     if (!reasoning) return null;
 
     // Robustness check for malformed or legacy string data
@@ -61,16 +64,28 @@ export const ExecutiveFindings = ({ reasoning, onDeploy }: ExecutiveFindingsProp
                             </div>
                         </div>
 
-                        {onDeploy && (
-                            <button
-                                onClick={onDeploy}
-                                className="btn btn-primary btn-sm flex items-center gap-2 shadow-glow-primary hover:scale-105 transition-transform w-full md:w-auto"
-                                style={{ borderRadius: '12px', padding: '0 16px', height: '36px' }}
-                            >
-                                <Zap size={14} fill="currentColor" />
-                                <span className="text-[11px] font-black uppercase tracking-wider">Deploy Strategy</span>
-                            </button>
-                        )}
+                        <div className="flex gap-2 flex-wrap">
+                            {onPin && (
+                                <button
+                                    onClick={onPin}
+                                    className="btn btn-ghost btn-sm flex items-center gap-2 hover:bg-primary/10 transition-all w-full md:w-auto"
+                                    style={{ borderRadius: '12px', padding: '0 16px', height: '36px', border: '1px solid var(--border-subtle)' }}
+                                >
+                                    <Pin size={14} />
+                                    <span className="text-[11px] font-bold uppercase tracking-wider">Pin to Dashboard</span>
+                                </button>
+                            )}
+                            {onDeploy && (
+                                <button
+                                    onClick={onDeploy}
+                                    className="btn btn-primary btn-sm flex items-center gap-2 shadow-glow-primary hover:scale-105 transition-transform w-full md:w-auto"
+                                    style={{ borderRadius: '12px', padding: '0 16px', height: '36px' }}
+                                >
+                                    <Zap size={14} fill="currentColor" />
+                                    <span className="text-[11px] font-black uppercase tracking-wider">Deploy Strategy</span>
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <p className="text-lg leading-relaxed" style={{ fontWeight: 400, opacity: 0.9 }}>
@@ -97,18 +112,22 @@ export const ExecutiveFindings = ({ reasoning, onDeploy }: ExecutiveFindingsProp
                             </div>
                             <div className="flex-col gap-2">
                                 {safeReasoning.strategicAdvice.map((advice, i) => (
-                                    <motion.div
+                                    <motion.button
                                         key={i}
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.1 * i + 0.3 }}
-                                        className="flex gap-3 items-start group p-3 rounded-xl hover-lift bg-white/[0.01] hover:bg-white/[0.03] transition-all border border-transparent hover:border-white/10"
+                                        onClick={() => onDrillDown?.(advice)}
+                                        className="flex gap-3 items-start group p-3 rounded-xl hover-lift bg-white/[0.01] hover:bg-primary/[0.03] transition-all border border-transparent hover:border-primary/10 w-full text-left"
+                                        title="Click to analyze this finding"
                                     >
                                         <div className="mt-1 text-primary group-hover:translate-x-1 transition-transform">
                                             <ChevronRight size={14} />
                                         </div>
-                                        <span className="text-sm leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">{advice}</span>
-                                    </motion.div>
+                                        <span className="text-sm leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
+                                            {advice}
+                                        </span>
+                                    </motion.button>
                                 ))}
                             </div>
                         </motion.div>
@@ -129,10 +148,10 @@ export const ExecutiveFindings = ({ reasoning, onDeploy }: ExecutiveFindingsProp
                                 <h3 className="text-h3 tracking-tight-titles" style={{ fontSize: '16px' }}>Optimization Matrix</h3>
                             </div>
                             <div className="flex-col gap-2">
-                                <div className="flex items-center gap-2 px-2 mb-1">
-                                    <span className="label-premium flex-1">Priority Task</span>
-                                    <span className="label-premium w-[60px] text-center">Impact</span>
-                                    <span className="label-premium w-[60px] text-center">Effort</span>
+                                <div className="flex items-center gap-2 px-3 py-1 mb-1 text-[10px] uppercase font-bold text-tertiary tracking-wider opacity-60">
+                                    <span className="flex-1">Action Item</span>
+                                    <span className="w-[80px] text-center">Impact</span>
+                                    <span className="w-[60px] text-center">Effort</span>
                                 </div>
                                 {safeReasoning.priorityMatrix.map((item, i) => (
                                     <motion.div
@@ -140,36 +159,40 @@ export const ExecutiveFindings = ({ reasoning, onDeploy }: ExecutiveFindingsProp
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.1 * i + 0.4 }}
-                                        className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-primary/30 transition-all active-press"
+                                        className="flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group"
                                     >
-                                        <span className="text-sm font-medium opacity-80" style={{ flex: 1 }}>{item.task}</span>
-                                        <div style={{ width: '60px', display: 'flex', justifyContent: 'center' }}>
-                                            <div style={{ height: '6px', width: '40px', background: 'var(--bg-surface)', borderRadius: '3px', overflow: 'hidden' }}>
-                                                <div style={{
-                                                    height: '100%',
-                                                    width: item.impact === 'High' ? '100%' : '50%',
-                                                    background: item.impact === 'High' ? 'var(--success)' : 'var(--primary)',
-                                                    boxShadow: item.impact === 'High' ? '0 0 10px var(--success)' : 'none'
-                                                }}></div>
+                                        <span className="text-sm font-medium opacity-90 group-hover:opacity-100 transition-opacity" style={{ flex: 1 }}>{item.task}</span>
+                                        <div style={{ width: '80px', display: 'flex', justifyContent: 'center' }}>
+                                            <div className="w-full h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full"
+                                                    style={{
+                                                        width: item.impact === 'High' ? '100%' : '50%',
+                                                        background: item.impact === 'High'
+                                                            ? 'linear-gradient(90deg, var(--success), #4ade80)'
+                                                            : 'linear-gradient(90deg, var(--primary), #60a5fa)',
+                                                        boxShadow: item.impact === 'High' ? '0 0 8px rgba(34, 197, 94, 0.4)' : 'none'
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                         <div style={{ width: '60px', display: 'flex', justifyContent: 'center' }}>
-                                            <div style={{ height: '100%', display: 'flex', gap: '2px' }}>
+                                            <div className="flex gap-1">
                                                 {[1, 2, 3].map(dot => (
-                                                    <div key={dot} style={{
-                                                        width: '6px', height: '6px', borderRadius: '50%',
-                                                        background: (item.effort === 'High' && dot <= 3) || (item.effort === 'Medium' && dot <= 2) || (item.effort === 'Low' && dot <= 1)
-                                                            ? 'var(--warning)' : 'var(--bg-surface)'
-                                                    }}></div>
+                                                    <div key={dot} className={`w-1.5 h-1.5 rounded-full transition-colors ${(item.effort === 'High' && dot <= 3) || (item.effort === 'Medium' && dot <= 2) || (item.effort === 'Low' && dot <= 1)
+                                                        ? 'bg-[var(--warning)]'
+                                                        : 'bg-[var(--bg-surface)] opacity-30'
+                                                        }`} />
                                                 ))}
                                             </div>
                                         </div>
                                     </motion.div>
                                 ))}
                             </div>
-                            <div className="mt-auto p-4 rounded-xl bg-primary/5 border border-primary/10">
-                                <p className="text-[11px] leading-relaxed opacity-70">
-                                    <strong>Expert Note:</strong> High impact / Low effort tasks should be prioritized in the next sprint cycle to maximize institutional ROI.
+                            <div className="mt-auto p-3 rounded-lg bg-[var(--primary)]/5 border border-[var(--primary)]/10 flex items-start gap-2">
+                                <div className="mt-0.5 text-[var(--primary)]"><Zap size={12} fill="currentColor" /></div>
+                                <p className="text-[11px] leading-relaxed opacity-80">
+                                    <strong className="text-[var(--primary)]">Expert Note:</strong> Prioritize high-impact items for immediate ROI.
                                 </p>
                             </div>
                         </motion.div>

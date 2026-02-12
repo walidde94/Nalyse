@@ -20,11 +20,12 @@ interface NexusViewProps {
     groups: any[];
     token: string;
     onProjectCreated?: () => void;
+    runWithProgress?: (fn: () => Promise<void | { type: string; title: string; data: any }>) => Promise<void>;
 }
 
 import { API_URL } from '../../config';
 
-export const NexusView = ({ files, groups, token, onProjectCreated }: NexusViewProps) => {
+export const NexusView = ({ files, groups, token, onProjectCreated, runWithProgress }: NexusViewProps) => {
     const { addToast } = useToast();
     const [phase, setPhase] = useState<'selection' | 'processing' | 'dashboard'>('selection');
     const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
@@ -36,11 +37,11 @@ export const NexusView = ({ files, groups, token, onProjectCreated }: NexusViewP
 
     const logs = [
         "Initializing Neural Knowledge Mesh...",
-        "Identifying Inter-Departmental Causality...",
-        "Cross-Referencing Sales & Logistics Vectors...",
-        "Simulating Strategic Market Scenarios...",
-        "Drafting ROI Projection Models...",
-        "Finalizing Executive Intelligence Package..."
+        "Scanning for Inter-Departmental Correlations...",
+        "Evaluating Dataset Consistency & Integrity...",
+        "Modeling Potential Strategic Scenarios...",
+        "Validating Optimization Hypotheses...",
+        "Assembling Executive Intelligence Draft..."
     ];
 
     useEffect(() => {
@@ -67,26 +68,38 @@ export const NexusView = ({ files, groups, token, onProjectCreated }: NexusViewP
             addToast('Select at least one knowledge source.', 'info');
             return;
         }
-        setPhase('processing');
+
+        const worker = async () => {
+            setPhase('processing');
+            // Mock intelligence synthesis duration
+            await new Promise(r => setTimeout(r, 4500));
+            return { type: 'projects', title: 'Strategic Board', data: {} };
+        };
+
+        if (runWithProgress) {
+            runWithProgress(worker);
+        } else {
+            worker();
+        }
     };
 
     const generateInsights = () => {
         const objectiveMap: Record<StrategicObjective, Insight[]> = {
             revenue_growth: [
-                { id: 1, title: "Market Expansion Strategy", category: "Revenue", desc: "Crossing regional performance with advertising spend identifies a 40% higher conversion in 'DACH' compared to UK, despite UK receiving 80% of budget.", impact: "+$240k ARR", confidence: 95, status: "High Priority", actions: ["Reallocate 30% of UK budget to DACH", "Localize Q4 Sales Playbooks", "Scale German retargeting"] },
-                { id: 2, title: "Churn Vector Analysis", category: "Retention", desc: "Correlation mesh reveals churn spikes exactly 45 days after a 3rd support ticket is raised on Enterprise accounts.", impact: "15% Churn Reduction", confidence: 88, status: "Critical", actions: ["Trigger executive reach-out on 3rd ticket", "Automate Customer Health scores"] }
+                { id: 1, title: "Market Expansion Strategy", category: "Revenue", desc: "Cross-regional performance analysis suggests a conversion delta between DACH and other primary markets. Budget reallocation could optimize acquisition costs.", impact: "Increase ARR", confidence: 92, status: "High Priority", actions: ["Review regional acquisition costs", "Evaluate DACH market capacity", "Optimize ad spend distribution"] },
+                { id: 2, title: "Churn Vector Analysis", category: "Retention", desc: "Temporal analysis indicates a correlation between support tickets and account stability. Proactive engagement thresholds identified.", impact: "Reduce Churn", confidence: 85, status: "Critical", actions: ["Enable automated health alerts", "Review support escalation logs"] }
             ],
             cost_optimization: [
-                { id: 1, title: "Infrastructure Leakage", category: "OpEx", desc: "Multi-dataset stress testing shows that 22% of development cloud instances are active during weekends with 0% utilization.", impact: "$12.5k / mo", confidence: 97, status: "Immediate", actions: ["Implement weekend scheduled shutdown", "Enforce auto-scaling for staging"] },
-                { id: 2, title: "Operational Redundancy", category: "Efficiency", desc: "Procurement data shows storage costs for 5,000 units marked as 'Deprecated' in the Logistics database.", impact: "$150k / yr", confidence: 94, status: "Urgent", actions: ["Decommission storage for Deprecated SKUs", "Terminate Warehouse A lease"] }
+                { id: 1, title: "Infrastructure Leakage", category: "OpEx", desc: "Instance utilization heatmaps show significant off-peak waste. Resource scheduling optimization recommended.", impact: "Reduce Monthly OpEx", confidence: 95, status: "Immediate", actions: ["Apply auto-scaling policies", "Audit idle cloud resources"] },
+                { id: 2, title: "Operational Redundancy", category: "Efficiency", desc: "Dataset overlap detection found duplicated tracking for logistics units. Consolidation can reduce storage and management overhead.", impact: "Process Savings", confidence: 90, status: "Urgent", actions: ["Consolidate duplicate SKUs", "Review warehouse storage contracts"] }
             ],
             risk_mitigation: [
-                { id: 1, title: "Supply Chain Exposure", category: "Risk", desc: "65% of mission-critical components depend on a single supplier currently in financial distress zones.", impact: "$500k Risk Mitigated", confidence: 82, status: "Board Level", actions: ["Establish secondary supply chain", "Renegotiate payment terms"] },
-                { id: 2, title: "Compliance Data Exposure", category: "Governance", desc: "Unencrypted PII detected in 'Marketing Legacy' dataset, currently shared with 3rd party analysis tools.", impact: "Zero Exposure", confidence: 99, status: "Blocked", actions: ["Rescind API keys for Legacy tools", "Anonymize 'User_Email' columns"] }
+                { id: 1, title: "Supply Chain Exposure", category: "Risk", desc: "Concentration analysis identifies dependency on specific vendor clusters. Diversification recommended for business continuity.", impact: "Lower Exposure", confidence: 80, status: "Board Level", actions: ["Identify secondary vendors", "Stress test supply logistics"] },
+                { id: 2, title: "Compliance Data Exposure", category: "Governance", desc: "Sensitive data patterns detected in legacy datasets. Security protocols should be updated to enforce masking.", impact: "Zero Risk Target", confidence: 98, status: "Blocked", actions: ["Audit API access logs", "Apply PII anonymization"] }
             ],
             operational_efficiency: [
-                { id: 1, title: "Approval Bottleneck", category: "Process", desc: "Approval cycles in Legal are taking 12 days longer than the industry median, causing 8 weeks of shipping delays.", impact: "28% Velocity Gain", confidence: 91, status: "Operational", actions: ["Onboard Legal-Ops Automations", "Implement Template-based approvals"] },
-                { id: 2, title: "Skill Mismatch Gap", category: "Talent", desc: "Senior engineers are spending 30% of their time on Tier 1 support tasks due to missing escalation protocols.", impact: "800+ Dev Hours / mo", confidence: 87, status: "Optimized", actions: ["Refine CS escalation workflow", "Delegate Tier 1 to Support Juniors"] }
+                { id: 1, title: "Approval Bottleneck", category: "Process", desc: "Cycle time analysis shows delay in approval workflows compared to benchmarks. Automation can accelerate deal velocity.", impact: "Gain Velocity", confidence: 88, status: "Operational", actions: ["Implement digital workflow tools", "Review template hierarchies"] },
+                { id: 2, title: "Skill Mismatch Gap", category: "Talent", desc: "Resource allocation data shows high expert involvement in elementary tasks. Workflow redistribution could unlock significant productive hours.", impact: "Reclaim Hours", confidence: 82, status: "Optimized", actions: ["Update escalation protocols", "Review team task assignments"] }
             ]
         };
         const results = objectiveMap[objective];

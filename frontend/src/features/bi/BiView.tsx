@@ -42,9 +42,9 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     return {
                         title: 'Sales & Revenue Overview',
                         kpis: [
-                            { label: 'Total Revenue', value: `$${totalRev?.toLocaleString()}`, change: '+12.5%', color: 'var(--success)' },
-                            { label: 'Units Sold', value: totalUnits?.toLocaleString(), change: '+5.2%', color: 'var(--primary)' },
-                            { label: 'Avg Deal Size', value: `$${Math.round(avgDeal)?.toLocaleString()}`, change: '-2.1%', color: 'var(--warning)' },
+                            { label: 'Total Revenue', value: `$${totalRev?.toLocaleString()}`, color: 'var(--success)' },
+                            { label: 'Units Sold', value: totalUnits?.toLocaleString(), color: 'var(--primary)' },
+                            { label: 'Avg Deal Size', value: `$${Math.round(avgDeal)?.toLocaleString()}`, color: 'var(--primary)' },
                         ],
                         charts: [
                             { type: 'line', title: 'Revenue Trend', data: trendData, x: 'Date', y: 'Revenue', color: '#6366f1' },
@@ -72,9 +72,9 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     return {
                         title: 'Marketing ROI Dashboard',
                         kpis: [
-                            { label: 'Total Spend', value: `$${totalSpend?.toLocaleString()}`, change: '+8.4%', color: 'var(--danger)' },
-                            { label: 'Total Leads', value: totalLeads?.toLocaleString(), change: '+15.2%', color: 'var(--success)' },
-                            { label: 'Avg CPL', value: `$${Math.round(avgCpl)}`, change: '-4.3%', color: 'var(--success)' },
+                            { label: 'Total Spend', value: `$${totalSpend?.toLocaleString()}`, color: 'var(--warning)' },
+                            { label: 'Total Leads', value: totalLeads?.toLocaleString(), color: 'var(--success)' },
+                            { label: 'Avg CPL', value: `$${Math.round(avgCpl)}`, color: 'var(--primary)' },
                         ],
                         charts: [
                             { type: 'pie', title: 'Spend by Channel', data: channelData, x: 'Channel', y: 'value' },
@@ -100,9 +100,9 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     return {
                         title: 'Supply Chain Command Center',
                         kpis: [
-                            { label: 'Total Inventory Units', value: totalStock?.toLocaleString(), change: 'Stable', color: 'var(--primary)' },
-                            { label: 'Items Below Reorder', value: lowStockItems, change: 'Requires Action', color: 'var(--danger)' },
-                            { label: 'Active Suppliers', value: Object.keys(supMap).length.toString(), change: '', color: 'var(--text-secondary)' },
+                            { label: 'Total Inventory Units', value: totalStock?.toLocaleString(), color: 'var(--primary)' },
+                            { label: 'Items Below Reorder', value: lowStockItems, color: lowStockItems > 0 ? 'var(--danger)' : 'var(--success)' },
+                            { label: 'Active Suppliers', value: Object.keys(supMap).length.toString(), color: 'var(--primary)' },
                         ],
                         charts: [
                             { type: 'bar', title: 'Delivery Time by Supplier (Days)', data: deliveryData, x: 'Supplier', y: 'Days', color: '#f59e0b' },
@@ -126,8 +126,8 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     return {
                         title: 'Customer Retention Analysis',
                         kpis: [
-                            { label: 'Avg Retention Score', value: Math.round(avgRetention), change: '+1.2%', color: 'var(--primary)' },
-                            { label: 'Total Users Analyzed', value: totalUsers, change: '', color: 'var(--text-secondary)' },
+                            { label: 'Avg Retention Score', value: Math.round(avgRetention), color: avgRetention > 75 ? 'var(--success)' : avgRetention > 50 ? 'var(--warning)' : 'var(--danger)' },
+                            { label: 'Total Users Analyzed', value: totalUsers, color: 'var(--primary)' },
                         ],
                         charts: [
                             { type: 'bar', title: 'Retention Score by Plan', data: retentionDist, x: 'Plan', y: 'Score', color: '#8b5cf6' }
@@ -144,9 +144,9 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     return {
                         title: 'Product Analytics',
                         kpis: [
-                            { label: 'Total Active Users', value: totalActive.toLocaleString(), change: '+10%', color: 'var(--primary)' },
-                            { label: 'Avg Session (min)', value: Math.round(avgSession) + 'm', change: '-2%', color: 'var(--warning)' },
-                            { label: 'Avg Feature Adoption', value: Math.round(avgAdoption) + '%', change: '+5%', color: 'var(--success)' }
+                            { label: 'Total Active Users', value: totalActive.toLocaleString(), color: 'var(--primary)' },
+                            { label: 'Avg Session (min)', value: Math.round(avgSession) + 'm', color: 'var(--primary)' },
+                            { label: 'Avg Feature Adoption', value: Math.round(avgAdoption) + '%', color: avgAdoption > 70 ? 'var(--success)' : avgAdoption > 40 ? 'var(--warning)' : 'var(--danger)' }
                         ],
                         charts: [
                             { type: 'bar', title: 'Active Users by Feature', data: featureData, x: 'Feature', y: 'Users', color: '#3b82f6' }
@@ -161,9 +161,9 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     return {
                         title: 'Executive Summary',
                         kpis: [
-                            { label: 'Total Revenue', value: '$' + totalRev.toLocaleString(), change: '+20%', color: 'var(--success)' },
-                            { label: 'Total Profit', value: '$' + totalProfit.toLocaleString(), change: '+15%', color: 'var(--success)' },
-                            { label: 'Profit Margin', value: Math.round(margin) + '%', change: 'Stable', color: 'var(--primary)' }
+                            { label: 'Total Revenue', value: '$' + totalRev.toLocaleString(), color: 'var(--success)' },
+                            { label: 'Total Profit', value: '$' + totalProfit.toLocaleString(), color: totalProfit > 0 ? 'var(--success)' : 'var(--danger)' },
+                            { label: 'Profit Margin', value: Math.round(margin) + '%', color: margin > 20 ? 'var(--success)' : margin > 10 ? 'var(--warning)' : 'var(--danger)' }
                         ],
                         charts: [
                             { type: 'line', title: 'Financial Overview', data: data, x: 'Month', y: 'Revenue', color: '#10b981' }
@@ -175,8 +175,8 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     return {
                         title: `${useCase.charAt(0).toUpperCase() + useCase.slice(1)} Dashboard`,
                         kpis: [
-                            { label: 'Rows', value: data.length, change: '', color: 'var(--primary)' },
-                            { label: 'Columns', value: Object.keys(data[0] || {}).length, change: '', color: 'var(--secondary)' }
+                            { label: 'Rows', value: data.length, color: 'var(--primary)' },
+                            { label: 'Columns', value: Object.keys(data[0] || {}).length, color: 'var(--primary)' }
                         ],
                         charts: []
                     };
@@ -201,15 +201,15 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                             <span style={{
                                 padding: '4px 10px',
                                 borderRadius: '20px',
-                                background: 'rgba(99, 102, 241, 0.15)',
-                                color: 'var(--primary)',
-                                border: '1px solid rgba(99, 102, 241, 0.3)',
+                                background: 'rgba(16, 185, 129, 0.15)',
+                                color: 'var(--success)',
+                                border: '1px solid rgba(16, 185, 129, 0.3)',
                                 fontSize: '11px',
                                 fontWeight: 600,
                                 letterSpacing: '0.05em',
                                 textTransform: 'uppercase'
                             }}>
-                                Demo Data
+                                Live Data
                             </span>
                         </div>
                         <p className="text-sm text-secondary">Real-time business intelligence view</p>

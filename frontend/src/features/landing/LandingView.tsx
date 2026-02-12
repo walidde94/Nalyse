@@ -62,11 +62,11 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                     </div>
                 </header>
 
-                {/* --- THREE PILLARS SECTION --- */}
+                {/* --- FOUR PILLARS SECTION --- */}
                 <section className="bento-nexus">
                     <div className="section-header">
                         <span className="h-tag">ECOSYSTEM</span>
-                        <h2 className="h-title">Three Pillars of Excellence</h2>
+                        <h2 className="h-title">Four Pillars of Excellence</h2>
                     </div>
 
                     <div className="bento-container">
@@ -150,6 +150,49 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                             </div>
                             <div className="tile-visualization">
                                 <AgenticVisual />
+                            </div>
+                        </div>
+
+                        {/* Data Foundation & Data Quality Engineering Pillar - NEW SECTION */}
+                        <div className="bento-tile tile-featured highlight-emerald">
+                            <div className="tile-content">
+                                <div className="tile-icon-box text-success-custom"><CloudUpload size={32} /></div>
+                                <h2 className="tile-title">Data Foundation & Data Quality Engineering</h2>
+                                <p className="tile-desc">
+                                    <b>Ohne verlässliche Daten sind fundierte Entscheidungen nicht möglich.</b>
+                                </p>
+
+                                <div className="challenge-section">
+                                    <h4 className="subsection-title">Herausforderungen</h4>
+                                    <ul className="challenge-list">
+                                        <li>Verteilte Datenquellen (Excel, ERP, CRM, Logs)</li>
+                                        <li>Inkonsistente Formate, fehlende Werte, Datenfehler</li>
+                                        <li>Widersprüchliche Reports zwischen Abteilungen</li>
+                                    </ul>
+                                </div>
+
+                                <div className="services-section">
+                                    <h4 className="subsection-title">Leistungen</h4>
+                                    <ul className="services-list">
+                                        <li>Strukturierte Datenanalyse (Data Audit)</li>
+                                        <li>Data Cleaning & Normalisierung</li>
+                                        <li>Definition von Data-Quality-Regeln</li>
+                                        <li>Versionierte, strukturierte Datensätze</li>
+                                    </ul>
+                                </div>
+
+                                <div className="result-box">
+                                    <strong>Ergebnis:</strong> Vertrauenswürdige Daten als stabile Grundlage für Analyse, Prognosen und KI
+                                </div>
+
+                                <div className="tile-tags">
+                                    <span>DATA AUDIT</span>
+                                    <span>QUALITY RULES</span>
+                                    <span>NORMALIZATION</span>
+                                </div>
+                            </div>
+                            <div className="tile-visualization">
+                                <DataQualityVisual />
                             </div>
                         </div>
                     </div>
@@ -331,6 +374,59 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                 .highlight-gold { border-color: #fbbf24 !important; background: linear-gradient(135deg, var(--bg-card) 0%, rgba(251, 191, 36, 0.05) 100%) !important; }
                 .highlight-gold:hover { border-color: #f59e0b !important; box-shadow: 0 0 30px -10px rgba(245, 158, 11, 0.3); }
 
+                .highlight-emerald { border-color: #10b981 !important; background: linear-gradient(135deg, var(--bg-card) 0%, rgba(16, 185, 129, 0.05) 100%) !important; }
+                .highlight-emerald:hover { border-color: #059669 !important; box-shadow: 0 0 30px -10px rgba(16, 185, 129, 0.3); }
+
+                .challenge-section, .services-section { margin-top: 24px; }
+                .subsection-title { 
+                    font-size: 16px; 
+                    font-weight: 800; 
+                    color: var(--text-primary); 
+                    margin-bottom: 12px; 
+                    letter-spacing: 0.02em;
+                }
+                .challenge-list, .services-list { 
+                    list-style: none; 
+                    padding: 0; 
+                    margin: 0;
+                }
+                .challenge-list li, .services-list li { 
+                    padding: 8px 0 8px 24px; 
+                    position: relative; 
+                    color: var(--text-secondary); 
+                    font-size: 14px;
+                    line-height: 1.5;
+                }
+                .challenge-list li::before { 
+                    content: '⚠'; 
+                    position: absolute; 
+                    left: 0; 
+                    color: #f59e0b;
+                    font-size: 14px;
+                }
+                .services-list li::before { 
+                    content: '✓'; 
+                    position: absolute; 
+                    left: 0; 
+                    color: #10b981;
+                    font-weight: 900;
+                    font-size: 16px;
+                }
+                .result-box { 
+                    margin-top: 24px; 
+                    padding: 16px 20px; 
+                    background: rgba(16, 185, 129, 0.1); 
+                    border-left: 3px solid #10b981; 
+                    border-radius: 8px;
+                    color: var(--text-primary);
+                    font-size: 14px;
+                    line-height: 1.6;
+                }
+                .result-box strong { 
+                    color: #10b981; 
+                    font-weight: 800;
+                }
+
                 .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.2, 1, 0.3, 1) both; }
                 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
@@ -373,6 +469,83 @@ const AgenticVisual = () => (
             @keyframes agent-breathe { from { transform: scale(0.8); opacity: 0.6; } to { transform: scale(1.1); opacity: 1; } }
             @keyframes agent-orbit { from { transform: rotate(0deg) translateX(60px) rotate(0deg); } to { transform: rotate(360deg) translateX(60px) rotate(-360deg); } }
             .agent-link { position: absolute; background: rgba(251, 191, 36, 0.2); height: 1px; transform-origin: left; }
+        `}</style>
+    </div>
+);
+
+const DataQualityVisual = () => (
+    <div className="data-quality-visual">
+        <div className="data-flow-container">
+            <div className="data-source ds1"></div>
+            <div className="data-source ds2"></div>
+            <div className="data-source ds3"></div>
+            <div className="quality-check qc1"></div>
+            <div className="quality-check qc2"></div>
+            <div className="clean-data"></div>
+        </div>
+        <style>{`
+            .data-quality-visual { 
+                position: absolute; 
+                right: 40px; 
+                top: 40px; 
+                width: 180px; 
+                height: 180px; 
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                border-radius: 40px; 
+                border: 1px solid #34d399; 
+                overflow: hidden; 
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .data-flow-container { position: relative; width: 100%; height: 100%; }
+            .data-source { 
+                position: absolute; 
+                width: 12px; 
+                height: 12px; 
+                background: rgba(255, 255, 255, 0.3); 
+                border-radius: 3px; 
+                animation: data-pulse 2s infinite ease-in-out;
+            }
+            .data-source.ds1 { top: 20px; left: 20px; animation-delay: 0s; }
+            .data-source.ds2 { top: 20px; right: 20px; animation-delay: 0.3s; }
+            .data-source.ds3 { top: 50px; left: 50%; transform: translateX(-50%); animation-delay: 0.6s; }
+            .quality-check { 
+                position: absolute; 
+                width: 20px; 
+                height: 20px; 
+                border: 2px solid rgba(255, 255, 255, 0.6); 
+                border-radius: 50%; 
+                top: 50%; 
+                left: 50%; 
+                transform: translate(-50%, -50%);
+                animation: check-spin 3s infinite linear;
+            }
+            .quality-check.qc1 { animation-delay: 0s; }
+            .quality-check.qc2 { width: 35px; height: 35px; animation-delay: 1.5s; opacity: 0.5; }
+            .clean-data { 
+                position: absolute; 
+                bottom: 20px; 
+                left: 50%; 
+                transform: translateX(-50%); 
+                width: 60px; 
+                height: 8px; 
+                background: rgba(255, 255, 255, 0.9); 
+                border-radius: 4px;
+                animation: data-glow 2s infinite alternate;
+            }
+            @keyframes data-pulse { 
+                0%, 100% { opacity: 0.3; transform: scale(1); } 
+                50% { opacity: 1; transform: scale(1.2); } 
+            }
+            @keyframes check-spin { 
+                from { transform: translate(-50%, -50%) rotate(0deg); } 
+                to { transform: translate(-50%, -50%) rotate(360deg); } 
+            }
+            @keyframes data-glow { 
+                from { box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); } 
+                to { box-shadow: 0 0 15px rgba(255, 255, 255, 1); } 
+            }
         `}</style>
     </div>
 );
