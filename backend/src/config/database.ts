@@ -1,3 +1,4 @@
+import path from 'path';
 import { DataSource } from 'typeorm';
 import { User } from '../entities/User';
 import { Organization } from '../entities/Organization';
@@ -12,10 +13,10 @@ import { AgentTask } from '../entities/AgentTask';
 import { AgentLog } from '../entities/AgentLog';
 import { Report } from '../entities/Report';
 
+const entities = [User, Organization, File, Analysis, Group, Project, ApiKey, RemoteSource, Agent, AgentTask, AgentLog, Report];
+
 const isTest = process.env.NODE_ENV === 'test';
 const isProd = process.env.NODE_ENV === 'production';
-
-const entities = [User, Organization, File, Analysis, Group, Project, ApiKey, RemoteSource, Agent, AgentTask, AgentLog, Report];
 
 const getOptions = (): any => {
     if (isTest) {
@@ -28,29 +29,58 @@ const getOptions = (): any => {
         };
     }
 
-    return {
+    // Harden production configuration
+    const config: any = {
         type: 'postgres',
-        url: process.env.DATABASE_URL,
-        host: !process.env.DATABASE_URL ? (process.env.DB_HOST || 'localhost') : undefined,
-        port: !process.env.DATABASE_URL ? (parseInt(process.env.DB_PORT || '5432')) : undefined,
-        username: !process.env.DATABASE_URL ? (process.env.DB_USER || 'admin') : undefined,
-        password: !process.env.DATABASE_URL ? (process.env.DB_PASSWORD || '') : undefined,
-        database: !process.env.DATABASE_URL ? (process.env.DB_NAME || 'nalyse_dev') : undefined,
-        synchronize: true,
+        synchronize: true, // Be careful with this in real production, but keeping it as per existing setup
         logging: false,
-        ssl: isProd ? { rejectUnauthorized: false } : false,
         entities,
-        migrations: ['src/migrations/**/*.ts'],
+        migrations: [path.join(__dirname, '../migrations/**/*.{ts,js}')],
     };
+
+    if (process.env.DATABASE_URL) {
+        // Favor URL if provided (standard for Render/Heroku)
+        config.url = process.env.DATABASE_URL;
+    } else {
+        config.host = process.env.DB_HOST || 'localhost';
+        config.port = parseInt(process.env.DB_PORT || '5432');
+        config.username = process.env.DB_USER || 'admin';
+        config.password = process.env.DB_PASSWORD || '';
+        config.database = process.env.DB_NAME || 'nalyse_dev';
+    }
+
+    // Enhanced SSL Handling for Neon/Supabase/Render
+    // Enable SSL if in production OR if explicitly requested via DB_SSL env var
+    const useSSL = isProd || process.env.DB_SSL === 'true' || (config.url && config.url.includes('sslmode=require'));
+
+    if (useSSL) {
+        config.ssl = {
+            rejectUnauthorized: false
+        };
+    }
+
+    return config;
 };
 
 export const AppDataSource = new DataSource(getOptions());
 
 export const initializeDatabase = async () => {
     try {
+        const options = getOptions();
+        const connectionTarget = options.url
+            ? options.url.split('@')[1] // Log just the host part for security
+            : `${options.host}:${options.port}`;
+
+        console.log(`🔌 Attempting to connect to database at: ${connectionTarget}`);
         await AppDataSource.initialize();
-    } catch (error) {
-        console.error('❌ Database connection failed:', error);
+        console.log('✅ Database connection established.');
+    } catch (error: any) {
+        console.error('❌ Database connection failed!');
+        console.error('Error Message:', error.message);
+        console.error('Error Code:', error.code);
+        if (error.code === 'XX000') {
+            console.error('💡 Typical cause: Incorrect credentials or database name for cloud providers like Neon.');
+        }
         throw error;
     }
 };
