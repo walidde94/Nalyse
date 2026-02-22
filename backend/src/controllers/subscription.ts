@@ -305,19 +305,22 @@ export const syncSubscriptionStatus = async (req: Request, res: Response) => {
                 const sub = activeSub;
                 const priceId = sub.items.data[0].price.id;
 
-                // Update plan based on priceId
-                if (priceId === process.env.STRIPE_PRICE_ID_PRO) {
-                    org.plan = 'pro';
-                    org.storageLimit = 10737418240; // 10GB
-                    org.fileLimit = 1000;
-                    org.userLimit = 10;
-                    user.plan = 'pro';
-                } else if (priceId === process.env.STRIPE_PRICE_ID_ENTERPRISE) {
+                const envProPrice = process.env.STRIPE_PRICE_ID_PRO?.trim();
+                const envEnterprisePrice = process.env.STRIPE_PRICE_ID_ENTERPRISE?.trim();
+
+                // Update plan based on priceId, defaulting to 'pro' if there's any active sub
+                if (priceId === envEnterprisePrice) {
                     org.plan = 'enterprise';
                     org.storageLimit = 1099511627776; // 1TB
                     org.fileLimit = 10000;
                     org.userLimit = 100;
                     user.plan = 'enterprise';
+                } else {
+                    org.plan = 'pro';
+                    org.storageLimit = 10737418240; // 10GB
+                    org.fileLimit = 1000;
+                    org.userLimit = 10;
+                    user.plan = 'pro';
                 }
 
                 org.stripeSubscriptionId = sub.id;

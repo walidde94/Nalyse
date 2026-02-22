@@ -73,21 +73,19 @@ const updateSubscriptionStatus = async (subscription: any, isDeleted: boolean = 
         organization.cancelAtPeriodEnd = false;
     } else {
         const priceId = subscription.items.data[0].price.id;
+        const envEnterprisePrice = process.env.STRIPE_PRICE_ID_ENTERPRISE?.trim();
+
         // Simple logic for plan mapping
-        if (priceId === process.env.STRIPE_PRICE_ID_PRO) {
-            organization.plan = 'pro';
-            organization.storageLimit = 10737418240; // 10GB pro
-            organization.fileLimit = 1000; // Effectively unlimited datasets
-            organization.userLimit = 10;
-        } else if (priceId === process.env.STRIPE_PRICE_ID_ENTERPRISE) {
+        if (priceId === envEnterprisePrice) {
             organization.plan = 'enterprise';
             organization.storageLimit = 1099511627776; // 1TB enterprise
             organization.fileLimit = 10000;
             organization.userLimit = 100;
         } else {
-            organization.plan = 'free'; // Default/Fallback
-            organization.fileLimit = 5;
-            organization.userLimit = 1;
+            organization.plan = 'pro';
+            organization.storageLimit = 10737418240; // 10GB pro
+            organization.fileLimit = 1000; // Effectively unlimited datasets
+            organization.userLimit = 10;
         }
 
         organization.stripeSubscriptionId = subscription.id;
