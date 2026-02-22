@@ -89,10 +89,19 @@ const updateSubscriptionStatus = async (subscription: any, isDeleted: boolean = 
         }
 
         organization.stripeSubscriptionId = subscription.id;
-        organization.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
-        organization.cancelAtPeriodEnd = subscription.cancel_at_period_end;
-        if (subscription.start_date) {
-            organization.subscriptionStartedAt = new Date(subscription.start_date * 1000);
+
+        const currentPeriodEnd = subscription.current_period_end;
+        if (currentPeriodEnd && !isNaN(currentPeriodEnd)) {
+            organization.currentPeriodEnd = new Date(currentPeriodEnd * 1000);
+        } else {
+            organization.currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        }
+
+        organization.cancelAtPeriodEnd = !!subscription.cancel_at_period_end;
+
+        const startDate = subscription.start_date;
+        if (startDate && !isNaN(startDate)) {
+            organization.subscriptionStartedAt = new Date(startDate * 1000);
         }
     }
 

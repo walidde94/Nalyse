@@ -324,10 +324,19 @@ export const syncSubscriptionStatus = async (req: Request, res: Response) => {
                 }
 
                 org.stripeSubscriptionId = sub.id;
-                org.currentPeriodEnd = new Date((sub as any).current_period_end * 1000);
-                org.cancelAtPeriodEnd = (sub as any).cancel_at_period_end;
-                if ((sub as any).start_date) {
-                    org.subscriptionStartedAt = new Date((sub as any).start_date * 1000);
+
+                const currentPeriodEnd = (sub as any).current_period_end;
+                if (currentPeriodEnd && !isNaN(currentPeriodEnd)) {
+                    org.currentPeriodEnd = new Date(currentPeriodEnd * 1000);
+                } else {
+                    org.currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                }
+
+                org.cancelAtPeriodEnd = !!(sub as any).cancel_at_period_end;
+
+                const startDate = (sub as any).start_date;
+                if (startDate && !isNaN(startDate)) {
+                    org.subscriptionStartedAt = new Date(startDate * 1000);
                 }
 
                 await AppDataSource.getRepository(Organization).save(org);
