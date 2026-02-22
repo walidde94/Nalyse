@@ -10,6 +10,12 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         const userId = (req as any).user.userId;
         const { priceId } = req.body;
 
+        console.log(`[Stripe] Init checkout for user ${userId}`);
+
+        if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_placeholder') {
+            return res.status(500).json({ error: 'Stripe Secret Key is not configured on the server.' });
+        }
+
         const userRepo = AppDataSource.getRepository(User);
         const user = await userRepo.findOne({
             where: { id: userId },
@@ -95,7 +101,12 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         res.json({ url: session.url });
     } catch (error: any) {
         console.error('Stripe Checkout Error:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: `Stripe Error: ${error.message || 'Unknown server error'}`,
+            details: error.stack, // Expose stack temporarily for debugging
+            code: error.code,
+            type: error.type
+        });
     }
 };
 
