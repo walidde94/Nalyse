@@ -598,12 +598,12 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
             const insight = {
                 id: `insight_${Date.now()}`,
                 title: `${analysis.type} Analysis`,
-                summary: analysis.executiveReasoning.executiveSummary || 'Strategic insight',
+                summary: analysis.executiveReasoning?.executiveSummary || 'Strategic insight',
                 timestamp: new Date().toISOString(),
                 type: analysis.type,
                 priority: 'high',
-                advice: analysis.executiveReasoning.strategicAdvice || [],
-                matrix: analysis.executiveReasoning.priorityMatrix || []
+                advice: analysis.executiveReasoning?.strategicAdvice || [],
+                matrix: analysis.executiveReasoning?.priorityMatrix || []
             };
 
             const existing = JSON.parse(localStorage.getItem('strategic_watchlist') || '[]');
@@ -2421,7 +2421,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                                                     data: builderData,
                                                                     isStatic: true
                                                                 };
-                                                                analysis.options = [...(analysis.options || []), newOpt];
+                                                                (analysis as any).options = [...(analysis.options || []), newOpt];
                                                                 alert('Chart added to analysis reports!');
                                                             }}
                                                         >
