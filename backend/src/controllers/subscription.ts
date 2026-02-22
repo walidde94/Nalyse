@@ -39,12 +39,18 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         }
 
         const createSession = async (cid: string) => {
+            const priceToUse = priceId || process.env.STRIPE_PRICE_ID_PRO;
+            if (!priceToUse) {
+                console.error('[Stripe] Missing PRICE_ID_PRO in environment variables');
+                throw new Error('Subscription price configuration missing');
+            }
+
             return await stripe.checkout.sessions.create({
                 mode: 'subscription',
                 customer: cid,
                 line_items: [
                     {
-                        price: priceId || process.env.STRIPE_PRICE_ID_PRO,
+                        price: priceToUse,
                         quantity: 1,
                     },
                 ],
@@ -287,6 +293,8 @@ export const syncSubscriptionStatus = async (req: Request, res: Response) => {
             if (subscriptions.data.length > 0) {
                 const sub = subscriptions.data[0];
                 const priceId = sub.items.data[0].price.id;
+                console.log(`[SubscriptionSync] User ${userId} active sub: ${sub.id}, price: ${priceId}`);
+                console.log(`[SubscriptionSync] Expected Pro: ${process.env.STRIPE_PRICE_ID_PRO}, Expected Enterprise: ${process.env.STRIPE_PRICE_ID_ENTERPRISE}`);
 
                 // Update plan based on priceId
                 if (priceId === process.env.STRIPE_PRICE_ID_PRO) {

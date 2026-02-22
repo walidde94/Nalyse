@@ -45,7 +45,7 @@ const AnomalyDetectionView = React.lazy(() => import('./features/anomaly/Anomaly
 const FinancialRiskView = React.lazy(() => import('./features/financial/FinancialRiskView').then(m => ({ default: m.FinancialRiskView })));
 const SimulationView = React.lazy(() => import('./features/simulation/SimulationView').then(m => ({ default: m.SimulationView })));
 
-// const RoadView = React.lazy(() => import('./features/logistics/RoadView').then(m => ({ default: m.RoadView })));
+
 
 // Loading Component
 const PageLoader = () => (
@@ -360,7 +360,6 @@ function AppContent() {
     const socket = io(API_URL);
 
     socket.on('live_update', (payload: any) => {
-
       // Handle File Updates
       if (payload.entity === 'file') {
         // Refresh file list if it belongs to current user
@@ -530,7 +529,6 @@ function AppContent() {
     setFiles(prev => prev.map(f => f.id === file.id ? { ...f, isFavorite: !wasFavorite } : f));
 
     try {
-      console.log(`Toggling favorite: ${file.id} (${!wasFavorite})`);
       const res = await fetch(`${API_URL}/api/files/${file.id}/favorite`, {
         method: 'PATCH',
         headers: {

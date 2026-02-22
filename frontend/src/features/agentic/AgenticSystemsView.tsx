@@ -110,7 +110,7 @@ export const AgenticSystemsView = () => {
 
         try {
             // 1. Start Agent Session
-            // const token = localStorage.getItem('token'); // REMOVED
+
             if (!token) throw new Error('Authentication required');
 
             const res = await fetch(`${API_URL}/api/agents/start`, {

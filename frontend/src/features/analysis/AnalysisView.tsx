@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import alasql from 'alasql';
 import { useAuth } from '../../contexts/AuthContext';
@@ -282,6 +282,119 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
     const [localData, setLocalData] = useState<any[]>(analysis.sampleData || []);
     const [filteredData, setFilteredData] = useState<any[]>(localData);
 
+    // Optimized Data Structures
+    const columns = useMemo(() => Object.keys(localData[0] || {}), [localData]);
+
+    const fieldTypes = useMemo(() => ({
+        hasRevenue: columns.some(c => /revenue|amount|total|sales|price/i.test(c)),
+        hasCustomer: columns.some(c => /customer|user|client|account|id/i.test(c)),
+        hasStatus: columns.some(c => /status|state|active|churn/i.test(c))
+    }), [columns]);
+
+    const memoizedChartsData = useMemo(() => {
+        return (analysis.options || []).map((opt: any) => getFilteredChartData(opt));
+    }, [analysis.options, filteredData, dimensions, measures]);
+
+    const memoizedMetrics = useMemo(() => {
+        let metrics: any[] = [];
+        const { hasRevenue, hasCustomer, hasStatus } = fieldTypes;
+
+        const splitByTimePeriod = (dateCol: string) => {
+            if (!dateCol || localData.length < 2) return { current: localData, previous: [] };
+            try {
+                const sorted = [...localData].sort((a, b) => new Date(a[dateCol]).getTime() - new Date(b[dateCol]).getTime());
+                const mid = Math.floor(sorted.length / 2);
+                return { current: sorted.slice(mid), previous: sorted.slice(0, mid) };
+            } catch (e) {
+                return { current: localData, previous: [] };
+            }
+        };
+
+        const calculateTrend = (curr: number, prev: number) => {
+            if (prev === 0) return '+100%';
+            const diff = ((curr - prev) / prev) * 100;
+            return (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+        };
+
+        if (hasRevenue && localData.length > 0) {
+            const revCol = columns.find(c => /revenue|amount|total|sales|price/i.test(c));
+            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
+
+            if (revCol) {
+                const { current, previous } = splitByTimePeriod(dateCol || '');
+                const currentRevenue = current.reduce((acc, row) => acc + (parseFloat(row[revCol]) || 0), 0);
+                const previousRevenue = previous.reduce((acc, row) => acc + (parseFloat(row[revCol]) || 0), 0);
+                const trend = calculateTrend(currentRevenue, previousRevenue);
+
+                metrics.push({
+                    label: 'Total Revenue',
+                    value: `$${(currentRevenue / 1000000).toFixed(2)}M`,
+                    trend: trend,
+                    color: 'var(--success)',
+                    icon: '$'
+                });
+            }
+        }
+
+        if (hasCustomer && localData.length > 0) {
+            const custCol = columns.find(c => /customer|user|client|account|id/i.test(c));
+            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
+
+            if (custCol) {
+                const { current, previous } = splitByTimePeriod(dateCol || '');
+                const currentCustomers = new Set(current.map(row => row[custCol]).filter(Boolean)).size;
+                const previousCustomers = new Set(previous.map(row => row[custCol]).filter(Boolean)).size;
+                const trend = calculateTrend(currentCustomers, previousCustomers);
+
+                metrics.push({
+                    label: 'Active Customers',
+                    value: currentCustomers.toLocaleString(),
+                    trend: trend,
+                    color: 'var(--primary)',
+                    icon: '#'
+                });
+            }
+        }
+
+        if (hasStatus && localData.length > 0) {
+            const statusCol = columns.find(c => /status|state|active|churn/i.test(c));
+            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
+
+            if (statusCol) {
+                const { current, previous } = splitByTimePeriod(dateCol || '');
+                const currentActiveCount = current.filter(row => {
+                    const status = String(row[statusCol]).toLowerCase();
+                    return status.includes('active') || status.includes('true') || status === '1';
+                }).length;
+                const currentHealthScore = current.length > 0 ? ((currentActiveCount / current.length) * 100).toFixed(1) : '0';
+                const currentHealthNum = parseFloat(currentHealthScore);
+
+                const previousActiveCount = previous.filter(row => {
+                    const status = String(row[statusCol]).toLowerCase();
+                    return status.includes('active') || status.includes('true') || status === '1';
+                }).length;
+                const previousHealthNum = previous.length > 0 ? (previousActiveCount / previous.length) * 100 : 0;
+                const trend = calculateTrend(currentHealthNum, previousHealthNum);
+
+                metrics.push({
+                    label: 'Customer Health',
+                    value: `${currentHealthScore}%`,
+                    trend: trend,
+                    color: currentHealthNum > 85 ? 'var(--success)' : currentHealthNum > 70 ? 'var(--warning)' : 'var(--error)',
+                    icon: '%'
+                });
+            }
+        }
+
+        if (metrics.length === 0) {
+            metrics = [
+                { label: 'Data Volume', value: localData.length.toLocaleString(), trend: 'Records', color: 'var(--primary)', icon: 'D' },
+                { label: 'Data Dimensions', value: columns.length.toString(), trend: 'Attributes', color: 'var(--info)', icon: 'A' },
+                { label: 'Engine Integrity', value: `${analysis.dataHealth?.score || 100}%`, trend: 'Optimal', color: 'var(--success)', icon: 'E' }
+            ];
+        }
+        return metrics;
+    }, [localData, fieldTypes, columns, analysis]);
     // Handler Functions
     const handleDeploy = () => {
         setShowDeployModal(true);
@@ -429,7 +542,6 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                     ? `SELECT [${xCol}] AS [name], COUNT(*) AS [value] FROM ? GROUP BY [${xCol}]`
                     : `SELECT [${xCol}] AS [name], ${actualAgg}(CAST([${yCol}] AS FLOAT)) AS [value] FROM ? GROUP BY [${xCol}]`;
 
-                console.log("📊 Architect Execution:", query);
                 const res = alasql(query, [filteredData]) as any[];
 
                 if (!res || res.length === 0) {
@@ -454,7 +566,6 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
                     cleaned = cleaned.slice(0, builderConfig.topN || 30);
 
-                    console.log("📈 Architect manifested points:", cleaned.length);
                     setBuilderData(cleaned);
                 }
             } catch (e: any) {
@@ -467,19 +578,16 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
     // ===== NEW: Filter Computation Logic =====
     useEffect(() => {
         let filtered = [...localData];
-        console.log('🔍 Filter computation started. Total rows:', localData.length);
 
         // Apply global filters (dimension-based)
         Object.entries(globalFilters).forEach(([column, values]) => {
             if (values && values.length > 0) {
-                console.log(`Applying filter: ${column} IN [${values.join(', ')}]`);
                 filtered = filtered.filter(row => values.includes(row[column]));
             }
         });
 
         // Apply date range filter
         if (dateRange.column && dateRange.start && dateRange.end) {
-            console.log(`Applying date filter: ${dateRange.column} between ${dateRange.start} and ${dateRange.end}`);
             filtered = filtered.filter(row => {
                 const dateVal = new Date(row[dateRange.column!]);
                 const start = new Date(dateRange.start!);
@@ -490,7 +598,6 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
         // Apply drill-down filter
         if (activeDrillDown) {
-            console.log(`Applying drill-down: ${activeDrillDown.column} = ${activeDrillDown.value}`);
             filtered = filtered.filter(row => row[activeDrillDown.column] === activeDrillDown.value);
         }
 
@@ -504,7 +611,6 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
             });
         }
 
-        console.log(`✅ Filtering complete. Filtered rows: ${filtered.length} (${((filtered.length / localData.length) * 100).toFixed(1)}%)`);
         setFilteredData(filtered);
     }, [globalFilters, dateRange, activeDrillDown, localData]);
 
@@ -514,11 +620,9 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
             // Check if this value already exists for this column
             const existingValues = prev[column] || [];
             if (existingValues.includes(value)) {
-                console.log(`⚠️ Filter value already exists: ${column} = ${value}`);
                 return prev; // Don't add duplicate
             }
 
-            console.log(`➕ Adding filter: ${column} = ${value}`);
             return {
                 ...prev,
                 [column]: [...existingValues, value]
@@ -609,7 +713,6 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
             if (!titleMatch) {
                 // If title doesn't match pattern, just return original data
-                console.log(`⚠️ Chart title doesn't match pattern, using original data: "${opt.title}"`);
                 return opt.data;
             }
 
@@ -624,18 +727,15 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                 );
 
                 if (!dimensionCol) {
-                    console.log(`⚠️ Could not find dimension column: ${dimensionName}`);
                     return opt.data;
                 }
 
                 // Use COUNT for Index-based charts
                 const query = `SELECT [${dimensionCol}] as name, COUNT(*) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
-                console.log(`📊 Recomputing chart (COUNT): ${opt.title}`);
 
                 const result = alasql(query, [filteredData]) as any[];
 
                 if (!result || result.length === 0) {
-                    console.log(`⚠️ Query returned 0 results for "${opt.title}"`);
                     return opt.data;
                 }
 
@@ -656,13 +756,11 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
             // If we can't find matching columns, return original data
             if (!dimensionCol) {
-                console.log(`⚠️ Could not find dimension column: ${dimensionName}`);
                 return opt.data;
             }
 
             // If no measure found, use COUNT
             if (!measureCol) {
-                console.log(`⚠️ Could not find measure column: ${measureName}, using COUNT instead`);
                 const query = `SELECT [${dimensionCol}] as name, COUNT(*) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
                 const result = alasql(query, [filteredData]) as any[];
                 return result.slice(0, 10).map(r => ({ name: r.name, value: r.val }));
@@ -670,12 +768,10 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
             // Build and execute aggregation query with proper escaping
             const query = `SELECT [${dimensionCol}] as name, SUM(CAST([${measureCol}] as FLOAT)) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
-            console.log(`📊 Recomputing chart: ${opt.title}`);
 
             const result = alasql(query, [filteredData]) as any[];
 
             if (!result || result.length === 0) {
-                console.log(`⚠️ Query returned 0 results for "${opt.title}"`);
                 return opt.data;
             }
 
@@ -829,9 +925,9 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
         );
     };
 
-    const renderChart = (opt: any, index: number) => {
-        // Use filtered data for charts
-        const displayData = getFilteredChartData(opt);
+    const renderChart = (opt: any, index: number, forcedData?: any) => {
+        // Use filtered data for charts - prefer forcedData (memoized) if available
+        const displayData = forcedData || getFilteredChartData(opt);
         const color = COLORS[index % COLORS.length];
         const currentType = opt.isStatic ? opt.chartType : (chartConfig[index] || opt.chartType);
 
@@ -1484,341 +1580,166 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
 
                                 {/* Smart Business Metrics */}
                                 <div className="flex-responsive gap-4">
-                                    {(() => {
-                                        // Detect data type and calculate relevant metrics
-                                        const columns = localData[0] ? Object.keys(localData[0]) : [];
-                                        const hasRevenue = columns.some(c => /revenue|sales|amount|price|total/i.test(c));
-                                        const hasDate = columns.some(c => /date|time|created|updated/i.test(c));
-                                        const hasStatus = columns.some(c => /status|state|active|churn/i.test(c));
-                                        const hasCustomer = columns.some(c => /customer|user|client|account/i.test(c));
+                                    {memoizedMetrics.map((metric, idx) => (
 
-                                        // Helper function to calculate trend
-                                        const calculateTrend = (current: number, previous: number): string => {
-                                            if (previous === 0) return 'New';
-                                            const change = ((current - previous) / previous) * 100;
-                                            const sign = change >= 0 ? '+' : '';
-                                            return `${sign}${change.toFixed(1)}%`;
-                                        };
-
-                                        // Helper function to split data by time period
-                                        const splitByTimePeriod = (dateCol: string) => {
-                                            if (!dateCol || !hasDate) return { current: localData, previous: [] };
-
-                                            try {
-                                                // Sort data by date
-                                                const sortedData = [...localData].sort((a, b) => {
-                                                    const dateA = new Date(a[dateCol]).getTime();
-                                                    const dateB = new Date(b[dateCol]).getTime();
-                                                    return dateB - dateA; // Most recent first
-                                                });
-
-                                                // Get the most recent date
-                                                const latestDate = new Date(sortedData[0][dateCol]);
-                                                if (isNaN(latestDate.getTime())) return { current: localData, previous: [] };
-
-                                                // Define current period (last 30 days from latest date)
-                                                const currentPeriodStart = new Date(latestDate);
-                                                currentPeriodStart.setDate(currentPeriodStart.getDate() - 30);
-
-                                                // Define previous period (30 days before current period)
-                                                const previousPeriodStart = new Date(currentPeriodStart);
-                                                previousPeriodStart.setDate(previousPeriodStart.getDate() - 30);
-
-                                                const current = sortedData.filter(row => {
-                                                    const rowDate = new Date(row[dateCol]);
-                                                    return rowDate >= currentPeriodStart && rowDate <= latestDate;
-                                                });
-
-                                                const previous = sortedData.filter(row => {
-                                                    const rowDate = new Date(row[dateCol]);
-                                                    return rowDate >= previousPeriodStart && rowDate < currentPeriodStart;
-                                                });
-
-                                                return { current, previous };
-                                            } catch (e) {
-                                                return { current: localData, previous: [] };
-                                            }
-                                        };
-
-                                        // Calculate metrics based on data
-                                        let metrics = [];
-
-                                        if (hasRevenue && localData.length > 0) {
-                                            // Find revenue column
-                                            const revenueCol = columns.find(c => /revenue|sales|amount|price|total/i.test(c));
-                                            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
-
-                                            if (revenueCol) {
-                                                const { current, previous } = splitByTimePeriod(dateCol || '');
-
-                                                const currentRevenue = current.reduce((sum, row) => {
-                                                    const val = parseFloat(row[revenueCol]);
-                                                    return sum + (isNaN(val) ? 0 : val);
-                                                }, 0);
-
-                                                const previousRevenue = previous.reduce((sum, row) => {
-                                                    const val = parseFloat(row[revenueCol]);
-                                                    return sum + (isNaN(val) ? 0 : val);
-                                                }, 0);
-
-                                                const trend = calculateTrend(currentRevenue, previousRevenue);
-
-                                                metrics.push({
-                                                    label: 'Total Revenue',
-                                                    value: `$${(currentRevenue / 1000000).toFixed(2)}M`,
-                                                    trend: trend,
-                                                    color: 'var(--success)',
-                                                    icon: '$'
-                                                });
-                                            }
-                                        }
-
-                                        if (hasCustomer && localData.length > 0) {
-                                            const custCol = columns.find(c => /customer|user|client|account/i.test(c));
-                                            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
-
-                                            if (custCol) {
-                                                const { current, previous } = splitByTimePeriod(dateCol || '');
-
-                                                const currentCustomers = new Set(
-                                                    current.map(row => row[custCol]).filter(Boolean)
-                                                ).size;
-
-                                                const previousCustomers = new Set(
-                                                    previous.map(row => row[custCol]).filter(Boolean)
-                                                ).size;
-
-                                                const trend = calculateTrend(currentCustomers, previousCustomers);
-
-                                                metrics.push({
-                                                    label: 'Active Customers',
-                                                    value: currentCustomers.toLocaleString(),
-                                                    trend: trend,
-                                                    color: 'var(--primary)',
-                                                    icon: '#'
-                                                });
-                                            }
-                                        }
-
-                                        if (hasStatus && localData.length > 0) {
-                                            const statusCol = columns.find(c => /status|state|active|churn/i.test(c));
-                                            const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
-
-                                            if (statusCol) {
-                                                const { current, previous } = splitByTimePeriod(dateCol || '');
-
-                                                const currentActiveCount = current.filter(row => {
-                                                    const status = String(row[statusCol]).toLowerCase();
-                                                    return status.includes('active') || status.includes('true') || status === '1';
-                                                }).length;
-                                                const currentHealthScore = current.length > 0 ? ((currentActiveCount / current.length) * 100).toFixed(1) : '0';
-                                                const currentHealthNum = parseFloat(currentHealthScore);
-
-                                                const previousActiveCount = previous.filter(row => {
-                                                    const status = String(row[statusCol]).toLowerCase();
-                                                    return status.includes('active') || status.includes('true') || status === '1';
-                                                }).length;
-                                                const previousHealthNum = previous.length > 0 ? (previousActiveCount / previous.length) * 100 : 0;
-
-                                                const trend = calculateTrend(currentHealthNum, previousHealthNum);
-
-                                                metrics.push({
-                                                    label: 'Customer Health',
-                                                    value: `${currentHealthScore}%`,
-                                                    trend: trend,
-                                                    color: currentHealthNum > 85 ? 'var(--success)' : currentHealthNum > 70 ? 'var(--warning)' : 'var(--error)',
-                                                    icon: '%'
-                                                });
-                                            }
-                                        }
-
-                                        // Fallback to intelligent metadata if no business metrics detected
-                                        if (metrics.length === 0) {
-                                            metrics = [
-                                                {
-                                                    label: 'Data Volume',
-                                                    value: localData.length.toLocaleString(),
-                                                    trend: 'Records',
-                                                    color: 'var(--primary)',
-                                                    icon: 'D'
-                                                },
-                                                {
-                                                    label: 'Data Dimensions',
-                                                    value: columns.length.toString(),
-                                                    trend: 'Attributes',
-                                                    color: 'var(--info)',
-                                                    icon: 'A'
-                                                },
-                                                {
-                                                    label: 'Engine Integrity',
-                                                    value: `${analysis.dataHealth?.score || 100}%`,
-                                                    trend: analysis.dataHealth?.score ? (analysis.dataHealth.score >= 95 ? 'Optimal' : analysis.dataHealth.score >= 80 ? 'Good' : 'Fair') : 'Optimal',
-                                                    color: 'var(--success)',
-                                                    icon: 'E'
-                                                }
-                                            ];
-                                        }
-
-                                        return metrics.map((metric, idx) => (
+                                        <motion.div
+                                            key={`metric-${idx}`}
+                                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                                            transition={{
+                                                delay: idx * 0.15,
+                                                type: "spring",
+                                                stiffness: 200,
+                                                damping: 20
+                                            }}
+                                            whileHover={{
+                                                scale: 1.02,
+                                                transition: { duration: 0.2 }
+                                            }}
+                                            className="card flex-1 group cursor-pointer"
+                                            style={{
+                                                background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(255,255,255,0.02) 100%)',
+                                                border: '1px solid var(--border-subtle)',
+                                                position: 'relative',
+                                                overflow: 'hidden',
+                                                backdropFilter: 'blur(10px)',
+                                                minHeight: '140px'
+                                            }}
+                                        >
+                                            {/* Animated gradient background */}
                                             <motion.div
-                                                key={`metric-${idx}`}
-                                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                                animate={{
+                                                    opacity: [0.05, 0.15, 0.05],
+                                                    scale: [1, 1.2, 1],
+                                                }}
                                                 transition={{
-                                                    delay: idx * 0.15,
-                                                    type: "spring",
-                                                    stiffness: 200,
-                                                    damping: 20
+                                                    duration: 4,
+                                                    repeat: Infinity,
+                                                    ease: "easeInOut"
                                                 }}
-                                                whileHover={{
-                                                    scale: 1.02,
-                                                    transition: { duration: 0.2 }
-                                                }}
-                                                className="card flex-1 group cursor-pointer"
                                                 style={{
-                                                    background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(255,255,255,0.02) 100%)',
-                                                    border: '1px solid var(--border-subtle)',
-                                                    position: 'relative',
-                                                    overflow: 'hidden',
-                                                    backdropFilter: 'blur(10px)',
-                                                    minHeight: '140px'
+                                                    position: 'absolute',
+                                                    top: '-50%',
+                                                    right: '-50%',
+                                                    width: '200%',
+                                                    height: '200%',
+                                                    background: `radial-gradient(circle, ${metric.color}40 0%, transparent 70%)`,
+                                                    pointerEvents: 'none'
                                                 }}
+                                            />
+
+                                            {/* Top gradient accent */}
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                height: '4px',
+                                                background: `linear-gradient(90deg, ${metric.color}, ${metric.color}80, transparent)`,
+                                                opacity: 0.8
+                                            }} />
+
+                                            {/* Corner decoration */}
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '12px',
+                                                right: '12px',
+                                                width: '48px',
+                                                height: '48px',
+                                                borderRadius: '12px',
+                                                background: `${metric.color}10`,
+                                                border: `1px solid ${metric.color}20`,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '24px',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                                className="group-hover:scale-110 group-hover:rotate-12"
                                             >
-                                                {/* Animated gradient background */}
+                                                {metric.icon}
+                                            </div>
+
+                                            <div style={{ position: 'relative', zIndex: 1 }}>
+                                                {/* Label */}
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-secondary" style={{
+                                                        letterSpacing: '0.1em'
+                                                    }}>
+                                                        {metric.label}
+                                                    </span>
+                                                </div>
+
+                                                {/* Value */}
                                                 <motion.div
-                                                    animate={{
-                                                        opacity: [0.05, 0.15, 0.05],
-                                                        scale: [1, 1.2, 1],
-                                                    }}
-                                                    transition={{
-                                                        duration: 4,
-                                                        repeat: Infinity,
-                                                        ease: "easeInOut"
-                                                    }}
+                                                    className="text-h1 font-mono mb-3"
                                                     style={{
-                                                        position: 'absolute',
-                                                        top: '-50%',
-                                                        right: '-50%',
-                                                        width: '200%',
-                                                        height: '200%',
-                                                        background: `radial-gradient(circle, ${metric.color}40 0%, transparent 70%)`,
-                                                        pointerEvents: 'none'
+                                                        fontSize: 'clamp(28px, 4vw, 40px)',
+                                                        fontWeight: 700,
+                                                        color: metric.color,
+                                                        textShadow: `0 0 30px ${metric.color}30, 0 2px 4px rgba(0,0,0,0.3)`,
+                                                        lineHeight: 1,
+                                                        letterSpacing: '-0.02em'
                                                     }}
-                                                />
-
-                                                {/* Top gradient accent */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    height: '4px',
-                                                    background: `linear-gradient(90deg, ${metric.color}, ${metric.color}80, transparent)`,
-                                                    opacity: 0.8
-                                                }} />
-
-                                                {/* Corner decoration */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: '12px',
-                                                    right: '12px',
-                                                    width: '48px',
-                                                    height: '48px',
-                                                    borderRadius: '12px',
-                                                    background: `${metric.color}10`,
-                                                    border: `1px solid ${metric.color}20`,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontSize: '24px',
-                                                    transition: 'all 0.3s ease'
-                                                }}
-                                                    className="group-hover:scale-110 group-hover:rotate-12"
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: idx * 0.15 + 0.2 }}
                                                 >
-                                                    {metric.icon}
-                                                </div>
+                                                    {metric.value}
+                                                </motion.div>
 
-                                                <div style={{ position: 'relative', zIndex: 1 }}>
-                                                    {/* Label */}
-                                                    <div className="flex items-center gap-2 mb-3">
-                                                        <span className="text-xs font-bold uppercase tracking-wider text-secondary" style={{
-                                                            letterSpacing: '0.1em'
-                                                        }}>
-                                                            {metric.label}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Value */}
+                                                {/* Trend badge */}
+                                                <div className="flex items-center gap-2">
                                                     <motion.div
-                                                        className="text-h1 font-mono mb-3"
+                                                        initial={{ opacity: 0, scale: 0.8 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        transition={{ delay: idx * 0.15 + 0.3 }}
                                                         style={{
-                                                            fontSize: 'clamp(28px, 4vw, 40px)',
-                                                            fontWeight: 700,
+                                                            fontSize: '10px',
+                                                            fontWeight: 800,
+                                                            padding: '6px 10px',
+                                                            borderRadius: '8px',
+                                                            background: `${metric.color}15`,
                                                             color: metric.color,
-                                                            textShadow: `0 0 30px ${metric.color}30, 0 2px 4px rgba(0,0,0,0.3)`,
-                                                            lineHeight: 1,
-                                                            letterSpacing: '-0.02em'
+                                                            border: `1px solid ${metric.color}30`,
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.05em',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            boxShadow: `0 2px 8px ${metric.color}20`
                                                         }}
-                                                        initial={{ opacity: 0, x: -20 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: idx * 0.15 + 0.2 }}
                                                     >
-                                                        {metric.value}
+                                                        {metric.trend.includes('+') && <span>↗</span>}
+                                                        {metric.trend.includes('-') && <span>↘</span>}
+                                                        <span>{metric.trend}</span>
                                                     </motion.div>
-
-                                                    {/* Trend badge */}
-                                                    <div className="flex items-center gap-2">
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0.8 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            transition={{ delay: idx * 0.15 + 0.3 }}
-                                                            style={{
-                                                                fontSize: '10px',
-                                                                fontWeight: 800,
-                                                                padding: '6px 10px',
-                                                                borderRadius: '8px',
-                                                                background: `${metric.color}15`,
-                                                                color: metric.color,
-                                                                border: `1px solid ${metric.color}30`,
-                                                                textTransform: 'uppercase',
-                                                                letterSpacing: '0.05em',
-                                                                display: 'inline-flex',
-                                                                alignItems: 'center',
-                                                                gap: '4px',
-                                                                boxShadow: `0 2px 8px ${metric.color}20`
-                                                            }}
-                                                        >
-                                                            {metric.trend.includes('+') && <span>↗</span>}
-                                                            {metric.trend.includes('-') && <span>↘</span>}
-                                                            <span>{metric.trend}</span>
-                                                        </motion.div>
-                                                    </div>
-
-                                                    {/* Bottom sparkline decoration */}
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        bottom: '0',
-                                                        left: '0',
-                                                        right: '0',
-                                                        height: '2px',
-                                                        background: `linear-gradient(90deg, transparent, ${metric.color}40, transparent)`,
-                                                        opacity: 0.5
-                                                    }} />
                                                 </div>
 
-                                                {/* Hover glow effect */}
-                                                <div
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                                    style={{
-                                                        position: 'absolute',
-                                                        inset: 0,
-                                                        background: `radial-gradient(circle at center, ${metric.color}05, transparent)`,
-                                                        pointerEvents: 'none'
-                                                    }}
-                                                />
-                                            </motion.div>
-                                        ));
-                                    })()}
+                                                {/* Bottom sparkline decoration */}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    bottom: '0',
+                                                    left: '0',
+                                                    right: '0',
+                                                    height: '2px',
+                                                    background: `linear-gradient(90deg, transparent, ${metric.color}40, transparent)`,
+                                                    opacity: 0.5
+                                                }} />
+                                            </div>
+
+                                            {/* Hover glow effect */}
+                                            <div
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                                style={{
+                                                    position: 'absolute',
+                                                    inset: 0,
+                                                    background: `radial-gradient(circle at center, ${metric.color}05, transparent)`,
+                                                    pointerEvents: 'none'
+                                                }}
+                                            />
+                                        </motion.div>
+                                    ))}
                                 </div>
 
                                 <ExecutiveFindings
@@ -2059,7 +1980,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                     className="grid gap-6"
                                     style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}
                                 >
-                                    {analysis.options?.map((opt: any, i: number) => renderChart(opt, i))}
+                                    {analysis.options?.map((opt: any, i: number) => renderChart(opt, i, memoizedChartsData[i]))}
                                 </motion.div>
                             </div>
                         )}

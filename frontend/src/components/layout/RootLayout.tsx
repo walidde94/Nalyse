@@ -65,7 +65,6 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
                 flex: 1,
                 minWidth: 0,
                 position: 'relative',
-                zIndex: 1,
                 overflow: 'hidden',
             }}>
                 {tabBar}
