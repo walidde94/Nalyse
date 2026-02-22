@@ -156,14 +156,20 @@ function AppContent() {
   };
 
   // --- Checkout Success Handling ---
-  const { refreshProfile } = useAuth();
+  const { refreshProfile, syncSubscription } = useAuth();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
-      addToast('Upgrade successful. Neural Pro features are now active.', 'success');
-      refreshProfile(); // Refresh user data to show correct plan
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
+      const finalizeCheckout = async () => {
+        try {
+          await syncSubscription();
+          addToast('Upgrade verified. Neural Pro features are now active.', 'success');
+        } catch (error: any) {
+          addToast(`Upgraded, but sync failed: ${error?.message}. Please check Billing & Plans settings.`, 'warning');
+        }
+        window.history.replaceState({}, '', window.location.pathname);
+      };
+      finalizeCheckout();
     }
     if (params.get('canceled') === 'true') {
       addToast('Upgrade process was minimized. Return anytime to complete your evolution.', 'warning');

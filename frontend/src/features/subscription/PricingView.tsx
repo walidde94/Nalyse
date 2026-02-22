@@ -72,8 +72,18 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
 
     const handleSync = async () => {
         setLoading('sync');
-        await syncSubscription();
-        addToast('Plan status synchronized', 'success');
+        try {
+            const result = await syncSubscription();
+            if (result && result.success) {
+                addToast(result.message || 'Plan status synchronized', 'success');
+            } else if (result && !result.success) {
+                addToast(result.message || 'You are still on the Starter plan.', 'warning');
+            } else {
+                addToast('Sync failed locally. Please refresh.', 'error');
+            }
+        } catch (error: any) {
+            addToast(`Sync error: ${error.message || 'Unknown error'}`, 'error');
+        }
         setLoading(null);
     };
 

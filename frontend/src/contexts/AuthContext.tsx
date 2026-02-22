@@ -32,7 +32,7 @@ interface AuthContextType {
     logout: () => void;
     refreshToken: () => Promise<void>;
     refreshProfile: () => Promise<void>;
-    syncSubscription: () => Promise<boolean>;
+    syncSubscription: () => Promise<{ success: boolean; message?: string } | false>;
     requestSubscriptionCancellation: () => Promise<boolean>;
 }
 
@@ -198,23 +198,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (res.ok) {
-                // Fetch the latest profile to update state
-                const profileRes = await fetch(`${API_URL}/api/auth/profile`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (profileRes.ok) {
-                    const data = await profileRes.json();
-                    const userData = data.user || data;
-                    setUser(userData);
-                    localStorage.setItem('user', JSON.stringify(userData));
-                    return userData.organization?.plan === 'pro';
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || errData.message || 'Sync failed on server');
+            }
+
+            const syncData = await res.json();
+
+            // Fetch the latest profile to update state
+            const profileRes = await fetch(`${API_URL}/api/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (profileRes.ok) {
+                const data = await profileRes.json();
+                const userData = data.user || data;
+                setUser(userData);
+                localStorage.setItem('user', JSON.stringify(userData));
+
+                // Return success and the message from sync logic
+                if (syncData.plan === 'pro' || syncData.plan === 'enterprise') {
+                    return { success: true, message: 'Your account has been upgraded successfully.' };
+                } else {
+                    return { success: false, message: syncData.message || 'No active subscription found. You are on the free plan.' };
                 }
             }
-        } catch (e) {
+            throw new Error('Failed to fetch updated profile');
+        } catch (e: any) {
             console.error('Failed to sync subscription:', e);
+            throw e;
         }
-        return false;
     };
 
     const requestSubscriptionCancellation = async () => {
