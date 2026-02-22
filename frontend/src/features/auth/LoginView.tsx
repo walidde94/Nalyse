@@ -289,7 +289,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                             Initialize New Protocol
                         </button>
                     </p>
-                    <div style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: 600 }}>v3.0.2-APEX</span>
                         <a href="#" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Privacy</a>
                         <a href="#" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Terms</a>
                     </div>
