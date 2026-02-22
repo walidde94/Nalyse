@@ -109,7 +109,10 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                 body: JSON.stringify({}) // Backend defaults to Pro price ID
             });
 
-            if (!res.ok) throw new Error('Failed to start checkout');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to start checkout');
+            }
 
             const { url } = await res.json();
             if (url) {
@@ -117,9 +120,9 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
             } else {
                 throw new Error('No checkout URL returned');
             }
-        } catch (error) {
-            console.error(error);
-            addToast('Failed to initiate checkout', 'error');
+        } catch (error: any) {
+            console.error('Checkout Error:', error);
+            addToast(error.message || 'Failed to initiate checkout', 'error');
             setLoading(null);
         }
     };

@@ -327,7 +327,7 @@ export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
     }), [columns]);
 
     // ===== NEW: Recompute chart data based on filtered data =====
-    const getFilteredChartData = (opt: ChartOption) => {
+    function getFilteredChartData(opt: ChartOption) {
         // If isStatic is set, always return the data as-is
         if (opt.isStatic) return opt.data;
 
@@ -410,7 +410,8 @@ export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
             console.error('❌ Error recomputing chart data for:', opt.title, e);
             return opt.data; // Fallback to original
         }
-    };
+    }
+
 
 
     const memoizedChartsData = useMemo(() => {
