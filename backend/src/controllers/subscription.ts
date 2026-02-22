@@ -10,8 +10,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         const userId = (req as any).user.userId;
         const { priceId } = req.body;
 
-        console.log(`[Stripe] Init checkout for user ${userId}`);
-
         if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_placeholder') {
             return res.status(500).json({ error: 'Stripe Secret Key is not configured on the server.' });
         }
@@ -47,10 +45,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         const createSession = async (cid: string) => {
             const priceToUse = priceId || process.env.STRIPE_PRICE_ID_PRO;
             const baseUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
-
-            console.log(`[Stripe] Creating session for customer ${cid}`);
-            console.log(`[Stripe] Price: ${priceToUse}`);
-            console.log(`[Stripe] Base URL: ${baseUrl}`);
 
             if (!priceToUse) {
                 console.error('[Stripe] Missing PRICE_ID_PRO in environment variables');
@@ -102,10 +96,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('Stripe Checkout Error:', error);
         res.status(500).json({
-            error: `Stripe Error: ${error.message || 'Unknown server error'}`,
-            details: error.stack, // Expose stack temporarily for debugging
-            code: error.code,
-            type: error.type
+            error: error.message || 'Unknown server error',
+            code: error.code
         });
     }
 };
