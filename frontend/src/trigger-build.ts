@@ -1,1 +1,1 @@
-// Triggering Vercel Build: Sun Feb 22 13:36:18 CET 2026
+export const BUILD_ID = "v3.0.2-APEX-FORCE-DEPLOY-3";
