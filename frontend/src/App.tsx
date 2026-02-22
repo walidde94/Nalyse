@@ -155,6 +155,22 @@ function AppContent() {
     addToast('Onboarding complete. Welcome to the Apex Tier.', 'success');
   };
 
+  // --- Checkout Success Handling ---
+  const { refreshProfile } = useAuth();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      addToast('Upgrade successful. Neural Pro features are now active.', 'success');
+      refreshProfile(); // Refresh user data to show correct plan
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    if (params.get('canceled') === 'true') {
+      addToast('Upgrade process was minimized. Return anytime to complete your evolution.', 'warning');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [addToast, refreshProfile]);
+
   // Apply theme on mount and change
   useEffect(() => {
     applyTheme(theme);
