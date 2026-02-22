@@ -292,18 +292,18 @@ export const syncSubscriptionStatus = async (req: Request, res: Response) => {
         }
 
         try {
-            // Fetch active subscriptions from Stripe
+            // Fetch active or trialing subscriptions from Stripe
             const subscriptions = await stripe.subscriptions.list({
                 customer: org.stripeCustomerId || undefined,
-                status: 'active',
-                limit: 1
+                status: 'all', // Check all to be safe, but focus on the logic below
+                limit: 10 // Increased limit to find relevant sub if user has multiple
             });
 
-            if (subscriptions.data.length > 0) {
-                const sub = subscriptions.data[0];
+            const activeSub = subscriptions.data.find(s => s.status === 'active' || s.status === 'trialing');
+
+            if (activeSub) {
+                const sub = activeSub;
                 const priceId = sub.items.data[0].price.id;
-                console.log(`[SubscriptionSync] User ${userId} active sub: ${sub.id}, price: ${priceId}`);
-                console.log(`[SubscriptionSync] Expected Pro: ${process.env.STRIPE_PRICE_ID_PRO}, Expected Enterprise: ${process.env.STRIPE_PRICE_ID_ENTERPRISE}`);
 
                 // Update plan based on priceId
                 if (priceId === process.env.STRIPE_PRICE_ID_PRO) {
@@ -340,7 +340,7 @@ export const syncSubscriptionStatus = async (req: Request, res: Response) => {
             } else {
                 // No active subscriptions found - Downgrade to free
                 org.plan = 'free';
-                org.storageLimit = 5368709120; // 5GB
+                org.storageLimit = 104857600; // 100MB consistent limit
                 org.fileLimit = 5;
                 org.userLimit = 1;
                 org.stripeSubscriptionId = null;
@@ -352,19 +352,23 @@ export const syncSubscriptionStatus = async (req: Request, res: Response) => {
 
                 await AppDataSource.getRepository(Organization).save(org);
                 await userRepo.save(user);
-                return res.json({ success: true, plan: org.plan, message: 'Downgraded to free as no active subscriptions found' });
+
+                return res.json({
+                    success: true,
+                    plan: 'free',
+                    message: 'No active subscription found.'
+                });
             }
         } catch (stripeError: any) {
             // If customer is deleted in Stripe, it returns 404
             if (stripeError.code === 'resource_missing' || stripeError.message.includes('No such customer')) {
                 org.plan = 'free';
-                org.storageLimit = 5368709120; // 5GB
+                org.storageLimit = 104857600; // 100MB
                 org.fileLimit = 5;
                 org.userLimit = 1;
                 org.stripeCustomerId = null;
                 org.stripeSubscriptionId = null;
                 user.plan = 'free';
-                user.stripeCustomerId = null;
                 user.subscriptionStatus = 'inactive';
                 await AppDataSource.getRepository(Organization).save(org);
                 await userRepo.save(user);
