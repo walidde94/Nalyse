@@ -62,6 +62,14 @@ interface ChartOption {
 }
 
 interface AnalysisData {
+    id?: string;
+    summary?: {
+        columnTypes?: Record<string, string>;
+        rowCount?: number;
+        statistics?: any;
+        dimensions?: string[];
+        measures?: string[];
+    };
     sampleData: any[];
     options: ChartOption[];
     executiveReasoning?: {
@@ -85,7 +93,10 @@ interface AnalysisData {
 interface AnalysisViewProps {
     analysis: AnalysisData;
     onClose: () => void;
+    onShare?: () => Promise<void>;
+    onUpgradeRequested?: () => void;
 }
+
 
 
 // Premium Modern Color Palette
@@ -150,7 +161,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 import { API_URL } from '../../config';
 
-export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
+export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }: AnalysisViewProps) => {
     const { token } = useAuth();
     const { addToast } = useToast();
 
@@ -1076,7 +1087,7 @@ export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
                                 className="btn btn-secondary btn-icon"
                                 style={{ borderRadius: '10px' }}
                                 title="Export Analysis"
-                                onClick={() => exportToPDF(analysis, `analysis-report-${analysis.id}`)}
+                                onClick={() => exportToPDF(analysis, `analysis-report-${analysis.id || 'export'}`)}
                             >
                                 <Share2 size={16} />
                             </button>
@@ -1883,7 +1894,7 @@ export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
                                 {showFilterPanel && (
                                     <div className="card">
                                         <h4 className="text-h3 mb-4">Filter by Dimensions</h4>
-                                        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
                                             {dimensions.slice(0, 5).map(dim => {
                                                 const uniqueValues = Array.from(new Set(localData.map(r => r[dim]))).slice(0, 20);
                                                 return (
@@ -1910,7 +1921,7 @@ export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
                                         </div>
 
                                         {/* Date Range Filter */}
-                                        {analysis.summary.columnTypes && Object.entries(analysis.summary.columnTypes).some(([_, type]) => type === 'date') && (
+                                        {analysis.summary?.columnTypes && Object.entries(analysis.summary.columnTypes as any).some(([_, type]) => type === 'date') && (
                                             <div className="mt-6">
                                                 <h4 className="text-h3 mb-4">Filter by Date Range</h4>
                                                 <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
@@ -1922,7 +1933,7 @@ export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
                                                             onChange={(e) => setDateRange(prev => ({ ...prev, column: e.target.value }))}
                                                         >
                                                             <option value="">Select column...</option>
-                                                            {Object.entries(analysis.summary.columnTypes)
+                                                            {Object.entries(analysis.summary?.columnTypes || {})
                                                                 .filter(([_, type]) => type === 'date')
                                                                 .map(([col]) => (
                                                                     <option key={col} value={col}>{col}</option>
@@ -1957,7 +1968,7 @@ export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
                                 )}
 
 
-                                {analysis.keyFindings?.length > 0 && (
+                                {analysis.keyFindings && analysis.keyFindings.length > 0 && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -1972,7 +1983,7 @@ export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
                                         </div>
                                         <div className="grid gap-3" style={{ gridTemplateColumns: '1fr' }}>
                                             <AnimatePresence mode="popLayout">
-                                                {analysis.keyFindings.slice(0, 5).map((insight: any, i: number) => (
+                                                {analysis.keyFindings && analysis.keyFindings.slice(0, 5).map((insight: any, i: number) => (
                                                     <motion.div
                                                         key={i}
                                                         initial={{ opacity: 0, x: -10 }}
