@@ -53,6 +53,41 @@ import { ExecutiveFindings } from './components/ExecutiveFindings';
 import { PythonStudio } from './components/PythonStudio';
 import { DeployModal } from './components/DeployModal';
 
+interface ChartOption {
+    title: string;
+    description?: string;
+    chartType: string;
+    data: any[];
+    isStatic?: boolean;
+}
+
+interface AnalysisData {
+    sampleData: any[];
+    options: ChartOption[];
+    executiveReasoning?: {
+        executiveSummary: string;
+        strategicAdvice: string[];
+        priorityMatrix: Array<{ task: string; impact: string; effort: string }>;
+    };
+    keyFindings?: Array<{
+        type: string;
+        description: string;
+        confidence: number;
+    }>;
+    aiInsights: any[];
+    dataHealth?: {
+        score: number;
+    };
+    processingLog: string[];
+    type?: string;
+}
+
+interface AnalysisViewProps {
+    analysis: AnalysisData;
+    onClose: () => void;
+}
+
+
 // Premium Modern Color Palette
 const COLORS = [
     '#34d399', // Emerald 400 (Main Brand Color)
@@ -115,7 +150,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 import { API_URL } from '../../config';
 
-export const AnalysisView = ({ analysis, onClose }: any) => {
+export const AnalysisView = ({ analysis, onClose }: AnalysisViewProps) => {
     const { token } = useAuth();
     const { addToast } = useToast();
 
@@ -290,6 +325,93 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
         hasCustomer: columns.some(c => /customer|user|client|account|id/i.test(c)),
         hasStatus: columns.some(c => /status|state|active|churn/i.test(c))
     }), [columns]);
+
+    // ===== NEW: Recompute chart data based on filtered data =====
+    const getFilteredChartData = (opt: ChartOption) => {
+        // If isStatic is set, always return the data as-is
+        if (opt.isStatic) return opt.data;
+
+        // If we have very few filtered rows, just return original to avoid empty charts
+        if (filteredData.length === 0) return opt.data;
+
+        // If no filters are active, use original data
+        if (filteredData.length === localData.length) return opt.data;
+
+        try {
+            // Parse chart title to extract columns (e.g., "Sales by City" -> measure: Sales, dimension: City)
+            const titleMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
+
+            if (!titleMatch) {
+                // If title doesn't match pattern, just return original data
+                return opt.data;
+            }
+
+            const measureName = titleMatch[1].trim();
+            const dimensionName = titleMatch[2].trim();
+
+            // Special handling for "Index" - it's not a real measure, use COUNT instead
+            if (measureName.toLowerCase() === 'index' || measureName.toLowerCase() === 'trend') {
+                const dimensionCol = dimensions.find(d =>
+                    d.toLowerCase() === dimensionName.toLowerCase() ||
+                    d.toLowerCase().includes(dimensionName.toLowerCase())
+                );
+
+                if (!dimensionCol) {
+                    return opt.data;
+                }
+
+                // Use COUNT for Index-based charts
+                const query = `SELECT [${dimensionCol}] as name, COUNT(*) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
+
+                const result = alasql(query, [filteredData]) as any[];
+
+                if (!result || result.length === 0) {
+                    return opt.data;
+                }
+
+                // Map to expected format
+                return result.slice(0, 10).map(r => ({ name: r.name, value: r.val }));
+            }
+
+            // Find the actual column names (case-insensitive match)
+            const dimensionCol = dimensions.find(d =>
+                d.toLowerCase() === dimensionName.toLowerCase() ||
+                d.toLowerCase().includes(dimensionName.toLowerCase())
+            );
+
+            const measureCol = measures.find(m =>
+                m.toLowerCase() === measureName.toLowerCase() ||
+                m.toLowerCase().includes(measureName.toLowerCase())
+            );
+
+            // If we can't find matching columns, return original data
+            if (!dimensionCol) {
+                return opt.data;
+            }
+
+            // If no measure found, use COUNT
+            if (!measureCol) {
+                const query = `SELECT [${dimensionCol}] as name, COUNT(*) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
+                const result = alasql(query, [filteredData]) as any[];
+                return result.slice(0, 10).map(r => ({ name: r.name, value: r.val }));
+            }
+
+            // Build and execute aggregation query with proper escaping
+            const query = `SELECT [${dimensionCol}] as name, SUM(CAST([${measureCol}] as FLOAT)) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
+
+            const result = alasql(query, [filteredData]) as any[];
+
+            if (!result || result.length === 0) {
+                return opt.data;
+            }
+
+            return result.slice(0, 10).map(r => ({ name: r.name, value: r.val })); // Limit to top 10 for readability
+        } catch (e) {
+            console.error('❌ Error recomputing chart data for:', opt.title, e);
+            return opt.data; // Fallback to original
+        }
+    };
+
 
     const memoizedChartsData = useMemo(() => {
         return (analysis.options || []).map((opt: any) => getFilteredChartData(opt));
@@ -696,91 +818,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
     };
 
 
-    // ===== NEW: Recompute chart data based on filtered data =====
-    const getFilteredChartData = (opt: any) => {
-        // If isStatic is set, always return the data as-is
-        if (opt.isStatic) return opt.data;
 
-        // If we have very few filtered rows, just return original to avoid empty charts
-        if (filteredData.length === 0) return opt.data;
-
-        // If no filters are active, use original data
-        if (filteredData.length === localData.length) return opt.data;
-
-        try {
-            // Parse chart title to extract columns (e.g., "Sales by City" -> measure: Sales, dimension: City)
-            const titleMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
-
-            if (!titleMatch) {
-                // If title doesn't match pattern, just return original data
-                return opt.data;
-            }
-
-            const measureName = titleMatch[1].trim();
-            const dimensionName = titleMatch[2].trim();
-
-            // Special handling for "Index" - it's not a real measure, use COUNT instead
-            if (measureName.toLowerCase() === 'index' || measureName.toLowerCase() === 'trend') {
-                const dimensionCol = dimensions.find(d =>
-                    d.toLowerCase() === dimensionName.toLowerCase() ||
-                    d.toLowerCase().includes(dimensionName.toLowerCase())
-                );
-
-                if (!dimensionCol) {
-                    return opt.data;
-                }
-
-                // Use COUNT for Index-based charts
-                const query = `SELECT [${dimensionCol}] as name, COUNT(*) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
-
-                const result = alasql(query, [filteredData]) as any[];
-
-                if (!result || result.length === 0) {
-                    return opt.data;
-                }
-
-                // Map to expected format
-                return result.slice(0, 10).map(r => ({ name: r.name, value: r.val }));
-            }
-
-            // Find the actual column names (case-insensitive match)
-            const dimensionCol = dimensions.find(d =>
-                d.toLowerCase() === dimensionName.toLowerCase() ||
-                d.toLowerCase().includes(dimensionName.toLowerCase())
-            );
-
-            const measureCol = measures.find(m =>
-                m.toLowerCase() === measureName.toLowerCase() ||
-                m.toLowerCase().includes(measureName.toLowerCase())
-            );
-
-            // If we can't find matching columns, return original data
-            if (!dimensionCol) {
-                return opt.data;
-            }
-
-            // If no measure found, use COUNT
-            if (!measureCol) {
-                const query = `SELECT [${dimensionCol}] as name, COUNT(*) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
-                const result = alasql(query, [filteredData]) as any[];
-                return result.slice(0, 10).map(r => ({ name: r.name, value: r.val }));
-            }
-
-            // Build and execute aggregation query with proper escaping
-            const query = `SELECT [${dimensionCol}] as name, SUM(CAST([${measureCol}] as FLOAT)) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
-
-            const result = alasql(query, [filteredData]) as any[];
-
-            if (!result || result.length === 0) {
-                return opt.data;
-            }
-
-            return result.slice(0, 10).map(r => ({ name: r.name, value: r.val })); // Limit to top 10 for readability
-        } catch (e) {
-            console.error('❌ Error recomputing chart data for:', opt.title, e);
-            return opt.data; // Fallback to original
-        }
-    };
 
     const renderStaticChart = (data: any[], type: string) => {
         if (!data || data.length === 0) return (
@@ -925,7 +963,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
         );
     };
 
-    const renderChart = (opt: any, index: number, forcedData?: any) => {
+    const renderChart = (opt: ChartOption, index: number, forcedData?: any) => {
         // Use filtered data for charts - prefer forcedData (memoized) if available
         const displayData = forcedData || getFilteredChartData(opt);
         const color = COLORS[index % COLORS.length];
@@ -2574,7 +2612,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                 </p>
                             </div>
                             <div style={{ height: '600px', width: '100%', pointerEvents: 'auto' }}>
-                                {analysis.options?.length > 0 && renderChart(analysis.options[presentationIndex], presentationIndex)}
+                                {analysis.options?.length > 0 && renderChart(analysis.options[presentationIndex], presentationIndex, memoizedChartsData[presentationIndex])}
                             </div>
                         </div>
                     </div>
@@ -2587,7 +2625,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                 expandedChart && (() => {
                     const opt = expandedChart!.opt;
                     const index = expandedChart!.index;
-                    const displayData = getFilteredChartData(opt);
+                    const displayData = memoizedChartsData[index] || getFilteredChartData(opt);
                     const color = COLORS[index % COLORS.length];
                     const currentType = chartConfig[index] || opt.chartType;
 

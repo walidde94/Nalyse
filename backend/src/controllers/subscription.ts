@@ -40,9 +40,15 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
 
         const createSession = async (cid: string) => {
             const priceToUse = priceId || process.env.STRIPE_PRICE_ID_PRO;
+            const baseUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+
+            console.log(`[Stripe] Creating session for customer ${cid}`);
+            console.log(`[Stripe] Price: ${priceToUse}`);
+            console.log(`[Stripe] Base URL: ${baseUrl}`);
+
             if (!priceToUse) {
                 console.error('[Stripe] Missing PRICE_ID_PRO in environment variables');
-                throw new Error('Subscription price configuration missing');
+                throw new Error('Subscription price configuration missing. Please check STRIPE_PRICE_ID_PRO.');
             }
 
             return await stripe.checkout.sessions.create({
@@ -54,8 +60,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
                         quantity: 1,
                     },
                 ],
-                success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard?session_id={CHECKOUT_SESSION_ID}&success=true`,
-                cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/settings?canceled=true`,
+                success_url: `${baseUrl}/dashboard?session_id={CHECKOUT_SESSION_ID}&success=true`,
+                cancel_url: `${baseUrl}/settings?canceled=true`,
                 customer_update: {
                     address: 'auto',
                     name: 'auto'

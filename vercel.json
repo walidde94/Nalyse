@@ -2,5 +2,11 @@
     "version": 2,
     "public": true,
     "buildCommand": "cd frontend && npm install && npm run build",
-    "outputDirectory": "frontend/dist"
+    "outputDirectory": "frontend/dist",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
 }
