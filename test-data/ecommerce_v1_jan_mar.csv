@@ -1,0 +1,151 @@
+OrderID,Region,Category,Channel,SalesRep,Revenue,Units,Discount,ShippingCost,CustomerAge,SatisfactionScore,ReturnRate,ProcessingDays,Status,Date
+ORD-0001,Middle East,Apparel,Direct,Iris Taylor,9662,58,24,42,20,4.5,0.5,5,Pending,2025-01-04
+ORD-0002,Middle East,Automotive,Direct,Frank Brown,12059,66,15,80,23,5,14.6,3,Pending,2025-03-17
+ORD-0003,Latin America,Electronics,Wholesale,Bob Martinez,6947,25,29,102,32,3.7,12,1,Completed,2025-02-07
+ORD-0004,Asia Pacific,Apparel,Marketplace,Frank Brown,16845,1,9,9,38,3.8,10.1,5,Returned,2025-03-28
+ORD-0005,Asia Pacific,Automotive,Marketplace,Frank Brown,11645,6,8,34,37,3.8,1.1,6,Completed,2025-01-11
+ORD-0006,Asia Pacific,Automotive,Retail,Iris Taylor,21846,56,12,77,35,4.1,8.3,5,Pending,2025-03-07
+ORD-0007,North America,Home & Garden,Wholesale,Jake Wilson,8658,78,24,91,36,4.5,7,6,Returned,2025-03-03
+ORD-0008,Middle East,Electronics,Online,Grace Lee,23703,64,17,67,25,3.3,10.8,2,Pending,2025-03-09
+ORD-0009,North America,Apparel,Marketplace,Dave Kim,23420,56,13,84,53,4.2,5.2,7,Cancelled,2025-02-19
+ORD-0010,Middle East,Automotive,Online,Alice Chen,8569,4,2,50,28,4.1,1.9,9,Pending,2025-03-27
+ORD-0011,Middle East,Home & Garden,Wholesale,Dave Kim,20362,55,7,32,69,4.8,13.8,8,Completed,2025-01-17
+ORD-0012,Middle East,Home & Garden,Online,Dave Kim,2141,55,5,26,33,4.6,13.4,5,Completed,2025-03-13
+ORD-0013,Latin America,Apparel,Online,Alice Chen,24628,28,2,87,69,3.8,11.4,5,Cancelled,2025-02-02
+ORD-0014,North America,Automotive,Direct,Jake Wilson,3272,63,1,86,41,3.3,7.3,5,Returned,2025-01-01
+ORD-0015,Latin America,Home & Garden,Wholesale,Frank Brown,5522,8,8,76,38,3.9,12.8,1,Pending,2025-03-07
+ORD-0016,Europe,Beauty,Retail,Alice Chen,21306,80,1,41,69,3.1,4.5,10,Returned,2025-02-13
+ORD-0017,Latin America,Sports,Direct,Dave Kim,25326,59,16,96,51,4.9,5.9,11,Cancelled,2025-03-18
+ORD-0018,Middle East,Books,Retail,Eve Williams,10280,64,11,75,68,4.7,12.4,6,Pending,2025-03-09
+ORD-0019,Latin America,Electronics,Online,Carol Johnson,21503,39,6,13,59,3.1,9.4,8,Returned,2025-02-13
+ORD-0020,Middle East,Automotive,Marketplace,Eve Williams,19015,44,12,108,44,4.2,0.4,10,Cancelled,2025-03-13
+ORD-0021,Middle East,Apparel,Retail,Jake Wilson,23975,60,10,106,47,4.2,5.5,10,Returned,2025-03-27
+ORD-0022,North America,Apparel,Online,Grace Lee,13746,58,14,80,25,4.4,0.3,1,Cancelled,2025-02-17
+ORD-0023,North America,Beauty,Wholesale,Bob Martinez,1082,17,5,78,36,4.2,13.9,5,Returned,2025-01-13
+ORD-0024,Europe,Books,Retail,Iris Taylor,5350,69,10,55,63,5,3.9,9,Pending,2025-01-05
+ORD-0025,Europe,Home & Garden,Wholesale,Eve Williams,6600,59,10,78,20,3.1,14.8,3,Pending,2025-01-12
+ORD-0026,Europe,Apparel,Wholesale,Dave Kim,24821,24,12,75,40,5,12,9,Pending,2025-03-03
+ORD-0027,Asia Pacific,Food & Beverage,Marketplace,Bob Martinez,14929,63,16,10,67,4.4,12,7,Completed,2025-01-17
+ORD-0028,Latin America,Sports,Retail,Bob Martinez,20877,72,1,60,62,4.5,11.1,8,Pending,2025-03-10
+ORD-0029,Europe,Sports,Marketplace,Alice Chen,3717,44,15,74,29,4.4,7.1,2,Completed,2025-01-19
+ORD-0030,Middle East,Food & Beverage,Retail,Jake Wilson,15212,22,27,38,39,3.6,14.1,4,Completed,2025-01-23
+ORD-0031,Middle East,Books,Marketplace,Carol Johnson,20461,9,4,47,22,4.1,7.1,8,Returned,2025-02-25
+ORD-0032,Europe,Apparel,Retail,Alice Chen,12936,18,13,116,62,4.4,4.6,4,Completed,2025-01-05
+ORD-0033,Latin America,Books,Retail,Eve Williams,8283,6,6,68,69,3.4,12.5,2,Returned,2025-01-03
+ORD-0034,Latin America,Automotive,Marketplace,Bob Martinez,20829,64,20,75,22,3.8,1.8,11,Returned,2025-02-08
+ORD-0035,Asia Pacific,Apparel,Direct,Alice Chen,4987,15,21,75,48,4.2,11.6,6,Pending,2025-03-06
+ORD-0036,Asia Pacific,Beauty,Marketplace,Dave Kim,11291,14,20,46,23,3.9,4,2,Completed,2025-03-09
+ORD-0037,Middle East,Food & Beverage,Online,Iris Taylor,15819,57,11,124,60,4.2,8.5,4,Returned,2025-03-08
+ORD-0038,Middle East,Sports,Retail,Alice Chen,25380,72,13,103,58,3.5,10.6,10,Completed,2025-02-26
+ORD-0039,North America,Food & Beverage,Retail,Jake Wilson,8970,71,1,50,46,3.6,1,7,Returned,2025-03-25
+ORD-0040,Europe,Electronics,Direct,Frank Brown,17603,39,12,99,44,5,14.7,6,Returned,2025-03-05
+ORD-0041,Latin America,Automotive,Retail,Frank Brown,5914,55,0,84,19,3.9,9.7,4,Returned,2025-02-23
+ORD-0042,Latin America,Beauty,Retail,Alice Chen,14077,3,7,67,40,3.1,1.1,10,Pending,2025-02-24
+ORD-0043,Latin America,Food & Beverage,Marketplace,Iris Taylor,3691,31,9,63,41,4.3,9.1,2,Returned,2025-01-11
+ORD-0044,Asia Pacific,Food & Beverage,Marketplace,Alice Chen,22913,6,2,113,63,4.2,11.2,3,Cancelled,2025-01-01
+ORD-0045,Asia Pacific,Apparel,Online,Bob Martinez,5073,20,22,28,64,3.1,7.5,4,Cancelled,2025-03-03
+ORD-0046,Latin America,Apparel,Online,Frank Brown,13714,67,19,17,39,4.2,1.3,6,Completed,2025-03-13
+ORD-0047,Latin America,Apparel,Wholesale,Carol Johnson,24846,28,28,90,70,4.4,11.6,7,Pending,2025-02-06
+ORD-0048,Middle East,Books,Marketplace,Iris Taylor,18545,59,2,118,59,4,14.5,4,Cancelled,2025-01-26
+ORD-0049,North America,Food & Beverage,Retail,Grace Lee,5001,18,14,49,30,3,1,7,Cancelled,2025-02-08
+ORD-0050,North America,Home & Garden,Direct,Eve Williams,23586,63,27,65,31,4.7,0.2,4,Pending,2025-02-17
+ORD-0051,Latin America,Food & Beverage,Online,Eve Williams,6270,61,18,122,62,4.6,13.4,4,Completed,2025-01-13
+ORD-0052,Asia Pacific,Home & Garden,Marketplace,Eve Williams,12809,70,26,8,58,4.8,7,9,Cancelled,2025-01-22
+ORD-0053,Europe,Home & Garden,Retail,Hank Davis,15605,48,4,40,45,4.3,10.8,2,Pending,2025-01-02
+ORD-0054,Europe,Sports,Direct,Hank Davis,1332,18,11,112,56,4.2,1.2,11,Returned,2025-03-07
+ORD-0055,Middle East,Books,Marketplace,Hank Davis,19733,17,13,85,49,3.1,1.5,10,Returned,2025-03-09
+ORD-0056,Europe,Apparel,Online,Dave Kim,11178,27,12,74,35,4.1,0.3,8,Cancelled,2025-03-24
+ORD-0057,North America,Automotive,Direct,Hank Davis,9699,44,29,103,69,3.3,8.5,5,Completed,2025-03-15
+ORD-0058,Asia Pacific,Home & Garden,Retail,Frank Brown,3898,59,23,101,47,3.9,14.8,3,Returned,2025-01-06
+ORD-0059,Asia Pacific,Sports,Marketplace,Jake Wilson,9524,45,19,39,32,4.3,11.5,2,Completed,2025-01-18
+ORD-0060,Middle East,Electronics,Retail,Jake Wilson,1184,78,27,109,68,3.4,2.7,4,Returned,2025-02-13
+ORD-0061,Latin America,Beauty,Direct,Alice Chen,23626,68,17,80,54,4.8,12.8,2,Returned,2025-01-20
+ORD-0062,Middle East,Beauty,Wholesale,Dave Kim,9303,20,18,49,51,4.2,1.9,6,Returned,2025-03-22
+ORD-0063,Middle East,Apparel,Online,Eve Williams,5468,26,30,14,55,4.8,12.2,6,Returned,2025-02-09
+ORD-0064,Middle East,Home & Garden,Online,Frank Brown,22396,16,6,103,26,4.4,8,9,Cancelled,2025-01-28
+ORD-0065,North America,Books,Direct,Carol Johnson,3374,11,21,63,30,4.4,13.5,1,Returned,2025-01-06
+ORD-0066,Middle East,Electronics,Retail,Bob Martinez,17886,73,29,26,42,4.6,9.4,4,Returned,2025-01-21
+ORD-0067,Europe,Automotive,Wholesale,Carol Johnson,12990,80,26,77,47,3,7.5,3,Cancelled,2025-02-24
+ORD-0068,Latin America,Electronics,Online,Carol Johnson,19567,38,29,101,20,3.5,11.3,2,Cancelled,2025-03-05
+ORD-0069,Europe,Electronics,Wholesale,Carol Johnson,18505,39,17,100,64,3.9,11,4,Pending,2025-02-18
+ORD-0070,Latin America,Sports,Direct,Dave Kim,19189,25,4,97,53,3.8,1.7,7,Pending,2025-03-19
+ORD-0071,Asia Pacific,Food & Beverage,Wholesale,Iris Taylor,15572,81,27,99,38,4,10.3,7,Cancelled,2025-02-22
+ORD-0072,Middle East,Books,Retail,Carol Johnson,545,12,3,86,62,3,1,4,Completed,2025-02-15
+ORD-0073,Middle East,Sports,Online,Dave Kim,24862,66,2,21,18,4.1,11.9,7,Returned,2025-02-06
+ORD-0074,Asia Pacific,Apparel,Marketplace,Frank Brown,5421,76,9,30,60,3.1,10,9,Cancelled,2025-01-23
+ORD-0075,North America,Electronics,Direct,Iris Taylor,8453,28,4,118,56,3.3,3.5,4,Completed,2025-02-01
+ORD-0076,North America,Automotive,Wholesale,Dave Kim,14488,65,1,14,56,5,9.6,5,Completed,2025-03-28
+ORD-0077,Middle East,Books,Wholesale,Alice Chen,2719,10,7,26,56,3.4,11.4,1,Pending,2025-03-13
+ORD-0078,Asia Pacific,Sports,Retail,Alice Chen,16766,24,27,26,31,4.1,1.9,5,Cancelled,2025-03-24
+ORD-0079,Middle East,Books,Wholesale,Hank Davis,12664,30,13,74,73,3.9,1.9,7,Returned,2025-02-20
+ORD-0080,Middle East,Beauty,Marketplace,Dave Kim,10800,67,18,47,63,3.7,9.3,4,Cancelled,2025-03-02
+ORD-0081,Latin America,Books,Retail,Jake Wilson,11682,42,12,47,19,5,2.7,5,Returned,2025-02-02
+ORD-0082,Latin America,Home & Garden,Direct,Frank Brown,2107,68,2,95,34,4.3,7.5,5,Returned,2025-03-24
+ORD-0083,Asia Pacific,Sports,Wholesale,Bob Martinez,17950,66,1,12,45,4.7,0,2,Pending,2025-01-17
+ORD-0084,Asia Pacific,Books,Marketplace,Eve Williams,19307,76,2,5,64,3.2,8.5,5,Cancelled,2025-03-23
+ORD-0085,Middle East,Automotive,Marketplace,Iris Taylor,23231,2,22,43,71,3.9,12.3,7,Returned,2025-03-25
+ORD-0086,Latin America,Sports,Direct,Jake Wilson,23609,31,26,101,49,3,13.2,7,Cancelled,2025-02-10
+ORD-0087,Asia Pacific,Food & Beverage,Online,Frank Brown,787,73,20,80,71,4.5,12.4,7,Pending,2025-03-28
+ORD-0088,Middle East,Beauty,Direct,Jake Wilson,9144,31,19,44,51,4.3,13.7,2,Pending,2025-02-18
+ORD-0089,North America,Electronics,Retail,Iris Taylor,4865,53,12,112,24,3,4.2,6,Completed,2025-01-19
+ORD-0090,Asia Pacific,Automotive,Retail,Grace Lee,15968,68,28,73,63,3.4,13.6,5,Cancelled,2025-01-01
+ORD-0091,North America,Apparel,Online,Hank Davis,20506,1,23,124,44,3.9,1,3,Cancelled,2025-03-17
+ORD-0092,Middle East,Beauty,Marketplace,Jake Wilson,1986,37,11,77,22,3.6,4.8,4,Completed,2025-02-03
+ORD-0093,Middle East,Home & Garden,Wholesale,Grace Lee,4178,21,15,98,69,3.4,6.9,9,Returned,2025-02-28
+ORD-0094,Latin America,Sports,Retail,Carol Johnson,21279,47,19,108,54,4.5,14.6,4,Pending,2025-03-18
+ORD-0095,Europe,Apparel,Wholesale,Alice Chen,17566,33,28,79,59,3.1,2.1,1,Returned,2025-02-15
+ORD-0096,Middle East,Books,Online,Grace Lee,12039,35,3,95,26,3.1,10.7,9,Completed,2025-03-08
+ORD-0097,Middle East,Apparel,Online,Dave Kim,4714,78,28,78,53,3.8,0.3,8,Returned,2025-01-19
+ORD-0098,North America,Beauty,Retail,Iris Taylor,17774,8,17,54,29,4.9,5.8,5,Cancelled,2025-03-26
+ORD-0099,Latin America,Apparel,Retail,Iris Taylor,1925,65,22,24,47,3.8,4.1,7,Pending,2025-03-23
+ORD-0100,Middle East,Beauty,Online,Iris Taylor,10551,14,20,62,59,4.1,3.6,7,Cancelled,2025-01-01
+ORD-0101,Asia Pacific,Home & Garden,Direct,Alice Chen,17519,73,22,47,71,3.6,2.5,4,Returned,2025-01-18
+ORD-0102,Middle East,Books,Online,Eve Williams,22991,69,7,53,49,4.8,4.4,1,Returned,2025-02-01
+ORD-0103,Asia Pacific,Sports,Wholesale,Carol Johnson,592,12,11,36,66,4.4,7.1,1,Pending,2025-01-23
+ORD-0104,Asia Pacific,Books,Wholesale,Iris Taylor,22352,48,10,120,73,4.5,9.5,10,Completed,2025-02-14
+ORD-0105,Latin America,Beauty,Wholesale,Hank Davis,8113,31,14,34,28,4.5,12.8,1,Completed,2025-01-03
+ORD-0106,Latin America,Electronics,Retail,Jake Wilson,12602,38,6,113,46,3.1,5.8,10,Completed,2025-02-15
+ORD-0107,Asia Pacific,Beauty,Wholesale,Frank Brown,20571,4,23,12,57,4.3,0.4,7,Cancelled,2025-03-10
+ORD-0108,Middle East,Apparel,Direct,Jake Wilson,2627,23,27,37,35,4,3.6,7,Cancelled,2025-03-07
+ORD-0109,Europe,Sports,Wholesale,Carol Johnson,24186,76,23,49,38,4.7,2.1,2,Pending,2025-01-22
+ORD-0110,Latin America,Apparel,Marketplace,Frank Brown,11962,22,20,110,36,4.3,0.7,8,Cancelled,2025-01-12
+ORD-0111,Middle East,Automotive,Online,Bob Martinez,20401,80,4,61,71,4,12.2,6,Pending,2025-02-25
+ORD-0112,Europe,Food & Beverage,Marketplace,Jake Wilson,10966,40,25,24,50,4.1,7.3,8,Returned,2025-03-20
+ORD-0113,Europe,Home & Garden,Online,Iris Taylor,25270,25,7,107,38,4.7,12.6,4,Pending,2025-03-06
+ORD-0114,Middle East,Electronics,Retail,Alice Chen,6586,12,29,65,55,4,3.3,7,Pending,2025-03-15
+ORD-0115,North America,Sports,Wholesale,Frank Brown,13060,53,9,82,55,4.3,10.5,4,Returned,2025-02-15
+ORD-0116,North America,Electronics,Online,Bob Martinez,11789,81,11,38,26,3.1,1.7,6,Cancelled,2025-02-25
+ORD-0117,Latin America,Home & Garden,Retail,Bob Martinez,11633,12,9,61,66,3.1,7.8,11,Cancelled,2025-01-06
+ORD-0118,Latin America,Apparel,Retail,Jake Wilson,11461,50,24,37,38,3.6,2,7,Completed,2025-01-14
+ORD-0119,Europe,Home & Garden,Online,Eve Williams,2085,9,8,49,64,4.5,10,2,Pending,2025-01-28
+ORD-0120,Europe,Electronics,Retail,Hank Davis,4999,12,25,23,33,3.7,10.2,9,Pending,2025-01-24
+ORD-0121,Middle East,Home & Garden,Direct,Frank Brown,15326,2,29,91,67,4.3,10.7,11,Cancelled,2025-01-27
+ORD-0122,Latin America,Apparel,Direct,Eve Williams,19132,63,7,63,66,4.2,6.8,1,Pending,2025-01-06
+ORD-0123,Europe,Food & Beverage,Wholesale,Bob Martinez,4708,35,18,94,34,3.4,3.3,9,Returned,2025-01-04
+ORD-0124,Asia Pacific,Sports,Retail,Jake Wilson,21954,58,2,103,43,3.3,1,5,Returned,2025-02-21
+ORD-0125,Europe,Electronics,Online,Bob Martinez,19543,73,4,120,66,5,3.9,4,Pending,2025-02-09
+ORD-0126,Asia Pacific,Electronics,Direct,Carol Johnson,25298,68,18,73,64,3.6,7.3,7,Cancelled,2025-01-16
+ORD-0127,Asia Pacific,Beauty,Online,Bob Martinez,13932,49,14,28,56,4.8,3.3,10,Returned,2025-03-02
+ORD-0128,Asia Pacific,Beauty,Retail,Alice Chen,12392,12,2,99,44,3.2,14.5,2,Returned,2025-01-10
+ORD-0129,North America,Home & Garden,Online,Grace Lee,8006,27,25,111,37,3.4,1.7,9,Cancelled,2025-02-04
+ORD-0130,Middle East,Food & Beverage,Retail,Carol Johnson,17482,12,13,15,65,3.8,4.6,9,Returned,2025-03-02
+ORD-0131,Asia Pacific,Sports,Online,Hank Davis,13017,71,15,49,30,3.7,0.5,2,Completed,2025-01-10
+ORD-0132,Latin America,Automotive,Direct,Grace Lee,2840,8,14,60,30,3.5,9.6,11,Completed,2025-02-28
+ORD-0133,Middle East,Automotive,Retail,Jake Wilson,23498,55,2,91,62,3.1,8.4,2,Cancelled,2025-03-15
+ORD-0134,North America,Food & Beverage,Direct,Grace Lee,12682,20,28,85,24,4.1,13.2,11,Pending,2025-03-13
+ORD-0135,Asia Pacific,Food & Beverage,Direct,Hank Davis,15953,56,19,20,24,3.8,10.5,2,Completed,2025-03-06
+ORD-0136,North America,Home & Garden,Retail,Dave Kim,16148,35,1,60,25,3.4,10,5,Pending,2025-03-05
+ORD-0137,Middle East,Sports,Direct,Eve Williams,11095,70,2,62,70,4.5,3.1,2,Cancelled,2025-02-11
+ORD-0138,Latin America,Books,Online,Dave Kim,16723,5,0,118,21,3.5,12.2,6,Returned,2025-02-12
+ORD-0139,Europe,Apparel,Retail,Jake Wilson,22690,67,10,78,57,3.1,8.3,5,Cancelled,2025-03-17
+ORD-0140,North America,Home & Garden,Online,Alice Chen,8181,10,26,58,56,4.3,6.4,9,Completed,2025-02-09
+ORD-0141,Europe,Sports,Online,Hank Davis,19725,41,3,111,48,4,10.2,5,Completed,2025-02-18
+ORD-0142,North America,Apparel,Direct,Carol Johnson,2259,5,3,92,27,4.3,9.6,10,Cancelled,2025-03-02
+ORD-0143,Middle East,Beauty,Retail,Eve Williams,18536,60,3,29,52,3.3,7.1,4,Completed,2025-03-26
+ORD-0144,Latin America,Automotive,Direct,Frank Brown,23226,21,27,107,32,3.8,6.9,2,Returned,2025-02-12
+ORD-0145,Europe,Sports,Retail,Bob Martinez,23798,21,14,80,23,4.6,14.5,9,Completed,2025-01-15
+ORD-0146,North America,Beauty,Retail,Eve Williams,7450,20,3,76,62,4.2,10.4,4,Pending,2025-03-01
+ORD-0147,Europe,Automotive,Marketplace,Alice Chen,9248,75,21,58,39,4.8,6.2,10,Cancelled,2025-03-25
+ORD-0148,Middle East,Apparel,Marketplace,Jake Wilson,11781,79,17,115,51,3.6,12.7,7,Cancelled,2025-01-16
+ORD-0149,Asia Pacific,Electronics,Wholesale,Bob Martinez,20287,33,5,78,47,3.6,11.4,8,Completed,2025-02-16
+ORD-0150,Latin America,Automotive,Direct,Frank Brown,10611,11,12,66,31,3.7,1.9,4,Pending,2025-01-24

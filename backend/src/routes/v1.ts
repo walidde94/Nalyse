@@ -12,6 +12,7 @@ import { getTelemetry, pushTelemetry } from '../controllers/v1/telemetryControll
 
 import { openApiSpec } from '../config/openapi';
 
+import { checkFeatureAccess } from '../middleware/gating';
 import { apiLogger } from '../middleware/apiLogger';
 
 const router = Router();
@@ -53,11 +54,11 @@ router.post('/datasets/:id/clean', apiCleanDataset);
 /**
  * @api {post} /v1/analysis Run Statistical Analysis
  */
-router.post('/analysis', apiRunAnalysis);
+router.post('/analysis', checkFeatureAccess('pro_analytics'), apiRunAnalysis);
 
 /**
  * @api {post} /v1/charts Generate Chart Metadata
  */
-router.post('/charts', apiGenerateCharts);
+router.post('/charts', checkFeatureAccess('pro_analytics'), apiGenerateCharts);
 
 export default router;

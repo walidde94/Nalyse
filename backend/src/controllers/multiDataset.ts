@@ -2,8 +2,10 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { AppDataSource } from '../config/database';
 import { File } from '../entities/File';
+import { Organization } from '../entities/Organization';
 import { analyzeFile, analyzeRawData } from '../services/analyzer';
 import fs from 'fs';
+import crypto from 'crypto';
 import { parse } from 'csv-parse/sync';
 
 interface DatasetRelationship {
@@ -243,35 +245,96 @@ export const uploadMultipleFilesHandler = async (req: AuthRequest, res: Response
         return res.status(400).json({ error: 'No files uploaded' });
     }
 
-    const fileRepo = AppDataSource.getRepository(File);
+    const organizationRepo = AppDataSource.getRepository(Organization);
     const uploadedFiles: File[] = [];
 
     try {
-        // Upload all files
-        for (const file of files) {
-            const newFile = fileRepo.create({
-                filename: file.filename,
-                originalName: file.originalname,
-                mimeType: file.mimetype,
-                size: file.size,
-                s3Key: file.path,
-                ownerId: userId,
-                organizationId: organizationId,
-                isFavorite: false
+        const result = await AppDataSource.transaction(async (transactionalEntityManager) => {
+            const org = await transactionalEntityManager.findOne(Organization, {
+                where: { id: organizationId },
+                lock: process.env.NODE_ENV === 'test' ? undefined : { mode: 'pessimistic_write' }
             });
 
-            const savedFile = await fileRepo.save(newFile);
-            uploadedFiles.push(savedFile);
-        }
+            if (!org) throw new Error('Organization not found');
+
+            // Count existing files
+            const existingFileCount = await transactionalEntityManager.count(File, {
+                where: { organizationId: org.id, isDeleted: false }
+            });
+
+            // Calculate checksums and check for duplicates upfront
+            const fileDataList: Array<{ file: Express.Multer.File, checksum: string }> = [];
+            for (const file of files) {
+                const content = fs.readFileSync(file.path);
+                const checksum = crypto.createHash('md5').update(content).digest('hex');
+
+                const duplicate = await transactionalEntityManager.findOne(File, {
+                    where: [
+                        { organizationId: org.id, originalName: file.originalname, isDeleted: false },
+                        { organizationId: org.id, checksum: checksum, isDeleted: false }
+                    ]
+                });
+
+                if (duplicate) {
+                    const message = duplicate.originalName === file.originalname
+                        ? `A file named "${file.originalname}" already exists in this workspace.`
+                        : `File "${file.originalname}" content has already been uploaded as "${duplicate.originalName}".`;
+                    const err = new Error(message);
+                    (err as any).statusCode = 409;
+                    throw err;
+                }
+
+                fileDataList.push({ file, checksum });
+            }
+
+            // Check if adding the new batch will exceed the limit
+            if (existingFileCount + files.length > org.fileLimit) {
+                const err = new Error(`Dataset limit exceeded. Your plan allows up to ${org.fileLimit} datasets. You currently have ${existingFileCount} and are trying to upload ${files.length} more.`);
+                (err as any).statusCode = 403;
+                throw err;
+            }
+
+            // Check storage limit for the whole batch
+            const totalBatchSize = files.reduce((sum, f) => sum + f.size, 0);
+            if (Number(org.storageUsed) + totalBatchSize > Number(org.storageLimit)) {
+                const err = new Error('Batch upload exceeds storage quota');
+                (err as any).statusCode = 403;
+                throw err;
+            }
+
+            const savedFiles: File[] = [];
+            for (const item of fileDataList) {
+                const newFile = transactionalEntityManager.create(File, {
+                    filename: item.file.filename,
+                    originalName: item.file.originalname,
+                    mimeType: item.file.mimetype,
+                    size: item.file.size,
+                    s3Key: item.file.path,
+                    checksum: item.checksum,
+                    ownerId: userId,
+                    organizationId: organizationId,
+                    isFavorite: false
+                });
+                const savedFile = await transactionalEntityManager.save(File, newFile);
+                savedFiles.push(savedFile);
+            }
+
+            // Update storage used
+            org.storageUsed = Number(org.storageUsed) + totalBatchSize;
+            await transactionalEntityManager.save(Organization, org);
+
+            return savedFiles;
+        });
 
         res.json({
-            message: `${files.length} files uploaded successfully`,
-            files: uploadedFiles
+            message: `${result.length} files uploaded successfully`,
+            files: result
         });
 
     } catch (error: any) {
         console.error('Multi-file upload error:', error);
-        res.status(500).json({ error: 'Upload failed: ' + error.message });
+        const statusCode = error.statusCode || 500;
+        res.status(statusCode).json({ error: error.message });
     }
 };
 

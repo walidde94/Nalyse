@@ -6,12 +6,10 @@ import { Analysis } from '../../entities/Analysis';
 
 // This function starts the worker listener
 export const initAnalysisWorker = () => {
-    console.log('[Worker] Analysis worker initialized');
 
     queueService.processJobs(async (job: IJobData) => {
         if (job.type !== 'ANALYSIS') return;
 
-        console.log(`[Worker] Processing Analysis job for file: ${job.payload.fileId}`);
         const { fileId, userId } = job.payload;
 
         const fileRepo = AppDataSource.getRepository(File);
@@ -46,7 +44,6 @@ export const initAnalysisWorker = () => {
             });
 
             await analysisRepo.save(analysis);
-            console.log(`[Worker] Analysis saved for file ${fileId} in ${duration}ms`);
 
         } catch (error: any) {
             console.error(`[Worker] Analysis failed for file ${fileId}`, error);

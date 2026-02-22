@@ -267,14 +267,40 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                             Plan
                         </label>
                         <div style={{
-                            padding: '12px 16px',
-                            background: 'var(--bg-surface)',
-                            border: '1px solid var(--border-default)',
-                            borderRadius: 'var(--radius-md)',
-                            textTransform: 'capitalize',
-                            fontWeight: 600
+                            display: 'flex',
+                            alignItems: 'center'
                         }}>
-                            {user?.organization?.plan || 'Free'}
+                            {((user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro') ? (
+                                <span style={{
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    padding: '4px 10px',
+                                    borderRadius: '8px',
+                                    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                                    color: '#000',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)',
+                                    border: '1px solid rgba(255,255,255,0.2)'
+                                }}>
+                                    Neural Pro
+                                </span>
+                            ) : (
+                                <span style={{
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    padding: '4px 10px',
+                                    borderRadius: '8px',
+                                    background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+                                    color: 'white',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+                                    border: '1px solid rgba(255,255,255,0.1)'
+                                }}>
+                                    Standard Tier
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>

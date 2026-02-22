@@ -1,0 +1,201 @@
+OrderID,Region,Category,Channel,SalesRep,Revenue,Units,Discount,ShippingCost,CustomerAge,SatisfactionScore,ReturnRate,ProcessingDays,LoyaltyTier,Status,Date
+ORD-0001,Latin America,Apparel,Online,Hank Davis,11543,64,19,39,67,4.2,5.7,7,Silver,Completed,2025-05-24
+ORD-0002,Asia Pacific,Home & Garden,Retail,Frank Brown,15678,40,10,45,28,4.1,3.7,2,Bronze,Completed,2025-04-02
+ORD-0003,Africa,Automotive,Social Commerce,Frank Brown,14396,32,8,41,19,4.5,6.4,4,Gold,Returned,2025-06-24
+ORD-0004,North America,Home & Garden,Online,Hank Davis,17238,56,10,51,33,4.4,6,3,Platinum,Completed,2025-04-19
+ORD-0005,Africa,Apparel,Online,Dave Kim,2272,36,21,14,60,3.8,0.4,4,Bronze,Returned,2025-06-23
+ORD-0006,Europe,Electronics,Social Commerce,Jake Wilson,15482,72,15,9,38,4.9,1.7,2,Gold,Pending,2025-06-07
+ORD-0007,Latin America,Apparel,Direct,Luna Zhang,14715,79,12,88,35,4.6,7.8,4,Gold,Processing,2025-05-18
+ORD-0008,Africa,Automotive,Social Commerce,Frank Brown,30586,59,11,16,47,4.8,5,5,Silver,Pending,2025-05-21
+ORD-0009,Europe,AI & Tech,Wholesale,Hank Davis,4788,63,18,23,39,4.4,6.8,7,Platinum,Cancelled,2025-05-12
+ORD-0010,Middle East,Beauty,Wholesale,Kai Patel,25103,23,20,7,61,4.8,0.6,3,Platinum,Cancelled,2025-05-02
+ORD-0011,Latin America,Sports,Marketplace,Bob Martinez,13054,21,12,74,68,4.9,6.2,1,Bronze,Cancelled,2025-06-06
+ORD-0012,Europe,Electronics,Social Commerce,Jake Wilson,6625,17,14,40,31,4,8.8,3,Platinum,Processing,2025-05-08
+ORD-0013,Africa,Sports,Marketplace,Alice Chen,1170,3,6,47,54,4.1,6,7,Platinum,Processing,2025-05-07
+ORD-0014,Europe,Automotive,Online,Carol Johnson,19829,13,4,12,64,4.2,2.7,3,Gold,Returned,2025-06-07
+ORD-0015,Middle East,Sports,Direct,Kai Patel,32472,62,9,87,26,4.5,2.8,4,Bronze,Pending,2025-05-11
+ORD-0016,Latin America,Home & Garden,Marketplace,Bob Martinez,8136,50,17,91,37,3.8,1.4,4,Gold,Pending,2025-05-19
+ORD-0017,Africa,Electronics,Online,Grace Lee,22874,83,10,18,45,3.7,4.8,7,Platinum,Returned,2025-05-23
+ORD-0018,Middle East,Books,Retail,Alice Chen,18094,24,21,39,58,4.2,5.7,6,Gold,Returned,2025-06-09
+ORD-0019,Asia Pacific,Apparel,Marketplace,Dave Kim,7393,85,17,73,30,5,5.2,4,Bronze,Cancelled,2025-04-17
+ORD-0020,Latin America,Books,Retail,Dave Kim,12866,28,21,13,58,5,1.2,7,Platinum,Processing,2025-06-10
+ORD-0021,Africa,Sustainability,Wholesale,Iris Taylor,19410,47,1,80,70,4.9,9.9,2,Platinum,Returned,2025-06-22
+ORD-0022,Middle East,Automotive,Retail,Iris Taylor,6007,28,7,74,56,3.7,0.1,5,Silver,Cancelled,2025-05-10
+ORD-0023,Europe,Food & Beverage,Retail,Hank Davis,19363,53,14,21,62,4.1,8.5,3,Silver,Pending,2025-06-16
+ORD-0024,North America,Automotive,Social Commerce,Frank Brown,16037,56,2,89,23,4.3,7.9,2,Gold,Processing,2025-06-15
+ORD-0025,Africa,AI & Tech,Wholesale,Grace Lee,10150,57,18,92,55,4.3,1.5,3,Silver,Cancelled,2025-05-25
+ORD-0026,Middle East,Food & Beverage,Direct,Alice Chen,9149,30,4,92,65,4.7,6.3,8,Gold,Completed,2025-06-16
+ORD-0027,North America,Automotive,Direct,Grace Lee,28051,84,7,61,22,4.9,7.9,3,Bronze,Pending,2025-06-20
+ORD-0028,Africa,Home & Garden,Direct,Iris Taylor,3209,32,12,27,70,4.9,2.3,7,Silver,Processing,2025-04-16
+ORD-0029,North America,Beauty,Retail,Dave Kim,15567,63,7,13,27,5,8,7,Platinum,Pending,2025-05-08
+ORD-0030,North America,Food & Beverage,Direct,Iris Taylor,1751,21,18,10,23,4.7,7.1,3,Silver,Returned,2025-04-24
+ORD-0031,Middle East,Beauty,Retail,Eve Williams,9644,44,5,50,42,3.9,2.3,3,Platinum,Pending,2025-04-14
+ORD-0032,Latin America,Beauty,Direct,Dave Kim,22814,48,4,13,61,4.3,6.6,4,Silver,Pending,2025-05-21
+ORD-0033,Africa,Apparel,Marketplace,Kai Patel,23410,65,9,53,56,4.7,1.7,6,Silver,Pending,2025-05-16
+ORD-0034,Asia Pacific,Sports,Wholesale,Kai Patel,32553,64,16,11,31,4.9,4.8,5,Platinum,Completed,2025-04-11
+ORD-0035,Latin America,Books,Social Commerce,Eve Williams,20339,90,4,22,25,4.6,7.8,4,Bronze,Completed,2025-06-14
+ORD-0036,Middle East,Sustainability,Retail,Eve Williams,31032,2,11,20,64,4.9,5.3,4,Silver,Processing,2025-04-23
+ORD-0037,Africa,Home & Garden,Retail,Hank Davis,12995,17,6,4,40,3.9,2.9,1,Platinum,Processing,2025-06-14
+ORD-0038,Africa,Electronics,Marketplace,Luna Zhang,19257,73,12,10,59,4.3,3.7,7,Platinum,Returned,2025-04-07
+ORD-0039,North America,Apparel,Marketplace,Alice Chen,11755,83,5,84,68,4.3,2.6,4,Silver,Pending,2025-05-17
+ORD-0040,Latin America,Apparel,Social Commerce,Carol Johnson,6323,51,13,79,47,3.8,5.8,5,Gold,Completed,2025-05-20
+ORD-0041,Asia Pacific,Books,Online,Frank Brown,27276,60,2,76,20,3.5,9.7,5,Silver,Processing,2025-06-05
+ORD-0042,North America,Sports,Online,Alice Chen,28411,75,8,84,27,3.6,7.4,3,Bronze,Pending,2025-04-25
+ORD-0043,Africa,Apparel,Social Commerce,Hank Davis,26566,45,12,82,42,3.7,3,4,Bronze,Cancelled,2025-05-26
+ORD-0044,Asia Pacific,Books,Wholesale,Alice Chen,12149,45,12,86,51,3.6,8.7,1,Bronze,Pending,2025-04-07
+ORD-0045,Latin America,Beauty,Wholesale,Grace Lee,24676,4,7,80,58,4.1,6.5,6,Gold,Processing,2025-05-14
+ORD-0046,Europe,Apparel,Online,Grace Lee,1795,69,9,52,57,4.4,10,4,Gold,Completed,2025-05-12
+ORD-0047,Latin America,Sports,Marketplace,Kai Patel,19444,34,22,77,28,4.7,5.1,6,Bronze,Completed,2025-06-02
+ORD-0048,Europe,Food & Beverage,Online,Carol Johnson,24517,91,10,37,41,4.1,8.3,3,Bronze,Completed,2025-06-07
+ORD-0049,Europe,Apparel,Direct,Bob Martinez,13454,4,11,40,33,4.5,5.6,2,Silver,Processing,2025-05-09
+ORD-0050,North America,Electronics,Retail,Frank Brown,11010,58,1,32,59,4.4,9.7,4,Silver,Cancelled,2025-04-27
+ORD-0051,Latin America,Apparel,Direct,Bob Martinez,32265,62,7,52,52,4.2,6.5,5,Bronze,Pending,2025-04-19
+ORD-0052,Africa,Home & Garden,Online,Carol Johnson,14894,34,8,75,34,4.1,0.2,2,Bronze,Processing,2025-05-21
+ORD-0053,Europe,Home & Garden,Online,Jake Wilson,16686,38,8,75,56,3.9,10,4,Platinum,Completed,2025-05-22
+ORD-0054,Asia Pacific,AI & Tech,Retail,Eve Williams,14881,9,8,20,56,4.2,3.4,3,Platinum,Cancelled,2025-04-28
+ORD-0055,Middle East,Beauty,Online,Alice Chen,23871,49,21,39,33,4.7,3.9,7,Bronze,Cancelled,2025-06-13
+ORD-0056,North America,Sports,Social Commerce,Bob Martinez,14935,53,3,61,69,4.8,6.5,5,Silver,Pending,2025-04-13
+ORD-0057,Asia Pacific,AI & Tech,Direct,Jake Wilson,12862,72,21,88,62,4.9,6.6,5,Gold,Processing,2025-06-25
+ORD-0058,North America,Sports,Retail,Grace Lee,30472,31,20,74,48,4,0.4,7,Bronze,Cancelled,2025-04-07
+ORD-0059,North America,Apparel,Direct,Carol Johnson,32157,55,1,12,65,4.5,9.9,6,Silver,Cancelled,2025-05-24
+ORD-0060,North America,Sports,Social Commerce,Jake Wilson,24068,38,15,82,56,3.7,6.8,5,Bronze,Pending,2025-06-14
+ORD-0061,Africa,Automotive,Retail,Jake Wilson,21295,50,21,23,22,3.9,9,3,Gold,Returned,2025-06-15
+ORD-0062,Asia Pacific,Automotive,Marketplace,Frank Brown,24098,40,9,70,63,3.8,1.2,4,Platinum,Cancelled,2025-04-15
+ORD-0063,Asia Pacific,Automotive,Social Commerce,Frank Brown,22346,29,6,60,57,4.4,7.7,3,Gold,Pending,2025-04-10
+ORD-0064,North America,Electronics,Online,Eve Williams,21254,27,9,67,32,4.1,3.6,3,Gold,Completed,2025-06-07
+ORD-0065,North America,AI & Tech,Social Commerce,Luna Zhang,27617,94,1,25,54,3.5,4.7,5,Bronze,Returned,2025-04-10
+ORD-0066,Africa,Home & Garden,Direct,Alice Chen,25600,35,16,39,48,3.8,5.9,2,Gold,Returned,2025-05-15
+ORD-0067,Latin America,Beauty,Social Commerce,Frank Brown,5441,95,15,13,25,4.7,7.9,7,Bronze,Cancelled,2025-06-09
+ORD-0068,Africa,Apparel,Marketplace,Eve Williams,8591,38,2,14,71,3.5,0.5,6,Platinum,Processing,2025-04-19
+ORD-0069,Asia Pacific,Beauty,Online,Eve Williams,15227,9,4,55,69,4.5,3.6,4,Bronze,Cancelled,2025-05-28
+ORD-0070,Asia Pacific,Beauty,Retail,Iris Taylor,23478,6,1,35,28,4,3.9,2,Bronze,Pending,2025-05-01
+ORD-0071,Europe,Beauty,Online,Eve Williams,16683,84,19,3,57,4.1,4.5,5,Gold,Processing,2025-04-26
+ORD-0072,Latin America,Food & Beverage,Direct,Jake Wilson,9371,34,1,41,54,3.9,3.2,3,Gold,Completed,2025-05-28
+ORD-0073,Europe,Sports,Social Commerce,Dave Kim,15796,9,17,49,54,5,5.7,6,Gold,Returned,2025-04-25
+ORD-0074,Asia Pacific,Sports,Social Commerce,Bob Martinez,15931,47,11,42,70,4.1,6.9,7,Platinum,Returned,2025-05-26
+ORD-0075,Asia Pacific,Books,Marketplace,Grace Lee,29927,7,5,34,42,4.2,8.4,1,Silver,Completed,2025-06-27
+ORD-0076,Africa,Apparel,Retail,Kai Patel,24065,11,22,64,51,4.5,7.1,5,Bronze,Completed,2025-04-17
+ORD-0077,Latin America,Beauty,Social Commerce,Kai Patel,15069,30,6,18,62,4.7,2,1,Platinum,Pending,2025-06-07
+ORD-0078,Asia Pacific,Food & Beverage,Social Commerce,Frank Brown,12001,49,18,82,49,4.2,6.8,3,Gold,Pending,2025-04-11
+ORD-0079,Asia Pacific,AI & Tech,Marketplace,Luna Zhang,18827,8,10,14,22,3.9,8.8,7,Bronze,Pending,2025-06-09
+ORD-0080,North America,Apparel,Direct,Frank Brown,11710,71,3,64,19,4,4.9,7,Platinum,Pending,2025-04-04
+ORD-0081,Latin America,Automotive,Online,Eve Williams,12978,20,21,52,43,4,6.5,8,Bronze,Cancelled,2025-04-02
+ORD-0082,Latin America,Apparel,Direct,Dave Kim,18309,52,9,63,64,4.4,7.1,7,Silver,Cancelled,2025-06-15
+ORD-0083,Asia Pacific,Home & Garden,Retail,Kai Patel,20622,46,13,64,32,4,6.1,1,Platinum,Cancelled,2025-05-07
+ORD-0084,Latin America,Apparel,Social Commerce,Bob Martinez,9939,76,1,12,33,3.6,9.1,3,Gold,Processing,2025-04-05
+ORD-0085,Latin America,Sports,Retail,Jake Wilson,10881,80,8,19,55,4.2,7.4,4,Bronze,Completed,2025-04-19
+ORD-0086,Middle East,Automotive,Direct,Eve Williams,4336,49,12,5,50,4.6,0.1,2,Platinum,Completed,2025-06-04
+ORD-0087,Latin America,Apparel,Wholesale,Luna Zhang,9793,2,12,78,48,4.8,2.9,2,Platinum,Cancelled,2025-04-02
+ORD-0088,Asia Pacific,Food & Beverage,Marketplace,Frank Brown,32139,35,15,69,56,3.6,9.7,6,Gold,Pending,2025-06-01
+ORD-0089,Middle East,Apparel,Direct,Dave Kim,16123,68,21,51,45,4,8.4,7,Gold,Cancelled,2025-06-07
+ORD-0090,Middle East,Automotive,Wholesale,Grace Lee,17493,8,3,7,59,3.8,8.6,7,Bronze,Completed,2025-04-12
+ORD-0091,Latin America,Apparel,Social Commerce,Grace Lee,27810,56,19,36,25,3.9,6.1,6,Bronze,Completed,2025-04-17
+ORD-0092,Middle East,Books,Direct,Dave Kim,16359,87,8,84,43,4,2.1,5,Bronze,Completed,2025-06-13
+ORD-0093,Africa,AI & Tech,Social Commerce,Carol Johnson,28347,68,5,92,32,4.7,1.5,5,Platinum,Completed,2025-05-02
+ORD-0094,North America,Food & Beverage,Retail,Kai Patel,25164,96,6,47,39,4.9,0.7,8,Platinum,Completed,2025-06-22
+ORD-0095,Europe,Food & Beverage,Wholesale,Luna Zhang,30868,83,20,7,30,4.8,2.5,7,Silver,Processing,2025-04-24
+ORD-0096,Africa,Apparel,Retail,Dave Kim,18165,83,8,31,20,3.8,0.4,6,Gold,Completed,2025-06-06
+ORD-0097,Europe,Electronics,Marketplace,Bob Martinez,24184,88,8,63,60,4.1,9.1,7,Bronze,Completed,2025-05-17
+ORD-0098,Asia Pacific,Electronics,Online,Grace Lee,17737,74,17,49,64,4.8,3.7,4,Bronze,Returned,2025-06-10
+ORD-0099,Latin America,Beauty,Marketplace,Hank Davis,24920,70,8,40,26,3.6,2.3,3,Gold,Returned,2025-04-07
+ORD-0100,Middle East,AI & Tech,Wholesale,Luna Zhang,31569,91,7,47,73,3.6,8.4,2,Platinum,Returned,2025-05-24
+ORD-0101,Africa,Sports,Social Commerce,Grace Lee,26065,41,1,74,29,3.6,3.4,6,Silver,Cancelled,2025-05-27
+ORD-0102,Latin America,Food & Beverage,Retail,Frank Brown,8916,97,17,30,47,4.4,9,3,Gold,Processing,2025-04-18
+ORD-0103,Asia Pacific,AI & Tech,Retail,Frank Brown,30400,11,1,50,46,3.9,5.8,4,Gold,Completed,2025-06-19
+ORD-0104,Africa,Electronics,Social Commerce,Luna Zhang,2023,19,10,81,60,4,6,6,Bronze,Cancelled,2025-05-17
+ORD-0105,Middle East,AI & Tech,Wholesale,Alice Chen,19363,40,19,64,44,4.1,6.5,5,Platinum,Pending,2025-04-24
+ORD-0106,Africa,Books,Direct,Bob Martinez,16573,68,17,43,37,4.9,4.9,5,Bronze,Cancelled,2025-04-26
+ORD-0107,Africa,Electronics,Marketplace,Alice Chen,2264,85,7,87,64,4.9,0.1,4,Bronze,Processing,2025-05-21
+ORD-0108,Asia Pacific,Books,Direct,Frank Brown,8680,68,2,17,65,4.9,3.2,7,Gold,Pending,2025-06-09
+ORD-0109,Middle East,Sports,Social Commerce,Carol Johnson,23429,85,6,89,47,4.9,8.5,6,Gold,Returned,2025-05-23
+ORD-0110,Latin America,Books,Marketplace,Frank Brown,3029,85,20,25,46,4.3,5,4,Silver,Pending,2025-05-21
+ORD-0111,North America,Automotive,Social Commerce,Carol Johnson,3268,32,15,77,54,4.4,6.2,3,Platinum,Pending,2025-05-22
+ORD-0112,Africa,Apparel,Social Commerce,Hank Davis,10675,86,18,69,55,4,7.4,3,Platinum,Processing,2025-06-04
+ORD-0113,Middle East,Food & Beverage,Direct,Grace Lee,12202,47,14,28,64,4.2,6.3,3,Silver,Cancelled,2025-05-20
+ORD-0114,Africa,Home & Garden,Retail,Grace Lee,7534,45,16,28,64,4.3,4.1,4,Platinum,Completed,2025-06-14
+ORD-0115,Africa,Food & Beverage,Social Commerce,Carol Johnson,4039,90,18,9,73,3.8,1.9,2,Platinum,Processing,2025-04-26
+ORD-0116,Africa,Automotive,Direct,Bob Martinez,11479,97,18,38,57,4.2,8.6,3,Silver,Completed,2025-04-12
+ORD-0117,Asia Pacific,Sports,Marketplace,Carol Johnson,6659,43,7,19,26,4.8,5.1,1,Silver,Pending,2025-05-24
+ORD-0118,North America,Sports,Marketplace,Luna Zhang,15087,74,21,42,50,4,3.6,5,Platinum,Cancelled,2025-05-01
+ORD-0119,Middle East,Automotive,Social Commerce,Carol Johnson,12957,29,20,81,61,4.4,7.8,6,Silver,Cancelled,2025-05-17
+ORD-0120,Middle East,Automotive,Social Commerce,Bob Martinez,8309,67,4,85,39,4.1,8.4,2,Gold,Completed,2025-05-16
+ORD-0121,Latin America,Sustainability,Online,Frank Brown,1561,65,7,28,70,4.3,1.4,1,Bronze,Completed,2025-06-16
+ORD-0122,North America,AI & Tech,Direct,Eve Williams,16046,52,14,81,66,3.7,9.6,2,Platinum,Cancelled,2025-05-06
+ORD-0123,Middle East,Automotive,Wholesale,Dave Kim,7392,72,16,46,52,3.5,3.2,7,Silver,Cancelled,2025-06-01
+ORD-0124,Latin America,Beauty,Marketplace,Carol Johnson,30031,86,6,71,66,4.2,8.8,2,Bronze,Returned,2025-06-26
+ORD-0125,North America,Sports,Wholesale,Frank Brown,30352,52,17,65,51,4.3,7.5,7,Platinum,Completed,2025-04-26
+ORD-0126,Europe,Automotive,Marketplace,Bob Martinez,32064,20,7,22,37,3.9,4,7,Silver,Cancelled,2025-06-28
+ORD-0127,Asia Pacific,Sports,Wholesale,Jake Wilson,29578,3,12,68,31,3.8,3.2,2,Gold,Returned,2025-05-09
+ORD-0128,Middle East,Electronics,Wholesale,Jake Wilson,24008,33,14,76,66,4.1,8.8,3,Bronze,Processing,2025-04-19
+ORD-0129,North America,Food & Beverage,Direct,Luna Zhang,29656,74,12,73,35,3.5,6.6,6,Gold,Pending,2025-06-08
+ORD-0130,Asia Pacific,Automotive,Direct,Iris Taylor,30794,79,10,77,36,4.6,7.8,1,Gold,Pending,2025-05-18
+ORD-0131,Latin America,Food & Beverage,Wholesale,Bob Martinez,3813,8,17,25,38,3.6,5.3,7,Platinum,Pending,2025-04-22
+ORD-0132,Latin America,Beauty,Direct,Grace Lee,25574,73,2,56,38,4.6,9.9,8,Bronze,Cancelled,2025-05-17
+ORD-0133,Europe,Beauty,Retail,Eve Williams,21716,77,21,87,64,4.4,2.1,1,Gold,Pending,2025-05-25
+ORD-0134,North America,Sustainability,Social Commerce,Grace Lee,32500,25,5,34,73,4.6,0.7,2,Bronze,Returned,2025-04-01
+ORD-0135,Africa,AI & Tech,Social Commerce,Eve Williams,28117,73,4,68,59,4.4,6,2,Bronze,Completed,2025-04-16
+ORD-0136,North America,Electronics,Retail,Alice Chen,3406,65,4,64,41,3.5,8.9,6,Platinum,Pending,2025-05-21
+ORD-0137,Latin America,Books,Direct,Jake Wilson,12707,63,16,40,25,4.3,2.7,4,Silver,Returned,2025-06-06
+ORD-0138,Latin America,Electronics,Social Commerce,Luna Zhang,20369,79,19,11,67,3.8,1.6,8,Silver,Pending,2025-05-21
+ORD-0139,North America,Electronics,Online,Carol Johnson,2423,90,5,61,63,4.9,1.1,4,Gold,Processing,2025-05-01
+ORD-0140,Middle East,Food & Beverage,Online,Frank Brown,8464,22,7,67,56,4.8,4.5,4,Bronze,Processing,2025-06-14
+ORD-0141,Latin America,Sustainability,Wholesale,Luna Zhang,3485,74,13,73,41,4.4,0.7,6,Platinum,Pending,2025-06-05
+ORD-0142,Africa,Automotive,Wholesale,Frank Brown,15696,64,8,39,35,4.5,1.9,4,Gold,Completed,2025-04-17
+ORD-0143,Asia Pacific,Electronics,Social Commerce,Dave Kim,32007,45,3,87,49,3.5,3.3,3,Platinum,Returned,2025-05-26
+ORD-0144,Europe,Sustainability,Retail,Dave Kim,17273,80,1,35,70,4.2,6.9,4,Silver,Cancelled,2025-04-21
+ORD-0145,Latin America,Books,Direct,Eve Williams,10783,9,17,80,58,3.6,6.6,1,Platinum,Processing,2025-04-14
+ORD-0146,Africa,Automotive,Wholesale,Carol Johnson,995,55,14,66,25,3.7,7.4,8,Platinum,Cancelled,2025-05-11
+ORD-0147,Europe,AI & Tech,Wholesale,Iris Taylor,10652,72,20,13,68,4.3,7,4,Bronze,Completed,2025-05-12
+ORD-0148,Europe,Electronics,Social Commerce,Bob Martinez,19056,56,6,24,58,4.1,8.5,3,Platinum,Returned,2025-06-21
+ORD-0149,Latin America,Electronics,Retail,Grace Lee,26972,11,1,37,37,3.9,6.1,5,Gold,Pending,2025-04-25
+ORD-0150,Middle East,Beauty,Wholesale,Carol Johnson,12729,5,21,13,27,4.8,3.2,6,Gold,Returned,2025-04-01
+ORD-0151,Africa,Automotive,Direct,Alice Chen,22667,12,0,73,19,3.9,9.4,6,Bronze,Returned,2025-04-18
+ORD-0152,North America,Sports,Retail,Carol Johnson,10308,8,16,73,64,4.9,9.3,2,Silver,Cancelled,2025-05-22
+ORD-0153,Asia Pacific,Automotive,Direct,Luna Zhang,3825,75,3,74,49,3.8,0.7,5,Gold,Completed,2025-04-11
+ORD-0154,North America,Beauty,Online,Eve Williams,23597,75,2,87,48,4.4,1,2,Bronze,Processing,2025-05-01
+ORD-0155,North America,Beauty,Social Commerce,Iris Taylor,28513,39,5,23,32,4.7,8.1,3,Gold,Pending,2025-05-28
+ORD-0156,Asia Pacific,Home & Garden,Online,Luna Zhang,1246,47,2,40,47,4.7,7.5,3,Platinum,Returned,2025-04-08
+ORD-0157,Latin America,Food & Beverage,Wholesale,Dave Kim,24242,21,2,36,49,4.9,6.3,7,Platinum,Returned,2025-04-22
+ORD-0158,Asia Pacific,Automotive,Wholesale,Luna Zhang,4442,53,10,54,62,5,7.4,1,Silver,Pending,2025-06-01
+ORD-0159,North America,Books,Social Commerce,Bob Martinez,12711,47,20,22,48,4.3,8.1,3,Bronze,Cancelled,2025-05-19
+ORD-0160,Asia Pacific,Automotive,Wholesale,Dave Kim,18916,33,20,39,33,4.3,9.6,8,Platinum,Pending,2025-05-23
+ORD-0161,Middle East,Automotive,Social Commerce,Iris Taylor,15736,7,17,73,71,4.3,0.6,2,Silver,Cancelled,2025-05-27
+ORD-0162,Middle East,Sports,Marketplace,Dave Kim,9088,24,21,38,26,4.7,7.8,6,Platinum,Processing,2025-04-17
+ORD-0163,Africa,Electronics,Wholesale,Frank Brown,18671,38,6,70,25,4.5,8.9,2,Platinum,Completed,2025-05-14
+ORD-0164,Europe,Home & Garden,Marketplace,Iris Taylor,18024,69,19,39,41,4.1,3.5,4,Platinum,Completed,2025-04-05
+ORD-0165,Europe,Sustainability,Online,Bob Martinez,3038,10,2,32,37,4.8,7.6,6,Platinum,Cancelled,2025-05-19
+ORD-0166,Africa,AI & Tech,Online,Hank Davis,3184,85,4,10,29,3.7,9.4,2,Gold,Returned,2025-06-03
+ORD-0167,Africa,Electronics,Retail,Frank Brown,24332,89,13,21,60,3.5,2.2,4,Gold,Pending,2025-06-22
+ORD-0168,Asia Pacific,Automotive,Marketplace,Dave Kim,31594,41,20,8,43,3.7,7.2,2,Silver,Pending,2025-06-14
+ORD-0169,North America,Food & Beverage,Wholesale,Frank Brown,14944,81,5,18,71,3.5,8.8,2,Gold,Processing,2025-05-20
+ORD-0170,Middle East,Beauty,Retail,Frank Brown,2364,75,9,34,22,4,6.8,8,Platinum,Processing,2025-05-25
+ORD-0171,North America,Electronics,Retail,Eve Williams,1181,39,3,44,39,3.6,6.8,2,Gold,Processing,2025-06-21
+ORD-0172,Asia Pacific,Sports,Marketplace,Hank Davis,24496,60,13,86,32,4,1.4,7,Silver,Processing,2025-04-16
+ORD-0173,Asia Pacific,Home & Garden,Social Commerce,Carol Johnson,11313,78,21,93,51,4.3,9.5,6,Silver,Pending,2025-04-04
+ORD-0174,Africa,Apparel,Retail,Grace Lee,4586,62,5,19,51,3.7,5,4,Silver,Processing,2025-05-18
+ORD-0175,Africa,Home & Garden,Marketplace,Iris Taylor,12253,23,0,41,29,4.2,7.3,8,Silver,Completed,2025-05-19
+ORD-0176,Africa,Sports,Online,Kai Patel,9176,24,12,13,41,3.9,0.1,7,Bronze,Pending,2025-05-13
+ORD-0177,Africa,Food & Beverage,Online,Eve Williams,2923,46,20,75,35,4.8,1,4,Silver,Cancelled,2025-06-11
+ORD-0178,Europe,Sports,Wholesale,Carol Johnson,24964,90,9,63,42,4.8,6,4,Bronze,Completed,2025-04-13
+ORD-0179,Africa,Electronics,Retail,Grace Lee,3985,64,22,93,62,3.9,6.8,5,Gold,Completed,2025-05-18
+ORD-0180,North America,Sustainability,Online,Kai Patel,9033,44,6,45,26,4.4,7.5,8,Gold,Completed,2025-04-16
+ORD-0181,Europe,Food & Beverage,Direct,Frank Brown,23995,13,12,66,57,4.5,1.5,4,Platinum,Completed,2025-04-16
+ORD-0182,Latin America,Sustainability,Direct,Alice Chen,28467,9,9,6,72,3.6,7,2,Bronze,Returned,2025-06-10
+ORD-0183,Asia Pacific,Electronics,Social Commerce,Eve Williams,16851,71,14,92,48,4.6,9.6,3,Platinum,Completed,2025-05-25
+ORD-0184,North America,Electronics,Retail,Iris Taylor,25248,92,8,42,51,3.7,8,6,Silver,Processing,2025-06-23
+ORD-0185,Asia Pacific,Sustainability,Wholesale,Carol Johnson,31384,11,17,50,52,3.7,5,5,Silver,Completed,2025-06-20
+ORD-0186,North America,Home & Garden,Wholesale,Frank Brown,30250,19,10,27,42,4.6,0.8,3,Platinum,Completed,2025-04-03
+ORD-0187,Africa,Beauty,Marketplace,Iris Taylor,2218,39,0,72,69,3.6,6.3,1,Platinum,Completed,2025-05-15
+ORD-0188,Asia Pacific,Apparel,Online,Hank Davis,13482,52,11,47,19,5,8.1,6,Gold,Pending,2025-05-10
+ORD-0189,Latin America,AI & Tech,Social Commerce,Kai Patel,24865,67,21,15,68,4.7,7.2,8,Bronze,Returned,2025-04-07
+ORD-0190,Middle East,Books,Social Commerce,Iris Taylor,27750,87,2,7,46,3.7,0.1,1,Gold,Processing,2025-04-12
+ORD-0191,Africa,Food & Beverage,Online,Alice Chen,18241,80,17,58,43,4.2,7.4,7,Bronze,Cancelled,2025-04-09
+ORD-0192,Middle East,Sustainability,Direct,Alice Chen,20924,78,7,90,52,4.8,0.7,5,Bronze,Returned,2025-04-06
+ORD-0193,Europe,Sustainability,Social Commerce,Eve Williams,21584,13,6,64,28,4.5,9.1,2,Bronze,Returned,2025-04-01
+ORD-0194,North America,Sustainability,Social Commerce,Kai Patel,10576,86,0,31,48,4.7,4.4,4,Platinum,Returned,2025-05-04
+ORD-0195,Africa,Apparel,Online,Frank Brown,18328,35,18,54,31,3.5,9.4,8,Gold,Processing,2025-04-26
+ORD-0196,North America,AI & Tech,Direct,Luna Zhang,24370,70,12,38,35,4.4,0.5,7,Silver,Pending,2025-06-04
+ORD-0197,Middle East,Automotive,Retail,Dave Kim,17269,63,5,79,35,4.3,8.4,2,Platinum,Pending,2025-04-20
+ORD-0198,Europe,AI & Tech,Marketplace,Frank Brown,29407,17,17,52,58,4.5,4.4,1,Bronze,Cancelled,2025-04-15
+ORD-0199,Asia Pacific,Electronics,Direct,Bob Martinez,21281,73,20,77,36,4.1,1.5,8,Gold,Returned,2025-06-22
+ORD-0200,Africa,AI & Tech,Direct,Alice Chen,12339,64,15,10,61,4.8,5.4,6,Platinum,Cancelled,2025-05-03

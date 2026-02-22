@@ -50,12 +50,10 @@ export class S3StorageService implements IStorageService {
     constructor() { }
 
     async uploadFile(file: Express.Multer.File): Promise<{ key: string; location: string }> {
-        console.log('S3 Upload not implemented yet, credentials needed.');
         throw new Error('S3 Not Configured');
     }
 
     async deleteFile(key: string): Promise<void> {
-        console.log('S3 Delete not implemented');
     }
 
     async getSignedUrl(key: string): Promise<string> {

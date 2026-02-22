@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     LayoutDashboard, Settings, ArrowRightLeft, FileText,
     Database, Code2, Map, Users, X, Trash2,
-    ArrowRightFromLine, ArrowLeftFromLine, Files, BarChart3, Bot, Sparkles, Network
+    ArrowRightFromLine, ArrowLeftFromLine, Files, BarChart3, Bot, Sparkles, Network, GitCompareArrows, Activity, ShieldAlert, Landmark, FlaskConical
 } from 'lucide-react';
 
 export interface TabType {
     id: string;
     title: string;
-    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis';
+    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation';
     data?: any;
     icon?: React.ReactNode;
 }
@@ -38,9 +38,9 @@ export const TabBar = ({
 }: TabBarProps) => {
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number, fileId: string } | null>(null);
     const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+    const [hoveredTab, setHoveredTab] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // Close Context Menu on outside click
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -54,7 +54,6 @@ export const TabBar = ({
     const handleDragStart = (e: React.DragEvent, index: number) => {
         setDraggedIdx(index);
         e.dataTransfer.effectAllowed = 'move';
-        // For Firefox mostly
         e.dataTransfer.setData('text/plain', index.toString());
     };
 
@@ -77,128 +76,187 @@ export const TabBar = ({
         setContextMenu({ x: e.clientX, y: e.clientY, fileId: id });
     };
 
+    const getTabIcon = (tab: TabType) => {
+        if (tab.icon) return tab.icon;
+        const iconMap: Record<string, React.ReactNode> = {
+            'dashboard': <LayoutDashboard size={13} />,
+            'analysis': <BarChart3 size={13} />,
+            'settings': <Settings size={13} />,
+            'migration': <ArrowRightLeft size={13} />,
+            'developer': <Code2 size={13} />,
+            'sources': <Database size={13} />,
+            'logistics': <Map size={13} />,
+            'groups': <Users size={13} />,
+            'agentic': <Bot size={13} />,
+            'democracy': <Sparkles size={13} />,
+            'multi-analysis': <Network size={13} />,
+            'diff': <GitCompareArrows size={13} />,
+            'anomaly': <ShieldAlert size={13} />,
+            'financial': <Landmark size={13} />,
+            'simulation': <FlaskConical size={13} />,
+
+        };
+        return iconMap[tab.type] || <FileText size={13} />;
+    };
+
     return (
         <>
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '40px',
-                    padding: '0 16px',
-                    gap: '2px',
-                    userSelect: 'none',
-                    overflowX: 'auto',
-                    background: 'var(--bg-header)',
-                    borderBottom: '1px solid var(--border-default)',
-                    position: 'relative',
-                    zIndex: 10
-                }}
-            >
-                {tabs.map((tab, idx) => (
-                    <div
-                        key={tab.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, idx)}
-                        onDragOver={(e) => handleDragOver(e)}
-                        onDrop={(e) => handleDrop(e, idx)}
-                        onClick={() => onActivate(tab.id)}
-                        onContextMenu={(e) => handleContextMenu(e, tab.id)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '0 12px 0 14px',
-                            height: '32px',
-                            color: activeTabId === tab.id ? 'var(--primary)' : 'var(--text-secondary)',
-                            fontSize: '12px',
-                            fontWeight: activeTabId === tab.id ? 700 : 500,
-                            cursor: 'pointer',
-                            maxWidth: '180px',
-                            minWidth: '100px',
-                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                            position: 'relative',
-                            background: activeTabId === tab.id ? 'var(--bg-card)' : 'transparent',
-                            borderRadius: '8px',
-                            border: activeTabId === tab.id ? '1px solid var(--border-default)' : '1px solid transparent',
-                            opacity: draggedIdx === idx ? 0.5 : 1,
-                            flexShrink: 0
-                        }}
-                        className="tab-item"
-                    >
-                        <span style={{ opacity: activeTabId === tab.id ? 1 : 0.6, display: 'flex', alignItems: 'center' }}>
-                            {tab.icon || (
-                                tab.type === 'dashboard' ? <LayoutDashboard size={14} /> :
-                                    tab.type === 'analysis' ? <BarChart3 size={14} /> :
-                                        tab.type === 'settings' ? <Settings size={14} /> :
-                                            tab.type === 'migration' ? <ArrowRightLeft size={14} /> :
-                                                tab.type === 'developer' ? <Code2 size={14} /> :
-                                                    tab.type === 'sources' ? <Database size={14} /> :
-                                                        tab.type === 'logistics' ? <Map size={14} /> :
-                                                            tab.type === 'groups' ? <Users size={14} /> :
-                                                                tab.type === 'agentic' ? <Bot size={14} /> :
-                                                                    tab.type === 'democracy' ? <Sparkles size={14} /> :
-                                                                        tab.type === 'multi-analysis' ? <Network size={14} /> :
-                                                                            <FileText size={14} />
-                            )}
-                        </span>
-                        <span style={{
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            flex: 1
-                        }}>
-                            {tab.title}
-                        </span>
+            <div style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                height: '38px',
+                padding: '0 12px',
+                gap: '1px',
+                userSelect: 'none',
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                background: 'var(--bg-secondary)',
+                borderBottom: '1px solid var(--border-subtle)',
+                position: 'relative',
+                zIndex: 10,
+            }}>
+                {tabs.map((tab, idx) => {
+                    const isActive = activeTabId === tab.id;
+                    const isHovered = hoveredTab === tab.id;
 
-                        {tabs.length > 1 && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onClose(tab.id);
-                                }}
-                                className="btn btn-icon btn-ghost btn-sm"
-                                style={{
-                                    padding: '2px',
-                                    width: '18px',
-                                    height: '18px',
-                                    borderRadius: '4px',
-                                    opacity: 0.6
-                                }}
-                            >
-                                <X size={10} />
-                            </button>
-                        )}
-                    </div>
-                ))}
+                    return (
+                        <div
+                            key={tab.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, idx)}
+                            onDragOver={(e) => handleDragOver(e)}
+                            onDrop={(e) => handleDrop(e, idx)}
+                            onClick={() => onActivate(tab.id)}
+                            onContextMenu={(e) => handleContextMenu(e, tab.id)}
+                            onMouseEnter={() => setHoveredTab(tab.id)}
+                            onMouseLeave={() => setHoveredTab(null)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '7px',
+                                padding: '0 14px',
+                                height: isActive ? '32px' : '30px',
+                                color: isActive ? 'var(--text-primary)' : isHovered ? 'var(--text-secondary)' : 'var(--text-muted)',
+                                fontSize: '12px',
+                                fontWeight: isActive ? 700 : 500,
+                                cursor: 'pointer',
+                                maxWidth: '200px',
+                                minWidth: '100px',
+                                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                                position: 'relative',
+                                background: isActive ? 'var(--bg-main)' : isHovered ? 'var(--bg-surface)' : 'transparent',
+                                borderRadius: '8px 8px 0 0',
+                                borderTop: isActive ? '1px solid var(--border-default)' : '1px solid transparent',
+                                borderLeft: isActive ? '1px solid var(--border-default)' : '1px solid transparent',
+                                borderRight: isActive ? '1px solid var(--border-default)' : '1px solid transparent',
+                                borderBottom: isActive ? '1px solid var(--bg-main)' : '1px solid transparent',
+                                marginBottom: isActive ? '-1px' : '0',
+                                opacity: draggedIdx === idx ? 0.4 : 1,
+                                flexShrink: 0,
+                            }}
+                        >
+                            {/* Active bottom glow */}
+                            {isActive && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '0',
+                                    left: '20%',
+                                    right: '20%',
+                                    height: '2px',
+                                    background: 'var(--primary)',
+                                    borderRadius: '0 0 4px 4px',
+                                    boxShadow: '0 2px 8px var(--primary-glow)',
+                                }} />
+                            )}
+
+                            <span style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                opacity: isActive ? 1 : 0.6,
+                                color: isActive ? 'var(--primary)' : 'inherit',
+                                transition: 'all 0.2s',
+                            }}>
+                                {getTabIcon(tab)}
+                            </span>
+
+                            <span style={{
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                flex: 1,
+                                letterSpacing: '-0.01em',
+                            }}>
+                                {tab.title}
+                            </span>
+
+                            {tabs.length > 1 && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onClose(tab.id);
+                                    }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '2px',
+                                        width: '18px',
+                                        height: '18px',
+                                        borderRadius: '4px',
+                                        opacity: isActive || isHovered ? 0.7 : 0,
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: 'inherit',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
+                                        (e.target as HTMLElement).style.opacity = '1';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        (e.target as HTMLElement).style.background = 'transparent';
+                                        (e.target as HTMLElement).style.opacity = isActive ? '0.7' : '0';
+                                    }}
+                                >
+                                    <X size={10} />
+                                </button>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
-            {/* Styled Context Menu */}
+            {/* Context Menu */}
             {contextMenu && (
                 <div
                     ref={menuRef}
-                    className="glass-morphism animate-fade-in"
                     style={{
                         position: 'fixed',
                         top: contextMenu.y + 5,
                         left: contextMenu.x + 5,
                         zIndex: 2000,
-                        padding: '8px',
+                        padding: '6px',
                         minWidth: '220px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '2px',
-                        boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)',
-                        borderRadius: '16px',
-                        overflow: 'hidden'
+                        gap: '1px',
+                        background: 'var(--bg-elevated)',
+                        backdropFilter: 'blur(24px) saturate(150%)',
+                        border: '1px solid var(--border-default)',
+                        boxShadow: '0 20px 48px -12px rgba(0,0,0,0.5)',
+                        borderRadius: '14px',
+                        overflow: 'hidden',
+                        animation: 'fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                 >
-                    <MenuButton onClick={() => { onClose(contextMenu.fileId); setContextMenu(null); }} icon={<X size={15} />}>Close Tab</MenuButton>
-                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '6px 12px', opacity: 0.3 }}></div>
-                    <MenuButton onClick={() => { onCloseOthers(contextMenu.fileId); setContextMenu(null); }} icon={<Files size={15} />}>Close Others</MenuButton>
-                    <MenuButton onClick={() => { onCloseRight(contextMenu.fileId); setContextMenu(null); }} icon={<ArrowRightFromLine size={15} />}>Close to the Right</MenuButton>
-                    <MenuButton onClick={() => { onCloseLeft(contextMenu.fileId); setContextMenu(null); }} icon={<ArrowLeftFromLine size={15} />}>Close to the Left</MenuButton>
-                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '6px 12px', opacity: 0.3 }}></div>
-                    <MenuButton isDanger onClick={() => { onCloseAll(); setContextMenu(null); }} icon={<Trash2 size={15} />}>Close All Tabs</MenuButton>
+                    <MenuButton onClick={() => { onClose(contextMenu.fileId); setContextMenu(null); }} icon={<X size={14} />}>Close Tab</MenuButton>
+                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 10px', opacity: 0.3 }} />
+                    <MenuButton onClick={() => { onCloseOthers(contextMenu.fileId); setContextMenu(null); }} icon={<Files size={14} />}>Close Others</MenuButton>
+                    <MenuButton onClick={() => { onCloseRight(contextMenu.fileId); setContextMenu(null); }} icon={<ArrowRightFromLine size={14} />}>Close to the Right</MenuButton>
+                    <MenuButton onClick={() => { onCloseLeft(contextMenu.fileId); setContextMenu(null); }} icon={<ArrowLeftFromLine size={14} />}>Close to the Left</MenuButton>
+                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 10px', opacity: 0.3 }} />
+                    <MenuButton isDanger onClick={() => { onCloseAll(); setContextMenu(null); }} icon={<Trash2 size={14} />}>Close All Tabs</MenuButton>
                 </div>
             )}
         </>
@@ -211,19 +269,20 @@ const MenuButton = ({ children, onClick, icon, isDanger }: any) => (
         className="btn-menu-item"
         style={{
             textAlign: 'left',
-            padding: '10px 14px',
-            fontSize: '13px',
-            borderRadius: '10px',
+            padding: '9px 12px',
+            fontSize: '12.5px',
+            borderRadius: '8px',
             width: '100%',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
             background: 'transparent',
             border: 'none',
             color: isDanger ? 'var(--danger)' : 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             fontWeight: 600,
+            fontFamily: 'var(--font-main)',
             outline: 'none'
         }}
     >
@@ -241,10 +300,10 @@ const MenuButton = ({ children, onClick, icon, isDanger }: any) => (
             .btn-menu-item:hover {
                 background: var(--bg-surface-hover) !important;
                 color: var(--text-primary) !important;
-                transform: translateX(4px);
+                transform: translateX(2px);
             }
             .btn-menu-item:active {
-                transform: translateX(2px);
+                transform: translateX(1px);
                 opacity: 0.7;
             }
         `}</style>

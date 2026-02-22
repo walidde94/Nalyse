@@ -1,19 +1,39 @@
 import React, { useState } from 'react';
 import alasql from 'alasql';
 
-import { Link2, BarChart3 } from 'lucide-react';
+import { Link2, BarChart3, Sparkles } from 'lucide-react';
 
 import { API_URL } from '../../config';
 
 interface CorrelationViewProps {
     files: any[];
     token: string;
+    userPlan?: string;
     onUpgradeRequested?: () => void;
 }
 
-export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, onUpgradeRequested }) => {
+export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, userPlan, onUpgradeRequested }) => {
     const [selectedIdA, setSelectedIdA] = useState<string>('');
     const [selectedIdB, setSelectedIdB] = useState<string>('');
+
+    if (userPlan === 'free') {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="card text-center flex-col items-center gap-6 premium-highlight-card" style={{ maxWidth: '400px', padding: '48px' }}>
+                    <div className="inner-highlight" style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'var(--primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                        <Sparkles size={32} />
+                    </div>
+                    <div className="flex-col gap-2">
+                        <h2 className="text-h2">Correlation Engine</h2>
+                        <p className="text-sec">Advanced multi-dataset joins and relationship discovery are Pro features.</p>
+                    </div>
+                    <button className="btn btn-primary btn-lg w-full" onClick={onUpgradeRequested}>
+                        <span className="shimmer-text">Upgrade to Pro</span>
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const [dataA, setDataA] = useState<any[]>([]);
     const [dataB, setDataB] = useState<any[]>([]);
@@ -91,7 +111,7 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
                             onChange={(e) => { setSelectedIdA(e.target.value); loadFile(e.target.value, 'A'); }}
                         >
                             <option value="">Select File...</option>
-                            {files.map(f => <option key={f.id} value={f.id}>{f.filename}</option>)}
+                            {files.map(f => <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>)}
                         </select>
                     </div>
 
@@ -123,7 +143,7 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
                             onChange={(e) => { setSelectedIdB(e.target.value); loadFile(e.target.value, 'B'); }}
                         >
                             <option value="">Select File...</option>
-                            {files.map(f => <option key={f.id} value={f.id}>{f.filename}</option>)}
+                            {files.map(f => <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>)}
                         </select>
                     </div>
 

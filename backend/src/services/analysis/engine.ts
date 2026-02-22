@@ -1,9 +1,9 @@
 import fs from 'fs';
-import * as cheerio from 'cheerio';
+import path from 'path';
 import { parse } from 'csv-parse/sync';
 import { AnalysisResult, AdvancedColumnType, Insight, AnalysisOption } from './types';
 import { inferColumnType, performDataCleaning } from './cleaner';
-import { generateInventoryInsights, generateCategoryInsights, generateTimeSeriesAnalysis, generateCorrelations, generateEntityInsights } from './stats';
+import { generateInventoryInsights, generateCategoryInsights, generateTimeSeriesAnalysis, generateCorrelations, generateEntityInsights, generateKeyMetrics } from './stats';
 import { analyzePDF, analyzeHTML } from './document';
 import { ReasoningEngine } from './reasoning';
 
@@ -121,13 +121,16 @@ export const analyzeRawData = (records: any[], sourceName: string = 'Data'): Ana
         keyFindings,
         dataLimitations,
         processingLog: cleaningResult.log,
-        sampleData: cleanRecords.slice(0, 10000),
-        dataHealth: cleaningResult.stats
+        sampleData: cleanRecords.slice(0, 50000), // Safety limit: 50k rows for frontend grid to prevent API crash
+        dataHealth: cleaningResult.stats,
+        metrics: generateKeyMetrics(cleanRecords, validColumns, cleaningResult.stats.score)
     };
 
     // 4. Expert Reasoning Synthesis
     if (cleanRecords.length > 0) {
+        cleaningResult.log.push("🧠 Analysis Phase: Beginning institutional context mapping...");
         result.executiveReasoning = ReasoningEngine.synthesize(result);
+        cleaningResult.log.push("✨ Synthesis Phase: Executive intelligence package assembled.");
     }
 
     return result;
@@ -135,29 +138,45 @@ export const analyzeRawData = (records: any[], sourceName: string = 'Data'): Ana
 
 export const analyzeFile = async (filePath: string, mimetype: string): Promise<AnalysisResult> => {
     try {
-        // Path Sanitization (B-33 Fix)
-        const path = require('path');
+
+
+        // Handle bare filenames by assuming they are in uploads/
+        if (!filePath.includes('/') && !filePath.includes('\\')) {
+            filePath = path.join('uploads', filePath);
+
+        }
+
         const absoluteUploadsDir = path.resolve(process.cwd(), 'uploads');
         const absoluteRequestedPath = path.resolve(process.cwd(), filePath);
 
+
+
         if (!absoluteRequestedPath.startsWith(absoluteUploadsDir)) {
+
             throw new Error('Security Error: Unauthorized file path access attempt.');
         }
 
-        const stats = fs.statSync(filePath);
-        if (stats.size > 50 * 1024 * 1024) { // 50MB Limit
-            throw new Error('Analysis Error: File exceeds 50MB analyzer memory limit. Use streaming export.');
+        if (!fs.existsSync(absoluteRequestedPath)) {
+
+            throw new Error(`File not found at path: ${filePath}`);
         }
 
-        const buffer = fs.readFileSync(filePath);
+        const stats = fs.statSync(absoluteRequestedPath);
+        if (stats.size > 500 * 1024 * 1024) { // 500MB Limit
+            throw new Error('Analysis Error: File exceeds 500MB analyzer memory limit. Use streaming export.');
+        }
+
+        const buffer = fs.readFileSync(absoluteRequestedPath);
 
         if (mimetype === 'application/pdf' || filePath.endsWith('.pdf')) {
+
             return await analyzePDF(buffer);
         }
 
         const content = buffer.toString('utf-8');
 
         if (mimetype === 'text/html' || filePath.endsWith('.html')) {
+
             return analyzeHTML(content);
         }
 
@@ -171,7 +190,8 @@ export const analyzeFile = async (filePath: string, mimetype: string): Promise<A
             const records = parse(content, {
                 columns: true,
                 skip_empty_lines: true,
-                relax_column_count: true
+                relax_column_count: true,
+                relax_quotes: true
             });
             return analyzeRawData(records, 'CSV File');
         }

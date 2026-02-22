@@ -22,16 +22,25 @@ export class Organization {
     @Column({ type: 'varchar', nullable: true })
     stripeSubscriptionId: string | null;
 
+    @Column({ type: 'timestamp', nullable: true })
+    subscriptionStartedAt: Date | null;
+
+    @Column({ type: 'timestamp', nullable: true })
+    currentPeriodEnd: Date | null;
+
+    @Column({ type: 'boolean', default: false })
+    cancelAtPeriodEnd: boolean;
+
     @Column({ type: 'bigint', default: 0 })
     storageUsed: number;
 
-    @Column({ type: 'bigint', default: 5368709120 }) // 5GB default for free plan
+    @Column({ type: 'bigint', default: 104857600 }) // 100MB default for free plan
     storageLimit: number;
 
-    @Column({ type: 'int', default: 5 })
+    @Column({ type: 'int', default: 1 })
     userLimit: number;
 
-    @Column({ type: 'int', default: 10 })
+    @Column({ type: 'int', default: 5 })
     fileLimit: number;
 
     @OneToMany(() => User, user => user.organization)

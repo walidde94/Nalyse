@@ -67,7 +67,6 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
         setLoading(true);
         setError(null);
         try {
-            console.log('Sending forecast request:', { ...forecastConfig, dataLength: data.length });
 
             const response = await fetch(`${API_URL}/api/bi/forecast`, {
                 method: 'POST',
@@ -75,9 +74,7 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
                 body: JSON.stringify({ ...forecastConfig, data })
             });
 
-            console.log('Response status:', response.status);
             const text = await response.text();
-            console.log('Response text:', text);
 
             let result;
             try {
@@ -133,7 +130,6 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
         setLoading(true);
         setError(null);
         try {
-            console.log('Sending regression request:', { ...regressionConfig, dataLength: data.length });
             const response = await fetch(`${API_URL}/api/bi/regression`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -141,7 +137,6 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
             });
 
             const text = await response.text();
-            console.log('Regression response:', text);
             let result;
             try {
                 result = JSON.parse(text);
@@ -167,7 +162,6 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
         setLoading(true);
         setError(null);
         try {
-            console.log('Sending cohort request:', { ...cohortConfig, dataLength: data.length });
             const response = await fetch(`${API_URL}/api/bi/cohort`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -175,7 +169,6 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
             });
 
             const text = await response.text();
-            console.log('Cohort response:', text);
             let result;
             try {
                 result = JSON.parse(text);
@@ -201,7 +194,6 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
         setLoading(true);
         setError(null);
         try {
-            console.log('Sending funnel request:', { ...funnelConfig, dataLength: data.length });
             const response = await fetch(`${API_URL}/api/bi/funnel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -209,7 +201,6 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
             });
 
             const text = await response.text();
-            console.log('Funnel response:', text);
             let result;
             try {
                 result = JSON.parse(text);

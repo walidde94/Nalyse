@@ -15,18 +15,47 @@ interface Insight {
     actions: string[];
 }
 
+import { API_URL } from '../../config';
+import { Sparkles, Lock, BrainCircuit } from 'lucide-react';
+
 interface NexusViewProps {
     files: any[];
     groups: any[];
     token: string;
+    userPlan?: string;
     onProjectCreated?: () => void;
     runWithProgress?: (fn: () => Promise<void | { type: string; title: string; data: any }>) => Promise<void>;
 }
 
-import { API_URL } from '../../config';
-
-export const NexusView = ({ files, groups, token, onProjectCreated, runWithProgress }: NexusViewProps) => {
+export const NexusView = ({ files, groups, token, userPlan, onProjectCreated, runWithProgress }: NexusViewProps) => {
     const { addToast } = useToast();
+
+    if (userPlan === 'free') {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="card text-center flex-col items-center gap-6 premium-highlight-card" style={{ maxWidth: '440px', padding: '48px', position: 'relative', overflow: 'hidden' }}>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]"></div>
+                    <div className="inner-highlight" style={{ width: '72px', height: '72px', borderRadius: '24px', background: 'var(--primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                        <BrainCircuit size={40} />
+                    </div>
+                    <div className="flex-col gap-2">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                            <span className="badge badge-primary">PRO FEATURE</span>
+                        </div>
+                        <h2 className="text-h1">Nexus AI</h2>
+                        <p className="text-sec">Strategic intelligence synthesis and automated project generation require a Pro subscription.</p>
+                    </div>
+
+                    <div className="flex-col gap-3 w-full">
+                        <button className="btn btn-primary btn-lg w-full glow-btn" onClick={() => (window as any).dispatchEvent(new CustomEvent('navigate-to-settings', { detail: { initialTab: 'subscription' } }))}>
+                            <span className="shimmer-text">Upgrade to Pro</span>
+                        </button>
+                        <p className="text-[10px] opacity-40 uppercase tracking-widest font-bold">Unlocking Neural Knowledge Mesh</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     const [phase, setPhase] = useState<'selection' | 'processing' | 'dashboard'>('selection');
     const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
     const [objective, setObjective] = useState<StrategicObjective>('revenue_growth');
@@ -182,30 +211,42 @@ export const NexusView = ({ files, groups, token, onProjectCreated, runWithProgr
                         <section className="card-panel glass">
                             <h2 className="text-h2 mb-5">2. Data Streams</h2>
                             <div className="data-stack">
-                                {groups.map(group => {
-                                    const gFiles = files.filter(f => f.groupId === group.id);
-                                    if (gFiles.length === 0) return null;
-                                    const allS = gFiles.every(f => selectedFileIds.includes(f.id));
-                                    return (
-                                        <div key={group.id} className="data-group">
-                                            <div className="data-group-head" onClick={() => {
-                                                if (allS) setSelectedFileIds(prev => prev.filter(id => !gFiles.map(f => f.id).includes(id)));
-                                                else setSelectedFileIds(prev => Array.from(new Set([...prev, ...gFiles.map(f => f.id)])));
-                                            }}>
-                                                <div className="flex items-center gap-2"><span>📂</span><b>{group.name}</b></div>
-                                                <div className={`nexus-check ${allS ? 'on' : ''}`}></div>
+                                {(() => {
+                                    const ungrouped = files.filter(f => !f.groupId || !groups.find(g => g.id === f.groupId));
+                                    const displayGroups = [...groups];
+                                    if (ungrouped.length > 0) {
+                                        displayGroups.push({ id: 'ungrouped', name: 'General Data' });
+                                    }
+
+                                    return displayGroups.map(group => {
+                                        const gFiles = group.id === 'ungrouped'
+                                            ? ungrouped
+                                            : files.filter(f => f.groupId === group.id);
+
+                                        if (gFiles.length === 0) return null;
+                                        const allS = gFiles.every(f => selectedFileIds.includes(f.id));
+
+                                        return (
+                                            <div key={group.id} className="data-group">
+                                                <div className="data-group-head" onClick={() => {
+                                                    if (allS) setSelectedFileIds(prev => prev.filter(id => !gFiles.map(f => f.id).includes(id)));
+                                                    else setSelectedFileIds(prev => Array.from(new Set([...prev, ...gFiles.map(f => f.id)])));
+                                                }}>
+                                                    <div className="flex items-center gap-2"><span>📂</span><b>{group.name}</b></div>
+                                                    <div className={`nexus-check ${allS ? 'on' : ''}`}></div>
+                                                </div>
+                                                <div className="data-file-box">
+                                                    {gFiles.map(f => (
+                                                        <div key={f.id} className={`data-file hover-lift ${selectedFileIds.includes(f.id) ? 'on' : ''}`} onClick={() => setSelectedFileIds(prev => prev.includes(f.id) ? prev.filter(id => id !== f.id) : [...prev, f.id])}>
+                                                            <span>{f.originalName || f.filename}</span>
+                                                            {selectedFileIds.includes(f.id) && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="tick">✓</motion.span>}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="data-file-box">
-                                                {gFiles.map(f => (
-                                                    <div key={f.id} className={`data-file hover-lift ${selectedFileIds.includes(f.id) ? 'on' : ''}`} onClick={() => setSelectedFileIds(prev => prev.includes(f.id) ? prev.filter(id => id !== f.id) : [...prev, f.id])}>
-                                                        <span>{f.filename}</span>
-                                                        {selectedFileIds.includes(f.id) && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="tick">✓</motion.span>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    });
+                                })()}
                             </div>
                             <button className="btn btn-primary btn-lg w-full mt-10 glow-btn" onClick={runAnalysis} disabled={selectedFileIds.length === 0}>Generate Strategy</button>
                         </section>

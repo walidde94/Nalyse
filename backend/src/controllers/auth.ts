@@ -221,7 +221,6 @@ export const logout = async (req: AuthRequest, res: Response) => {
     try {
         // In a production app, you might want to blacklist the token
         // For now, we just log the logout
-        console.log(`User ${req.user?.email} logged out`);
 
         res.json({ message: 'Logged out successfully' });
     } catch (error: any) {

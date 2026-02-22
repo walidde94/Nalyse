@@ -1,7 +1,6 @@
-import { motion } from 'framer-motion';
-import { Target, TrendingUp, AlertTriangle, ChevronRight, BarChart2, Pin } from 'lucide-react';
-
-import { Zap } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Target, ChevronRight, BarChart2, Pin, Zap, ChevronDown } from 'lucide-react';
 
 interface ExecutiveFindingsProps {
     reasoning?: {
@@ -15,10 +14,14 @@ interface ExecutiveFindingsProps {
     onPin?: () => void;
 }
 
+const impactLevel = (s: string) => (s && s.toLowerCase().includes('high')) ? 'high' : (s && s.toLowerCase().includes('medium')) ? 'medium' : (s && s.toLowerCase().includes('low')) ? 'low' : null;
+const effortLevel = (s: string) => (s && s.toLowerCase().includes('high')) ? 3 : (s && s.toLowerCase().includes('medium')) ? 2 : (s && s.toLowerCase().includes('low')) ? 1 : null;
+
 export const ExecutiveFindings = ({ reasoning, onDeploy, onDrillDown, onCreateTask, onPin }: ExecutiveFindingsProps) => {
+    const [expandedRec, setExpandedRec] = useState<number | null>(null);
+
     if (!reasoning) return null;
 
-    // Robustness check for malformed or legacy string data
     const safeReasoning = typeof reasoning === 'string' ? {
         executiveSummary: reasoning,
         strategicAdvice: [],
@@ -30,7 +33,7 @@ export const ExecutiveFindings = ({ reasoning, onDeploy, onDrillDown, onCreateTa
     };
 
     return (
-        <div className="flex-col gap-6 fade-in mb-8">
+        <div className="flex flex-col gap-8 fade-in mb-8">
             {/* Main Header Card */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -95,105 +98,138 @@ export const ExecutiveFindings = ({ reasoning, onDeploy, onDrillDown, onCreateTa
             </motion.div>
 
             {(safeReasoning.strategicAdvice.length > 0 || safeReasoning.priorityMatrix.length > 0) && (
-                <div className="grid gap-6 grid-responsive" style={{ gridTemplateColumns: safeReasoning.strategicAdvice.length > 0 && safeReasoning.priorityMatrix.length > 0 ? '1.2fr 1fr' : '1fr' }}>
-                    {/* Strategic Advice */}
+                <div className="grid gap-8 grid-responsive" style={{ gridTemplateColumns: safeReasoning.strategicAdvice.length > 0 && safeReasoning.priorityMatrix.length > 0 ? '1.15fr 1fr' : '1fr' }}>
+                    {/* Strategic Recommendations — expandable */}
                     {safeReasoning.strategicAdvice.length > 0 && (
                         <motion.div
-                            initial={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, x: -16 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="card flex-col gap-4 rounded-xl inner-bevel"
+                            transition={{ delay: 0.15, duration: 0.35 }}
+                            className="flex flex-col gap-4"
                         >
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 rounded-lg bg-success/10 text-success">
-                                    <TrendingUp size={16} />
-                                </div>
-                                <h3 className="text-h3 tracking-tight-titles" style={{ fontSize: '16px' }}>Strategic Recommendations</h3>
-                            </div>
-                            <div className="flex-col gap-2">
-                                {safeReasoning.strategicAdvice.map((advice, i) => (
-                                    <motion.button
-                                        key={i}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.1 * i + 0.3 }}
-                                        onClick={() => onDrillDown?.(advice)}
-                                        className="flex gap-3 items-start group p-3 rounded-xl hover-lift bg-white/[0.01] hover:bg-primary/[0.03] transition-all border border-transparent hover:border-primary/10 w-full text-left"
-                                        title="Click to analyze this finding"
-                                    >
-                                        <div className="mt-1 text-primary group-hover:translate-x-1 transition-transform">
-                                            <ChevronRight size={14} />
-                                        </div>
-                                        <span className="text-sm leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
-                                            {advice}
-                                        </span>
-                                    </motion.button>
-                                ))}
+                            <h3 className="text-base font-semibold tracking-tight text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>Strategic Recommendations</h3>
+                            <div className="architect-section-card flex flex-col gap-1 p-1 rounded-xl">
+                                {safeReasoning.strategicAdvice.map((advice, i) => {
+                                    const isExpanded = expandedRec === i;
+                                    return (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, y: 6 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.05 * i + 0.2 }}
+                                            className="rounded-lg overflow-hidden border border-transparent hover:border-[var(--border-subtle)] transition-colors"
+                                        >
+                                            <button
+                                                onClick={() => { setExpandedRec(isExpanded ? null : i); onDrillDown?.(advice); }}
+                                                className="flex gap-3 items-start w-full text-left p-4 group hover:bg-white/[0.03] transition-colors"
+                                                title="Click to expand or analyze"
+                                            >
+                                                <span className={`mt-0.5 text-[var(--primary)] transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
+                                                    <ChevronRight size={18} strokeWidth={2.5} />
+                                                </span>
+                                                <span className="text-sm leading-relaxed text-[var(--text-primary)] opacity-95 group-hover:opacity-100 flex-1">
+                                                    {advice}
+                                                </span>
+                                                <ChevronDown size={14} className={`text-[var(--text-muted)] shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                            </button>
+                                            <AnimatePresence>
+                                                {isExpanded && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <div className="px-4 pb-4 pt-0 pl-[52px] border-t border-[var(--border-subtle)]/50">
+                                                            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                                                Use this recommendation to align strategy with data-backed trends. Click again or use Explore to drill into the analysis.
+                                                            </p>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
+                                    );
+                                })}
                             </div>
                         </motion.div>
                     )}
 
-                    {/* Priority Matrix */}
+                    {/* Optimization Matrix — Impact/Effort with placeholders */}
                     {safeReasoning.priorityMatrix.length > 0 && (
                         <motion.div
-                            initial={{ opacity: 0, x: 20 }}
+                            initial={{ opacity: 0, x: 16 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="card flex-col gap-4 rounded-xl inner-bevel"
+                            transition={{ delay: 0.25, duration: 0.35 }}
+                            className="flex flex-col gap-4"
                         >
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 rounded-lg bg-warning/10 text-warning">
-                                    <AlertTriangle size={16} />
+                            <h3 className="text-base font-semibold tracking-tight text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>Optimization Matrix</h3>
+                            <div className="architect-section-card rounded-xl p-5 flex flex-col gap-4">
+                                <div className="grid gap-1">
+                                    <div className="grid grid-cols-[1fr_100px_90px] gap-3 px-1 py-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                                        <span>Action Item</span>
+                                        <span className="text-center">Impact</span>
+                                        <span className="text-center">Effort</span>
+                                    </div>
+                                    {safeReasoning.priorityMatrix.map((item, i) => {
+                                        const impact = impactLevel(item.impact);
+                                        const effortDots = effortLevel(item.effort);
+                                        return (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ opacity: 0, y: 8 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.05 * i + 0.35 }}
+                                                className="grid grid-cols-[1fr_100px_90px] gap-3 items-center p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] border border-transparent hover:border-white/[0.06] transition-all group"
+                                            >
+                                                <span className="text-sm font-medium text-[var(--text-primary)] opacity-95 group-hover:opacity-100 truncate pr-2">{item.task}</span>
+                                                <div className="flex justify-center">
+                                                    {impact ? (
+                                                        <div className="w-full max-w-[80px] h-2 bg-[var(--bg-surface)] rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full rounded-full transition-all duration-300"
+                                                                style={{
+                                                                    width: impact === 'high' ? '100%' : impact === 'medium' ? '65%' : '35%',
+                                                                    background: impact === 'high'
+                                                                        ? 'linear-gradient(90deg, var(--success), #4ade80)'
+                                                                        : impact === 'medium'
+                                                                            ? 'linear-gradient(90deg, var(--primary), #60a5fa)'
+                                                                            : 'linear-gradient(90deg, var(--text-muted), var(--text-tertiary))',
+                                                                    boxShadow: impact === 'high' ? '0 0 10px rgba(34, 197, 94, 0.35)' : 'none'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[10px] text-[var(--text-muted)] italic">—</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-center gap-1">
+                                                    {effortDots != null ? (
+                                                        [1, 2, 3].map(dot => (
+                                                            <div
+                                                                key={dot}
+                                                                className="w-2 h-2 rounded-full transition-colors"
+                                                                style={{
+                                                                    backgroundColor: dot <= effortDots ? 'var(--warning)' : 'var(--bg-surface)',
+                                                                    opacity: dot <= effortDots ? 1 : 0.35
+                                                                }}
+                                                            />
+                                                        ))
+                                                    ) : (
+                                                        <span className="text-[10px] text-[var(--text-muted)] italic">—</span>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
                                 </div>
-                                <h3 className="text-h3 tracking-tight-titles" style={{ fontSize: '16px' }}>Optimization Matrix</h3>
-                            </div>
-                            <div className="flex-col gap-2">
-                                <div className="flex items-center gap-2 px-3 py-1 mb-1 text-[10px] uppercase font-bold text-tertiary tracking-wider opacity-60">
-                                    <span className="flex-1">Action Item</span>
-                                    <span className="w-[80px] text-center">Impact</span>
-                                    <span className="w-[60px] text-center">Effort</span>
+                                <div className="mt-2 p-4 rounded-xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 flex items-start gap-3">
+                                    <Zap size={16} className="text-[var(--primary)] shrink-0 mt-0.5" />
+                                    <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
+                                        <strong className="text-[var(--primary)]">Expert Note:</strong> Prioritize high-impact items for immediate ROI.
+                                    </p>
                                 </div>
-                                {safeReasoning.priorityMatrix.map((item, i) => (
-                                    <motion.div
-                                        key={i}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.1 * i + 0.4 }}
-                                        className="flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group"
-                                    >
-                                        <span className="text-sm font-medium opacity-90 group-hover:opacity-100 transition-opacity" style={{ flex: 1 }}>{item.task}</span>
-                                        <div style={{ width: '80px', display: 'flex', justifyContent: 'center' }}>
-                                            <div className="w-full h-1.5 bg-[var(--bg-surface)] rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full"
-                                                    style={{
-                                                        width: item.impact === 'High' ? '100%' : '50%',
-                                                        background: item.impact === 'High'
-                                                            ? 'linear-gradient(90deg, var(--success), #4ade80)'
-                                                            : 'linear-gradient(90deg, var(--primary), #60a5fa)',
-                                                        boxShadow: item.impact === 'High' ? '0 0 8px rgba(34, 197, 94, 0.4)' : 'none'
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div style={{ width: '60px', display: 'flex', justifyContent: 'center' }}>
-                                            <div className="flex gap-1">
-                                                {[1, 2, 3].map(dot => (
-                                                    <div key={dot} className={`w-1.5 h-1.5 rounded-full transition-colors ${(item.effort === 'High' && dot <= 3) || (item.effort === 'Medium' && dot <= 2) || (item.effort === 'Low' && dot <= 1)
-                                                        ? 'bg-[var(--warning)]'
-                                                        : 'bg-[var(--bg-surface)] opacity-30'
-                                                        }`} />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                            <div className="mt-auto p-3 rounded-lg bg-[var(--primary)]/5 border border-[var(--primary)]/10 flex items-start gap-2">
-                                <div className="mt-0.5 text-[var(--primary)]"><Zap size={12} fill="currentColor" /></div>
-                                <p className="text-[11px] leading-relaxed opacity-80">
-                                    <strong className="text-[var(--primary)]">Expert Note:</strong> Prioritize high-impact items for immediate ROI.
-                                </p>
                             </div>
                         </motion.div>
                     )}

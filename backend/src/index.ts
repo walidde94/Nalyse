@@ -21,6 +21,8 @@ import v1Routes from './routes/v1';
 import sourceRoutes from './routes/sources';
 import agentRoutes from './routes/agents';
 import pulseRoutes from './routes/pulse';
+import subscriptionRoutes from './routes/subscription';
+
 
 const allowedOrigins = [
     'http://localhost:5173',
@@ -53,8 +55,6 @@ export const broadcastUpdate = (entity: string, data: any) => {
 };
 
 io.on('connection', (socket) => {
-    console.log(`🔌 Client connected: ${socket.id}`);
-    socket.on('disconnect', () => console.log(`🔌 Client disconnected: ${socket.id}`));
 });
 
 const PORT = process.env.PORT || 3000;
@@ -87,9 +87,15 @@ app.use(cors({
 // Logging
 app.use(morgan('dev'));
 
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing (Exclude webhook)
+app.use((req, res, next) => {
+    if (req.originalUrl === '/api/subscription/webhook') {
+        next();
+    } else {
+        express.json({ limit: '500mb' })(req, res, next);
+    }
+});
+app.use(express.urlencoded({ extended: true, limit: '500mb' }));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -121,8 +127,12 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/v1', externalApiLimiter, v1Routes);
 app.use('/api/sources', sourceRoutes);
+
+
 app.use('/api/agents', agentRoutes);
+
 app.use('/api/pulse', pulseRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check
@@ -240,9 +250,6 @@ const startServer = async () => {
 
         // Start server
         httpServer.listen(Number(PORT), '0.0.0.0', () => {
-            console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📝 Environment: ${process.env.NODE_ENV}`);
-            console.log(`💚 Health: /health`);
         });
     } catch (error) {
         console.error('Failed to start server:', error);

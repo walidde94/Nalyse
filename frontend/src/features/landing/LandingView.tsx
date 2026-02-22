@@ -428,7 +428,49 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                 }
 
                 .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.2, 1, 0.3, 1) both; }
+                .fade-in-up:nth-child(2) { animation-delay: 0.1s; }
+                .fade-in-up:nth-child(3) { animation-delay: 0.2s; }
+                .fade-in-up:nth-child(4) { animation-delay: 0.3s; }
                 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+                /* --- RESPONSIVE --- */
+                @media (max-width: 1024px) {
+                    .landing-content { padding: 0 24px; }
+                    .apex-title { font-size: 52px !important; }
+                    .apex-subtitle { font-size: 18px !important; }
+                    .bento-container { grid-template-columns: 1fr !important; grid-auto-rows: auto !important; }
+                    .tile-featured, .tile-medium { grid-column: span 1 !important; }
+                    .lifecycle-wrapper { flex-direction: column !important; gap: 40px !important; }
+                    .lifecycle-orb-visual { width: 250px !important; height: 250px !important; margin: 0 auto; }
+                    .h-title { font-size: 36px !important; }
+                    .pulse-h { font-size: 36px !important; }
+                    .footer-callout h2 { font-size: 36px !important; }
+                }
+
+                @media (max-width: 768px) {
+                    .landing-content { padding: 0 16px; }
+                    .glass-nav { height: 72px; margin-bottom: 32px; }
+                    .apex-hero { padding: 40px 0 60px !important; }
+                    .apex-title { font-size: 36px !important; }
+                    .apex-subtitle { font-size: 16px !important; max-width: 100%; margin-bottom: 32px !important; }
+                    .hero-actions { flex-direction: column !important; align-items: center; gap: 12px !important; margin-bottom: 40px !important; }
+                    .btn-apex-primary, .btn-apex-secondary { width: 100% !important; justify-content: center; padding: 16px 32px !important; font-size: 16px !important; }
+                    .btn-apex-primary.big { padding: 18px 40px !important; font-size: 18px !important; }
+                    .trust-logos { gap: 24px !important; font-size: 14px !important; }
+                    .bento-nexus { margin-bottom: 80px !important; }
+                    .bento-tile { padding: 24px !important; border-radius: 20px !important; }
+                    .tile-title { font-size: 20px !important; }
+                    .tile-visualization { position: relative !important; right: auto !important; top: auto !important; margin-top: 20px; }
+                    .step-card-item { padding: 16px !important; }
+                    .pulse-lifecycle { padding: 60px 0 !important; margin-bottom: 80px !important; }
+                    .footer-legal { flex-direction: column !important; gap: 16px; text-align: center; }
+                    .footer-callout { margin-bottom: 60px !important; }
+                    .footer-callout h2 { font-size: 28px !important; }
+                    .section-header { margin-bottom: 32px !important; }
+                    .h-title { font-size: 28px !important; }
+                    .pulse-h { font-size: 28px !important; }
+                    .tile-desc { font-size: 14px !important; }
+                }
             `}</style>
         </div >
     );

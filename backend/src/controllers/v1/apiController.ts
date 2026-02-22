@@ -4,6 +4,8 @@ import { AppDataSource } from '../../config/database';
 import { File } from '../../entities/File';
 import { Organization } from '../../entities/Organization';
 import { analyzeFile } from '../../services/analyzer';
+import fs from 'fs';
+import crypto from 'crypto';
 
 const API_URL = process.env.API_URL || 'http://localhost:3000';
 
@@ -31,6 +33,27 @@ export const apiUploadDataset = async (req: ApiRequest, res: Response) => {
 
             if (!org) throw new Error('Organization not found');
 
+            // 1.5 Calculate checksum for duplicate detection
+            const fileContent = fs.readFileSync(req.file!.path);
+            const checksum = crypto.createHash('md5').update(fileContent).digest('hex');
+
+            // Duplicate detection check
+            const duplicate = await transactionalEntityManager.findOne(File, {
+                where: [
+                    { organizationId: orgId, originalName: req.file!.originalname, isDeleted: false },
+                    { organizationId: orgId, checksum: checksum, isDeleted: false }
+                ]
+            });
+
+            if (duplicate) {
+                const message = duplicate.originalName === req.file!.originalname
+                    ? `A dataset named "${req.file!.originalname}" already exists.`
+                    : `This dataset's content has already been uploaded as "${duplicate.originalName}".`;
+                const err = new Error(message);
+                (err as any).statusCode = 409;
+                throw err;
+            }
+
             // 2. Enforcement (B-17)
             const fileSize = req.file!.size;
             const currentUsage = Number(org.storageUsed);
@@ -49,6 +72,7 @@ export const apiUploadDataset = async (req: ApiRequest, res: Response) => {
                 mimeType: req.file!.mimetype,
                 size: fileSize,
                 s3Key: req.file!.path,
+                checksum: checksum,
                 ownerId: userId!,
                 organizationId: orgId,
                 isFavorite: false
@@ -74,6 +98,9 @@ export const apiUploadDataset = async (req: ApiRequest, res: Response) => {
         console.error('[UPLOAD_ERROR]', error);
         if (error.statusCode === 403) {
             return res.status(403).json({ error: 'Quota Exceeded', message: error.message });
+        }
+        if (error.statusCode === 409) {
+            return res.status(409).json({ error: 'Duplicate File', message: error.message });
         }
         res.status(500).json({ error: 'Internal server error during upload', message: error.message });
     }

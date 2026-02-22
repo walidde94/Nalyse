@@ -148,7 +148,6 @@ export const DeveloperView = ({ token }: { token: string }) => {
                     desc: 'Trigger the statistical core to generate insights and distributions.',
                     payload: '{ "datasetId": "UUID" }',
                     curl: `curl -X POST ${API_URL}/api/v1/analysis \\\n  -H "X-API-KEY: ${keys[0]?.key || 'YOUR_KEY'}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"datasetId": "{id}"}'`,
-                    js: `const res = await fetch('${API_URL}/api/v1/analysis', {\n  method: 'POST',\n  headers: {\n    'X-API-KEY': '${keys[0]?.key || 'YOUR_KEY'}',\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({ datasetId: '{id}' })\n});\nconsole.log(await res.json());`
                 }
             ]
         },

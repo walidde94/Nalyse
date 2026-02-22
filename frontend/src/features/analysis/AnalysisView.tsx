@@ -42,7 +42,10 @@ import {
     Heart,
     BarChart3,
     Layers,
-    Zap
+    Zap,
+    Activity,
+    Microscope,
+    Rocket
 } from 'lucide-react';
 import { ElasticSearch } from './components/ElasticSearch';
 import { ElasticFilterBar } from './components/ElasticFilterBar';
@@ -136,7 +139,9 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
         xAxis: '',
         yAxis: '',
         aggregation: 'SUM', // SUM, AVG, COUNT, MAX, MIN
-        chartType: 'bar'
+        chartType: 'bar',
+        sortBy: 'valueDesc',
+        topN: 30
     });
     const [builderData, setBuilderData] = useState<any[]>([]);
     const [debugMsg, setDebugMsg] = useState('');
@@ -156,6 +161,7 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
     const [activeDrillDown, setActiveDrillDown] = useState<{ column: string; value: any } | null>(null);
     const [filterHistory, setFilterHistory] = useState<Array<{ type: string; column: string; value: any }>>([]);
     const [showFilterPanel, setShowFilterPanel] = useState(false);
+    const [showFullAudit, setShowFullAudit] = useState(false);
 
     // Data Grid State
     const [gridPageSize, setGridPageSize] = useState<number>(100);
@@ -431,10 +437,22 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                     setBuilderData([]);
                 } else {
                     setDebugMsg('');
-                    const cleaned = res.map((r: any) => ({
+                    let cleaned = res.map((r: any) => ({
                         name: String(r.name || 'N/A'),
                         value: isNaN(Number(r.value)) ? 0 : Number(r.value)
-                    })).sort((a, b) => b.value - a.value).slice(0, 30);
+                    }));
+
+                    if (builderConfig.sortBy === 'valueAsc') {
+                        cleaned.sort((a, b) => a.value - b.value);
+                    } else if (builderConfig.sortBy === 'labelAsc') {
+                        cleaned.sort((a, b) => a.name.localeCompare(b.name));
+                    } else if (builderConfig.sortBy === 'labelDesc') {
+                        cleaned.sort((a, b) => b.name.localeCompare(a.name));
+                    } else {
+                        cleaned.sort((a, b) => b.value - a.value); // default valueDesc
+                    }
+
+                    cleaned = cleaned.slice(0, builderConfig.topN || 30);
 
                     console.log("📈 Architect manifested points:", cleaned.length);
                     setBuilderData(cleaned);
@@ -1809,30 +1827,59 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                                     onPin={handlePinInsight}
                                 />
 
-                                {analysis.processingLog?.length > 0 && (
-                                    <div className="card" style={{ background: 'rgba(56, 189, 248, 0.03)', border: '1px border-subtle' }}>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <Terminal size={18} className="text-info-custom" />
-                                            <h3 className="text-h3" style={{ fontSize: '15px' }}>Analytical Audit & Traceability</h3>
+                                {analysis.processingLog?.length > 0 && (() => {
+                                    const parseAuditEntry = (entry: string) => {
+                                        const e = entry.toLowerCase();
+                                        if (e.includes('starting') || e.includes('deep audit')) return { icon: 'rocket', color: 'var(--primary)' };
+                                        if (e.includes('complete') || e.includes('deduplication') || e.includes('resolved')) return { icon: 'check', color: 'var(--success)' };
+                                        if (e.includes('analytics insight') || e.includes('outlier')) return { icon: 'search', color: 'var(--accent)' };
+                                        return { icon: 'dot', color: 'var(--text-muted)' };
+                                    };
+                                    const outlierMatch = (entry: string) => entry.match(/Found (\d+) statistical outliers in '([^']+)'/);
+                                    const visibleLog = showFullAudit ? analysis.processingLog : analysis.processingLog.slice(0, 4);
+                                    return (
+                                        <div className="flex flex-col gap-4 mt-2 mb-6">
+                                            <h3 className="text-base font-semibold tracking-tight text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>Analytical Audit & Traceability</h3>
+                                            <div className="architect-section-card flex flex-col gap-0 rounded-xl p-5">
+                                                {visibleLog.map((entry: string, i: number) => {
+                                                    const { icon, color } = parseAuditEntry(entry);
+                                                    const outlier = outlierMatch(entry);
+                                                    return (
+                                                        <div key={i} className="flex gap-4 items-start py-3 border-b border-[var(--border-subtle)]/50 last:border-0 group">
+                                                            <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-opacity" style={{ background: `${color}18`, color }}>
+                                                                {icon === 'rocket' && <Rocket size={14} />}
+                                                                {icon === 'check' && <Activity size={14} />}
+                                                                {icon === 'search' && <Microscope size={14} />}
+                                                                {icon === 'dot' && <div className="w-2 h-2 rounded-full bg-current opacity-60" />}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <span className="text-xs font-mono text-[var(--text-primary)] opacity-90 leading-relaxed">{entry}</span>
+                                                                {outlier && (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="mt-2 text-[11px] font-semibold text-[var(--primary)] hover:underline block"
+                                                                        onClick={() => setActiveTab('data')}
+                                                                    >
+                                                                        Review {outlier[1]} outliers in {outlier[2]} →
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                                {analysis.processingLog.length > 4 && (
+                                                    <button
+                                                        type="button"
+                                                        className="mt-4 pt-4 border-t border-[var(--border-subtle)]/50 text-xs font-semibold text-[var(--primary)] hover:underline flex items-center gap-2"
+                                                        onClick={() => setShowFullAudit(!showFullAudit)}
+                                                    >
+                                                        {showFullAudit ? '− Collapse audit' : `+ View full ${analysis.processingLog.length} stage processing audit...`}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex-col gap-2">
-                                            {analysis.processingLog.slice(0, 4).map((entry: string, i: number) => (
-                                                <div key={i} className="flex gap-3 items-start group">
-                                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-info-custom opacity-40 group-hover:opacity-100 transition-opacity" />
-                                                    <span className="text-xs font-mono opacity-80" style={{ lineHeight: '1.4' }}>{entry}</span>
-                                                </div>
-                                            ))}
-                                            {analysis.processingLog.length > 4 && (
-                                                <button
-                                                    className="text-xs text-info-custom hover:underline mt-2 text-left"
-                                                    onClick={() => setActiveTab('data')}
-                                                >
-                                                    + View full {analysis.processingLog.length} stage processing audit...
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
 
                                 {/* Warning when filters result in 0 rows */}
                                 {filteredData.length === 0 && activeFiltersList.length > 0 && (
@@ -2235,97 +2282,129 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                             <PythonStudio data={localData} />
                         )}
                         {activeTab === 'builder' && (
-                            <div className="flex flex-col md:flex-row gap-6 fade-in h-full p-2 relative overflow-hidden">
+                            <div className="flex flex-col gap-6 fade-in h-full p-2 relative overflow-y-auto">
                                 {/* Ambient Backlight */}
                                 <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
                                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full animate-pulse-slow" />
                                     <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/10 blur-[100px] rounded-full" />
                                 </div>
 
-                                {/* Builder Controls */}
-                                <div className="w-full md:w-[320px] glass-noise rounded-[2rem] border border-white/10 p-8 flex flex-col gap-8 relative bg-black/40 backdrop-blur-3xl shadow-2xl">
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-lg shadow-primary/20">
-                                                <PenTool size={16} className="text-white" />
-                                            </div>
-                                            <h3 className="text-xl font-bold tracking-tight">Visual Architect</h3>
+                                {/* Builder Controls styled exactly like Version Diff Selector */}
+                                <div style={{ padding: '24px', borderRadius: '18px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #818cf8, #34d399, #fbbf24)' }} />
+
+                                    <div className="flex items-center gap-2" style={{ marginBottom: '20px' }}>
+                                        <Database size={15} style={{ color: 'var(--text-muted)' }} />
+                                        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>Visual Architect</span>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+                                        {/* Dimension */}
+                                        <div style={{ flex: 1, minWidth: '220px' }}>
+                                            <label style={{ fontSize: '10px', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#818cf8', boxShadow: `0 0 8px #818cf8` }} /> Dimension (X-Axis)
+                                            </label>
+                                            <select
+                                                id="va-dim-select"
+                                                style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${builderConfig.xAxis ? '#818cf844' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500, transition: 'border-color 0.2s', outline: 'none', cursor: 'pointer' }}
+                                                value={builderConfig.xAxis}
+                                                onChange={e => setBuilderConfig(prev => ({ ...prev, xAxis: e.target.value }))}
+                                            >
+                                                <option value="">Choose dimension…</option>
+                                                {(dimensions.length > 0 ? dimensions : Object.keys(localData[0] || {})).map(c => <option key={c} value={c}>{c}</option>)}
+                                            </select>
                                         </div>
-                                        <p className="text-[9px] label-premium !opacity-40 uppercase tracking-[0.2em] font-black">Strategic Intelligence Node</p>
 
-                                        <div className="mt-10 flex flex-col gap-8">
-                                            <div className="flex flex-col gap-4">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-[#a1a1aa] flex items-center gap-2">
-                                                    <div className="w-1 h-3 bg-primary rounded-full" />
-                                                    Axis Configuration
-                                                </label>
+                                        {/* Measure */}
+                                        <div style={{ flex: 1, minWidth: '220px' }}>
+                                            <label style={{ fontSize: '10px', fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: `0 0 8px #34d399` }} /> Measure (Y-Axis)
+                                            </label>
+                                            <select
+                                                id="va-meas-select"
+                                                style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${builderConfig.yAxis ? '#34d39944' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500, transition: 'border-color 0.2s', outline: 'none', cursor: 'pointer' }}
+                                                value={builderConfig.yAxis}
+                                                onChange={e => setBuilderConfig(prev => ({ ...prev, yAxis: e.target.value }))}
+                                            >
+                                                <option value="">Choose quantitative target…</option>
+                                                <optgroup label="Quantitative (Numeric)">
+                                                    {measures.map(c => <option key={c} value={c}>{c}</option>)}
+                                                </optgroup>
+                                                <optgroup label="Qualitative (Counts)">
+                                                    {dimensions.map(c => <option key={c} value={c}>{c}</option>)}
+                                                </optgroup>
+                                            </select>
+                                        </div>
 
-                                                <div className="flex flex-col gap-5 p-5 bg-white/[0.02] rounded-2xl border border-white/5 shadow-inner">
-                                                    <div className="flex flex-col gap-2">
-                                                        <span className="text-[9px] font-bold text-tertiary uppercase ml-1 opacity-50">Dimension (X-Axis)</span>
-                                                        <select
-                                                            className="input !text-[13px] !h-11 !bg-black/40 border border-white/10 rounded-xl focus:border-primary/50 transition-all cursor-pointer"
-                                                            value={builderConfig.xAxis}
-                                                            onChange={e => setBuilderConfig(prev => ({ ...prev, xAxis: e.target.value }))}
-                                                        >
-                                                            <option value="">Select a Dimension...</option>
-                                                            {(dimensions.length > 0 ? dimensions : Object.keys(localData[0] || {})).map(c => <option key={c} value={c}>{c}</option>)}
-                                                        </select>
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-2">
-                                                        <span className="text-[9px] font-bold text-tertiary uppercase ml-1 opacity-50">Measure (Y-Axis)</span>
-                                                        <select
-                                                            className="input !text-[13px] !h-11 !bg-black/40 border border-white/10 rounded-xl focus:border-purple-500/50 transition-all cursor-pointer"
-                                                            value={builderConfig.yAxis}
-                                                            onChange={e => setBuilderConfig(prev => ({ ...prev, yAxis: e.target.value }))}
-                                                        >
-                                                            <option value="">Select a Column...</option>
-                                                            <optgroup label="Quantitative (Numeric)">
-                                                                {measures.map(c => <option key={c} value={c}>{c}</option>)}
-                                                            </optgroup>
-                                                            <optgroup label="Qualitative (Counts)">
-                                                                {dimensions.map(c => <option key={c} value={c}>{c}</option>)}
-                                                            </optgroup>
-                                                        </select>
-                                                    </div>
-                                                </div>
+                                        {/* Operation Logic */}
+                                        <div style={{ minWidth: '220px' }}>
+                                            <label style={{ fontSize: '10px', fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#fbbf24', boxShadow: `0 0 8px #fbbf24` }} /> Logic
+                                            </label>
+                                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                                {['SUM', 'AVG', 'COUNT', 'MAX', 'MIN'].map(agg => (
+                                                    <button
+                                                        key={agg}
+                                                        onClick={() => setBuilderConfig(prev => ({ ...prev, aggregation: agg }))}
+                                                        style={{ padding: '8px 16px', borderRadius: '10px', border: builderConfig.aggregation === agg ? '1px solid #fbbf24' : '1px solid var(--border-default)', background: builderConfig.aggregation === agg ? 'rgba(251,191,36,0.1)' : 'var(--bg-main)', color: builderConfig.aggregation === agg ? '#fbbf24' : 'var(--text-secondary)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', outline: 'none' }}
+                                                    >
+                                                        {agg}
+                                                    </button>
+                                                ))}
                                             </div>
+                                        </div>
+                                    </div>
 
-                                            <div className="flex flex-col gap-4">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-[#a1a1aa] flex items-center gap-2">
-                                                    <div className="w-1 h-3 bg-purple-500 rounded-full" />
-                                                    Operation Logic
-                                                </label>
-                                                <div className="grid grid-cols-3 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5">
-                                                    {['SUM', 'AVG', 'COUNT'].map(agg => (
-                                                        <button
-                                                            key={agg}
-                                                            className={`text-[10px] font-black py-2.5 rounded-lg transition-all duration-300 ${builderConfig.aggregation === agg ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-white/5 opacity-40 hover:opacity-100'}`}
-                                                            onClick={() => setBuilderConfig(prev => ({ ...prev, aggregation: agg }))}
-                                                        >
-                                                            {agg}
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                    {/* Secondary Row (Presentation & Sorting) */}
+                                    <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border-subtle)' }}>
+                                        {/* Presentation Type */}
+                                        <div style={{ flex: 1, minWidth: '320px' }}>
+                                            <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <BarChart3 size={12} /> Presentation
+                                            </label>
+                                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                                {['bar', 'line', 'area', 'pie', 'donut', 'scatter'].map(type => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => setBuilderConfig(prev => ({ ...prev, chartType: type }))}
+                                                        style={{ padding: '8px 16px', height: '36px', borderRadius: '10px', border: builderConfig.chartType === type ? '1px solid var(--primary)' : '1px solid var(--border-default)', background: builderConfig.chartType === type ? 'var(--primary-subtle)' : 'var(--bg-main)', color: builderConfig.chartType === type ? 'var(--primary)' : 'var(--text-secondary)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s', outline: 'none', display: 'flex', alignItems: 'center' }}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                ))}
                                             </div>
+                                        </div>
 
-                                            <div className="flex flex-col gap-4">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-[#a1a1aa] flex items-center gap-2">
-                                                    <div className="w-1 h-3 bg-pink-500 rounded-full" />
-                                                    Presentation
+                                        {/* Sort & Limit */}
+                                        <div style={{ display: 'flex', gap: '16px', minWidth: '240px' }}>
+                                            <div style={{ flex: 2 }}>
+                                                <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    Sort Order
                                                 </label>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {['bar', 'line', 'area', 'pie', 'scatter'].map(type => (
-                                                        <button
-                                                            key={type}
-                                                            className={`btn btn-sm btn-secondary !text-[10px] !h-10 flex items-center justify-center hover-lift active-press transition-all duration-300 ${builderConfig.chartType === type ? 'bg-gradient-to-r from-indigo-500 to-purple-500 !text-white border-none shadow-lg' : 'bg-black/20 border-white/5 opacity-60 hover:opacity-100'}`}
-                                                            onClick={() => setBuilderConfig(prev => ({ ...prev, chartType: type }))}
-                                                        >
-                                                            {type.toUpperCase()}
-                                                        </button>
+                                                <select
+                                                    style={{ width: '100%', padding: '10px 14px', height: '36px', borderRadius: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 500, outline: 'none', cursor: 'pointer' }}
+                                                    value={(builderConfig as any).sortBy || 'valueDesc'}
+                                                    onChange={e => setBuilderConfig(prev => ({ ...prev, sortBy: e.target.value as any }))}
+                                                >
+                                                    <option value="valueDesc">Value (High to Low)</option>
+                                                    <option value="valueAsc">Value (Low to High)</option>
+                                                    <option value="labelAsc">Label (A–Z)</option>
+                                                    <option value="labelDesc">Label (Z–A)</option>
+                                                </select>
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    Limit
+                                                </label>
+                                                <select
+                                                    style={{ width: '100%', padding: '10px 14px', height: '36px', borderRadius: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 500, outline: 'none', cursor: 'pointer' }}
+                                                    value={(builderConfig as any).topN || 30}
+                                                    onChange={e => setBuilderConfig(prev => ({ ...prev, topN: Number(e.target.value) }))}
+                                                >
+                                                    {[10, 20, 30, 50].map(n => (
+                                                        <option key={n} value={n}>Top {n}</option>
                                                     ))}
-                                                </div>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -2494,94 +2573,93 @@ export const AnalysisView = ({ analysis, onClose }: any) => {
                             />
                         )}
 
-                        {activeTab === 'presentation' && (
-                            <div className="fade-in" style={{
-                                position: 'fixed', inset: 0, zIndex: 2000,
-                                background: '#09090b', color: 'white',
-                                display: 'flex', flexDirection: 'column'
-                            }}>
-                                {/* Top Progress Bars */}
-                                <div style={{
-                                    display: 'flex', gap: '4px', padding: '12px 16px',
-                                    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10
-                                }}>
-                                    {(analysis.options || []).map((_: any, i: number) => (
-                                        <div
-                                            key={i}
-                                            onClick={(e) => { e.stopPropagation(); setPresentationIndex(i); }}
-                                            style={{ flex: 1, height: '20px', display: 'flex', alignItems: 'center', cursor: 'pointer', zIndex: 30 }}
-                                        >
-                                            <div style={{
-                                                width: '100%', height: '3px', borderRadius: '2px',
-                                                background: 'rgba(255,255,255,0.2)',
-                                                overflow: 'hidden'
-                                            }}>
-                                                <div style={{
-                                                    height: '100%',
-                                                    width: i < presentationIndex ? '100%' : (i === presentationIndex && isPlaying) ? '100%' : '0%',
-                                                    background: 'white',
-                                                    transition: i === presentationIndex && isPlaying ? 'width 5s linear' : 'none'
-                                                }} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Header Controls */}
-                                <div style={{
-                                    position: 'absolute', top: '24px', right: '24px', zIndex: 20,
-                                    display: 'flex', gap: '20px', alignItems: 'center'
-                                }}>
-                                    <button
-                                        onClick={() => setIsPlaying(!isPlaying)}
-                                        style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', opacity: 0.8, fontSize: '20px' }}
-                                        title={isPlaying ? "Pause" : "Play"}
-                                    >
-                                        {isPlaying ? '⏸' : '▶'}
-                                    </button>
-                                    <button onClick={() => setActiveTab('overview')} style={{
-                                        background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%',
-                                        width: '40px', height: '40px', color: 'white', cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)'
-                                    }}>
-                                        ✕
-                                    </button>
-                                </div>
-
-                                {/* Content Area */}
-                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-
-                                    {/* Touch/Click Zones */}
-                                    <div
-                                        style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30%', zIndex: 5, cursor: 'w-resize' }}
-                                        onClick={(e) => { e.stopPropagation(); setPresentationIndex(p => Math.max(0, p - 1)); }}
-                                    />
-                                    <div
-                                        style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '30%', zIndex: 5, cursor: 'e-resize' }}
-                                        onClick={(e) => { e.stopPropagation(); setPresentationIndex(p => Math.min((analysis.options?.length || 1) - 1, p + 1)); }}
-                                    />
-
-                                    {/* Slide Content */}
-                                    <div className="fade-in-scale" style={{ width: '100%', maxWidth: '1000px', padding: '24px', zIndex: 6, pointerEvents: 'none' }}>
-                                        <div style={{ textAlign: 'center', marginBottom: '40px', pointerEvents: 'auto', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-                                            <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px', letterSpacing: '-0.01em' }}>
-                                                {(analysis.options?.[presentationIndex]?.title) || "Analysis Overview"}
-                                            </h1>
-                                            <p style={{ fontSize: '18px', opacity: 0.7, maxWidth: '600px', margin: '0 auto' }}>
-                                                {(analysis.options?.[presentationIndex]?.description)}
-                                            </p>
-                                        </div>
-                                        <div style={{ height: '600px', width: '100%', pointerEvents: 'auto' }}>
-                                            {analysis.options?.length > 0 && renderChart(analysis.options[presentationIndex], presentationIndex)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                     </div >
                 </div >
             </div >
+
+            {activeTab === 'presentation' && (
+                <div className="fade-in" style={{
+                    position: 'absolute', inset: 0, zIndex: 9000,
+                    background: '#09090b', color: 'white',
+                    display: 'flex', flexDirection: 'column'
+                }}>
+                    {/* Top Progress Bars */}
+                    <div style={{
+                        display: 'flex', gap: '4px', padding: '12px 16px',
+                        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50
+                    }}>
+                        {(analysis.options || []).map((_: any, i: number) => (
+                            <div
+                                key={i}
+                                onClick={(e) => { e.stopPropagation(); setPresentationIndex(i); }}
+                                style={{ flex: 1, height: '24px', display: 'flex', alignItems: 'center', cursor: 'pointer', zIndex: 30 }}
+                            >
+                                <div style={{
+                                    width: '100%', height: '4px', borderRadius: '2px',
+                                    background: 'rgba(255,255,255,0.15)',
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{
+                                        height: '100%',
+                                        width: i < presentationIndex ? '100%' : (i === presentationIndex && isPlaying) ? '100%' : '0%',
+                                        background: 'var(--primary)',
+                                        transition: i === presentationIndex && isPlaying ? 'width 5s linear' : 'none'
+                                    }} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Header Controls */}
+                    <div style={{
+                        position: 'absolute', top: '40px', right: '40px', zIndex: 9999,
+                        display: 'flex', gap: '16px', alignItems: 'center'
+                    }}>
+                        <button
+                            onClick={() => setIsPlaying(!isPlaying)}
+                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px 16px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
+                        >
+                            {isPlaying ? <span className="text-xl leading-none">⏸</span> : <span className="text-xl leading-none">▶</span>}
+                            {isPlaying ? 'Pause' : 'Play'}
+                        </button>
+                        <button onClick={() => setActiveTab('overview')} style={{
+                            background: 'rgba(255,50,50,0.1)', border: '1px solid rgba(255,50,50,0.3)', borderRadius: '12px', padding: '10px 20px', color: '#ff8888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', backdropFilter: 'blur(10px)', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(255,0,0,0.1)'
+                        }}>
+                            <span className="text-xl leading-none">✕</span> Exit Presentation
+                        </button>
+                    </div>
+
+                    {/* Content Area */}
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+
+                        {/* Touch/Click Zones */}
+                        <div
+                            style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30%', zIndex: 5, cursor: 'w-resize' }}
+                            onClick={(e) => { e.stopPropagation(); setPresentationIndex(p => Math.max(0, p - 1)); }}
+                        />
+                        <div
+                            style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '30%', zIndex: 5, cursor: 'e-resize' }}
+                            onClick={(e) => { e.stopPropagation(); setPresentationIndex(p => Math.min((analysis.options?.length || 1) - 1, p + 1)); }}
+                        />
+
+                        {/* Slide Content */}
+                        <div className="fade-in-scale" style={{ width: '100%', maxWidth: '1000px', padding: '24px', zIndex: 6, pointerEvents: 'none' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '40px', pointerEvents: 'auto', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                                <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px', letterSpacing: '-0.01em' }}>
+                                    {(analysis.options?.[presentationIndex]?.title) || "Analysis Overview"}
+                                </h1>
+                                <p style={{ fontSize: '18px', opacity: 0.7, maxWidth: '600px', margin: '0 auto' }}>
+                                    {(analysis.options?.[presentationIndex]?.description)}
+                                </p>
+                            </div>
+                            <div style={{ height: '600px', width: '100%', pointerEvents: 'auto' }}>
+                                {analysis.options?.length > 0 && renderChart(analysis.options[presentationIndex], presentationIndex)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* Expanded Chart Modal */}
             {

@@ -49,7 +49,6 @@ run_analysis()
     useEffect(() => {
         const loadPy = async () => {
             if (window.loadPyodide) {
-                console.log("Pyodide already loaded");
                 try {
                     const py = await window.loadPyodide({
                         indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"

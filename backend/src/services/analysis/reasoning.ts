@@ -17,24 +17,27 @@ export class ReasoningEngine {
         const correlations = insights.filter(i => i.type === 'correlation');
         const columnNames = Object.keys(result.summary.columnTypes).join(' ').toLowerCase();
 
-        // 1. Detect Field Expertise
+        // 1. Detect Field Expertise (The "Understanding" Phase)
         let detectedField = 'General Business';
         if (/patient|medical|doctor|clinical|health|diagnosis|provider/i.test(columnNames)) detectedField = 'Healthcare & Life Sciences';
-        else if (/sku|product|inventory|stock|retail|order|shipment/i.test(columnNames)) detectedField = 'Retail & Supply Chain';
-        else if (/churn|mrr|subscription|saas|user|login|session/i.test(columnNames)) detectedField = 'SaaS & Digital Products';
-        else if (/revenue|cost|margin|profit|finance|ebitda|balance|asset/i.test(columnNames)) detectedField = 'Corporate Finance';
+        else if (/sku|product|inventory|stock|retail|order|shipment|warehouse|carrier/i.test(columnNames)) detectedField = 'Retail & Supply Chain';
+        else if (/churn|mrr|subscription|saas|user|login|session|arr|cac/i.test(columnNames)) detectedField = 'SaaS & Digital Products';
+        else if (/revenue|cost|margin|profit|finance|ebitda|balance|asset|tax|invoice/i.test(columnNames)) detectedField = 'Corporate Finance';
+        else if (/campaign|click|impression|lead|mql|sql|ad_spend|ctr/i.test(columnNames)) detectedField = 'Marketing & Growth';
+        else if (/employee|salary|onboarding|talent|hiring|resignation|attrition/i.test(columnNames)) detectedField = 'Human Resources';
 
         // 2. Generate Executive Summary with Field Authority
-        let summary = `[Expert Insight: ${detectedField}] Our synchronization engine has parsed ${result.summary.rows.toLocaleString()} institutional data points. `;
+        let summary = `[Strategic Domain Analysis: ${detectedField}] System has successfully mapped the underlying logic of this dataset. `;
+        summary += `We have characterized this as a ${detectedField} core knowledge stream containing ${result.summary.rows.toLocaleString()} institutional data points. `;
 
         if (anomalies.length > 0) {
-            summary += `We observed ${anomalies.length} critical deviations from expected ${detectedField} baselines. `;
+            summary += `Structural analysis revealed ${anomalies.length} significant deviations from standard ${detectedField} efficiency baselines. `;
         } else {
             summary += `Data patterns show high alignment with standard ${detectedField} performance models. `;
         }
 
         if (correlations.length > 0) {
-            summary += `Structural analysis identified ${correlations.length} interconnected dependencies that suggest a mature operational framework. `;
+            summary += `Our synthesis engine identified ${correlations.length} interconnected dependencies that suggest a mature operational framework. `;
         }
 
         // 3. Field-Specific Strategic Advice
@@ -56,6 +59,14 @@ export class ReasoningEngine {
             case 'Corporate Finance':
                 advice.push('Optimize capital allocation based on the detected high-margin segments.');
                 advice.push('Monitor the significant correlation between operational costs and revenue acceleration.');
+                break;
+            case 'Marketing & Growth':
+                advice.push('Optimize CAC by reallocating budget to the highest CTR clusters identified.');
+                advice.push('Scale the top-performing campaign archetypes across underperforming demographics.');
+                break;
+            case 'Human Resources':
+                advice.push('Implement early-warning systems for high-value talent attrition risks.');
+                advice.push('Optimize the onboarding pipeline by identifying bottlenecks in the training-to-productivity transition.');
                 break;
             default:
                 advice.push('Establish a secondary validation layer for the identified high-confidence trends.');

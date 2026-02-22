@@ -9,6 +9,7 @@ import { upload } from '../middleware/upload';
 import { analyzeFile, analyzeRawData } from '../services/analyzer';
 import { scrapeUrl } from '../services/scraper';
 import fs from 'fs';
+import crypto from 'crypto';
 import { parse } from 'csv-parse/sync';
 
 export const uploadFile = async (req: AuthRequest, res: Response) => {
@@ -46,6 +47,10 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
         const fileSize = req.file.size;
 
+        // Calculate checksum for duplicate detection
+        const fileContent = fs.readFileSync(req.file.path);
+        const checksum = crypto.createHash('md5').update(fileContent).digest('hex');
+
         const result = await AppDataSource.transaction(async (transactionalEntityManager) => {
             const org = await transactionalEntityManager.findOne(Organization, {
                 where: { id: organizationId },
@@ -54,8 +59,41 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
             if (!org) throw new Error('Organization not found');
 
+            // Comprehensive Duplicate Check (Name or Content)
+            const duplicate = await transactionalEntityManager.findOne(File, {
+                where: [
+                    { organizationId: org.id, originalName: req.file!.originalname, isDeleted: false },
+                    { organizationId: org.id, checksum: checksum, isDeleted: false }
+                ]
+            });
+
+            if (duplicate) {
+                const message = duplicate.originalName === req.file!.originalname
+                    ? `A file named "${duplicate.originalName}" already exists in this workspace.`
+                    : `This file's content has already been uploaded as "${duplicate.originalName}".`;
+                const err = new Error(message);
+                (err as any).statusCode = 409;
+                throw err;
+            }
+
             if (Number(org.storageUsed) + fileSize > Number(org.storageLimit)) {
                 const err = new Error('Storage quota exceeded');
+                (err as any).statusCode = 403;
+                throw err;
+            }
+
+            // Dataset (File) limit check
+            const fileCount = await transactionalEntityManager.count(File, {
+                where: { organizationId: org.id, isDeleted: false }
+            });
+
+            let effectiveLimit = org.fileLimit;
+            if (org.plan === 'free') {
+                effectiveLimit = 5; // Hard cap for free plan
+            }
+
+            if (fileCount >= effectiveLimit) {
+                const err = new Error(`Dataset limit exceeded. Your plan allows up to ${effectiveLimit} datasets.`);
                 (err as any).statusCode = 403;
                 throw err;
             }
@@ -66,6 +104,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 mimeType: req.file!.mimetype,
                 size: fileSize,
                 s3Key: req.file!.path,
+                checksum: checksum,
                 ownerId: userId,
                 organizationId: organizationId,
                 isFavorite: false
@@ -87,9 +126,10 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
         res.json({ message: 'File uploaded', file: result });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('File Upload Error:', error);
-        res.status(500).json({ error: 'Database error: ' + (error as any).message });
+        const statusCode = error.statusCode || 500;
+        res.status(statusCode).json({ error: error.message });
     }
 };
 
@@ -264,7 +304,6 @@ export const transformFileHandler = async (req: AuthRequest, res: Response) => {
         } else if (originalFile.mimeType.includes('csv') || originalFile.filename.endsWith('.csv')) {
             records = parse(rawContent, { columns: true, skip_empty_lines: true, relax_column_count: true });
         } else {
-            console.warn('Unsupported file type for transformation:', originalFile.mimeType);
             return res.status(400).json({ error: 'Unsupported file type for transformation' });
         }
 
@@ -312,7 +351,6 @@ export const transformFileHandler = async (req: AuthRequest, res: Response) => {
         const newFilename = baseName + extension;
         const newPath = 'uploads/' + newFilename.replace(/[^a-z0-9.]/gi, '_') + '_' + Date.now();
 
-        console.log('Writing transformed file to:', newPath);
         fs.writeFileSync(newPath, newContent);
 
         const newFileEntry = fileRepo.create({
@@ -327,7 +365,6 @@ export const transformFileHandler = async (req: AuthRequest, res: Response) => {
         });
 
         const savedFile = await fileRepo.save(newFileEntry);
-        console.log('Transformation complete for file:', savedFile.id);
         res.json(savedFile);
 
     } catch (e: any) {
@@ -363,5 +400,67 @@ export const updateFileGroupHandler = async (req: AuthRequest, res: Response) =>
         res.json(file);
     } catch (error: any) {
         res.status(500).json({ error: 'Failed to update group: ' + error.message });
+    }
+};
+
+export const previewFileHandler = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.userId;
+    const fileId = req.params.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const fileRepo = AppDataSource.getRepository(File);
+
+    try {
+        const file = await fileRepo.findOne({ where: { id: fileId as string, isDeleted: false } });
+        if (!file || file.ownerId !== userId) return res.status(404).json({ error: 'File not found' });
+
+        const path = file.s3Key || file.filename;
+        if (!fs.existsSync(path)) return res.status(404).json({ error: 'File content not found' });
+
+        const rawContent = fs.readFileSync(path);
+        let previewData: any[] = [];
+
+        if (file.mimeType.includes('json') || file.filename.endsWith('.json')) {
+            const allData = JSON.parse(rawContent.toString());
+            previewData = Array.isArray(allData) ? allData.slice(0, 15) : [allData];
+        } else if (file.mimeType.includes('csv') || file.filename.endsWith('.csv')) {
+            const records = parse(rawContent, {
+                columns: true,
+                skip_empty_lines: true,
+                relax_column_count: true,
+                trim: true
+            });
+            previewData = records.slice(0, 15);
+        }
+
+        // Infer column types
+        const columns = previewData.length > 0 ? Object.keys(previewData[0]).map(key => {
+            const sampleValue = previewData.find(r => r[key] !== null && r[key] !== '')?.[key];
+            let type = 'string';
+
+            if (sampleValue !== undefined && sampleValue !== null) {
+                const valStr = String(sampleValue).trim();
+                if (!isNaN(Number(valStr)) && valStr !== '') {
+                    type = 'numeric';
+                } else if (!isNaN(Date.parse(valStr)) && valStr.length > 5) {
+                    type = 'date';
+                }
+            }
+
+            return { name: key, type };
+        }) : [];
+
+        res.json({
+            rows: previewData,
+            columns,
+            metadata: {
+                rowCount: previewData.length,
+                totalSize: file.size,
+                format: file.filename.split('.').pop()?.toUpperCase()
+            }
+        });
+    } catch (error: any) {
+        console.error('Preview failed:', error);
+        res.status(500).json({ error: 'Failed to generate preview' });
     }
 };

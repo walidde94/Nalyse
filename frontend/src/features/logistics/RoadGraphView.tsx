@@ -102,7 +102,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
     };
 
     return (
-        <div style={{ position: 'fixed', inset: 0, background: '#09090b', zIndex: 1000, color: 'white', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'absolute', inset: 0, background: '#09090b', zIndex: 10, color: 'white', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <style>{`
                 .leaflet-container { background: #050505 !important; }
                 .backdrop-blur { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }

@@ -76,7 +76,47 @@ const DEPARTMENTS: Department[] = [
     }
 ];
 
-export const SelfServiceStudio = ({ files, token, apiUrl, runWithProgress }: { files: any[], token: string, apiUrl: string, runWithProgress?: (fn: () => Promise<void | { type: string; title: string; data: any }>) => Promise<void> }) => {
+export const SelfServiceStudio = ({
+    files,
+    token,
+    apiUrl,
+    userPlan,
+    runWithProgress
+}: {
+    files: any[],
+    token: string,
+    apiUrl: string,
+    userPlan?: string,
+    runWithProgress?: (fn: () => Promise<void | { type: string; title: string; data: any }>) => Promise<void>
+}) => {
+    const { addToast } = useToast();
+
+    if (userPlan === 'free') {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="card text-center flex-col items-center gap-6 premium-highlight-card" style={{ maxWidth: '440px', padding: '48px', position: 'relative', overflow: 'hidden' }}>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]"></div>
+                    <div className="inner-highlight" style={{ width: '72px', height: '72px', borderRadius: '24px', background: 'var(--primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                        <Sparkles size={40} />
+                    </div>
+                    <div className="flex-col gap-2">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                            <span className="badge badge-primary">PRO FEATURE</span>
+                        </div>
+                        <h2 className="text-h1">Self-Service Studio</h2>
+                        <p className="text-sec">Advanced natural language data discovery and departmental portals are Pro features.</p>
+                    </div>
+
+                    <div className="flex-col gap-3 w-full">
+                        <button className="btn btn-primary btn-lg w-full glow-btn" onClick={() => (window as any).dispatchEvent(new CustomEvent('navigate-to-settings', { detail: { initialTab: 'subscription' } }))}>
+                            <span className="shimmer-text">Upgrade to Pro</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const [selectedDept, setSelectedDept] = useState<Department | null>(null);
     const [selectedFileId, setSelectedFileId] = useState<string>('');
     const [query, setQuery] = useState('');
@@ -90,7 +130,6 @@ export const SelfServiceStudio = ({ files, token, apiUrl, runWithProgress }: { f
     const [sortBy, setSortBy] = useState('none');
 
     const activeFile = files.find(f => f.id === selectedFileId);
-    const { addToast } = useToast();
 
     const getSynonyms = (term: string): string[] => {
         if (term.includes('cost') || term.includes('spend')) return ['revenue', 'price', 'expenses', 'profit', 'budget'];
@@ -310,7 +349,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, runWithProgress }: { f
                             >
                                 <option value="">Select a Dataset...</option>
                                 {files.map(f => (
-                                    <option key={f.id} value={f.id}>{f.filename} ({(f.size / 1024).toFixed(1)} KB)</option>
+                                    <option key={f.id} value={f.id}>{f.originalName || f.filename} ({(f.size / 1024).toFixed(1)} KB)</option>
                                 ))}
                             </select>
                         </div>
@@ -323,7 +362,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, runWithProgress }: { f
                                 <div className="flex items-center gap-4">
                                     <div className="badge badge-success px-3 py-1">CONNECTED</div>
                                     <span className="text-xs font-bold opacity-60">
-                                        Live ingestion active for <span className="text-[var(--primary)]">{activeFile.filename}</span>
+                                        Live ingestion active for <span className="text-[var(--primary)]">{activeFile.originalName || activeFile.filename}</span>
                                     </span>
                                 </div>
                                 <div className="flex gap-2">

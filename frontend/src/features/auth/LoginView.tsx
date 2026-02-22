@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { BarChart3, Eye, EyeOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Lock, User, Check, AlertCircle } from 'lucide-react';
+import { AuroraBackground } from './AuroraBackground';
+import { Logo } from '../../components/common/Logo';
 
 interface LoginViewProps {
     onSwitchToRegister: () => void;
@@ -9,179 +12,289 @@ interface LoginViewProps {
 
 export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSuccess }) => {
     const { login } = useAuth();
+
+    // 0: Email, 1: Password, 2: Processing, 3: Success
+    const [step, setStep] = useState(0);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setIsLoading(true);
+    const emailInputRef = useRef<HTMLInputElement>(null);
+    const passwordInputRef = useRef<HTMLInputElement>(null);
 
-        try {
-            await login(email, password);
-            onSuccess();
-        } catch (err: any) {
-            setError(err.message || 'Login failed. Please check your credentials.');
-        } finally {
-            setIsLoading(false);
+    useEffect(() => {
+        if (step === 0 && emailInputRef.current) {
+            emailInputRef.current.focus();
+        } else if (step === 1 && passwordInputRef.current) {
+            passwordInputRef.current.focus();
+        }
+    }, [step]);
+
+    const handleNext = () => {
+        if (step === 0) {
+            if (!email || !email.includes('@')) {
+                setError('Please provide a valid identifier.');
+                return;
+            }
+            setError('');
+            setStep(1);
+        } else if (step === 1) {
+            if (!password || password.length < 4) {
+                setError('Security key required.');
+                return;
+            }
+            setError('');
+            handleLogin();
         }
     };
 
+    const handleLogin = async () => {
+        setStep(2);
+        try {
+            await login(email, password);
+            setStep(3);
+            setTimeout(() => onSuccess(), 1000);
+        } catch (err: any) {
+            setError(err.message || 'Authentication failed.');
+            setStep(1); // Go back to password
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleNext();
+        }
+    };
+
+    const pageVariants = {
+        initial: { opacity: 0, scale: 0.95, filter: 'blur(10px)' },
+        in: { opacity: 1, scale: 1, filter: 'blur(0px)' },
+        out: { opacity: 0, scale: 1.05, filter: 'blur(10px)' }
+    };
+
     return (
-        <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            width: '100%',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            overflow: 'auto',
-            background: 'var(--bg-app)',
-            padding: '20px'
-        }}>
-            {/* Background Glows */}
-            <div style={{ position: 'absolute', top: '10%', left: '10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)', filter: 'blur(100px)', zIndex: 0 }}></div>
-            <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '30vw', height: '30vw', background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)', filter: 'blur(100px)', zIndex: 0 }}></div>
+        <div style={{ width: '100vw', height: '100vh', position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column' }}>
+            <AuroraBackground />
 
-            <div className="card glass" style={{ maxWidth: '480px', width: '100%', padding: '64px', zIndex: 1, border: '1px solid var(--border-highlight)', margin: 'auto' }}>
-                {/* Logo & Header */}
-                <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                    <div style={{
-                        width: '72px',
-                        height: '72px',
-                        margin: '0 auto 24px',
-                        background: 'var(--gradient-primary)',
-                        borderRadius: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        boxShadow: 'var(--shadow-primary)'
-                    }}>
-                        <BarChart3 size={32} />
-                    </div>
-                    <h1 className="text-h2" style={{ fontSize: '2.5rem', marginBottom: '12px' }}>Welcome Back</h1>
-                    <p className="text-sec">Modern analytics for forward thinkers</p>
+            {/* Header Nalyse Branding */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
+                style={{ position: 'absolute', top: '40px', left: '48px', zIndex: 50, display: 'flex', alignItems: 'center', gap: '16px' }}
+            >
+                <Logo hideText={true} style={{ width: '32px', height: '32px' }} />
+                <div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'white' }}>Nalyse<span style={{ color: '#3b82f6' }}>.</span></div>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', marginTop: '4px' }}>ENTERPRISE // SYS.LOGIN</div>
                 </div>
+            </motion.div>
 
-                {/* Error Message */}
-                {error && (
-                    <div className="fade-in" style={{
-                        padding: '12px 16px',
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid var(--danger)',
-                        borderRadius: 'var(--radius-md)',
-                        marginBottom: '24px',
-                        color: 'var(--danger)',
-                        fontSize: '14px'
-                    }}>
-                        {error}
-                    </div>
-                )}
+            {/* Main Interactive Area */}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 10vw', zIndex: 10 }}>
+                <AnimatePresence mode="wait">
 
-                {/* Login Form */}
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div>
-                        <label htmlFor="email" className="text-sm" style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-                            Email Address
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            className="input"
-                            placeholder="you@company.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            autoFocus
-                        />
-                    </div>
-
-                    <div>
-                        <label htmlFor="password" className="text-sm" style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-                            Password
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                className="input"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                disabled={isLoading}
-                                style={{ paddingRight: '40px' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="btn btn-icon btn-ghost btn-sm"
-                                style={{
-                                    position: 'absolute',
-                                    right: '8px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)'
-                                }}
-                            >
-                                {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
-                            </button>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="btn btn-primary btn-lg w-full"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Signing in...' : 'Sign In'}
-                    </button>
-                </form>
-
-                {/* Divider */}
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    margin: '32px 0',
-                    opacity: 0.5
-                }}>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border-default)' }}></div>
-                    <span className="text-sm">OR</span>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border-default)' }}></div>
-                </div>
-
-                {/* Register Link */}
-                <div style={{ textAlign: 'center' }}>
-                    <p className="text-sm text-secondary">
-                        Don't have an account?{' '}
-                        <button
-                            onClick={onSwitchToRegister}
-                            className="btn btn-ghost btn-sm"
-                            style={{ fontWeight: 600, color: 'var(--primary)', textDecoration: 'underline' }}
+                    {step === 0 && (
+                        <motion.div
+                            key="step-0"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="in"
+                            exit="out"
+                            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                            style={{ width: '100%', maxWidth: '800px' }}
                         >
-                            Create one now
+                            <h2 style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '24px' }}>
+                                Step 1 // Identification
+                            </h2>
+
+                            <div style={{ position: 'relative', width: '100%' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                                    <input
+                                        ref={emailInputRef}
+                                        type="email"
+                                        className="auth-flow-input"
+                                        placeholder="Enter your email identifier"
+                                        value={email}
+                                        onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                                        onKeyDown={handleKeyDown}
+                                    />
+                                    <AnimatePresence>
+                                        {email && email.includes('@') && (
+                                            <motion.button
+                                                initial={{ opacity: 0, scale: 0.5 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.5 }}
+                                                className="auth-next-btn"
+                                                onClick={handleNext}
+                                            >
+                                                <ArrowRight size={20} />
+                                            </motion.button>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                                <div className="auth-input-line">
+                                    <div className="auth-input-line-active" />
+                                </div>
+                            </div>
+
+                            {error && (
+                                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ color: '#f87171', fontSize: '13px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <AlertCircle size={14} /> {error}
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {step === 1 && (
+                        <motion.div
+                            key="step-1"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="in"
+                            exit="out"
+                            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                            style={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column' }}
+                        >
+                            <div style={{ display: 'flex', gap: '16px', marginBottom: '40px' }}>
+                                <motion.div layoutId="email-chip" className="step-chip" onClick={() => setStep(0)}>
+                                    <User size={14} />
+                                    {email}
+                                </motion.div>
+                            </div>
+
+                            <h2 style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '24px' }}>
+                                Step 2 // Verification
+                            </h2>
+
+                            <div style={{ position: 'relative', width: '100%' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                                    <input
+                                        ref={passwordInputRef}
+                                        type="password"
+                                        className="auth-flow-input"
+                                        placeholder="Enter your security key"
+                                        value={password}
+                                        onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                                        onKeyDown={handleKeyDown}
+                                    />
+                                    <AnimatePresence>
+                                        {password.length > 2 && (
+                                            <motion.button
+                                                initial={{ opacity: 0, scale: 0.5 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.5 }}
+                                                className="auth-next-btn"
+                                                onClick={handleNext}
+                                            >
+                                                <ArrowRight size={20} />
+                                            </motion.button>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                                <div className="auth-input-line">
+                                    <div className="auth-input-line-active" />
+                                </div>
+                            </div>
+
+                            {error && (
+                                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ color: '#f87171', fontSize: '13px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <AlertCircle size={14} /> {error}
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {step >= 2 && (
+                        <motion.div
+                            key="step-2"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="in"
+                            exit="out"
+                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                            style={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                            <div style={{ display: 'flex', gap: '16px', marginBottom: '64px' }}>
+                                <motion.div layoutId="email-chip" className="step-chip">
+                                    <User size={14} />
+                                    {email}
+                                </motion.div>
+                                <motion.div layoutId="pass-chip" className="step-chip">
+                                    <Lock size={14} />
+                                    Security Key Established
+                                </motion.div>
+                            </div>
+
+                            <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {step === 2 ? (
+                                    <>
+                                        <motion.svg width="120" height="120" viewBox="0 0 120 120" style={{ position: 'absolute' }}>
+                                            <motion.circle
+                                                cx="60" cy="60" r="58"
+                                                fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2"
+                                            />
+                                            <motion.circle
+                                                cx="60" cy="60" r="58"
+                                                fill="none" stroke="#3b82f6" strokeWidth="2"
+                                                strokeLinecap="round"
+                                                initial={{ pathLength: 0, rotate: -90 }}
+                                                animate={{ pathLength: 1, rotate: 270 }}
+                                                transition={{ duration: 2, ease: "linear", repeat: Infinity }}
+                                                style={{ transformOrigin: 'center' }}
+                                            />
+                                        </motion.svg>
+                                        <div style={{ fontSize: '11px', letterSpacing: '0.1em', fontWeight: 600, color: 'white' }}>
+                                            ANALYZING
+                                        </div>
+                                    </>
+                                ) : (
+                                    <motion.div
+                                        initial={{ scale: 0.5, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ type: 'spring', bounce: 0.5 }}
+                                        style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#34d399', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#020205' }}
+                                    >
+                                        <Check size={40} strokeWidth={3} />
+                                    </motion.div>
+                                )}
+                            </div>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
+                                style={{ marginTop: '24px', color: step === 3 ? '#34d399' : 'rgba(255,255,255,0.6)', fontSize: '14px', letterSpacing: '0.05em' }}
+                            >
+                                {step === 2 ? 'Verifying Neural Handshake...' : 'Handshake Verified. Redirecting...'}
+                            </motion.div>
+                        </motion.div>
+                    )}
+
+                </AnimatePresence>
+            </div>
+
+            {/* Footer */}
+            {step < 2 && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    style={{ position: 'absolute', bottom: '40px', left: '48px', right: '48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 50 }}
+                >
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+                        Unregistered Node?{' '}
+                        <button onClick={onSwitchToRegister} style={{ background: 'none', border: 'none', color: 'white', fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+                            Initialize New Protocol
                         </button>
                     </p>
-                </div>
-
-                {/* Footer */}
-                <div style={{ marginTop: '32px', textAlign: 'center' }}>
-                    <p className="text-xs text-secondary">
-                        By signing in, you agree to our{' '}
-                        <a href="/terms" style={{ color: 'var(--primary)' }}>Terms of Service</a>
-                        {' '}and{' '}
-                        <a href="/privacy" style={{ color: 'var(--primary)' }}>Privacy Policy</a>
-                    </p>
-                </div>
-            </div>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <a href="#" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Privacy</a>
+                        <a href="#" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Terms</a>
+                    </div>
+                </motion.div>
+            )}
         </div>
     );
 };

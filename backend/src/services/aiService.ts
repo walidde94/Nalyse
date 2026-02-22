@@ -10,7 +10,6 @@ export class AiService {
                 apiKey: process.env.OPENAI_API_KEY,
             });
         } else {
-            console.warn('⚠️ No OpenAI API Key found. AI features will be simulated.');
         }
     }
 

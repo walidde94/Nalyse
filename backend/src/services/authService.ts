@@ -42,9 +42,9 @@ export class AuthService {
                 name: finalOrgName,
                 slug,
                 plan: 'free',
-                storageLimit: 5368709120,
-                userLimit: 5,
-                fileLimit: 10
+                storageLimit: 104857600, // 100MB
+                userLimit: 1,
+                fileLimit: 5
             });
 
             const savedOrg = await transactionalEntityManager.save(Organization, organization);
@@ -63,7 +63,6 @@ export class AuthService {
 
             const savedUser = await transactionalEntityManager.save(User, user);
 
-            console.log(`📧 Verification token for ${email}: ${emailVerificationToken}`);
             return { user: savedUser, organization: savedOrg };
         });
     }
@@ -195,7 +194,6 @@ export class AuthService {
         await userRepository().save(user);
 
         // TODO: Send reset email
-        console.log(`🔑 Password reset token for ${email}: ${resetToken}`);
 
         return resetToken;
     }

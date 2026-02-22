@@ -17,6 +17,8 @@ import {
   LogOut
 } from 'lucide-react';
 import { OnboardingTour } from './components/ui/OnboardingTour';
+import { ProcessingOverlay } from './components/ui/ProcessingOverlay';
+import { ProBackdrop } from './components/layout/ProBackdrop';
 import './index.css';
 
 // Lazy Load Heavy Views
@@ -38,6 +40,11 @@ const RoadGraphView = React.lazy(() => import('./features/logistics/RoadGraphVie
 const AgenticSystemsView = React.lazy(() => import('./features/agentic/AgenticSystemsView').then(m => ({ default: m.AgenticSystemsView })));
 const SelfServiceStudio = React.lazy(() => import('./features/democratization/SelfServiceStudio').then(m => ({ default: m.SelfServiceStudio })));
 const MultiAnalysisView = React.lazy(() => import('./features/analysis/MultiAnalysisView').then(m => ({ default: m.MultiAnalysisView })));
+const VersionDiffView = React.lazy(() => import('./features/diff/VersionDiffView').then(m => ({ default: m.VersionDiffView })));
+const AnomalyDetectionView = React.lazy(() => import('./features/anomaly/AnomalyDetectionView').then(m => ({ default: m.AnomalyDetectionView })));
+const FinancialRiskView = React.lazy(() => import('./features/financial/FinancialRiskView').then(m => ({ default: m.FinancialRiskView })));
+const SimulationView = React.lazy(() => import('./features/simulation/SimulationView').then(m => ({ default: m.SimulationView })));
+
 // const RoadView = React.lazy(() => import('./features/logistics/RoadView').then(m => ({ default: m.RoadView })));
 
 // Loading Component
@@ -70,11 +77,10 @@ interface FileData {
   groupId?: string;
 }
 
-
-
 // Main App Component
 function AppContent() {
   const { user, token, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const isPro = (user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro';
   const { addToast } = useToast();
   const { t } = useLanguage();
 
@@ -91,12 +97,45 @@ function AppContent() {
 
   // Analyzing State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStage, setAnalysisStage] = useState(0);
+  const [analysisStatus, setAnalysisStatus] = useState<'processing' | 'completed' | 'error'>('processing');
+  const [analysisError, setAnalysisError] = useState<string | undefined>();
+  const [lastWorkerResult, setLastWorkerResult] = useState<{ type: string; title: string; data: any } | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
   // --- Theme State ---
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
   });
+
+  // Helper for staged analysis progress
+  const runAnalysisWithProgress = async (workerFn: () => Promise<void | { type: string; title: string; data: any }>) => {
+    setIsAnalyzing(true);
+    setAnalysisStage(0);
+    setAnalysisStatus('processing');
+    setAnalysisError(undefined);
+    setLastWorkerResult(null);
+
+    let currentStage = 0;
+    const stageInterval = setInterval(() => {
+      if (currentStage < 3) { // Stop at 'Generating Insights', 'Ready' is manual
+        currentStage++;
+        setAnalysisStage(currentStage);
+      }
+    }, 1500);
+
+    try {
+      const result = await workerFn();
+      clearInterval(stageInterval);
+      setAnalysisStage(4); // 'Ready'
+      setAnalysisStatus('completed');
+      if (result) setLastWorkerResult(result);
+    } catch (err: any) {
+      clearInterval(stageInterval);
+      setAnalysisStatus('error');
+      setAnalysisError(err.message || 'The neural pipeline encountered a structural anomaly.');
+    }
+  };
 
   // --- Onboarding State ---
   const [showTour, setShowTour] = useState(false);
@@ -111,8 +150,9 @@ function AppContent() {
   }, [isAuthenticated]);
 
   const handleTourComplete = () => {
-    localStorage.setItem('nalyse_onboarding_completed', 'true');
     setShowTour(false);
+    localStorage.setItem('nalyse_onboarding_completed', 'true');
+    addToast('Onboarding complete. Welcome to the Apex Tier.', 'success');
   };
 
   // Apply theme on mount and change
@@ -128,9 +168,27 @@ function AppContent() {
         setTheme(stored);
       }
     };
+
+    const handleNavigateToSettings = (e: any) => {
+      openTab('settings', 'Settings', e.detail);
+    };
+
     window.addEventListener('theme-change', handleExternalChange);
-    return () => window.removeEventListener('theme-change', handleExternalChange);
+    window.addEventListener('navigate-to-settings', handleNavigateToSettings);
+    return () => {
+      window.removeEventListener('theme-change', handleExternalChange);
+      window.removeEventListener('navigate-to-settings', handleNavigateToSettings);
+    };
   }, [theme]);
+
+  // Pro Plan Attribute Injection
+  useEffect(() => {
+    if (user && (user.organization?.plan === 'pro' || (user as any).plan === 'pro')) {
+      document.body.setAttribute('data-plan', 'pro');
+    } else {
+      document.body.removeAttribute('data-plan');
+    }
+  }, [user]);
 
   const applyTheme = (newTheme: 'dark' | 'light') => {
     document.documentElement.setAttribute('data-theme', newTheme);
@@ -263,7 +321,7 @@ function AppContent() {
         setFiles(data);
       }
     } catch (e) {
-      console.error('Failed to fetch files:', e);
+      // Silent fail - files will be empty array
     }
   }, [token]);
 
@@ -279,7 +337,7 @@ function AppContent() {
         setGroups(data);
       }
     } catch (e) {
-      console.error('Failed to fetch groups:', e);
+      // Silent fail - groups will be empty array
     }
   }, [token]);
 
@@ -302,7 +360,6 @@ function AppContent() {
     const socket = io(API_URL);
 
     socket.on('live_update', (payload: any) => {
-      console.log('📡 Real-time update received:', payload);
 
       // Handle File Updates
       if (payload.entity === 'file') {
@@ -344,123 +401,154 @@ function AppContent() {
 
   // --- Action Handlers ---
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (filesOrFile: File[] | File) => {
     if (!token) {
       addToast('Please login to upload files', 'error');
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    setIsAnalyzing(true);
+    const files = Array.isArray(filesOrFile) ? filesOrFile : [filesOrFile];
+    if (files.length === 0) return;
 
-    try {
-      const uploadRes = await fetch(`${API_URL}/api/files/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
+    runAnalysisWithProgress(async () => {
+      let successCount = 0;
+      let lastAnalysisData = null;
+      let lastFilename = '';
 
-      if (!uploadRes.ok) throw new Error('Upload failed');
-      const { file: newFile } = await uploadRes.json();
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const uploadRes = await fetch(`${API_URL}/api/files/upload`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+
+        if (!uploadRes.ok) {
+          const errorText = await uploadRes.text();
+          throw new Error(`Upload failed for ${file.name}: ${errorText}`);
+        }
+        const { file: newFile } = await uploadRes.json();
+
+        // Small delay to allow 'Validating' stage to feel real
+        await new Promise(r => setTimeout(r, 1000));
+
+        const analyzeRes = await fetch(`${API_URL}/api/files/${newFile.id}/analyze`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (analyzeRes.ok) {
+          const analysisData = await analyzeRes.json();
+          lastAnalysisData = analysisData;
+          lastFilename = newFile.filename;
+          successCount++;
+        } else {
+          const errorText = await analyzeRes.text();
+          throw new Error(`Strategic analysis failed for ${file.name}: ${errorText}`);
+        }
+      }
+
       await fetchFiles();
 
-      const analyzeRes = await fetch(`${API_URL}/api/files/${newFile.id}/analyze`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!analyzeRes.ok) throw new Error('Analysis failed');
-
-      const analysisData = await analyzeRes.json();
-
-      openTab('analysis', newFile.filename, analysisData);
-      addToast('File analyzed successfully!', 'success');
-
-    } catch (e: any) {
-      addToast(e.message || 'Upload failed', 'error');
-    } finally {
-      setIsAnalyzing(false);
-    }
+      if (successCount === 1 && lastAnalysisData) {
+        return { type: 'analysis', title: lastFilename, data: lastAnalysisData };
+      }
+    });
   };
 
   const handleBiFileUpload = async (file: File, type: string) => {
     if (!token) return;
-    setIsAnalyzing(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const uploadRes = await fetch(`${API_URL}/api/files/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
-      if (!uploadRes.ok) throw new Error('Upload failed');
-      const { file: newFile } = await uploadRes.json();
-      await fetchFiles();
+    runAnalysisWithProgress(async () => {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const uploadRes = await fetch(`${API_URL}/api/files/upload`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+        if (!uploadRes.ok) throw new Error('Upload failed');
+        const { file: newFile } = await uploadRes.json();
+        await fetchFiles();
 
-      const analyzeRes = await fetch(`${API_URL}/api/files/${newFile.id}/analyze`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!analyzeRes.ok) throw new Error('Analysis failed');
-      const analysisData = await analyzeRes.json();
+        const analyzeRes = await fetch(`${API_URL}/api/files/${newFile.id}/analyze`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!analyzeRes.ok) throw new Error('Analysis failed');
+        const analysisData = await analyzeRes.json();
 
-      openTab('bi', `BI: ${type}`, {
-        sampleData: analysisData.sampleData || [],
-        metadata: { type: 'bi', useCase: type }
-      });
-
-    } catch (e: any) {
-      addToast(e.message || 'Error processing file', 'error');
-    } finally {
-      setIsAnalyzing(false);
-    }
+        openTab('bi', `BI: ${type}`, {
+          sampleData: analysisData.sampleData || [],
+          metadata: { type: 'bi', useCase: type }
+        });
+      } catch (e: any) {
+        addToast(e.message || 'Error processing file', 'error');
+      }
+    });
   };
 
   const handleLoadDemo = async (type: string) => {
-    setIsAnalyzing(true);
-    try {
-      const res = await fetch(`${API_URL}/api/bi/${type}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      if (!res.ok) throw new Error('Failed to load BI data');
-      const biData = await res.json();
+    runAnalysisWithProgress(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/bi/${type}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (!res.ok) throw new Error('Failed to load BI data');
+        const biData = await res.json();
 
-      openTab('bi', `Demo: ${type}`, {
-        sampleData: biData.data,
-        metadata: { type: 'bi', useCase: type }
-      });
-    } catch (e: any) {
-      addToast('Error loading BI data', 'error');
-    } finally {
-      setIsAnalyzing(false);
-    }
+        openTab('bi', `Demo: ${type}`, {
+          sampleData: biData.data,
+          metadata: { type: 'bi', useCase: type }
+        });
+      } catch (e: any) {
+        addToast('Error loading BI data', 'error');
+      }
+    });
   };
 
   const handleAnalyzeFile = async (file: FileData) => {
-    if (!token) return;
-    setIsAnalyzing(true);
-    try {
+    if (!token) {
+      return;
+    }
+
+    runAnalysisWithProgress(async () => {
       const res = await fetch(`${API_URL}/api/files/${file.id}/analyze`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (!res.ok) throw new Error('Neural analysis encountered a structural fault.');
       const data = await res.json();
-      openTab('analysis', file.filename, data);
-    } catch (e) {
-      addToast('Analysis failed', 'error');
-    } finally {
-      setIsAnalyzing(false);
-    }
+      return { type: 'analysis', title: file.filename, data };
+    });
   };
 
   const handleToggleFavorite = async (file: FileData) => {
     if (!token) return;
+
+    // Optimistic Update
+    const wasFavorite = !!file.isFavorite; // Boolean cast
+    setFiles(prev => prev.map(f => f.id === file.id ? { ...f, isFavorite: !wasFavorite } : f));
+
     try {
-      await fetch(`${API_URL}/api/files/${file.id}/favorite`, {
+      console.log(`Toggling favorite: ${file.id} (${!wasFavorite})`);
+      const res = await fetch(`${API_URL}/api/files/${file.id}/favorite`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
       });
-      setFiles(files.map(f => f.id === file.id ? { ...f, isFavorite: !f.isFavorite } : f));
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Favorite toggle failed:', errorText);
+        throw new Error('Failed to update favorite');
+      }
     } catch (e) {
-      addToast('Failed to update favorite', 'error');
+      // Revert Optimistic Update
+      console.error(e);
+      setFiles(prev => prev.map(f => f.id === file.id ? { ...f, isFavorite: wasFavorite } : f));
+      addToast('Failed to update favorite status', 'error');
     }
   };
 
@@ -588,6 +676,7 @@ function AppContent() {
     { id: 'settings', label: 'Open Settings', icon: <Settings size={18} />, action: () => openTab('settings', 'Settings'), category: 'Navigation' },
     { id: 'upload', label: 'Upload New File', icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', 'Dashboard'); document.getElementById('file-input')?.click(); }, category: 'Actions' },
     { id: 'theme', label: `Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`, icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance' },
+    { id: 'simulation', label: 'Open Simulation Engine', icon: <LayoutDashboard size={18} />, action: () => openTab('simulation', 'Simulation Engine'), category: 'Navigation' },
     { id: 'logout', label: 'Logout', icon: <LogOut size={18} />, action: logout, category: 'Account' },
   ];
 
@@ -599,14 +688,17 @@ function AppContent() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [openTab]);
+  }, [openTab, logout, theme, handleThemeToggle]);
 
   // --- Render ---
 
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-full" style={{ background: 'var(--bg-app)' }}>
-        <div className="text-h2">Loading...</div>
+        <div className="flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-h2 opacity-50">Authenticating...</div>
+        </div>
       </div>
     );
   }
@@ -615,26 +707,11 @@ function AppContent() {
     return (
       <Suspense fallback={<PageLoader />}>
         {authView === 'login' ? (
-          <LoginView onSwitchToRegister={() => setAuthView('register')} onSuccess={() => {
-            // Trigger useEffect to set dashboard
-          }} />
+          <LoginView onSwitchToRegister={() => setAuthView('register')} onSuccess={() => { }} />
         ) : (
           <RegisterView onSwitchToLogin={() => setAuthView('login')} onSuccess={() => { }} />
         )}
       </Suspense>
-    );
-  }
-
-  if (isAnalyzing) {
-    return (
-      <div className="flex items-center justify-center h-screen w-full" style={{ background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
-        <div className="flex-col items-center gap-4">
-          <div className="text-h2">Loading Data...</div>
-          <div style={{ width: '200px', height: '4px', background: 'var(--bg-surface)', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{ width: '50%', height: '100%', background: 'var(--primary)', animation: 'progress 1s infinite alternate' }}></div>
-          </div>
-        </div>
-      </div>
     );
   }
 
@@ -644,24 +721,33 @@ function AppContent() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {isPro && <ProBackdrop />}
       <div className="noise-overlay"></div>
       <Header
         theme={theme}
         onThemeToggle={handleThemeToggle}
         onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        onNavigate={(path) => {
+          if (path === 'settings') openTab('settings', 'Settings');
+        }}
       />
+
 
       <RootLayout
         currentView={currentViewType}
         isMobileMenuOpen={isMobileMenuOpen}
         onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
-        onViewChange={(viewType) => {
-          const title = viewType === 'nexus' ? 'Nexus AI' :
-            viewType === 'logistics' ? 'Road Intelligence' :
-              viewType === 'agentic' ? 'Agentic Systems' :
-                viewType === 'democracy' ? 'Self-Service Studio' :
-                  viewType.charAt(0).toUpperCase() + viewType.slice(1);
-          openTab(viewType, title);
+        onViewChange={(viewInfo) => {
+          const id = typeof viewInfo === 'string' ? viewInfo : viewInfo.id;
+          const data = typeof viewInfo === 'string' ? undefined : viewInfo.data;
+
+          const title = id === 'diff' ? 'Version Diff' :
+            id === 'nexus' ? 'Nexus AI' :
+              id === 'logistics' ? 'Road Intelligence' :
+                id === 'agentic' ? 'Agentic Systems' :
+                  id === 'democracy' ? 'Self-Service Studio' :
+                    id.charAt(0).toUpperCase() + id.slice(1);
+          openTab(id, title, data);
         }}
         tabBar={
           <TabBar
@@ -680,7 +766,7 @@ function AppContent() {
         <Suspense fallback={<PageLoader />}>
           <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             {tabs.map(tab => (
-              <div key={tab.id} style={{ display: tab.id === activeTabId ? 'block' : 'none', height: '100%' }}>
+              <div key={tab.id} style={{ display: tab.id === activeTabId ? 'block' : 'none', height: '100%', position: 'relative' }}>
 
                 {tab.type === 'landing' && (
                   <LandingView onGetStarted={() => openTab('dashboard', t('nav.workspace'))} />
@@ -705,6 +791,7 @@ function AppContent() {
                     dragActive={dragActive}
                     handleDrag={(e: any) => { e.preventDefault(); setDragActive(e.type === 'dragenter' || e.type === 'dragover'); }}
                     handleDrop={(e: any) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files[0]) handleUpload(e.dataTransfer.files[0]); }}
+                    onViewReport={() => openTab('projects', 'Strategic Board')}
                   />
                 )}
 
@@ -716,6 +803,8 @@ function AppContent() {
                     onUpgradeRequested={() => openTab('settings', 'Settings', { initialTab: 'subscription' })}
                   />
                 )}
+
+
 
                 {tab.type === 'bi' && !tab.data && (
                   <BiSelectionView onLoadDemo={handleLoadDemo} onUploadFile={handleBiFileUpload} />
@@ -733,6 +822,7 @@ function AppContent() {
                   <CorrelationView
                     files={files}
                     token={token || ''}
+                    userPlan={(user as any)?.organization?.plan || 'free'}
                     onUpgradeRequested={() => openTab('settings', 'Settings', { initialTab: 'subscription' })}
                   />
                 )}
@@ -742,9 +832,14 @@ function AppContent() {
                 )}
 
                 {tab.type === 'nexus' && (
-                  <NexusView files={files} groups={groups} token={token || ''} onProjectCreated={() => {
-                    openTab('projects', 'Strategic Board');
-                  }} />
+                  <NexusView
+                    files={files}
+                    groups={groups}
+                    token={token || ''}
+                    userPlan={(user as any)?.organization?.plan || 'free'}
+                    onProjectCreated={() => openTab('projects', 'Strategic Board')}
+                    runWithProgress={runAnalysisWithProgress}
+                  />
                 )}
 
                 {tab.type === 'projects' && (
@@ -768,11 +863,48 @@ function AppContent() {
                 )}
 
                 {tab.type === 'democracy' && (
-                  <SelfServiceStudio files={files} token={token || ''} apiUrl={API_URL} />
+                  <SelfServiceStudio
+                    files={files}
+                    token={token || ''}
+                    apiUrl={API_URL}
+                    userPlan={(user as any)?.organization?.plan || 'free'}
+                    runWithProgress={runAnalysisWithProgress}
+                  />
                 )}
 
                 {tab.type === 'multi-analysis' && (
-                  <MultiAnalysisView onClose={() => openTab('dashboard', 'Dashboard')} />
+                  <MultiAnalysisView
+                    userPlan={(user as any)?.organization?.plan || 'free'}
+                    onClose={() => openTab('dashboard', 'Dashboard')}
+                  />
+                )}
+
+                {tab.type === 'diff' && (
+                  <VersionDiffView
+                    files={files}
+                    token={token || ''}
+                  />
+                )}
+
+                {tab.type === 'anomaly' && (
+                  <AnomalyDetectionView
+                    files={files}
+                    token={token || ''}
+                  />
+                )}
+
+                {tab.type === 'financial' && (
+                  <FinancialRiskView
+                    files={files}
+                    token={token || ''}
+                  />
+                )}
+
+                {tab.type === 'simulation' && (
+                  <SimulationView
+                    files={files}
+                    token={token || ''}
+                  />
                 )}
 
                 {tab.type === 'settings' && (
@@ -789,10 +921,29 @@ function AppContent() {
           </div>
         </Suspense>
 
+
         <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} commands={commands} />
       </RootLayout>
 
       {showTour && <OnboardingTour onComplete={handleTourComplete} />}
+
+      <ProcessingOverlay
+        isVisible={isAnalyzing}
+        stage={analysisStage}
+        status={analysisStatus}
+        errorDetails={analysisError}
+        onViewResults={() => {
+          if (lastWorkerResult) {
+            openTab(lastWorkerResult.type as any, lastWorkerResult.title, lastWorkerResult.data);
+          }
+          setIsAnalyzing(false);
+        }}
+        onRetry={() => {
+          setIsAnalyzing(false);
+          addToast('Retry sequence initiated. Please re-trigger the action.', 'info');
+        }}
+        onClose={() => setIsAnalyzing(false)}
+      />
     </div>
   );
 }

@@ -17,7 +17,6 @@ export class InMemoryQueueService implements IQueueService {
     private handlers: ((job: IJobData) => Promise<void>)[] = [];
 
     async addJob(data: IJobData): Promise<void> {
-        console.log(`[Queue] Adding job ${data.jobId} of type ${data.type}`);
         this.queue.push(data);
         this.processNext();
     }
@@ -39,7 +38,6 @@ export class InMemoryQueueService implements IQueueService {
                 for (const handler of this.handlers) {
                     await handler(job);
                 }
-                console.log(`[Queue] Job ${job.jobId} completed`);
             } catch (err) {
                 console.error(`[Queue] Job ${job.jobId} failed`, err);
                 // Simple retry logic?

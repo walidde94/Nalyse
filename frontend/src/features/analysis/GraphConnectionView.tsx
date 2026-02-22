@@ -94,7 +94,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
     // Controls
     const [layoutType, setLayoutType] = useState<'force' | 'radial' | 'hierarchical' | 'grid'>('force');
     const [showLabels, setShowLabels] = useState(true);
-    const [linkStrengthThreshold, setLinkStrengthThreshold] = useState(0.2); // Default lowered for more connections
+    const [linkStrengthThreshold, setLinkStrengthThreshold] = useState(0.5); // Default higher for clarity
     const [animationSpeed, setAnimationSpeed] = useState(1);
 
 
@@ -131,7 +131,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                 const v2 = data.map(r => parseFloat(r[col2]) || 0);
                 const corr = calculateCorrelation(v1, v2);
 
-                if (Math.abs(corr) > 0.1) {
+                if (Math.abs(corr) > 0.5) {
                     links.push({
                         source: col1,
                         target: col2,
@@ -161,7 +161,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                 withinVar /= data.length;
                 const dep = totalVar > 0 ? 1 - (withinVar / totalVar) : 0;
 
-                if (dep > 0.15) {
+                if (dep > 0.5) {
                     links.push({ source: dim, target: measure, value: dep, type: 'dependency' });
                 }
             });
@@ -177,7 +177,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                 const u2 = new Set(data.map(r => r[c2]));
                 const mi = combs.size / (u1.size * u2.size); // Basic proxy
 
-                if (mi < 0.8) {
+                if (mi < 0.5) {
                     links.push({ source: c1, target: c2, value: 1 - mi, type: 'frequency' });
                 }
             }

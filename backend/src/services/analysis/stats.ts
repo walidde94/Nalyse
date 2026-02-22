@@ -1,4 +1,4 @@
-import { AnalysisOption, Insight, AdvancedColumnType } from './types';
+import { AnalysisOption, Insight, AdvancedColumnType, KeyMetric } from './types';
 
 // Helper: safe float parsing
 const parseNum = (val: any) => parseFloat(String(val).replace(/[$€£,% ]/g, '')) || 0;
@@ -411,4 +411,224 @@ export const generateCorrelations = (records: any[], numbers: string[]): { insig
         }
     }
     return { insights, options };
+};
+
+export const generateKeyMetrics = (records: any[], columns: string[], dataHealthScore: number): KeyMetric[] => {
+    const metrics: KeyMetric[] = [];
+    const len = records.length;
+    if (len === 0) return metrics;
+
+    // 1. Column Identification
+    const revenueCol = columns.find(c => /revenue|sales|amount|price|total|value|cost/i.test(c));
+    const dateCol = columns.find(c => /date|time|created|updated|timestamp/i.test(c));
+    const custCol = columns.find(c => /customer|user|client|account|email/i.test(c));
+    const statusCol = columns.find(c => /status|state|active|churn|stage/i.test(c));
+    const categoryCol = columns.find(c => /category|type|segment|department|region|country/i.test(c));
+
+    // 2. Efficient Single-Pass Processing
+    let totalRevenue = 0;
+    let validDates = 0;
+    let minTime = Infinity;
+    let maxTime = -Infinity;
+
+    // Performance: Use Maps for frequency (faster than object for distinct counting)
+    const categoryCounts = new Map<string, number>();
+    const activeStatuses = new Set(['active', 'true', '1', 'completed', 'paid', 'won']);
+    let activeCount = 0;
+
+    // Main Aggregation Loop
+    for (let i = 0; i < len; i++) {
+        const r = records[i];
+
+        // Revenue
+        if (revenueCol) {
+            const val = parseNum(r[revenueCol]);
+            if (!isNaN(val)) totalRevenue += val;
+        }
+
+        // Dates & Time
+        if (dateCol) {
+            const t = new Date(r[dateCol]).getTime();
+            if (!isNaN(t)) {
+                if (t < minTime) minTime = t;
+                if (t > maxTime) maxTime = t;
+                validDates++;
+            }
+        }
+
+        // Status
+        if (statusCol) {
+            const s = String(r[statusCol]).toLowerCase();
+            if (activeStatuses.has(s) || s.includes('active')) {
+                activeCount++;
+            }
+        }
+
+        // Top Category
+        if (categoryCol) {
+            const cat = String(r[categoryCol] || 'Unknown');
+            categoryCounts.set(cat, (categoryCounts.get(cat) || 0) + 1);
+        }
+    }
+
+    // 3. Time-Period Comparisons (Current vs Previous 30 Days)
+    let currentRevenue = 0;
+    let prevRevenue = 0;
+    let currentCount = 0;
+    let prevCount = 0;
+    let currentActive = 0;
+    let prevActive = 0;
+
+    if (validDates > 0 && maxTime > minTime) {
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        const currentStart = maxTime - thirtyDays;
+        const previousStart = currentStart - thirtyDays;
+
+        // Second Pass: Only needed for Time-Based Trend Calculation
+        // This is worth it for the 'Trend' accuracy on 2M rows
+        for (let i = 0; i < len; i++) {
+            const r = records[i];
+            const t = new Date(r[dateCol!]).getTime();
+            if (isNaN(t)) continue;
+
+            const isCurrent = t >= currentStart && t <= maxTime;
+            const isPrev = t >= previousStart && t < currentStart;
+
+            if (isCurrent || isPrev) {
+                if (revenueCol) {
+                    const val = parseNum(r[revenueCol]);
+                    if (isCurrent) currentRevenue += val;
+                    if (isPrev) prevRevenue += val;
+                }
+
+                if (isCurrent) currentCount++;
+                if (isPrev) prevCount++;
+
+                if (statusCol) {
+                    const s = String(r[statusCol]).toLowerCase();
+                    if (activeStatuses.has(s) || s.includes('active')) {
+                        if (isCurrent) currentActive++;
+                        if (isPrev) prevActive++;
+                    }
+                }
+            }
+        }
+    } else {
+        // If no dates, assume all data is "current" for totals, but trends are N/A
+        currentRevenue = totalRevenue;
+        currentCount = len;
+    }
+
+    // 4. Metric Construction
+    const calculateTrend = (curr: number, prev: number) => {
+        if (prev === 0) return 'N/A';
+        const p = ((curr - prev) / prev) * 100;
+        return `${p >= 0 ? '+' : ''}${p.toFixed(1)}%`;
+    };
+
+    // Metric: Total Revenue
+    if (revenueCol) {
+        const avgValue = len > 0 ? totalRevenue / len : 0;
+
+        metrics.push({
+            label: 'Total Volume',
+            value: totalRevenue > 1000000 ? `$${(totalRevenue / 1000000).toFixed(2)}M` : `$${totalRevenue.toLocaleString()}`,
+            trend: validDates > 0 ? calculateTrend(currentRevenue, prevRevenue) : 'Total',
+            color: 'var(--success)',
+            icon: '$'
+        });
+
+        metrics.push({
+            label: 'Avg. Value',
+            value: `$${avgValue.toFixed(2)}`,
+            trend: 'Per Unit',
+            color: 'var(--info)',
+            icon: 'AVG' // Will need mapping in UI or standard text
+        });
+    }
+
+    // Metric: Active Entities (Customers/Users)
+    if (custCol) {
+        // Unique Count Approximation (Set is safe for < 5M usually, but let's be safe)
+        // For very large sets, just report total rows or simple distinct
+        const uniqueCount = new Set(records.map(r => r[custCol])).size;
+
+        metrics.push({
+            label: 'Distinct Entities',
+            value: uniqueCount.toLocaleString(),
+            trend: 'Unique',
+            color: 'var(--primary)',
+            icon: '#'
+        });
+    }
+
+    // Metric: Health / Status
+    if (statusCol) {
+        const rate = (activeCount / len) * 100;
+        const currRate = currentCount > 0 ? (currentActive / currentCount) * 100 : 0;
+        const prevRate = prevCount > 0 ? (prevActive / prevCount) * 100 : 0;
+
+        metrics.push({
+            label: 'Active Rate',
+            value: `${rate.toFixed(1)}%`,
+            trend: validDates > 0 ? calculateTrend(currRate, prevRate) : 'Overall',
+            color: rate > 80 ? 'var(--success)' : rate > 50 ? 'var(--warning)' : 'var(--error)',
+            icon: '%'
+        });
+    }
+
+    // Metric: Top Category dominance
+    if (categoryCol && categoryCounts.size > 0) {
+        let topCat = '';
+        let topCount = 0;
+        categoryCounts.forEach((count, cat) => {
+            if (count > topCount) {
+                topCount = count;
+                topCat = cat;
+            }
+        });
+
+        if (topCat) {
+            const dominance = ((topCount / len) * 100).toFixed(1);
+            metrics.push({
+                label: 'Top Segment',
+                value: topCat.length > 12 ? topCat.substring(0, 10) + '...' : topCat,
+                trend: `${dominance}% Share`,
+                color: 'var(--accent)',
+                icon: '★'
+            });
+        }
+    }
+
+    // Fallback if empty
+    if (metrics.length === 0) {
+        metrics.push({
+            label: 'Dataset Size',
+            value: len.toLocaleString(),
+            trend: 'Rows',
+            color: 'var(--primary)',
+            icon: 'D'
+        });
+
+        if (validDates > 0) {
+            const days = Math.floor((maxTime - minTime) / (1000 * 60 * 60 * 24));
+            metrics.push({
+                label: 'Time Span',
+                value: `${days} Days`,
+                trend: 'Duration',
+                color: 'var(--info)',
+                icon: 'T'
+            });
+        }
+
+        metrics.push({
+            label: 'Data Health',
+            value: `${dataHealthScore}%`,
+            trend: 'Quality Score',
+            color: dataHealthScore > 90 ? 'var(--success)' : 'var(--warning)',
+            icon: 'H'
+        });
+    }
+
+    return metrics;
 };

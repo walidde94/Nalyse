@@ -62,4 +62,7 @@ export class File {
 
     @Column({ default: false })
     isDeleted: boolean;
+
+    @Column({ nullable: true })
+    checksum: string;
 }

@@ -97,6 +97,21 @@ export const inviteMember = async (req: AuthRequest, res: Response) => {
 
         if (user.role !== 'admin') return res.status(403).json({ error: 'Only admins can invite members' });
 
+        // Check user limit
+        const memberCount = await userRepo.count({ where: { organizationId: user.organization.id } });
+        const pendingInviteCount = await inviteRepo.count({
+            where: { organizationId: user.organization.id, status: 'pending' }
+        });
+
+        const effectiveUserLimit = user.organization.plan === 'free' ? 1 : user.organization.userLimit;
+
+        if (memberCount + pendingInviteCount >= effectiveUserLimit) {
+            return res.status(403).json({
+                error: 'User limit exceeded',
+                details: `Your plan allows up to ${effectiveUserLimit} user(s). Please upgrade to add more.`
+            });
+        }
+
         // Check if user already exists in this org
         const existingMember = await userRepo.findOne({ where: { email, organizationId: user.organization.id } });
         if (existingMember) return res.status(400).json({ error: 'User already in organization' });
@@ -128,7 +143,6 @@ export const inviteMember = async (req: AuthRequest, res: Response) => {
 
         // MOCK EMAIL SENDING
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        console.log(`[EMAIL MOCK] To: ${email}, Subject: Join ${user.organization.name}, Link: ${frontendUrl}/join?token=${token}`);
 
         res.json({ message: 'Invitation sent', invite });
 

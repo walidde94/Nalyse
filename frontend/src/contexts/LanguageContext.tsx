@@ -39,6 +39,7 @@ const translations = {
         'header.profile': 'Profile',
         'header.logout': 'Logout',
         'header.signedInAs': 'Signed in as',
+        'header.settings': 'Setting',
 
         // Dashboard
         'dashboard.upload.title': 'Upload Data',
@@ -83,6 +84,7 @@ const translations = {
         'header.profile': 'Profil',
         'header.logout': 'Abmelden',
         'header.signedInAs': 'Angemeldet als',
+        'header.settings': 'Einstellung',
 
         // Dashboard
         'dashboard.upload.title': 'Daten hochladen',

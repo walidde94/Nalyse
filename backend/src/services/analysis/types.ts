@@ -51,4 +51,13 @@ export interface AnalysisResult {
         strategicAdvice: string[];
         priorityMatrix: Array<{ task: string; impact: string; effort: string }>;
     };
+    metrics?: KeyMetric[];
+}
+
+export interface KeyMetric {
+    label: string;
+    value: string;
+    trend: string;
+    color: string;
+    icon: string;
 }

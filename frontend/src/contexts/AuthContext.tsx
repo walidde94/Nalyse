@@ -16,6 +16,9 @@ interface User {
         id: string;
         name: string;
         plan: string;
+        subscriptionStartedAt?: string;
+        currentPeriodEnd?: string;
+        cancelAtPeriodEnd?: boolean;
     };
 }
 
@@ -29,6 +32,8 @@ interface AuthContextType {
     logout: () => void;
     refreshToken: () => Promise<void>;
     refreshProfile: () => Promise<void>;
+    syncSubscription: () => Promise<boolean>;
+    requestSubscriptionCancellation: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -186,6 +191,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const syncSubscription = async () => {
+        if (!token) return false;
+        try {
+            const res = await fetch(`${API_URL}/api/subscription/sync-status`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                // Fetch the latest profile to update state
+                const profileRes = await fetch(`${API_URL}/api/auth/profile`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (profileRes.ok) {
+                    const data = await profileRes.json();
+                    const userData = data.user || data;
+                    setUser(userData);
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    return userData.organization?.plan === 'pro';
+                }
+            }
+        } catch (e) {
+            console.error('Failed to sync subscription:', e);
+        }
+        return false;
+    };
+
+    const requestSubscriptionCancellation = async () => {
+        if (!token) return false;
+        try {
+            const res = await fetch(`${API_URL}/api/subscription/cancel`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                return true;
+            }
+        } catch (e) {
+            console.error('Failed to cancel subscription:', e);
+        }
+        return false;
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -196,7 +243,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             register,
             logout,
             refreshToken,
-            refreshProfile
+            refreshProfile,
+            syncSubscription,
+            requestSubscriptionCancellation
         }}>
             {children}
         </AuthContext.Provider>
