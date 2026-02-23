@@ -158,12 +158,18 @@ function AppContent() {
   // --- Checkout Success Handling ---
   const { refreshProfile, syncSubscription } = useAuth();
   useEffect(() => {
+    if (!isAuthenticated) return; // Wait for AuthContext to initialize the token
+
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
       const finalizeCheckout = async () => {
         try {
-          await syncSubscription();
-          addToast('Upgrade verified. Neural Pro features are now active.', 'success');
+          const result = await syncSubscription();
+          if (result && (result as any).success) {
+            addToast('Upgrade verified. Neural Pro features are now active.', 'success');
+          } else {
+            addToast('Upgrade pending. Try syncing from Billing settings.', 'warning');
+          }
         } catch (error: any) {
           addToast(`Upgraded, but sync failed: ${error?.message}. Please check Billing & Plans settings.`, 'warning');
         }
@@ -175,7 +181,7 @@ function AppContent() {
       addToast('Upgrade process was minimized. Return anytime to complete your evolution.', 'warning');
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [addToast, refreshProfile]);
+  }, [isAuthenticated, addToast, syncSubscription]);
 
   // Apply theme on mount and change
   useEffect(() => {
