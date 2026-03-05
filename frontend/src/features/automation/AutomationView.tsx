@@ -28,7 +28,7 @@ const Spark = ({ data, color, w = 60, h = 24 }: { data: number[]; color: string;
                     <stop offset="100%" stopColor={color} stopOpacity={0} />
                 </linearGradient>
             </defs>
-            <polyline points={pts} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeJoin="round" />
+            <polyline points={pts} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             <polygon points={`${pts} ${w},${h} 0,${h}`} fill={`url(#spark-grad-${color.replace('#', '')})`} />
         </svg>
     );
