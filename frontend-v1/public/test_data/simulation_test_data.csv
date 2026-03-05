@@ -1,0 +1,97 @@
+Product,Category,Unit_Price,Unit_Cost,Fixed_Cost,Demand,Max_Capacity,Supplier,Lead_Time_Days,Material_Cost,Labor_Cost_Per_Unit,Overhead_Rate,Region,Segment
+Industrial Servo Motor X500,Automation,485.00,178.50,42000,1850,2200,Siemens AG,14,52.30,28.50,8.2,Europe,Enterprise
+Precision Linear Actuator V3,Automation,312.00,125.80,28500,2400,3100,Bosch Rexroth,18,41.20,22.00,7.5,Europe,Enterprise
+Smart Proximity Sensor IR-200,Sensors,89.50,28.40,8200,8500,10000,Keyence Corp,7,8.90,6.50,9.1,Asia,Mid-Market
+Thermocouple Assembly Type-K,Sensors,42.00,14.20,3800,15000,18000,Omega Engineering,5,4.80,3.20,8.8,North America,SMB
+Hydraulic Control Valve HV-80,Fluid Power,678.00,245.00,58000,920,1100,Parker Hannifin,21,82.50,35.00,7.9,North America,Enterprise
+Pneumatic Cylinder DC-150,Fluid Power,195.00,72.30,15200,4200,5500,SMC Corporation,10,22.10,14.00,8.5,Asia,Mid-Market
+CNC Spindle Motor 15kW,Machine Tools,2450.00,890.00,125000,380,450,Fanuc Ltd,28,245.00,85.00,6.8,Asia,Enterprise
+Ball Screw Assembly BSA-2010,Machine Tools,385.00,142.00,22000,1650,2000,THK Co Ltd,16,38.50,18.00,7.2,Asia,Enterprise
+Industrial PLC Controller S7-1500,Controls,1250.00,485.00,68000,1200,1500,Siemens AG,12,125.00,45.00,7.8,Europe,Enterprise
+HMI Touch Panel 15 inch,Controls,890.00,320.00,35000,1800,2200,Rockwell Automation,15,88.00,32.00,8.0,North America,Enterprise
+Variable Frequency Drive 7.5kW,Power,565.00,210.00,28000,2800,3500,ABB Group,11,58.00,25.00,8.3,Europe,Mid-Market
+Servo Amplifier Digital DA-200,Power,445.00,168.00,24000,1900,2400,Yaskawa Electric,13,42.00,20.00,7.6,Asia,Mid-Market
+Industrial Robot Arm 6-Axis,Robotics,18500.00,7200.00,450000,120,150,KUKA AG,45,1850.00,520.00,6.2,Europe,Enterprise
+Collaborative Robot Gripper CG-5,Robotics,2850.00,1050.00,85000,450,550,Universal Robots,22,285.00,95.00,7.0,Europe,Enterprise
+Vision Inspection Camera VC-400,Vision,1680.00,620.00,48000,780,950,Cognex Corp,17,168.00,55.00,7.4,North America,Enterprise
+Barcode Scanner Industrial BS-50,Vision,285.00,98.00,12000,5500,7000,Datalogic SpA,8,28.50,12.00,8.6,Europe,Mid-Market
+Safety Light Curtain SLC-800,Safety,520.00,188.00,22000,2100,2800,SICK AG,14,52.00,22.00,8.1,Europe,Mid-Market
+Emergency Stop Module ES-PRO,Safety,145.00,48.50,6500,9200,12000,Pilz GmbH,6,14.50,8.00,9.0,Europe,SMB
+Conveyor Belt Drive CBD-3000,Material Handling,1850.00,685.00,95000,520,650,Rexnord Corp,25,185.00,65.00,7.1,North America,Enterprise
+Automated Storage Carousel ASC-X,Material Handling,12500.00,4800.00,280000,85,100,Kardex AG,42,1250.00,380.00,6.5,Europe,Enterprise
+Welding Power Supply WPS-500,Welding,3200.00,1180.00,120000,340,420,Lincoln Electric,20,320.00,110.00,6.9,North America,Enterprise
+MIG Welding Torch Assembly,Welding,185.00,62.00,8500,7800,9500,Fronius International,9,18.50,10.00,8.7,Europe,Mid-Market
+Laser Cutting Head LC-5000W,Laser,8500.00,3200.00,220000,180,220,Trumpf GmbH,35,850.00,280.00,6.4,Europe,Enterprise
+Fiber Laser Source 2kW,Laser,15000.00,5800.00,380000,95,120,IPG Photonics,40,1500.00,450.00,6.0,North America,Enterprise
+Precision Grinding Wheel PGW-300,Abrasives,78.00,22.50,4200,22000,28000,Norton Abrasives,4,7.80,4.50,9.2,North America,SMB
+Diamond Cutting Tool DCT-10,Abrasives,245.00,88.00,12500,4800,6000,Sandvik Coromant,12,24.50,12.00,8.4,Europe,Mid-Market
+Hydraulic Press 200T HP-200,Forming,28000.00,10500.00,650000,45,55,Schuler AG,60,2800.00,850.00,5.8,Europe,Enterprise
+Sheet Metal Brake SB-3000,Forming,5200.00,1950.00,145000,180,220,Amada Co Ltd,30,520.00,180.00,6.6,Asia,Enterprise
+Industrial Air Compressor 30HP,Compressed Air,4800.00,1780.00,110000,280,350,Atlas Copco,24,480.00,150.00,7.0,Europe,Enterprise
+Compressed Air Dryer CAD-500,Compressed Air,1250.00,465.00,32000,650,800,Kaeser Compressors,16,125.00,45.00,7.8,Europe,Mid-Market
+Temperature Controller TC-PRO,Process Control,225.00,78.00,9500,6200,8000,Eurotherm,9,22.50,10.50,8.5,Europe,Mid-Market
+Flow Meter Electromagnetic FM-100,Process Control,1450.00,535.00,42000,850,1050,Endress+Hauser,18,145.00,48.00,7.3,Europe,Enterprise
+Level Transmitter Radar LT-80,Process Control,980.00,365.00,28000,1100,1400,Vega Grieshaber,15,98.00,35.00,7.6,Europe,Mid-Market
+Pressure Transmitter PT-3051,Process Control,385.00,138.00,18000,3500,4500,Emerson Electric,10,38.50,16.00,8.2,North America,Mid-Market
+pH Analyzer Industrial PA-200,Process Control,1680.00,625.00,45000,520,650,Hach Company,19,168.00,55.00,7.4,North America,Enterprise
+Gas Detection System GDS-4,Safety Systems,2200.00,820.00,65000,380,480,Dräger AG,22,220.00,75.00,7.1,Europe,Enterprise
+Flame Detector UV/IR FD-500,Safety Systems,950.00,345.00,25000,1200,1500,Det-Tronics,14,95.00,32.00,7.8,North America,Mid-Market
+Industrial Ethernet Switch IES-24,Networking,685.00,248.00,18000,3200,4000,Cisco Systems,8,68.50,22.00,8.3,North America,Mid-Market
+Wireless Access Point Industrial,Networking,425.00,155.00,11000,4500,5800,Siemens AG,7,42.50,15.00,8.6,Europe,Mid-Market
+Edge Computing Gateway ECG-X,Networking,1850.00,685.00,52000,680,850,Advantech Co,16,185.00,62.00,7.2,Asia,Enterprise
+Industrial UPS 10kVA,Power Systems,3500.00,1280.00,85000,420,520,Eaton Corp,20,350.00,110.00,7.0,North America,Enterprise
+Power Distribution Unit PDU-32,Power Systems,245.00,88.00,8500,5800,7500,Schneider Electric,6,24.50,10.00,8.8,Europe,SMB
+Motor Starter Soft SS-75,Power Systems,685.00,252.00,22000,1800,2300,Allen-Bradley,12,68.50,24.00,7.9,North America,Mid-Market
+Induction Heating System IH-50,Thermal,4200.00,1580.00,120000,220,280,EFD Induction,26,420.00,140.00,6.8,Europe,Enterprise
+Electric Resistance Heater ERH-20,Thermal,185.00,65.00,7200,6500,8500,Watlow Electric,8,18.50,8.50,8.7,North America,Mid-Market
+Cooling Tower Module CT-1000,Thermal,8500.00,3150.00,185000,95,120,SPX Cooling,38,850.00,260.00,6.3,North America,Enterprise
+Heat Exchanger Plate HEP-200,Thermal,2800.00,1020.00,75000,350,440,Alfa Laval,22,280.00,92.00,7.0,Europe,Enterprise
+Vibration Monitoring System VMS,Condition Monitoring,1450.00,528.00,38000,780,980,SKF Group,15,145.00,48.00,7.5,Europe,Enterprise
+Oil Analysis Sensor OAS-100,Condition Monitoring,685.00,245.00,16000,1600,2000,Parker Hannifin,11,68.50,22.00,8.2,North America,Mid-Market
+Ultrasonic Thickness Gauge UTG-5,Inspection,520.00,188.00,14000,2200,2800,Olympus Corp,9,52.00,18.00,8.4,Asia,Mid-Market
+X-Ray Inspection System XIS-PRO,Inspection,45000.00,17500.00,850000,28,35,Nikon Metrology,75,4500.00,1200.00,5.5,Asia,Enterprise
+Coordinate Measuring Machine CMM,Inspection,32000.00,12200.00,620000,42,52,Carl Zeiss AG,65,3200.00,980.00,5.8,Europe,Enterprise
+Surface Roughness Tester SRT-100,Inspection,1250.00,458.00,32000,850,1050,Mitutoyo Corp,14,125.00,42.00,7.6,Asia,Mid-Market
+Hardness Tester Digital HTD-500,Inspection,2800.00,1050.00,72000,320,400,Zwick Roell,20,280.00,95.00,7.0,Europe,Enterprise
+3D Printer Industrial SLS-400,Additive Mfg,125000.00,48000.00,1800000,12,15,EOS GmbH,90,12500.00,3500.00,5.0,Europe,Enterprise
+Metal 3D Printer DMLS-PRO,Additive Mfg,285000.00,110000.00,4200000,5,8,SLM Solutions,120,28500.00,8500.00,4.5,Europe,Enterprise
+FDM Printer Production FP-800,Additive Mfg,15000.00,5600.00,180000,180,220,Stratasys Ltd,28,1500.00,480.00,6.5,North America,Enterprise
+Resin 3D Printer RP-200,Additive Mfg,4500.00,1680.00,65000,420,520,Formlabs Inc,18,450.00,150.00,7.2,North America,Mid-Market
+Electric Motor IE4 15kW,Motors,1850.00,685.00,48000,980,1200,WEG SA,16,185.00,62.00,7.4,South America,Enterprise
+Gearbox Planetary PG-500,Motors,2200.00,820.00,58000,650,800,SEW-Eurodrive,20,220.00,75.00,7.1,Europe,Enterprise
+Bearing Roller Precision BRP-80,Components,125.00,42.00,6500,18000,22000,NSK Ltd,5,12.50,6.00,9.0,Asia,SMB
+Linear Guide Rail LGR-25,Components,85.00,28.50,4200,25000,32000,Hiwin Technologies,4,8.50,4.50,9.2,Asia,SMB
+Coupling Flexible CF-200,Components,165.00,55.00,7800,12000,15000,Rexnord Corp,6,16.50,7.50,8.8,North America,SMB
+Chain Drive Industrial CDI-60,Components,78.00,25.50,3500,28000,35000,Tsubakimoto Chain,4,7.80,4.00,9.3,Asia,SMB
+Pneumatic Fitting Kit PFK-100,Fittings,32.00,10.50,2200,45000,55000,SMC Corporation,3,3.20,2.50,9.5,Asia,SMB
+Hydraulic Hose Assembly HHA-16,Fittings,48.00,16.20,2800,32000,40000,Gates Corp,4,4.80,3.00,9.4,North America,SMB
+Cable Tray System CTS-300,Infrastructure,125.00,42.00,8500,15000,19000,Legrand SA,7,12.50,6.50,8.9,Europe,SMB
+Industrial Panel Enclosure IPE-80,Infrastructure,285.00,98.00,15000,6500,8200,Rittal GmbH,10,28.50,12.00,8.4,Europe,Mid-Market
+DIN Rail Terminal Block DRT-50,Infrastructure,12.50,3.80,1500,85000,100000,Phoenix Contact,3,1.25,1.00,9.8,Europe,SMB
+Wire Duct and Raceway WDR-40,Infrastructure,18.00,5.50,1800,62000,78000,Panduit Corp,3,1.80,1.20,9.7,North America,SMB
+Industrial PC Rack Mount IPC-X,Computing,3200.00,1180.00,85000,380,480,Beckhoff Automation,18,320.00,105.00,7.0,Europe,Enterprise
+SCADA Software License SSL-ENT,Software,8500.00,850.00,250000,280,500,Wonderware,2,85.00,25.00,4.2,North America,Enterprise
+MES Platform License MPL-PRO,Software,12000.00,1200.00,380000,180,400,Siemens AG,2,120.00,35.00,3.8,Europe,Enterprise
+IoT Platform Subscription IPS-1Y,Software,2400.00,240.00,85000,1200,5000,PTC Inc,1,24.00,8.00,5.5,North America,Mid-Market
+Predictive Maintenance Module PMM,Software,4500.00,450.00,120000,650,2000,IBM Corp,2,45.00,15.00,4.8,North America,Enterprise
+Dust Collector Industrial DC-5000,Environmental,6500.00,2420.00,145000,180,220,Donaldson Company,28,650.00,210.00,6.8,North America,Enterprise
+Air Filtration System AFS-PRO,Environmental,3800.00,1420.00,92000,320,400,Camfil AB,22,380.00,125.00,7.0,Europe,Enterprise
+Noise Reduction Enclosure NRE-L,Environmental,1250.00,465.00,28000,680,850,IAC Acoustics,15,125.00,42.00,7.6,North America,Mid-Market
+Waste Oil Recovery System WORS,Environmental,4200.00,1580.00,110000,150,190,Alfa Laval,25,420.00,140.00,6.8,Europe,Enterprise
+Torque Wrench Digital TWD-500,Hand Tools,685.00,248.00,18000,3200,4000,Atlas Copco,8,68.50,22.00,8.3,Europe,Mid-Market
+Crimping Tool Hydraulic CTH-200,Hand Tools,345.00,125.00,9500,5500,7000,Klauke GmbH,7,34.50,14.00,8.6,Europe,Mid-Market
+Pipe Threading Machine PTM-4,Hand Tools,4500.00,1680.00,85000,280,350,Ridgid Tools,20,450.00,150.00,7.0,North America,Enterprise
+Impact Wrench Industrial IWI-1,Hand Tools,285.00,102.00,11000,7200,9000,Ingersoll Rand,8,28.50,12.00,8.5,North America,Mid-Market
+Calibration Standard Kit CSK-PRO,Calibration,1850.00,685.00,42000,520,650,Fluke Corp,14,185.00,62.00,7.5,North America,Enterprise
+Data Logger Multi-Channel DLM-32,Data Acquisition,2200.00,820.00,55000,450,560,Yokogawa Electric,18,220.00,75.00,7.2,Asia,Enterprise
+Signal Conditioner Module SCM-8,Data Acquisition,385.00,140.00,12000,3800,4800,National Instruments,9,38.50,15.00,8.3,North America,Mid-Market
+Programmable Power Supply PPS-3K,Test Equipment,5200.00,1950.00,125000,220,280,Keysight Technologies,22,520.00,175.00,6.8,North America,Enterprise
+Oscilloscope Digital 4-Ch DSO-4,Test Equipment,3800.00,1420.00,95000,350,440,Tektronix Inc,18,380.00,125.00,7.0,North America,Enterprise
+Function Generator FG-200,Test Equipment,1250.00,465.00,32000,680,850,Rigol Technologies,14,125.00,42.00,7.8,Asia,Mid-Market
+Multimeter Industrial DMM-PRO,Test Equipment,185.00,65.00,7500,8500,11000,Fluke Corp,6,18.50,8.00,8.8,North America,SMB
+Insulation Tester IT-5000V,Test Equipment,685.00,248.00,18000,2800,3500,Megger Group,10,68.50,22.00,8.2,Europe,Mid-Market
+Clamp Meter True RMS CM-600,Test Equipment,125.00,42.00,5500,12000,15000,Fluke Corp,5,12.50,6.00,9.0,North America,SMB
+Thermal Imaging Camera TIC-640,Test Equipment,8500.00,3150.00,185000,180,220,FLIR Systems,25,850.00,280.00,6.5,North America,Enterprise
+Power Quality Analyzer PQA-PRO,Test Equipment,4500.00,1680.00,95000,280,350,Hioki EE Corp,20,450.00,150.00,7.0,Asia,Enterprise
+Transformer Oil Tester TOT-100,Test Equipment,2800.00,1040.00,65000,380,480,Megger Group,16,280.00,92.00,7.2,Europe,Enterprise
+Motor Circuit Analyzer MCA-X,Test Equipment,3200.00,1180.00,78000,320,400,ALL-TEST Pro,18,320.00,105.00,7.0,North America,Enterprise

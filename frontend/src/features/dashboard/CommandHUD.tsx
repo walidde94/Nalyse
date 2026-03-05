@@ -18,6 +18,9 @@ import {
     Layers,
     Radio,
     HeartPulse,
+    Gauge,
+    Signal,
+    Fingerprint,
 } from 'lucide-react';
 
 /* ──────────────────────────────────────────────────────────
@@ -128,6 +131,86 @@ export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: numb
 };
 
 /* ──────────────────────────────────────────────────────────
+   RADIAL PERFORMANCE GAUGE — Animated SVG ring gauge
+   ────────────────────────────────────────────────────────── */
+
+export const PerformanceGauge = ({ value = 94, label = 'System Health' }: { value?: number; label?: string }) => {
+    const radius = 58;
+    const stroke = 6;
+    const circumference = 2 * Math.PI * radius;
+    const progress = ((100 - value) / 100) * circumference;
+    const color = value >= 80 ? '#10b981' : value >= 50 ? '#f59e0b' : '#ef4444';
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, type: 'spring', stiffness: 200, damping: 20 }}
+            className="performance-gauge"
+        >
+            <svg width="140" height="140" viewBox="0 0 140 140">
+                {/* Background track */}
+                <circle
+                    cx="70" cy="70" r={radius}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.04)"
+                    strokeWidth={stroke}
+                />
+                {/* Animated progress */}
+                <motion.circle
+                    cx="70" cy="70" r={radius}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={stroke}
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    initial={{ strokeDashoffset: circumference }}
+                    animate={{ strokeDashoffset: progress }}
+                    transition={{ duration: 2, ease: [0.16, 1, 0.3, 1], delay: 1 }}
+                    style={{
+                        transformOrigin: 'center',
+                        transform: 'rotate(-90deg)',
+                        filter: `drop-shadow(0 0 8px ${color}60)`
+                    }}
+                />
+                {/* Glow overlay */}
+                <motion.circle
+                    cx="70" cy="70" r={radius - 12}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={1}
+                    opacity={0.15}
+                    strokeDasharray="4 8"
+                    style={{ transformOrigin: 'center' }}
+                >
+                    <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from="0 70 70"
+                        to="360 70 70"
+                        dur="20s"
+                        repeatCount="indefinite"
+                    />
+                </motion.circle>
+            </svg>
+            <div className="gauge-content">
+                <motion.span
+                    className="gauge-value"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.2 }}
+                    style={{ color }}
+                >
+                    {value}
+                </motion.span>
+                <span className="gauge-unit">%</span>
+                <span className="gauge-label">{label}</span>
+            </div>
+        </motion.div>
+    );
+};
+
+/* ──────────────────────────────────────────────────────────
    ORBITAL METRIC ORB — A 3D-inspired circular metric
    ────────────────────────────────────────────────────────── */
 
@@ -139,10 +222,14 @@ interface OrbProps {
     icon: React.ReactNode;
     trend?: string;
     index: number;
+    sparkData?: number[];
 }
 
-export const OrbitalMetric = ({ label, value, subValue, color, icon, trend, index }: OrbProps) => {
+export const OrbitalMetric = ({ label, value, subValue, color, icon, trend, index, sparkData }: OrbProps) => {
     const orbRef = useRef<HTMLDivElement>(null);
+    const defaultSparkData = useMemo(() => {
+        return sparkData || Array.from({ length: 20 }, () => Math.random() * 100);
+    }, [sparkData]);
 
     return (
         <motion.div
@@ -153,6 +240,9 @@ export const OrbitalMetric = ({ label, value, subValue, color, icon, trend, inde
             className="orbital-metric"
             style={{ '--orb-color': color } as React.CSSProperties}
         >
+            {/* Holographic border sweep */}
+            <div className="orb-border-sweep" />
+
             {/* Orbital rings */}
             <div className="orb-ring orb-ring-1" />
             <div className="orb-ring orb-ring-2" />
@@ -167,6 +257,39 @@ export const OrbitalMetric = ({ label, value, subValue, color, icon, trend, inde
                 <div className="orb-label">{label}</div>
                 <div className="orb-value">{value}</div>
                 {subValue && <div className="orb-sub">{subValue}</div>}
+
+                {/* Inline Sparkline */}
+                <div className="orb-sparkline">
+                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="sparkline-svg">
+                        <defs>
+                            <linearGradient id={`spark-grad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                                <stop offset="100%" stopColor={color} stopOpacity="0" />
+                            </linearGradient>
+                        </defs>
+                        <motion.path
+                            d={`M0,${30 - (defaultSparkData[0] / 100) * 28} ${defaultSparkData.map((v, i) =>
+                                `L${(i / (defaultSparkData.length - 1)) * 100},${30 - (v / 100) * 28}`
+                            ).join(' ')} L100,30 L0,30 Z`}
+                            fill={`url(#spark-grad-${index})`}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1 + index * 0.1 }}
+                        />
+                        <motion.path
+                            d={`M0,${30 - (defaultSparkData[0] / 100) * 28} ${defaultSparkData.map((v, i) =>
+                                `L${(i / (defaultSparkData.length - 1)) * 100},${30 - (v / 100) * 28}`
+                            ).join(' ')}`}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth="1.5"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ delay: 0.8 + index * 0.1, duration: 1.5, ease: 'easeOut' }}
+                        />
+                    </svg>
+                </div>
+
                 {trend && (
                     <div className={`orb-trend ${trend.includes('-') ? 'negative' : 'positive'}`}>
                         <ArrowUpRight size={10} />
@@ -180,6 +303,53 @@ export const OrbitalMetric = ({ label, value, subValue, color, icon, trend, inde
             <div className="orb-accent top-right" />
             <div className="orb-accent bottom-left" />
             <div className="orb-accent bottom-right" />
+        </motion.div>
+    );
+};
+
+/* ──────────────────────────────────────────────────────────
+   QUICK ACTIONS BAR — Glassmorphic command palette
+   ────────────────────────────────────────────────────────── */
+
+export const QuickActionsBar = ({ onUpload, onViewReport, onUpgrade, fileCount }: {
+    onUpload: () => void;
+    onViewReport: () => void;
+    onUpgrade: () => void;
+    fileCount: number;
+}) => {
+    const actions = [
+        { label: 'Upload Dataset', icon: Database, color: '#3b82f6', action: onUpload, shortcut: '⌘U' },
+        { label: 'View Report', icon: BarChart3, color: '#8b5cf6', action: onViewReport, shortcut: '⌘R' },
+        { label: 'Intelligence Feed', icon: HeartPulse, color: '#ef4444', action: () => { }, shortcut: '⌘I' },
+        { label: 'Upgrade Plan', icon: Sparkles, color: '#f59e0b', action: onUpgrade, shortcut: '⌘P' },
+    ];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.6 }}
+            className="quick-actions-bar"
+        >
+            {actions.map((act, i) => (
+                <motion.button
+                    key={act.label}
+                    onClick={act.action}
+                    className="quick-action-item"
+                    style={{ '--qa-color': act.color } as React.CSSProperties}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1 + i * 0.08, duration: 0.4 }}
+                >
+                    <div className="qa-icon-wrap">
+                        <act.icon size={18} />
+                    </div>
+                    <span className="qa-label">{act.label}</span>
+                    <span className="qa-shortcut">{act.shortcut}</span>
+                </motion.button>
+            ))}
         </motion.div>
     );
 };
@@ -377,5 +547,29 @@ export const DataHealthMatrix = ({ files }: { files: any[] }) => {
                 ))}
             </div>
         </motion.div>
+    );
+};
+
+/* ──────────────────────────────────────────────────────────
+   LIVE CLOCK — animated time display
+   ────────────────────────────────────────────────────────── */
+
+export const LiveClock = () => {
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const interval = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="live-clock">
+            <div className="clock-time">
+                {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+            </div>
+            <div className="clock-date">
+                {time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </div>
+        </div>
     );
 };

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nalyse - Executive User Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --accent: #8b5cf6;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-sec: #94a3b8;
+            --border: #334155;
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        .logo-box {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 16px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+        }
+        h1 { font-size: 48px; font-weight: 800; letter-spacing: -0.04em; margin: 0; }
+        h2 { font-size: 28px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-top: 60px; color: var(--primary); }
+        h3 { font-size: 20px; margin-top: 30px; }
+        p { font-size: 17px; color: var(--text-sec); }
+        .section { margin-bottom: 80px; }
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+        .feature-card { background: var(--card); padding: 24px; border-radius: 16px; border: 1px solid var(--border); }
+        .feature-card b { display: block; margin-bottom: 8px; color: var(--text); font-size: 18px; }
+        .image-placeholder {
+            width: 100%;
+            height: 400px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--border);
+            margin: 24px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .image-placeholder img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+        .badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; display: inline-block; }
+        .shortcut { font-family: 'JetBrains Mono', monospace; background: var(--bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); font-size: 14px; }
+        @media print {
+            body { background: white; color: black; }
+            .container { max-width: 100%; padding: 0; }
+            .feature-card { border: 1px solid #ddd; background: #fff; }
+            .image-placeholder { border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-box"><svg width="30" height="30" viewBox="0 0 36 36" fill="white"><path d="M10 26V16C10 16 12 10 18 10C24 10 26 16 26 16V26" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+            <h1>Nalyse User Guide</h1>
+            <p>Empowering Data-Driven Decision Making at Scale</p>
+        </div>
+
+        <div class="section">
+            <div class="badge">Module 01</div>
+            <h2>Dashboard & Enterprise Pulse</h2>
+            <p>Your centralized command center for all business intelligence.</p>
+            <div class="image-placeholder">
+                <img src="https://images.unsplash.com/photo-1551288049-bbbda5366392?auto=format&fit=crop&q=80&w=1000" alt="Dashboard">
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <b>Live Pulse Metrics</b>
+                    Real-time monitoring of Revenue Velocity, Risks, and Projected ROI across all workspace data.
+                </div>
+                <div class="feature-card">
+                    <b>Unified Storage</b>
+                    Centralized management of CSV and JSON datasets with organizational group structures.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="badge">Module 02</div>
+            <h2>Nexus AI: Strategic Oracle</h2>
+            <p>Beyond analysis—Nexus AI cross-references complex datasets to find strategic causality.</p>
+            <div class="image-placeholder">
+                 <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1000" alt="Nexus AI">
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <b>Synthesis Engine</b>
+                    Identify correlations between disconnected departments (e.g., Marketing vs Logistics).
+                </div>
+                <div class="feature-card">
+                    <b>Strategic Findings</b>
+                    Automated insight generation with pre-configured "Action Steps" for immediate execution.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="badge">Module 03</div>
+            <h2>Project Execution</h2>
+            <p>Transforming AI findings into measurable business value.</p>
+            <div class="image-placeholder">
+                 <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=1000" alt="Strategic Board">
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <b>Strategic Board</b>
+                    Kanban-style management of AI-driven projects, tracking them from 'Execution' to 'Value Realized'.
+                </div>
+                <div class="feature-card">
+                    <b>Impact Tracking</b>
+                    Every project card shows the calculated ROI and impact generated by the implementation.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="badge">Shortcuts</div>
+            <h2>Power User Tools</h2>
+            <p>Work faster with integrated command features.</p>
+            <div class="feature-card" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>Opening Command Palette & Search</span>
+                <span class="shortcut">⌘ K</span>
+            </div>
+            <div class="feature-card" style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px;">
+                <span>Switch Presentation Mode</span>
+                <span class="shortcut">P</span>
+            </div>
+        </div>
+
+        <div class="section" style="text-align: center; border-top: 1px solid var(--border); padding-top: 40px;">
+            <p>© 2026 Nalyse Enterprise Systems. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

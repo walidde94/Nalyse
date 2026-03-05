@@ -6,7 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { UserProfile } from '../UserProfile';
 
 interface HeaderProps {
-    theme: 'dark' | 'light';
+    theme: 'dark' | 'light' | 'midnight';
     onThemeToggle: () => void;
     onMenuToggle?: () => void;
     onNavigate?: (path: string) => void;
@@ -21,7 +21,12 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     const [currentTime, setCurrentTime] = useState('');
     const [searchFocused, setSearchFocused] = useState(false);
     const [pulseTrack, setPulseTrack] = useState<number[]>([10, 25, 15, 30, 20, 35, 25, 40]);
-    const isDark = theme === 'dark';
+    const isDark = theme === 'dark' || theme === 'midnight';
+    const isMidnight = theme === 'midnight';
+
+    // Read dynamic custom theme colors for inline styles
+    const customPrimary = isMidnight ? (getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#f59e0b') : '';
+    const customAccent = isMidnight ? (getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ea580c') : '';
 
     // Live clock
     useEffect(() => {
@@ -63,10 +68,18 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
-                background: isDark ? 'linear-gradient(180deg, rgba(5, 5, 10, 0.95) 0%, rgba(5, 5, 10, 0.7) 100%)' : 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.8) 100%)',
-                backdropFilter: 'blur(32px) saturate(200%)',
-                WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-                boxShadow: isDark ? '0 10px 40px -10px rgba(0,0,0,0.5)' : '0 10px 40px -10px rgba(0,0,0,0.1)',
+                background: isMidnight
+                    ? 'linear-gradient(180deg, rgba(14, 10, 4, 0.97) 0%, rgba(10, 8, 3, 0.85) 100%)'
+                    : isDark
+                        ? 'linear-gradient(180deg, rgba(5, 5, 10, 0.95) 0%, rgba(5, 5, 10, 0.7) 100%)'
+                        : 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.8) 100%)',
+                backdropFilter: isMidnight ? 'blur(40px) saturate(220%)' : 'blur(32px) saturate(200%)',
+                WebkitBackdropFilter: isMidnight ? 'blur(40px) saturate(220%)' : 'blur(32px) saturate(200%)',
+                boxShadow: isMidnight
+                    ? `0 10px 50px -10px ${customPrimary}30, 0 1px 0 ${customPrimary}15`
+                    : isDark
+                        ? '0 10px 40px -10px rgba(0,0,0,0.5)'
+                        : '0 10px 40px -10px rgba(0,0,0,0.1)',
             }}>
                 {/* 
                   FUTURISTIC ENERGY BORDER 
@@ -77,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    height: '1px',
+                    height: isMidnight ? '2px' : '1px',
                     background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
                     overflow: 'hidden'
                 }}>
@@ -86,11 +99,13 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         top: 0,
                         left: 0,
                         height: '100%',
-                        width: '30%',
-                        background: 'linear-gradient(90deg, transparent, #38bdf8, #818cf8, #e879f9, transparent)',
-                        filter: 'blur(1px)',
-                        opacity: 0.8,
-                        animation: 'energy-flow 4s linear infinite'
+                        width: isMidnight ? '40%' : '30%',
+                        background: isMidnight
+                            ? `linear-gradient(90deg, transparent, ${customPrimary}, ${customAccent}, ${customPrimary}, transparent)`
+                            : 'linear-gradient(90deg, transparent, #38bdf8, #818cf8, #e879f9, transparent)',
+                        filter: isMidnight ? 'blur(2px)' : 'blur(1px)',
+                        opacity: isMidnight ? 1 : 0.8,
+                        animation: isMidnight ? 'energy-flow 3s linear infinite' : 'energy-flow 4s linear infinite'
                     }} />
                 </div>
 
@@ -255,17 +270,17 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         alignItems: 'center',
                         gap: '12px',
                         padding: '6px 14px',
-                        background: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)',
-                        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0,0,0,0.05)'}`,
+                        background: isMidnight ? `${customPrimary}10` : isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)',
+                        border: `1px solid ${isMidnight ? `${customPrimary}20` : isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0,0,0,0.05)'}`,
                         borderRadius: '24px',
-                        boxShadow: isDark ? 'inset 0 1px 3px rgba(0,0,0,0.3), 0 0 10px rgba(16, 185, 129, 0.05)' : 'none'
+                        boxShadow: isMidnight ? `inset 0 1px 3px rgba(10,5,0,0.3), 0 0 12px ${customPrimary}10` : isDark ? 'inset 0 1px 3px rgba(0,0,0,0.3), 0 0 10px rgba(16, 185, 129, 0.05)' : 'none'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'flex-end', height: '14px', gap: '2px', opacity: 0.8 }}>
                             {pulseTrack.map((val, idx) => (
                                 <div key={idx} style={{
                                     width: '3px',
                                     height: `${val}%`,
-                                    background: connStatus === 'online' ? '#10b981' : '#f59e0b',
+                                    background: isMidnight ? (connStatus === 'online' ? customPrimary : '#fbbf24') : (connStatus === 'online' ? '#10b981' : '#f59e0b'),
                                     borderRadius: '2px',
                                     transition: 'height 0.3s ease'
                                 }} />
@@ -283,16 +298,16 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             <span style={{
                                 fontSize: '8px',
                                 fontWeight: 900,
-                                color: connStatus === 'online' ? '#10b981' : '#f59e0b',
+                                color: isMidnight ? (connStatus === 'online' ? customPrimary : '#fbbf24') : (connStatus === 'online' ? '#10b981' : '#f59e0b'),
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.15em',
                                 marginTop: '2px',
-                                textShadow: (connStatus === 'online' && isDark) ? '0 0 8px rgba(16, 185, 129, 0.5)' : 'none'
+                                textShadow: isMidnight ? (connStatus === 'online' ? `0 0 10px ${customPrimary}80` : 'none') : (connStatus === 'online' && isDark) ? '0 0 8px rgba(16, 185, 129, 0.5)' : 'none'
                             }}>{connStatus === 'online' ? 'SYS_NOMINAL' : 'SYS_SYNC'}</span>
                         </div>
                     </div>
 
-                    <div style={{ width: '1px', height: '24px', background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+                    <div style={{ width: '1px', height: '24px', background: isMidnight ? `${customPrimary}25` : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
 
                     {/* App Controls */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -442,19 +457,21 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         >
                             <div style={{
                                 transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                transform: theme === 'dark' ? 'rotate(0deg)' : 'rotate(180deg)',
+                                transform: theme === 'light' ? 'rotate(180deg)' : theme === 'midnight' ? 'rotate(90deg)' : 'rotate(0deg)',
                                 display: 'flex',
                             }}>
                                 {theme === 'dark' ?
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
-                                    :
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                                    : theme === 'light' ?
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                                        :
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="10.5" r="1.5" /><circle cx="8.5" cy="7.5" r="1.5" /><circle cx="6.5" cy="12" r="1.5" /><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12a10 10 0 0 0 10 10Z" /></svg>
                                 }
                             </div>
                         </button>
                     </div>
 
-                    <div style={{ width: '1px', height: '24px', background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+                    <div style={{ width: '1px', height: '24px', background: isMidnight ? `${customPrimary}25` : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
 
                     {/* Identity Matrix (Profile Profile) */}
                     <div style={{ position: 'relative' }}>
@@ -698,18 +715,18 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'};
-                    border: 1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
-                    color: ${isDark ? 'rgba(255,255,255,0.6)' : 'rgba(15,23,42,0.6)'};
+                    background: ${isMidnight ? `${customPrimary}0d` : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'};
+                    border: 1px solid ${isMidnight ? `${customPrimary}20` : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
+                    color: ${isMidnight ? `${customPrimary}cc` : isDark ? 'rgba(255,255,255,0.6)' : 'rgba(15,23,42,0.6)'};
                     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                     cursor: pointer;
                 }
                 .nexus-icon-btn:hover {
-                    background: ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'};
-                    border-color: ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'};
-                    color: ${isDark ? '#fff' : '#0f172a'};
+                    background: ${isMidnight ? `${customPrimary}20` : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'};
+                    border-color: ${isMidnight ? `${customPrimary}50` : isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'};
+                    color: ${isMidnight ? customPrimary : isDark ? '#fff' : '#0f172a'};
                     transform: translateY(-1px);
-                    box-shadow: 0 4px 12px ${isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)'};
+                    box-shadow: ${isMidnight ? `0 4px 16px ${customPrimary}25, 0 0 0 1px ${customPrimary}15` : isDark ? '0 4px 12px rgba(0,0,0,0.2)' : '0 4px 12px rgba(0,0,0,0.05)'};
                 }
             `}</style>
         </>

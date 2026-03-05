@@ -37,7 +37,9 @@ import {
 import { calculatePulse } from './pulseEngine';
 import { useAuth } from '../../contexts/AuthContext';
 import { NeuralCanvas } from './NeuralCanvas';
-import { AmbientStatusStrip, OrbitalMetric, IntelligenceTimeline, DataHealthMatrix } from './CommandHUD';
+import { AmbientStatusStrip, OrbitalMetric, IntelligenceTimeline, DataHealthMatrix, PerformanceGauge, QuickActionsBar, LiveClock } from './CommandHUD';
+import { ProPowerBanner, ProHeroBadge, SystemThroughputGrid } from './ProBeastMode';
+import { NeuralDropZone } from './NeuralDropZone';
 
 // --- SUB-COMPONENTS for Dashboard ---
 
@@ -202,7 +204,9 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
     const filePercent = Math.min(100, Math.round((fileCount / fileLimit) * 100));
     const storagePercent = Math.min(100, Math.round((storageUsed / maxStorage) * 100));
 
-    if (isPro) return null;
+    if (isPro) return (
+        <ProPowerBanner fileCount={fileCount} storageUsed={storageUsed} maxStorage={maxStorage} />
+    );
 
     return (
         <motion.div
@@ -597,14 +601,28 @@ export const DashboardView = ({
     });
 
     return (
-        <div className="flex-col gap-6 fade-in main-content-mobile" style={{
-            padding: 'clamp(16px, 5vw, 32px)',
-            maxWidth: '1600px',
-            margin: '0 auto',
-            width: '100%',
-            fontFamily: 'Dubai, sans-serif',
-            position: 'relative'
-        }}>
+        <div
+            className="flex-col gap-6 fade-in main-content-mobile"
+            style={{
+                padding: 'clamp(16px, 5vw, 32px)',
+                maxWidth: '1600px',
+                margin: '0 auto',
+                width: '100%',
+                fontFamily: 'Dubai, sans-serif',
+                position: 'relative'
+            }}
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+        >
+            {/* Cinematic Full-Screen Drag & Drop Overlay */}
+            <NeuralDropZone
+                dragActive={dragActive}
+                handleDrag={handleDrag}
+                handleDrop={handleDrop}
+                isOverLimit={isOverLimit}
+            />
+
             {/* Neural Network Canvas Background */}
             <NeuralCanvas intensity={0.8} />
             <div className="scanline-overlay" />
@@ -632,98 +650,97 @@ export const DashboardView = ({
                 <div className="hero-ambient-orb orb-2" />
                 <div className="hero-ambient-orb orb-3" />
 
-                <div style={{ position: 'relative', zIndex: 2 }}>
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2, duration: 0.6 }}
-                        className="hero-greeting-sup"
-                    >
-                        <span className="sup-line" />
-                        COMMAND CENTER
-                        <span className="sup-line" />
-                    </motion.div>
+                {/* Animated mesh background */}
+                <div className="hero-mesh-bg" />
 
-                    <motion.h1
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.7 }}
-                        className="hero-greeting"
-                    >
-                        Welcome back, <span className="name-highlight">{firstName || userEmail?.split('@')[0]}</span>
-                    </motion.h1>
-
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5, duration: 0.6 }}
-                        className="hero-subtitle"
-                    >
-                        {metrics.revenueGrowth === '—' || metrics.revenueGrowth === 'Waiting for Data' ? (
-                            <>Your intelligence engine is actively <strong>mapping {fileCount} data topologies</strong>. All systems nominal.</>
-                        ) : (
-                            <>Across <strong>{fileCount} active datasets</strong>, intelligence indicates a <strong>{metrics.revenueGrowth} growth trajectory</strong>. {metrics.anomalies > 0 ? `${metrics.anomalies} anomalies require attention.` : 'Data stability is optimal.'}</>
-                        )}
-                    </motion.p>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.7, duration: 0.5 }}
-                        className="hero-stats-row"
-                    >
-                        {(userPlan === 'pro' || userPlan === 'enterprise') ? (
-                            <>
-                                <div className="hero-stat">
-                                    <span className="hero-stat-label">Datasets</span>
-                                    <span className="hero-stat-value">{fileCount}</span>
-                                </div>
-                                <div className="hero-stat">
-                                    <span className="hero-stat-label">Storage</span>
-                                    <span className="hero-stat-value">{totalStorage}<span style={{ fontSize: 12, opacity: 0.5, marginLeft: 2 }}>MB</span></span>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="hero-stat">
-                                    <span className="hero-stat-label">Processing Load</span>
-                                    <span className="hero-stat-value" style={{ fontSize: '16px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                                        Optimal
-                                    </span>
-                                </div>
-                                <div className="hero-stat">
-                                    <span className="hero-stat-label">Engine Sync</span>
-                                    <span className="hero-stat-value" style={{ fontSize: '16px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" style={{ animationDuration: '1.5s' }} />
-                                        Active
-                                    </span>
-                                </div>
-                            </>
-                        )}
-                        <div className="hero-stat">
-                            <span className="hero-stat-label">Anomalies</span>
-                            <span className="hero-stat-value" style={{ color: metrics.anomalies > 0 ? '#ef4444' : '#10b981' }}>{metrics.anomalies}</span>
-                        </div>
-                        <div className="hero-stat">
-                            <span className="hero-stat-label">Model Health</span>
-                            <span className="hero-stat-value" style={{ fontSize: 14 }}>{metrics.modelHealth}</span>
-                        </div>
+                <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '32px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 400px' }}>
                         <motion.div
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            className="hero-stat"
-                            style={{ cursor: 'pointer', borderColor: 'rgba(59, 130, 246, 0.2)', background: 'rgba(59, 130, 246, 0.05)' }}
-                            onClick={onViewReport}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
+                            className="hero-greeting-sup"
                         >
-                            <span className="hero-stat-label" style={{ color: '#3b82f6' }}>Strategic Report</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 800, color: '#3b82f6' }}>
-                                View <ArrowRight size={12} />
-                            </span>
+                            <span className="sup-line" />
+                            COMMAND CENTER
+                            <span className="sup-line" />
+                            {(userPlan === 'pro' || userPlan === 'enterprise') && <ProHeroBadge />}
                         </motion.div>
+
+                        <motion.h1
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3, duration: 0.7 }}
+                            className="hero-greeting"
+                        >
+                            Welcome back, <span className="name-highlight">{firstName || userEmail?.split('@')[0]}</span>
+                        </motion.h1>
+
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.5, duration: 0.6 }}
+                            className="hero-subtitle"
+                        >
+                            {metrics.revenueGrowth === '—' || metrics.revenueGrowth === 'Waiting for Data' ? (
+                                <>Your intelligence engine is actively <strong>mapping {fileCount} data topologies</strong>. All systems nominal.</>
+                            ) : (
+                                <>Across <strong>{fileCount} active datasets</strong>, intelligence indicates a <strong>{metrics.revenueGrowth} growth trajectory</strong>. {metrics.anomalies > 0 ? `${metrics.anomalies} anomalies require attention.` : 'Data stability is optimal.'}</>
+                            )}
+                        </motion.p>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.7, duration: 0.5 }}
+                            className="hero-stats-row"
+                        >
+                            <div className="hero-stat">
+                                <span className="hero-stat-label">Datasets</span>
+                                <span className="hero-stat-value">{fileCount}</span>
+                            </div>
+                            <div className="hero-stat">
+                                <span className="hero-stat-label">Storage</span>
+                                <span className="hero-stat-value">{totalStorage}<span style={{ fontSize: 12, opacity: 0.5, marginLeft: 2 }}>MB</span></span>
+                            </div>
+                            <div className="hero-stat">
+                                <span className="hero-stat-label">Anomalies</span>
+                                <span className="hero-stat-value" style={{ color: metrics.anomalies > 0 ? '#ef4444' : '#10b981' }}>{metrics.anomalies}</span>
+                            </div>
+                            <motion.div
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                className="hero-stat hero-stat-action"
+                                onClick={onViewReport}
+                            >
+                                <span className="hero-stat-label" style={{ color: '#3b82f6' }}>Strategic Report</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 800, color: '#3b82f6' }}>
+                                    View <ArrowRight size={12} />
+                                </span>
+                            </motion.div>
+                        </motion.div>
+                    </div>
+
+                    {/* Right side: Performance Gauge + Clock */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.6, duration: 0.8 }}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}
+                    >
+                        <PerformanceGauge value={metrics.anomalies > 0 ? 72 : 96} label="System Health" />
+                        <LiveClock />
                     </motion.div>
                 </div>
             </motion.div>
+
+            {/* --- QUICK ACTIONS COMMAND PALETTE --- */}
+            <QuickActionsBar
+                onUpload={() => document.getElementById('file-input')?.click()}
+                onViewReport={onViewReport}
+                onUpgrade={onUpgrade}
+                fileCount={fileCount}
+            />
 
             {/* --- ORBITAL METRIC ORBS --- */}
             <div className="orb-grid">
@@ -1106,6 +1123,11 @@ export const DashboardView = ({
                 <IntelligenceTimeline files={safeFiles} />
                 <DataHealthMatrix files={safeFiles} />
             </div>
+
+            {/* --- PRO: SYSTEM THROUGHPUT CHART --- */}
+            {(userPlan === 'pro' || userPlan === 'enterprise') && (
+                <SystemThroughputGrid metrics={metrics} />
+            )}
 
             {/* --- COMMAND CENTER: WATCHLIST & INTELLIGENCE --- */}
             <motion.div

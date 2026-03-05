@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <img id="source" src="raw_logo.png" style="display:none;" crossOrigin="Anonymous" />
+    <div id="result">Waiting...</div>
+
+    <script>
+        window.onload = function () {
+            const img = document.getElementById('source');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Strategy: Make background transparent, but keep white lines white.
+            // This is for Dark Mode.
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const brightness = (r + g + b) / 3;
+
+                if (brightness < 100) {
+                    data[i + 3] = 0; // Transparent
+                } else {
+                    // Keep White
+                    data[i] = 255;
+                    data[i + 1] = 255;
+                    data[i + 2] = 255;
+                    // data[i+3] stays as is (opacity)
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            const base64 = canvas.toDataURL('image/png');
+            document.getElementById('result').innerText = base64;
+        };
+    </script>
+</body>
+
+</html>

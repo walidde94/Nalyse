@@ -354,13 +354,14 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
 
                             {/* Right Column - Appearance */}
                             <div className="card" style={{ padding: '24px', height: 'fit-content' }}>
-                                <h3 className="text-h3" style={{ marginBottom: '16px' }}>Appearance</h3>
+                                <h3 className="text-h3" style={{ marginBottom: '8px' }}>Appearance</h3>
                                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>Customize how Nalyse looks</p>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     {[
-                                        { id: 'light', label: 'Light', icon: <Icons.Sun /> },
-                                        { id: 'dark', label: 'Dark', icon: <Icons.Moon /> },
-                                        { id: 'system', label: 'System', icon: <Icons.Monitor /> }
+                                        { id: 'light', label: 'Light', desc: 'Clean & crisp', icon: <Icons.Sun />, accent: '#3b82f6' },
+                                        { id: 'dark', label: 'Dark', desc: 'Sleek & focused', icon: <Icons.Moon />, accent: '#60a5fa' },
+                                        { id: 'midnight', label: 'Custom', desc: 'Your own palette', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="13.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="10.5" r="2.5" /><circle cx="8.5" cy="7.5" r="2.5" /><circle cx="6.5" cy="12" r="2.5" /><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12c0 1.82.49 3.53 1.34 5 .84 1.45 1.6 2.55 2.16 3.24.56.69 1.34 1.48 2.27 1.6.53.07 1.15-.04 1.73-.37.58-.34 1.08-.92 1.26-1.81.18-.87.06-1.72.06-2.16 0-.55.45-1 1-1s1 .45 1 1c0 .6.18 1.62.72 2.45.54.84 1.3 1.48 2.46 1.09" /></svg>, accent: '#f59e0b' },
+                                        { id: 'system', label: 'System', desc: 'Match your OS', icon: <Icons.Monitor />, accent: '#64748b' }
                                     ].map(t => (
                                         <button
                                             key={t.id}
@@ -368,20 +369,323 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
                                             className={`btn btn-secondary`}
                                             style={{
                                                 justifyContent: 'flex-start',
-                                                padding: '12px 16px',
-                                                borderColor: theme === t.id ? 'var(--primary)' : 'var(--border-default)',
-                                                background: theme === t.id ? 'var(--bg-surface)' : 'transparent',
-                                                color: theme === t.id ? 'var(--primary)' : 'var(--text-secondary)',
+                                                padding: '14px 16px',
+                                                borderColor: theme === t.id ? t.accent : 'var(--border-default)',
+                                                background: theme === t.id ? `${t.accent}10` : 'transparent',
+                                                color: theme === t.id ? t.accent : 'var(--text-secondary)',
+                                                boxShadow: theme === t.id ? `0 0 20px ${t.accent}15, inset 0 1px 0 ${t.accent}10` : 'none',
+                                                position: 'relative',
+                                                overflow: 'hidden' as const,
                                             }}
                                         >
-                                            <div style={{ color: 'inherit' }}>{t.icon}</div>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, flex: 1, textAlign: 'left' }}>{t.label}</span>
                                             {theme === t.id && (
-                                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }}></div>
+                                                <div style={{
+                                                    position: 'absolute', left: 0, top: '20%', bottom: '20%', width: '3px',
+                                                    borderRadius: '0 4px 4px 0',
+                                                    background: t.accent,
+                                                    boxShadow: `0 0 8px ${t.accent}60`
+                                                }} />
+                                            )}
+                                            <div style={{ color: 'inherit' }}>{t.icon}</div>
+                                            <div style={{ flex: 1, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: '14px', fontWeight: 600, color: theme === t.id ? t.accent : 'var(--text-primary)' }}>{t.label}</span>
+                                                <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)', marginTop: '1px' }}>{t.desc}</span>
+                                            </div>
+                                            {theme === t.id && (
+                                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: t.accent, boxShadow: `0 0 6px ${t.accent}80` }}></div>
                                             )}
                                         </button>
                                     ))}
                                 </div>
+
+                                {/* Custom Theme Editor — shown when Custom is active */}
+                                {theme === 'midnight' && (() => {
+                                    const presets = [
+                                        { name: 'Sahara', primary: '#f59e0b', accent: '#ea580c', bgMain: '#0d0a04', textPrimary: '#fef3c7' },
+                                        { name: 'Nebula', primary: '#a855f7', accent: '#e879f9', bgMain: '#080412', textPrimary: '#f3f0ff' },
+                                        { name: 'Ocean', primary: '#0ea5e9', accent: '#06b6d4', bgMain: '#020c14', textPrimary: '#e0f2fe' },
+                                        { name: 'Forest', primary: '#22c55e', accent: '#10b981', bgMain: '#030d06', textPrimary: '#dcfce7' },
+                                        { name: 'Rose', primary: '#f43f5e', accent: '#ec4899', bgMain: '#14040a', textPrimary: '#ffe4e6' },
+                                        { name: 'Arctic', primary: '#6366f1', accent: '#818cf8', bgMain: '#040412', textPrimary: '#e0e7ff' },
+                                        { name: 'Crimson', primary: '#dc2626', accent: '#f97316', bgMain: '#0c0202', textPrimary: '#fef2f2' },
+                                        { name: 'Sunset', primary: '#f97316', accent: '#eab308', bgMain: '#0f0802', textPrimary: '#fff7ed' },
+                                        { name: 'Midnight', primary: '#3b82f6', accent: '#8b5cf6', bgMain: '#020617', textPrimary: '#dbeafe' },
+                                    ];
+
+                                    const saved = JSON.parse(localStorage.getItem('custom-theme-colors') || '{}');
+                                    const currentPrimary = saved.primary || '#f59e0b';
+                                    const currentAccent = saved.accent || '#ea580c';
+                                    const currentBg = saved.bgMain || '#0d0a04';
+                                    const currentText = saved.textPrimary || '#fef3c7';
+                                    const currentGlow = saved.glowIntensity ?? 50;
+                                    const currentBlur = saved.blurAmount ?? 28;
+
+                                    const applyCustomColors = (colors: any) => {
+                                        const merged = { ...saved, ...colors };
+                                        localStorage.setItem('custom-theme-colors', JSON.stringify(merged));
+                                        window.dispatchEvent(new Event('theme-change'));
+                                        // Force re-apply
+                                        const ev = new CustomEvent('force-theme-reapply');
+                                        window.dispatchEvent(ev);
+                                    };
+
+                                    const handleExport = () => {
+                                        const data = btoa(JSON.stringify(saved));
+                                        navigator.clipboard.writeText(data);
+                                        addToast('Theme code copied to clipboard!', 'success');
+                                    };
+
+                                    const handleImport = () => {
+                                        const code = prompt('Paste your theme code:');
+                                        if (code) {
+                                            try {
+                                                const data = JSON.parse(atob(code));
+                                                applyCustomColors(data);
+                                                addToast('Theme imported successfully!', 'success');
+                                            } catch { addToast('Invalid theme code', 'error'); }
+                                        }
+                                    };
+
+                                    return (
+                                        <div style={{ marginTop: '20px' }}>
+                                            {/* Section: Presets */}
+                                            <div style={{ marginBottom: '24px' }}>
+                                                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+                                                    Color Palettes
+                                                </div>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                                                    {presets.map(preset => {
+                                                        const isActive = currentPrimary === preset.primary && currentBg === preset.bgMain;
+                                                        return (
+                                                            <button
+                                                                key={preset.name}
+                                                                onClick={() => applyCustomColors(preset)}
+                                                                className="btn"
+                                                                style={{
+                                                                    padding: '0',
+                                                                    borderRadius: '10px',
+                                                                    border: `1.5px solid ${isActive ? preset.primary : 'var(--border-subtle)'}`,
+                                                                    background: 'transparent',
+                                                                    overflow: 'hidden',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+                                                                    position: 'relative',
+                                                                    boxShadow: isActive ? `0 0 16px ${preset.primary}30, inset 0 0 20px ${preset.primary}08` : 'none',
+                                                                }}
+                                                            >
+                                                                {/* Gradient preview bar */}
+                                                                <div style={{
+                                                                    height: '28px',
+                                                                    background: `linear-gradient(135deg, ${preset.bgMain} 0%, ${preset.bgMain} 30%, ${preset.primary}30 70%, ${preset.accent}25 100%)`,
+                                                                    position: 'relative',
+                                                                    overflow: 'hidden',
+                                                                }}>
+                                                                    {/* Mini UI preview dots */}
+                                                                    <div style={{ position: 'absolute', top: '8px', left: '6px', display: 'flex', gap: '3px' }}>
+                                                                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: preset.primary, opacity: 0.9 }} />
+                                                                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: preset.accent, opacity: 0.7 }} />
+                                                                    </div>
+                                                                    <div style={{ position: 'absolute', top: '7px', right: '6px', height: '6px', width: '20px', borderRadius: '3px', background: `linear-gradient(90deg, ${preset.primary}, ${preset.accent})` }} />
+                                                                    {/* Shimmer line */}
+                                                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px', background: `linear-gradient(90deg, transparent, ${preset.primary}40, transparent)` }} />
+                                                                </div>
+                                                                {/* Name */}
+                                                                <div style={{
+                                                                    padding: '5px 0',
+                                                                    fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em',
+                                                                    color: isActive ? preset.primary : 'var(--text-secondary)',
+                                                                    background: isActive ? `${preset.primary}08` : 'var(--bg-surface)',
+                                                                }}>
+                                                                    {preset.name}
+                                                                </div>
+                                                                {isActive && (
+                                                                    <div style={{ position: 'absolute', top: '3px', right: '3px', width: '5px', height: '5px', borderRadius: '50%', background: preset.primary, boxShadow: `0 0 4px ${preset.primary}` }} />
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            {/* Section: Fine Tune */}
+                                            <div style={{ marginBottom: '24px' }}>
+                                                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" /></svg>
+                                                    Fine Tune
+                                                </div>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                    {[
+                                                        { key: 'primary', label: 'Primary', value: currentPrimary },
+                                                        { key: 'accent', label: 'Accent', value: currentAccent },
+                                                        { key: 'bgMain', label: 'Background', value: currentBg },
+                                                        { key: 'textPrimary', label: 'Text', value: currentText },
+                                                    ].map(item => (
+                                                        <label key={item.key} style={{
+                                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                                            padding: '6px 8px', borderRadius: '8px',
+                                                            background: 'var(--bg-surface)',
+                                                            border: '1px solid var(--border-subtle)',
+                                                            cursor: 'pointer',
+                                                            transition: 'border-color 0.2s',
+                                                        }}>
+                                                            <div style={{ position: 'relative', flexShrink: 0 }}>
+                                                                <div style={{
+                                                                    width: '24px', height: '24px', borderRadius: '6px',
+                                                                    background: item.value,
+                                                                    border: '2px solid var(--border-subtle)',
+                                                                    boxShadow: `0 0 8px ${item.value}30`,
+                                                                }} />
+                                                                <input
+                                                                    type="color"
+                                                                    value={item.value}
+                                                                    onChange={(e) => applyCustomColors({ [item.key]: e.target.value })}
+                                                                    style={{
+                                                                        position: 'absolute', inset: 0,
+                                                                        opacity: 0, cursor: 'pointer',
+                                                                        width: '100%', height: '100%',
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>{item.label}</span>
+                                                                <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{item.value}</span>
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Section: Atmosphere Controls */}
+                                            <div style={{ marginBottom: '24px' }}>
+                                                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z" /></svg>
+                                                    Atmosphere
+                                                </div>
+                                                {[
+                                                    { key: 'glowIntensity', label: 'Glow Intensity', value: currentGlow, min: 10, max: 100, icon: '✦' },
+                                                    { key: 'blurAmount', label: 'Glass Blur', value: currentBlur, min: 8, max: 48, icon: '◉' },
+                                                ].map(slider => (
+                                                    <div key={slider.key} style={{ marginBottom: '12px' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>{slider.icon} {slider.label}</span>
+                                                            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: currentPrimary, fontWeight: 700 }}>{slider.value}{slider.key === 'blurAmount' ? 'px' : '%'}</span>
+                                                        </div>
+                                                        <div style={{ position: 'relative', height: '6px', borderRadius: '3px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+                                                            <div style={{
+                                                                position: 'absolute', left: 0, top: 0, bottom: 0,
+                                                                width: `${((slider.value - slider.min) / (slider.max - slider.min)) * 100}%`,
+                                                                borderRadius: '3px',
+                                                                background: `linear-gradient(90deg, ${currentPrimary}, ${currentAccent})`,
+                                                                boxShadow: `0 0 8px ${currentPrimary}40`,
+                                                                transition: 'width 0.15s ease',
+                                                            }} />
+                                                            <input
+                                                                type="range"
+                                                                min={slider.min}
+                                                                max={slider.max}
+                                                                value={slider.value}
+                                                                onChange={(e) => applyCustomColors({ [slider.key]: parseInt(e.target.value) })}
+                                                                style={{
+                                                                    position: 'absolute', inset: '-4px 0', width: '100%', height: '14px',
+                                                                    opacity: 0, cursor: 'pointer', margin: 0,
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Live Preview — Mini Dashboard */}
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+                                                    Live Preview
+                                                </div>
+                                                <div style={{
+                                                    borderRadius: '10px', overflow: 'hidden',
+                                                    border: `1px solid ${currentPrimary}20`,
+                                                    background: currentBg,
+                                                    position: 'relative',
+                                                }}>
+                                                    {/* Mini aurora */}
+                                                    <div style={{
+                                                        position: 'absolute', inset: 0, pointerEvents: 'none',
+                                                        background: `radial-gradient(ellipse 70% 50% at 20% 30%, ${currentPrimary}18 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 70%, ${currentAccent}10 0%, transparent 50%)`,
+                                                    }} />
+                                                    {/* Mini header */}
+                                                    <div style={{
+                                                        padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '8px',
+                                                        borderBottom: `1px solid ${currentPrimary}15`,
+                                                        background: `${currentBg}dd`,
+                                                        position: 'relative',
+                                                    }}>
+                                                        <div style={{ width: '8px', height: '8px', borderRadius: '3px', background: `linear-gradient(135deg, ${currentPrimary}, ${currentAccent})` }} />
+                                                        <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: currentText, opacity: 0.7 }} />
+                                                        <div style={{ flex: 1 }} />
+                                                        <div style={{ width: '50px', height: '4px', borderRadius: '2px', background: `${currentPrimary}30` }} />
+                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: currentPrimary, boxShadow: `0 0 6px ${currentPrimary}60` }} />
+                                                        {/* Energy border */}
+                                                        <div style={{ position: 'absolute', bottom: 0, left: '20%', width: '30%', height: '1px', background: `linear-gradient(90deg, transparent, ${currentPrimary}, ${currentAccent}, transparent)` }} />
+                                                    </div>
+                                                    {/* Mini body */}
+                                                    <div style={{ display: 'flex', padding: 0, position: 'relative' }}>
+                                                        {/* Mini sidebar */}
+                                                        <div style={{
+                                                            width: '32px', padding: '8px 4px', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center',
+                                                            borderRight: `1px solid ${currentPrimary}12`,
+                                                            background: `${currentBg}f0`,
+                                                        }}>
+                                                            {[0.5, 0.3, 0.3, 0.3].map((o, i) => (
+                                                                <div key={i} style={{ width: '12px', height: '3px', borderRadius: '1.5px', background: i === 0 ? currentPrimary : `${currentText}${Math.round(o * 100).toString(16).padStart(2, '0')}`, transition: 'background 0.3s' }} />
+                                                            ))}
+                                                        </div>
+                                                        {/* Mini content */}
+                                                        <div style={{ flex: 1, padding: '8px', display: 'flex', gap: '6px' }}>
+                                                            {/* Card 1 */}
+                                                            <div style={{
+                                                                flex: 1, padding: '6px', borderRadius: '5px',
+                                                                border: `1px solid ${currentPrimary}15`,
+                                                                background: `${currentBg}88`,
+                                                            }}>
+                                                                <div style={{ width: '20px', height: '3px', borderRadius: '1.5px', background: currentText, opacity: 0.6, marginBottom: '4px' }} />
+                                                                <div style={{ width: '100%', height: '3px', borderRadius: '1.5px', background: `${currentText}20`, marginBottom: '2px' }} />
+                                                                <div style={{ width: '70%', height: '3px', borderRadius: '1.5px', background: `${currentText}15` }} />
+                                                                <div style={{ marginTop: '6px', display: 'flex', gap: '3px' }}>
+                                                                    <div style={{ padding: '2px 6px', borderRadius: '3px', background: `linear-gradient(135deg, ${currentPrimary}, ${currentAccent})`, width: '16px', height: '4px' }} />
+                                                                    <div style={{ padding: '2px 6px', borderRadius: '3px', background: `${currentPrimary}20`, border: `1px solid ${currentPrimary}20`, width: '16px', height: '4px' }} />
+                                                                </div>
+                                                            </div>
+                                                            {/* Card 2 */}
+                                                            <div style={{
+                                                                flex: 1, padding: '6px', borderRadius: '5px',
+                                                                border: `1px solid ${currentPrimary}15`,
+                                                                background: `${currentBg}88`,
+                                                            }}>
+                                                                <div style={{ width: '16px', height: '3px', borderRadius: '1.5px', background: currentPrimary, opacity: 0.8, marginBottom: '4px' }} />
+                                                                <div style={{ width: '100%', height: '3px', borderRadius: '1.5px', background: `${currentText}20`, marginBottom: '2px' }} />
+                                                                <div style={{ width: '50%', height: '3px', borderRadius: '1.5px', background: `${currentText}15` }} />
+                                                                <div style={{ marginTop: '4px', height: '8px', borderRadius: '2px', background: `linear-gradient(90deg, ${currentPrimary}30, ${currentAccent}20)` }} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Theme Sharing */}
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button onClick={handleExport} className="btn btn-secondary" style={{ flex: 1, fontSize: '11px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
+                                                    Export Theme
+                                                </button>
+                                                <button onClick={handleImport} className="btn btn-secondary" style={{ flex: 1, fontSize: '11px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                                                    Import Theme
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </div>
                     )}

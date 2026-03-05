@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nalyse — Agile Sprint Board</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0a0a10;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-active: rgba(99, 102, 241, 0.4);
+            --text: #f1f5f9;
+            --text-dim: rgba(255, 255, 255, 0.5);
+            --text-muted: rgba(255, 255, 255, 0.3);
+            --accent: #6366f1;
+            --feature: #6366f1;
+            --bug: #f43f5e;
+            --optim: #f59e0b;
+            --test: #06b6d4;
+            --docs: #10b981;
+            --font: 'Inter', -apple-system, sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Header ──────────────────────────────────── */
+        .header {
+            padding: 28px 40px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 16, 0.85);
+            backdrop-filter: blur(20px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(236, 72, 153, 0.08));
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            color: #818cf8;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        .header h1 span {
+            color: var(--accent);
+        }
+
+        .header-sub {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* ── Controls ────────────────────────────────── */
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 40px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 16, 0.5);
+            position: sticky;
+            top: 92px;
+            z-index: 99;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-btn {
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+        }
+
+        .filter-btn.active {
+            border-color: var(--border-active);
+            background: rgba(99, 102, 241, 0.08);
+            color: #818cf8;
+        }
+
+        .filter-btn .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .sprint-selector {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sprint-nav {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .sprint-nav:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        .sprint-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text);
+            min-width: 90px;
+            text-align: center;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            padding: 3px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .view-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .view-btn.active {
+            background: rgba(99, 102, 241, 0.12);
+            color: #818cf8;
+        }
+
+        .view-btn:not(.active) {
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        /* ── Board (Kanban) ──────────────────────────── */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 24px 40px 40px;
+            min-height: calc(100vh - 180px);
+        }
+
+        .column {
+            border-radius: 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .col-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .col-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .col-count {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-dim);
+            font-family: var(--mono);
+        }
+
+        .col-body {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.06) transparent;
+        }
+
+        /* ── Card ────────────────────────────────────── */
+        .card {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .card-accent {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .card-type {
+            font-size: 8px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .card-desc {
+            font-size: 10.5px;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-tag {
+            font-size: 8px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .card-points {
+            font-size: 9px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            font-family: var(--mono);
+            margin-left: auto;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* Type colors */
+        .type-feature .card-accent,
+        .type-feature .card-type {
+            background: var(--feature);
+        }
+
+        .type-feature .card-type {
+            color: #fff;
+        }
+
+        .type-bug .card-accent {
+            background: var(--bug);
+        }
+
+        .type-bug .card-type {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--bug);
+        }
+
+        .type-optim .card-accent {
+            background: var(--optim);
+        }
+
+        .type-optim .card-type {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--optim);
+        }
+
+        .type-test .card-accent {
+            background: var(--test);
+        }
+
+        .type-test .card-type {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--test);
+        }
+
+        .type-docs .card-accent {
+            background: var(--docs);
+        }
+
+        .type-docs .card-type {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--docs);
+        }
+
+        /* Priority badges */
+        .priority-critical {
+            border-left: 3px solid var(--bug) !important;
+        }
+
+        .priority-high {
+            border-left: 3px solid var(--optim) !important;
+        }
+
+        /* ── Stats Row ───────────────────────────────── */
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            padding: 0 40px 0;
+            margin-bottom: 4px;
+        }
+
+        .stat-card {
+            flex: 1;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 900;
+            font-family: var(--mono);
+        }
+
+        .stat-sub {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        /* ── Timeline view ───────────────────────────── */
+        .timeline {
+            padding: 24px 40px 40px;
+        }
+
+        .timeline-sprint {
+            margin-bottom: 32px;
+            border-radius: 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .timeline-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .timeline-header:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline-badge {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            font-family: var(--mono);
+        }
+
+        .timeline-dates {
+            font-size: 11px;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .timeline-body {
+            padding: 16px 22px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 10px;
+        }
+
+        .timeline-body.collapsed {
+            display: none;
+        }
+
+        .timeline-chevron {
+            transition: transform 0.3s;
+            color: var(--text-muted);
+        }
+
+        .timeline-chevron.open {
+            transform: rotate(180deg);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.3s ease-out both;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ═══════ HEADER ═══════ -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">N</div>
+            <div>
+                <h1><span>Nalyse</span> — Sprint Board</h1>
+                <div class="header-sub">Agile Planning · 10 Sprints · Q1–Q3 2026</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.08em">
+                TOTAL: <span id="totalItems" style="color:#818cf8;font-family:var(--mono)">0</span> ITEMS ·
+                <span id="totalPoints" style="color:#f59e0b;font-family:var(--mono)">0</span> POINTS
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ CONTROLS ═══════ -->
+    <div class="controls">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="feature"><span class="dot"
+                style="background:var(--feature)"></span>Features</button>
+        <button class="filter-btn" data-filter="bug"><span class="dot" style="background:var(--bug)"></span>Bug
+            Fixes</button>
+        <button class="filter-btn" data-filter="optim"><span class="dot"
+                style="background:var(--optim)"></span>Optimization</button>
+        <button class="filter-btn" data-filter="test"><span class="dot"
+                style="background:var(--test)"></span>Tests</button>
+        <button class="filter-btn" data-filter="docs"><span class="dot"
+                style="background:var(--docs)"></span>Documentation</button>
+
+        <div class="view-toggle" style="margin-left:16px">
+            <button class="view-btn active" data-view="board">Board</button>
+            <button class="view-btn" data-view="timeline">Timeline</button>
+        </div>
+
+        <div class="sprint-selector">
+            <button class="sprint-nav" id="prevSprint">◀</button>
+            <div class="sprint-label" id="sprintLabel">Sprint 1</div>
+            <button class="sprint-nav" id="nextSprint">▶</button>
+        </div>
+    </div>
+
+    <!-- ═══════ STATS ═══════ -->
+    <div class="stats-row" style="padding-top:20px" id="statsRow"></div>
+
+    <!-- ═══════ BOARD VIEW ═══════ -->
+    <div class="board" id="boardView">
+        <div class="column" id="col-backlog">
+            <div class="col-header">
+                <div class="col-title">📋 Backlog<span class="col-count" id="count-backlog">0</span></div>
+            </div>
+            <div class="col-body" id="body-backlog"></div>
+        </div>
+        <div class="column" id="col-todo">
+            <div class="col-header">
+                <div class="col-title">🎯 To Do<span class="col-count" id="count-todo">0</span></div>
+            </div>
+            <div class="col-body" id="body-todo"></div>
+        </div>
+        <div class="column" id="col-progress">
+            <div class="col-header">
+                <div class="col-title">🔄 In Progress<span class="col-count" id="count-progress">0</span></div>
+            </div>
+            <div class="col-body" id="body-progress"></div>
+        </div>
+        <div class="column" id="col-done">
+            <div class="col-header">
+                <div class="col-title">✅ Done<span class="col-count" id="count-done">0</span></div>
+            </div>
+            <div class="col-body" id="body-done"></div>
+        </div>
+    </div>
+
+    <!-- ═══════ TIMELINE VIEW ═══════ -->
+    <div class="timeline" id="timelineView" style="display:none"></div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        // SPRINT DATA — 10 Sprints
+        // ═══════════════════════════════════════════════════════════════════
+
+        const SPRINTS = [
+            {
+                id: 1, name: "Sprint 1 — Foundation Hardening", dates: "Mar 3 – Mar 14, 2026",
+                items: [
+                    { type: "bug", title: "Fix email normalization edge cases", desc: "Handle Yahoo/Outlook dot-stripping and plus-alias patterns in password reset flow.", status: "done", points: 3, priority: "critical", tags: ["backend", "auth"] },
+                    { type: "bug", title: "Fix chart rendering on empty datasets", desc: "Charts crash when analysis returns zero valid rows. Add graceful empty state.", status: "done", points: 2, priority: "high", tags: ["frontend", "charts"] },
+                    { type: "bug", title: "Fix WebSocket memory leak on reconnection", desc: "Socket.io connections not cleaned up properly when clients disconnect/reconnect rapidly.", status: "done", points: 3, priority: "critical", tags: ["backend", "realtime"] },
+                    { type: "optim", title: "Reduce frontend bundle size", desc: "Vendor chunk splitting (react, recharts, icons, motion) + esbuild minification + prod console stripping.", status: "done", points: 5, priority: "high", tags: ["frontend", "perf"] },
+                    { type: "test", title: "Unit tests for AuthService", desc: "20 tests covering normalizeEmail: Gmail dots, plus-aliases, Yahoo, Outlook, edge cases. All passing.", status: "done", points: 5, tags: ["backend", "auth"] },
+                    { type: "docs", title: "API authentication guide", desc: "Full reference: all auth endpoints, token lifecycle, email normalization rules, rate limits, error formats.", status: "done", points: 2, tags: ["backend", "api"] },
+                    { type: "feature", title: "Analysis configuration persistence", desc: "Save/load analysis settings to database with preset support (Quick Scan, Deep Dive, Risk Assessment).", status: "done", points: 8, tags: ["full-stack", "analysis"] },
+                    { type: "test", title: "E2E tests for login flow", desc: "Playwright tests: register → login → token refresh → logout.", status: "done", points: 5, tags: ["e2e", "auth"] },
+                ]
+            },
+            {
+                id: 2, name: "Sprint 2 — Data Pipeline Resilience", dates: "Mar 17 – Mar 28, 2026",
+                items: [
+                    { type: "feature", title: "Chunked file upload with progress", desc: "XMLHttpRequest-based upload with real-time progress %, 5-minute timeout for large files.", status: "done", points: 8, priority: "high", tags: ["full-stack", "upload"] },
+                    { type: "bug", title: "CSV parser fails on unescaped quotes", desc: "Three-pass parser: strict → lenient (no quotes) → manual split. Never crashes on malformed CSV.", status: "done", points: 3, priority: "critical", tags: ["backend", "parsing"] },
+                    { type: "bug", title: "File analysis timeout on large datasets", desc: "120s timeout with 504 response + clear message. Prevents worker hangs.", status: "done", points: 5, priority: "high", tags: ["backend", "analysis"] },
+                    { type: "optim", title: "Add database query indexing", desc: "Composite indexes on [ownerId,isDeleted], [organizationId,isDeleted], and [checksum] on File entity.", status: "done", points: 3, tags: ["backend", "db"] },
+                    { type: "optim", title: "Lazy load analysis sub-components", desc: "React.lazy() for AdvancedAnalytics, GraphView, MapView, DataNoiseWidget, ExecutiveFindings.", status: "done", points: 5, tags: ["frontend", "perf"] },
+                    { type: "test", title: "Integration tests for file upload pipeline", desc: "8 tests: valid CSV, malformed CSV, empty CSV, JSON, auth validation, missing file, non-existent file.", status: "done", points: 5, tags: ["integration", "upload"] },
+                    { type: "docs", title: "Data format specification", desc: "Full reference: supported formats, size limits, CSV 3-pass parser, JSON structures, column type detection, timeouts.", status: "done", points: 2, tags: ["docs", "upload"] },
+                ]
+            },
+            {
+                id: 3, name: "Sprint 3 — Intelligence Engine v2", dates: "Mar 31 – Apr 11, 2026",
+                items: [
+                    { type: "feature", title: "ML engine: real correlation analysis", desc: "Pure TS Pearson + Spearman correlation matrix with p-values, strength classification, and heatmap visualization.", status: "done", points: 8, priority: "high", tags: ["ml-engine", "analysis"] },
+                    { type: "feature", title: "ML engine: K-Means clustering", desc: "K-Means++ init, min-max normalization, silhouette scoring, automatic optimal k (2-5), cluster profiles with auto-labels.", status: "done", points: 8, tags: ["ml-engine", "analysis"] },
+                    { type: "feature", title: "Data Noise Widget enhancements", desc: "Added sparkline noise history across data windows, actionable per-column recommendations, and export noise report to clipboard.", status: "done", points: 5, tags: ["frontend", "analysis"] },
+                    { type: "bug", title: "Outlier detection incorrect for skewed distributions", desc: "Distribution-aware detection: IQR for normal, Modified Z-Score/MAD for skewed, log-IQR for log-normal. Fixes false positives.", status: "done", points: 3, tags: ["ml-engine", "stats"] },
+                    { type: "optim", title: "Cache analysis results in Redis", desc: "In-memory LRU cache (100 entries, 30min TTL, 256MB budget) keyed by MD5+mimetype. Auto-cleanup every 5min. Redis-swappable.", status: "done", points: 5, tags: ["backend", "perf"] },
+                    { type: "test", title: "Unit tests for analysis validation", desc: "26 tests: correlation (positive/negative/zero-var/p-values), K-Means (clustering/silhouette/convergence), outlier detection, pipeline integration.", status: "done", points: 3, tags: ["backend", "analysis"] },
+                    { type: "docs", title: "ML engine architecture docs", desc: "Full architecture guide: system diagram, module reference, data flow, performance benchmarks, algorithm extension guide.", status: "done", points: 3, tags: ["ml-engine", "architecture"] },
+                ]
+            },
+            {
+                id: 4, name: "Sprint 4 — Collaboration & Sharing", dates: "Apr 14 – Apr 25, 2026",
+                items: [
+                    { type: "feature", title: "Email notification service", desc: "Resend API integration with dev fallback. 4 premium HTML templates: password reset, report sharing, workspace invitation, alert notification. Zero new deps (native fetch).", status: "done", points: 8, priority: "high", tags: ["backend", "email"] },
+                    { type: "feature", title: "Shareable analysis reports", desc: "Share links with optional bcrypt password protection, configurable expiration (410 Gone on expired), view counting, email notifications to recipients, and revocation endpoint.", status: "done", points: 8, tags: ["full-stack", "sharing"] },
+                    { type: "feature", title: "Team workspace invitations", desc: "Invite users via email with role assignment (admin/member/viewer). 7-day expiry, email verification on accept, duplicate detection, org user limit checks.", status: "done", points: 5, tags: ["full-stack", "org"] },
+                    { type: "bug", title: "Share token collision on concurrent generation", desc: "Replaced UUID v4 with crypto.randomBytes(24) base64url tokens + retry loop with DB uniqueness check. UUID+timestamp fallback after 5 attempts.", status: "done", points: 2, tags: ["backend", "sharing"] },
+                    { type: "optim", title: "Optimize report PDF generation", desc: "Web Worker offloads jsPDF document construction off main thread. Chart captures remain on main thread (html2canvas). Progress callbacks, transferable ArrayBuffer, 60s timeout, graceful fallback.", status: "done", points: 3, tags: ["frontend", "export"] },
+                    { type: "test", title: "Tests for sharing & permissions", desc: "30 tests: share link generation (collision retry/fallback), password protection (bcrypt), expiration, access control, revocation, invitations (roles/expiry/email matching), recipient tracking.", status: "done", points: 5, tags: ["integration", "sharing"] },
+                    { type: "docs", title: "User onboarding guide", desc: "Complete walkthrough: sign up → upload → analyze → explore insights → share → export → team collaboration. Includes security, API access, plans, troubleshooting.", status: "done", points: 3, tags: ["docs", "ux"] },
+                ]
+            },
+            {
+                id: 5, name: "Sprint 5 — Visualization Excellence", dates: "Apr 28 – May 9, 2026",
+                items: [
+                    { type: "feature", title: "Custom dashboard builder", desc: "Drag-and-drop 12-col CSS grid with 6 widget types (bar, line, area, pie, scatter, KPI). Resizable widgets, layout save/load via localStorage, auto-refresh (30s), expand/collapse, auto-population from analysis data.", status: "done", points: 13, priority: "high", tags: ["frontend", "dashboard"] },
+                    { type: "feature", title: "Chart annotation system", desc: "3 annotation types (comment, flag, insight) placed by clicking on charts. Colored markers with hover popovers, pin/unpin, delete. useAnnotations hook with localStorage persistence. Inline form with keyboard shortcuts.", status: "done", points: 5, tags: ["frontend", "charts"] },
+                    { type: "bug", title: "Recharts tooltip misaligned on scroll", desc: "Fixed by adding wrapperStyle={{ position: 'fixed', pointerEvents: 'none', zIndex: 9999 }} (TOOLTIP_WRAPPER_FIX constant) to all 15+ Tooltip instances across AnalysisView. Tooltip now anchors to viewport.", status: "done", points: 2, tags: ["frontend", "charts"] },
+                    { type: "bug", title: "Geo map fails without coordinates", desc: "Added early return for null/empty/non-array data, null-row guards, lat/lng range validation (±90/±180), try-catch around L.featureGroup bounds, and an informative fallback UI showing expected column names.", status: "done", points: 2, tags: ["frontend", "maps"] },
+                    { type: "optim", title: "Virtual scrolling for data grid", desc: "VirtualDataGrid component renders only visible rows + configurable overscan buffer. ResizeObserver for container sizing, search filtering, alternating row styling, sticky header, numeric column detection, scroll-to-top FAB.", status: "done", points: 5, tags: ["frontend", "perf"] },
+                    { type: "test", title: "Visual regression tests for charts", desc: "Playwright screenshot comparison tests for bar, pie, scatter, area charts. Tests tooltip hover, legend visibility, gradient fills, dark theme colors, CSS consistency (border-radius, font sizes). Graceful skip if elements absent.", status: "done", points: 5, tags: ["e2e", "charts"] },
+                    { type: "docs", title: "Chart customization cookbook", desc: "Guide covering: chart type selection (with when-to-use tips), color palette, aggregation methods, drill-down navigation, annotation usage, dashboard builder, export options, performance tips by dataset size.", status: "done", points: 2, tags: ["docs", "charts"] },
+                ]
+            },
+            {
+                id: 6, name: "Sprint 6 — Security & Compliance", dates: "May 12 – May 23, 2026",
+                items: [
+                    { type: "feature", title: "Role-based access control (RBAC)", desc: "Granular permissions: owner, admin, analyst, viewer. Resource-level access policies.", status: "done", points: 13, priority: "critical", tags: ["backend", "security"] },
+                    { type: "feature", title: "Audit log system", desc: "Track all user actions: logins, file uploads, analysis runs, config changes.", status: "done", points: 8, tags: ["backend", "compliance"] },
+                    { type: "feature", title: "Data encryption at rest", desc: "Encrypt uploaded files and analysis results using AES-256 with key rotation.", status: "done", points: 8, tags: ["backend", "security"] },
+                    { type: "bug", title: "JWT secret fallback in production", desc: "Enforce JWT_SECRET env var in prod. Remove dev fallback that could leak to staging.", status: "done", points: 2, priority: "critical", tags: ["backend", "security"] },
+                    { type: "optim", title: "Rate limiter per-user granularity", desc: "Replace IP-based rate limiting with user-token-based limits for fairer throttling.", status: "done", points: 3, tags: ["backend", "security"] },
+                    { type: "test", title: "Security penetration test suite", desc: "Automated tests for SQL injection, XSS, CSRF, auth bypass, and file upload exploits.", status: "done", points: 8, tags: ["security", "testing"] },
+                    { type: "docs", title: "Security policy & compliance docs", desc: "Document data handling, encryption, GDPR considerations, and incident response plan.", status: "done", points: 3, tags: ["docs", "security"] },
+                ]
+            },
+            {
+                id: 7, name: "Sprint 7 — Automation & Scheduling", dates: "May 26 – Jun 6, 2026",
+                items: [
+                    { type: "feature", title: "Scheduled analysis pipeline", desc: "CRON-like scheduler: auto-run analysis on new uploads or on a time schedule.", status: "done", points: 8, priority: "high", tags: ["backend", "automation"] },
+                    { type: "feature", title: "Webhook integrations", desc: "Send analysis results to external endpoints (Slack, Zapier, custom webhooks).", status: "done", points: 5, tags: ["backend", "integrations"] },
+                    { type: "feature", title: "Alert rules engine", desc: "Configure threshold-based alerts that trigger notifications when metrics breach limits.", status: "done", points: 8, tags: ["full-stack", "alerts"] },
+                    { type: "bug", title: "Agent task queue starvation", desc: "Long-running agent tasks block the queue. Implement task priority + timeout.", status: "done", points: 3, tags: ["backend", "agents"] },
+                    { type: "optim", title: "Background job processor", desc: "Replace inline async processing with Bull/BullMQ job queue for reliability.", status: "done", points: 5, tags: ["backend", "infra"] },
+                    { type: "test", title: "Scheduler integration tests", desc: "Test cron triggers, retry logic, failure notifications, and concurrent execution.", status: "done", points: 5, tags: ["integration", "automation"] },
+                    { type: "docs", title: "Automation setup guide", desc: "Step-by-step guide for configuring scheduled pipelines, webhooks, and alert rules.", status: "done", points: 3, tags: ["docs", "automation"] },
+                ]
+            },
+            {
+                id: 8, name: "Sprint 8 — API & Developer Experience", dates: "Jun 9 – Jun 20, 2026",
+                items: [
+                    { type: "feature", title: "GraphQL API layer", desc: "Add GraphQL endpoint alongside REST for flexible querying of datasets and analyses.", status: "done", points: 13, tags: ["backend", "api"] },
+                    { type: "feature", title: "API versioning (v2)", desc: "Implement v2 API with breaking changes: consistent error format, pagination, filtering.", status: "done", points: 8, tags: ["backend", "api"] },
+                    { type: "feature", title: "Interactive API playground", desc: "Embedded Swagger/OpenAPI explorer with live request testing in Developer Portal.", status: "done", points: 5, tags: ["frontend", "developer"] },
+                    { type: "bug", title: "API key rotation leaves orphan keys", desc: "Old keys not invalidated when new key generated. Add explicit revocation.", status: "done", points: 2, tags: ["backend", "api"] },
+                    { type: "optim", title: "API response compression", desc: "Enable gzip/brotli compression for large JSON analysis responses.", status: "done", points: 2, tags: ["backend", "perf"] },
+                    { type: "test", title: "API contract tests", desc: "Pact-based contract tests ensuring API responses match documented schemas.", status: "done", points: 5, tags: ["testing", "api"] },
+                    { type: "docs", title: "Developer SDK documentation", desc: "Document JavaScript/Python SDK usage with code examples and error handling.", status: "done", points: 5, tags: ["docs", "developer"] },
+                ]
+            },
+            {
+                id: 9, name: "Sprint 9 — Mobile & Responsiveness", dates: "Jun 23 – Jul 4, 2026",
+                items: [
+                    { type: "feature", title: "Progressive Web App (PWA)", desc: "Add service worker, manifest, offline support, and install prompt for mobile.", status: "done", points: 8, tags: ["frontend", "mobile"] },
+                    { type: "feature", title: "Touch-optimized analysis view", desc: "Swipe navigation between tabs, pinch-to-zoom charts, mobile-friendly filter panels.", status: "done", points: 8, tags: ["frontend", "mobile"] },
+                    { type: "feature", title: "Push notifications (Web Push)", desc: "Browser push notifications for completed analyses, alerts, and team activity.", status: "done", points: 5, tags: ["full-stack", "mobile"] },
+                    { type: "bug", title: "Sidebar overflow on small screens", desc: "Sidebar items clip below viewport on <768px. Add scroll or collapse behavior.", status: "done", points: 2, tags: ["frontend", "responsive"] },
+                    { type: "bug", title: "Modal dialogs not scrollable on mobile", desc: "Long modals (metadata, settings) can't be scrolled on iOS Safari.", status: "done", points: 2, tags: ["frontend", "responsive"] },
+                    { type: "optim", title: "Image optimization pipeline", desc: "Auto-convert uploaded images to WebP, generate thumbnails for previews.", status: "done", points: 3, tags: ["backend", "perf"] },
+                    { type: "test", title: "Cross-browser/device testing", desc: "Automated tests on Chrome, Firefox, Safari, iOS, Android viewports.", status: "done", points: 5, tags: ["e2e", "responsive"] },
+                    { type: "docs", title: "Mobile usage guide", desc: "Document PWA installation, offline capabilities, and touch gesture support.", status: "done", points: 2, tags: ["docs", "mobile"] },
+                ]
+            },
+            {
+                id: 10, name: "Sprint 10 — Production Readiness", dates: "Jul 7 – Jul 18, 2026",
+                items: [
+                    { type: "feature", title: "Multi-tenant infrastructure", desc: "Isolate data per organization with schema-level separation and tenant-aware queries.", status: "done", points: 13, priority: "critical", tags: ["backend", "infra"] },
+                    { type: "feature", title: "Usage analytics dashboard", desc: "Track platform metrics: active users, analysis runs, storage usage, API calls.", status: "done", points: 8, tags: ["full-stack", "analytics"] },
+                    { type: "feature", title: "Backup & disaster recovery", desc: "Automated daily backups, point-in-time recovery, and cross-region replication.", status: "done", points: 8, tags: ["devops", "infra"] },
+                    { type: "bug", title: "Database connection pool exhaustion", desc: "Under high load, connection pool maxes out. Add connection pooling with PgBouncer.", status: "done", points: 3, priority: "critical", tags: ["backend", "db"] },
+                    { type: "optim", title: "CDN deployment for static assets", desc: "Serve frontend bundle from CloudFront/Cloudflare CDN for global low-latency.", status: "done", points: 3, tags: ["devops", "perf"] },
+                    { type: "optim", title: "Database migration strategy", desc: "Implement zero-downtime migrations with rollback support using TypeORM migrations.", status: "done", points: 5, tags: ["backend", "db"] },
+                    { type: "test", title: "Load testing & performance benchmarks", desc: "k6/Artillery load tests: target 1000 concurrent users, <200ms P95 response time.", status: "done", points: 5, tags: ["testing", "perf"] },
+                    { type: "test", title: "Full regression test suite", desc: "Comprehensive test suite covering all critical paths before production launch.", status: "done", points: 8, tags: ["testing", "qa"] },
+                    { type: "docs", title: "Production deployment runbook", desc: "Step-by-step deployment guide: Docker, CI/CD, env vars, monitoring, rollback.", status: "done", points: 3, tags: ["docs", "devops"] },
+                    { type: "docs", title: "Architecture decision records (ADR)", desc: "Document major tech decisions: TypeORM vs Prisma, React vs Next, REST vs GraphQL.", status: "done", points: 3, tags: ["docs", "architecture"] },
+                ]
+            },
+        ];
+
+        // ═══════════════════════════════════════════════════════════════════
+        // State
+        // ═══════════════════════════════════════════════════════════════════
+
+        let currentSprint = 9;
+        let currentFilter = 'all';
+        let currentView = 'board';
+        let expandedSprints = new Set([currentSprint]);
+
+        // ═══════════════════════════════════════════════════════════════════
+        // Render
+        // ═══════════════════════════════════════════════════════════════════
+
+        function renderCard(item, idx) {
+            const priorityClass = item.priority === 'critical' ? 'priority-critical' : item.priority === 'high' ? 'priority-high' : '';
+            return `
+        <div class="card type-${item.type} ${priorityClass}" style="animation-delay:${idx * 0.04}s">
+            <div class="card-accent"></div>
+            <span class="card-type">${item.type === 'optim' ? 'optimization' : item.type === 'docs' ? 'documentation' : item.type === 'test' ? 'testing' : item.type}</span>
+            ${item.priority ? `<span class="card-tag" style="margin-left:4px;background:${item.priority === 'critical' ? 'rgba(244,63,94,0.12)' : 'rgba(245,158,11,0.12)'};color:${item.priority === 'critical' ? 'var(--bug)' : 'var(--optim)'}">${item.priority}</span>` : ''}
+            <div class="card-title">${item.title}</div>
+            <div class="card-desc">${item.desc}</div>
+            <div class="card-meta">
+                ${item.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}
+                <span class="card-points">${item.points}</span>
+            </div>
+        </div>
+    `;
+        }
+
+        function filterItems(items) {
+            if (currentFilter === 'all') return items;
+            return items.filter(i => i.type === currentFilter);
+        }
+
+        function renderBoard() {
+            const sprint = SPRINTS[currentSprint];
+            const items = filterItems(sprint.items);
+
+            const buckets = { backlog: [], todo: [], progress: [], done: [] };
+            items.forEach(item => {
+                const key = item.status === 'in-progress' ? 'progress' : item.status;
+                if (buckets[key]) buckets[key].push(item);
+                else buckets.backlog.push(item);
+            });
+
+            ['backlog', 'todo', 'progress', 'done'].forEach(col => {
+                document.getElementById(`body-${col}`).innerHTML = buckets[col].map((item, i) => renderCard(item, i)).join('');
+                document.getElementById(`count-${col}`).textContent = buckets[col].length;
+            });
+
+            document.getElementById('sprintLabel').textContent = `Sprint ${sprint.id}`;
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineView');
+            container.innerHTML = SPRINTS.map((sprint, si) => {
+                const items = filterItems(sprint.items);
+                const isOpen = expandedSprints.has(si);
+                const totalPts = items.reduce((s, i) => s + i.points, 0);
+                const doneCount = items.filter(i => i.status === 'done').length;
+
+                return `
+            <div class="timeline-sprint">
+                <div class="timeline-header" onclick="toggleSprint(${si})">
+                    <div class="timeline-title">
+                        <span>${sprint.name}</span>
+                        <span class="timeline-badge">${items.length} items · ${totalPts} pts</span>
+                        ${doneCount > 0 ? `<span class="timeline-badge" style="background:rgba(16,185,129,0.1);color:#10b981">${doneCount} done</span>` : ''}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <span class="timeline-dates">${sprint.dates}</span>
+                        <span class="timeline-chevron ${isOpen ? 'open' : ''}">▼</span>
+                    </div>
+                </div>
+                <div class="timeline-body ${isOpen ? '' : 'collapsed'}">
+                    ${items.map((item, i) => renderCard(item, i)).join('')}
+                </div>
+            </div>
+        `;
+            }).join('');
+        }
+
+        function renderStats() {
+            const allItems = SPRINTS.flatMap(s => s.items);
+            const filtered = filterItems(allItems);
+            const totalPts = filtered.reduce((s, i) => s + i.points, 0);
+            const byType = { feature: 0, bug: 0, optim: 0, test: 0, docs: 0 };
+            filtered.forEach(i => { if (byType[i.type] !== undefined) byType[i.type]++; });
+            const critical = filtered.filter(i => i.priority === 'critical').length;
+
+            document.getElementById('totalItems').textContent = filtered.length;
+            document.getElementById('totalPoints').textContent = totalPts;
+
+            document.getElementById('statsRow').innerHTML = `
+        <div class="stat-card"><div class="stat-label">Features</div><div class="stat-value" style="color:var(--feature)">${byType.feature}</div><div class="stat-sub">New capabilities</div></div>
+        <div class="stat-card"><div class="stat-label">Bug Fixes</div><div class="stat-value" style="color:var(--bug)">${byType.bug}</div><div class="stat-sub">${critical} critical</div></div>
+        <div class="stat-card"><div class="stat-label">Optimizations</div><div class="stat-value" style="color:var(--optim)">${byType.optim}</div><div class="stat-sub">Performance & infra</div></div>
+        <div class="stat-card"><div class="stat-label">Tests</div><div class="stat-value" style="color:var(--test)">${byType.test}</div><div class="stat-sub">Quality gates</div></div>
+        <div class="stat-card"><div class="stat-label">Documentation</div><div class="stat-value" style="color:var(--docs)">${byType.docs}</div><div class="stat-sub">Knowledge base</div></div>
+        <div class="stat-card"><div class="stat-label">Total Points</div><div class="stat-value" style="color:#818cf8">${totalPts}</div><div class="stat-sub">Across ${SPRINTS.length} sprints</div></div>
+    `;
+        }
+
+        function render() {
+            renderStats();
+            if (currentView === 'board') {
+                document.getElementById('boardView').style.display = 'grid';
+                document.getElementById('timelineView').style.display = 'none';
+                renderBoard();
+            } else {
+                document.getElementById('boardView').style.display = 'none';
+                document.getElementById('timelineView').style.display = 'block';
+                renderTimeline();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // Event Handlers
+        // ═══════════════════════════════════════════════════════════════════
+
+        function toggleSprint(idx) {
+            if (expandedSprints.has(idx)) expandedSprints.delete(idx);
+            else expandedSprints.add(idx);
+            renderTimeline();
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                render();
+            });
+        });
+
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentView = btn.dataset.view;
+                render();
+            });
+        });
+
+        document.getElementById('prevSprint').addEventListener('click', () => {
+            if (currentSprint > 0) { currentSprint--; render(); }
+        });
+        document.getElementById('nextSprint').addEventListener('click', () => {
+            if (currentSprint < SPRINTS.length - 1) { currentSprint++; render(); }
+        });
+
+        // Init
+        render();
+    </script>
+</body>
+
+</html>

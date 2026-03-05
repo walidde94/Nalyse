@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <img id="source" src="temp_fluid.png" style="display:none;" crossOrigin="Anonymous" />
+    <div id="result">Waiting...</div>
+    <div id="debug"></div>
+
+    <script>
+        window.onload = function () {
+            const img = document.getElementById('source');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Checkerboard removal strategy:
+            // The logo is vibrant (Blue, Cyan, Purple).
+            // The background is White (#FFFFFF) and Light Grey (#F0F0F0 or similiar).
+            // We will remove any pixel that has very low saturation.
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                // Calculate Saturation
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                const delta = max - min;
+
+                let saturation = 0;
+                if (max !== 0) {
+                    saturation = delta / max;
+                }
+
+                // Thresholds
+                const isWhite = r > 240 && g > 240 && b > 240;
+                const isGrey = Math.abs(r - g) < 10 && Math.abs(r - b) < 10 && Math.abs(g - b) < 10;
+
+                // If it's low saturation (grey/white) AND bright enough to be background
+                // Logo parts are vibrant, so saturation should be high.
+                // We'll be aggressive: if saturation is low, delete it.
+                if (saturation < 0.1 || isWhite || (isGrey && r > 200)) {
+                    data[i + 3] = 0; // Transparent
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            const base64 = canvas.toDataURL('image/png');
+            document.getElementById('result').innerText = base64;
+            document.getElementById('debug').innerText = 'Processed ' + img.width + 'x' + img.height;
+        };
+    </script>
+</body>
+
+</html>

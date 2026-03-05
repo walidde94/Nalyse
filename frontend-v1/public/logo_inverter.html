@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <img id="source" src="raw_logo.png" style="display:none;" crossOrigin="Anonymous" />
+    <div id="result">Waiting...</div>
+
+    <script>
+        window.onload = function () {
+            const img = document.getElementById('source');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Goal: Create a Light Mode version (Dark Icon on Transparent BG)
+            // Source: White Icon on Dark BG
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                // Brightness 0-255
+                const brightness = (r + g + b) / 3;
+
+                if (brightness < 100) {
+                    // Background (Dark) -> Transparent
+                    data[i + 3] = 0;
+                } else {
+                    // Icon/Text (White) -> Dark Blue/Black for Light Mode
+                    // Let's use a nice dark blue: #0f172a (RGB: 15, 23, 42)
+                    data[i] = 15;
+                    data[i + 1] = 23;
+                    data[i + 2] = 42;
+                    // Keep opacity (or force it high if it was semi-transparent/antialiased)
+                    // We'll trust the original anti-aliasing but darken the color.
+                    // Actually, if we just set color to dark, the anti-aliasing (which relies on alpha blending with the original black bg) might look weird if we don't handle alpha correctly.
+                    // But since we are making bg transparent, we should be fine setting the color to the target dark color.
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            const base64 = canvas.toDataURL('image/png');
+            document.getElementById('result').innerText = base64;
+        };
+    </script>
+</body>
+
+</html>

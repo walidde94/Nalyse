@@ -104,8 +104,8 @@ function AppContent() {
   const [dragActive, setDragActive] = useState(false);
 
   // --- Theme State ---
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
+  const [theme, setTheme] = useState<'dark' | 'light' | 'midnight'>(() => {
+    return (localStorage.getItem('theme') as 'dark' | 'light' | 'midnight') || 'dark';
   });
 
   // Helper for staged analysis progress
@@ -191,7 +191,7 @@ function AppContent() {
   // Listen for external theme changes (from SettingsView)
   useEffect(() => {
     const handleExternalChange = () => {
-      const stored = localStorage.getItem('theme') as 'dark' | 'light';
+      const stored = localStorage.getItem('theme') as 'dark' | 'light' | 'midnight';
       if (stored && stored !== theme) {
         setTheme(stored);
       }
@@ -201,11 +201,17 @@ function AppContent() {
       openTab('settings', 'Settings', e.detail);
     };
 
+    const handleForceReapply = () => {
+      applyTheme(theme);
+    };
+
     window.addEventListener('theme-change', handleExternalChange);
     window.addEventListener('navigate-to-settings', handleNavigateToSettings);
+    window.addEventListener('force-theme-reapply', handleForceReapply);
     return () => {
       window.removeEventListener('theme-change', handleExternalChange);
       window.removeEventListener('navigate-to-settings', handleNavigateToSettings);
+      window.removeEventListener('force-theme-reapply', handleForceReapply);
     };
   }, [theme]);
 
@@ -218,21 +224,150 @@ function AppContent() {
     }
   }, [user]);
 
-  const applyTheme = (newTheme: 'dark' | 'light') => {
+  const applyTheme = (newTheme: 'dark' | 'light' | 'midnight') => {
     document.documentElement.setAttribute('data-theme', newTheme);
-    // Remove legacy inline styles if any
-    const props = [
-      '--bg-app', '--bg-sidebar', '--bg-card', '--bg-surface', '--bg-surface-hover',
-      '--text-primary', '--text-secondary', '--text-tertiary', '--text-inverse',
-      '--border-default', '--border-subtle', '--border-highlight',
-      '--primary', '--primary-hover', '--success', '--warning', '--danger'
+    // Clean up any previous custom theme overrides
+    const customProps = [
+      '--bg-main', '--bg-secondary', '--bg-card', '--bg-surface', '--bg-surface-hover',
+      '--bg-sidebar', '--bg-header', '--bg-elevated',
+      '--primary', '--primary-dark', '--primary-light', '--primary-glow', '--primary-subtle',
+      '--accent', '--accent-light', '--accent-glow',
+      '--secondary-accent', '--secondary-glow',
+      '--text-primary', '--text-secondary', '--text-muted', '--text-tertiary', '--text-inverse', '--text-disabled',
+      '--border-color', '--border-default', '--border-subtle', '--glass-border', '--border-glow', '--border-highlight',
+      '--success', '--warning', '--danger', '--error', '--info',
+      '--theme-blur', '--theme-saturation', '--theme-glow-intensity',
     ];
-    props.forEach(p => document.documentElement.style.removeProperty(p));
-    // We rely on index.css now
+    customProps.forEach(p => document.documentElement.style.removeProperty(p));
+
+    // Remove dynamic aurora if switching away
+    const existingAurora = document.getElementById('dynamic-aurora-style');
+    if (existingAurora) existingAurora.remove();
+
+    // If custom theme, apply user's color overrides
+    if (newTheme === 'midnight') {
+      try {
+        const customColors = JSON.parse(localStorage.getItem('custom-theme-colors') || '{}');
+        if (customColors.primary) {
+          const p = customColors.primary;
+          const a = customColors.accent || p;
+          const bg = customColors.bgMain || '#0d0a04';
+          const text = customColors.textPrimary || '#fef3c7';
+          const glowIntensity = customColors.glowIntensity ?? 50;
+          const blurAmount = customColors.blurAmount ?? 28;
+
+          const hexToRgb = (hex: string) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `${r}, ${g}, ${b}`;
+          };
+
+          // Derive lighter/darker variants
+          const adjustBrightness = (hex: string, factor: number) => {
+            const r = Math.min(255, Math.max(0, Math.round(parseInt(hex.slice(1, 3), 16) * factor)));
+            const g = Math.min(255, Math.max(0, Math.round(parseInt(hex.slice(3, 5), 16) * factor)));
+            const b = Math.min(255, Math.max(0, Math.round(parseInt(hex.slice(5, 7), 16) * factor)));
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+          };
+
+          const bgR = parseInt(bg.slice(1, 3), 16), bgG = parseInt(bg.slice(3, 5), 16), bgB = parseInt(bg.slice(5, 7), 16);
+          const pRgb = hexToRgb(p);
+          const aRgb = hexToRgb(a);
+          const glowFactor = glowIntensity / 100;
+
+          // Core palette
+          document.documentElement.style.setProperty('--primary', p);
+          document.documentElement.style.setProperty('--primary-dark', adjustBrightness(p, 0.8));
+          document.documentElement.style.setProperty('--primary-light', adjustBrightness(p, 1.3));
+          document.documentElement.style.setProperty('--primary-glow', `rgba(${pRgb}, ${0.45 * glowFactor})`);
+          document.documentElement.style.setProperty('--primary-subtle', `rgba(${pRgb}, ${0.12 * glowFactor})`);
+          document.documentElement.style.setProperty('--accent', a);
+          document.documentElement.style.setProperty('--accent-light', adjustBrightness(a, 1.3));
+          document.documentElement.style.setProperty('--accent-glow', `rgba(${aRgb}, ${0.4 * glowFactor})`);
+
+          // Backgrounds — derive from bgMain
+          document.documentElement.style.setProperty('--bg-main', bg);
+          document.documentElement.style.setProperty('--bg-secondary', adjustBrightness(bg, 1.3));
+          document.documentElement.style.setProperty('--bg-card', `rgba(${Math.min(255, bgR + 15)}, ${Math.min(255, bgG + 10)}, ${Math.min(255, bgB + 5)}, 0.7)`);
+          document.documentElement.style.setProperty('--bg-surface', adjustBrightness(bg, 1.5));
+          document.documentElement.style.setProperty('--bg-surface-hover', adjustBrightness(bg, 1.8));
+          document.documentElement.style.setProperty('--bg-sidebar', `rgba(${bgR}, ${bgG}, ${bgB}, 0.92)`);
+          document.documentElement.style.setProperty('--bg-header', `rgba(${bgR}, ${bgG}, ${bgB}, 0.85)`);
+          document.documentElement.style.setProperty('--bg-elevated', `rgba(${Math.min(255, bgR + 20)}, ${Math.min(255, bgG + 14)}, ${Math.min(255, bgB + 7)}, 0.88)`);
+
+          // Text
+          document.documentElement.style.setProperty('--text-primary', text);
+          const tR = parseInt(text.slice(1, 3), 16), tG = parseInt(text.slice(3, 5), 16), tB = parseInt(text.slice(5, 7), 16);
+          document.documentElement.style.setProperty('--text-secondary', `rgba(${tR}, ${tG}, ${tB}, 0.72)`);
+          document.documentElement.style.setProperty('--text-muted', `rgba(${tR}, ${tG}, ${tB}, 0.48)`);
+          document.documentElement.style.setProperty('--text-tertiary', `rgba(${tR}, ${tG}, ${tB}, 0.32)`);
+
+          // Borders
+          document.documentElement.style.setProperty('--border-color', `rgba(${pRgb}, ${0.2 * glowFactor})`);
+          document.documentElement.style.setProperty('--border-default', `rgba(${pRgb}, ${0.15 * glowFactor})`);
+          document.documentElement.style.setProperty('--border-subtle', `rgba(${pRgb}, ${0.1 * glowFactor})`);
+          document.documentElement.style.setProperty('--glass-border', `rgba(${pRgb}, ${0.06 * glowFactor})`);
+          document.documentElement.style.setProperty('--border-glow', `rgba(${pRgb}, ${0.35 * glowFactor})`);
+
+          // Theme-specific controls
+          document.documentElement.style.setProperty('--theme-blur', `${blurAmount}px`);
+          document.documentElement.style.setProperty('--theme-saturation', `${120 + blurAmount * 2}%`);
+
+          // Dynamic Aurora — generate CSS keyframes matching user palette
+          const auroraOpacity = (0.12 * glowFactor).toFixed(3);
+          const auroraOpacity2 = (0.08 * glowFactor).toFixed(3);
+          const auroraOpacity3 = (0.05 * glowFactor).toFixed(3);
+          const styleEl = document.createElement('style');
+          styleEl.id = 'dynamic-aurora-style';
+          styleEl.textContent = `
+            [data-theme='midnight'] body::before {
+              content: '';
+              position: fixed;
+              inset: 0;
+              z-index: 0;
+              pointer-events: none;
+              background:
+                radial-gradient(ellipse 80% 60% at 10% 20%, rgba(${pRgb}, ${auroraOpacity}) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 85% 70%, rgba(${aRgb}, ${auroraOpacity2}) 0%, transparent 55%),
+                radial-gradient(ellipse 70% 40% at 50% 90%, rgba(${pRgb}, ${auroraOpacity3}) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 50% at 70% 10%, rgba(${aRgb}, ${auroraOpacity3}) 0%, transparent 50%);
+              animation: dynamic-aurora 18s ease-in-out infinite alternate;
+            }
+            @keyframes dynamic-aurora {
+              0% {
+                background:
+                  radial-gradient(ellipse 80% 60% at 10% 20%, rgba(${pRgb}, ${auroraOpacity}) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 85% 70%, rgba(${aRgb}, ${auroraOpacity2}) 0%, transparent 55%),
+                  radial-gradient(ellipse 70% 40% at 50% 90%, rgba(${pRgb}, ${auroraOpacity3}) 0%, transparent 50%),
+                  radial-gradient(ellipse 50% 50% at 70% 10%, rgba(${aRgb}, ${auroraOpacity3}) 0%, transparent 50%);
+              }
+              50% {
+                background:
+                  radial-gradient(ellipse 70% 50% at 50% 60%, rgba(${aRgb}, ${auroraOpacity}) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 60% at 20% 20%, rgba(${pRgb}, ${auroraOpacity2}) 0%, transparent 50%),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(${pRgb}, ${auroraOpacity3}) 0%, transparent 50%),
+                  radial-gradient(ellipse 60% 45% at 85% 30%, rgba(${aRgb}, ${auroraOpacity2}) 0%, transparent 55%);
+              }
+              100% {
+                background:
+                  radial-gradient(ellipse 75% 55% at 60% 40%, rgba(${pRgb}, ${auroraOpacity}) 0%, transparent 58%),
+                  radial-gradient(ellipse 55% 55% at 10% 70%, rgba(${aRgb}, ${auroraOpacity2}) 0%, transparent 50%),
+                  radial-gradient(ellipse 65% 45% at 90% 10%, rgba(${pRgb}, ${auroraOpacity3}) 0%, transparent 52%),
+                  radial-gradient(ellipse 60% 50% at 35% 85%, rgba(${aRgb}, ${auroraOpacity2}) 0%, transparent 55%);
+              }
+            }
+          `;
+          document.head.appendChild(styleEl);
+        }
+      } catch (e) { /* use defaults from CSS */ }
+    }
   };
 
   const handleThemeToggle = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    const cycle: Array<'dark' | 'light' | 'midnight'> = ['dark', 'light', 'midnight'];
+    const currentIdx = cycle.indexOf(theme);
+    const newTheme = cycle[(currentIdx + 1) % cycle.length];
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
   };
@@ -701,7 +836,7 @@ function AppContent() {
     { id: 'dash', label: 'Go to Dashboard', icon: <LayoutDashboard size={18} />, action: () => openTab('dashboard', 'Dashboard'), category: 'Navigation' },
     { id: 'settings', label: 'Open Settings', icon: <Settings size={18} />, action: () => openTab('settings', 'Settings'), category: 'Navigation' },
     { id: 'upload', label: 'Upload New File', icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', 'Dashboard'); document.getElementById('file-input')?.click(); }, category: 'Actions' },
-    { id: 'theme', label: `Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`, icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance' },
+    { id: 'theme', label: `Switch to ${theme === 'dark' ? 'Light' : theme === 'light' ? 'Custom' : 'Dark'} Mode`, icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance' },
     { id: 'simulation', label: 'Open Simulation Engine', icon: <LayoutDashboard size={18} />, action: () => openTab('simulation', 'Simulation Engine'), category: 'Navigation' },
     { id: 'logout', label: 'Logout', icon: <LogOut size={18} />, action: logout, category: 'Account' },
   ];
@@ -816,7 +951,7 @@ function AppContent() {
                     onDeleteGroup={handleDeleteGroup}
                     dragActive={dragActive}
                     handleDrag={(e: any) => { e.preventDefault(); setDragActive(e.type === 'dragenter' || e.type === 'dragover'); }}
-                    handleDrop={(e: any) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files[0]) handleUpload(e.dataTransfer.files[0]); }}
+                    handleDrop={(e: any) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files.length > 0) handleUpload(Array.from(e.dataTransfer.files)); }}
                     onViewReport={() => openTab('projects', 'Strategic Board')}
                   />
                 )}
