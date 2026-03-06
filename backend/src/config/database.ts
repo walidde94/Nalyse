@@ -41,8 +41,15 @@ const getOptions = (): any => {
     };
 
     if (process.env.DATABASE_URL) {
-        // Favor URL if provided (standard for Render/Heroku)
-        config.url = process.env.DATABASE_URL;
+        // Favor URL if provided. 
+        // IMPORTANT: Strip Prisma-specific flags (like pgbouncer=true) which can confuse TypeORM's underlying driver.
+        let url = process.env.DATABASE_URL;
+        if (url.includes('?')) {
+            const [base, query] = url.split('?');
+            const params = query.split('&').filter(p => !p.includes('pgbouncer') && !p.includes('workaround'));
+            url = params.length > 0 ? `${base}?${params.join('&')}` : base;
+        }
+        config.url = url;
     } else {
         config.host = process.env.DB_HOST || 'localhost';
         config.port = parseInt(process.env.DB_PORT || '5432');
@@ -52,8 +59,8 @@ const getOptions = (): any => {
     }
 
     // Enhanced SSL Handling for Neon/Supabase/Render
-    // Enable SSL if in production OR if explicitly requested via DB_SSL env var
-    const useSSL = isProd || process.env.DB_SSL === 'true' || (config.url && config.url.includes('sslmode=require'));
+    // Supabase and Render require SSL for external connections
+    const useSSL = isProd || process.env.DB_SSL === 'true' || (config.url && (config.url.includes('sslmode=require') || config.url.includes('supabase.co') || config.url.includes('pooler.supabase.com')));
 
     if (useSSL) {
         config.ssl = {
