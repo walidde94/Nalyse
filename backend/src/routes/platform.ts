@@ -55,11 +55,11 @@ router.get('/analytics', authenticate, async (req: AuthRequest, res: Response) =
         });
 
         // ═══ ANALYSIS PERFORMANCE ═══
-        const completedAnalyses = allAnalyses.filter(a => a.status === 'completed' && a.processingTimeMs);
-        const failedAnalyses = allAnalyses.filter(a => a.status === 'failed');
-        const pendingAnalyses = allAnalyses.filter(a => a.status === 'pending' || a.status === 'processing');
+        const completedAnalyses = allAnalyses.filter((a: any) => a.status === 'completed' && a.processingTimeMs);
+        const failedAnalyses = allAnalyses.filter((a: any) => a.status === 'failed');
+        const pendingAnalyses = allAnalyses.filter((a: any) => a.status === 'pending' || a.status === 'processing');
 
-        const processingTimes = completedAnalyses.map(a => a.processingTimeMs).filter(Boolean) as number[];
+        const processingTimes = completedAnalyses.map((a: any) => a.processingTimeMs).filter(Boolean) as number[];
         const avgProcessingTime = processingTimes.length > 0 ? processingTimes.reduce((a, b) => a + b, 0) / processingTimes.length : 0;
         const maxProcessingTime = processingTimes.length > 0 ? Math.max(...processingTimes) : 0;
         const minProcessingTime = processingTimes.length > 0 ? Math.min(...processingTimes) : 0;
@@ -78,7 +78,7 @@ router.get('/analytics', authenticate, async (req: AuthRequest, res: Response) =
 
         // Analysis timeline (analyses per day)
         const analysisPerDay: Record<string, { completed: number; failed: number; total: number; avgTime: number; times: number[] }> = {};
-        allAnalyses.forEach(a => {
+        allAnalyses.forEach((a: any) => {
             const day = new Date(a.createdAt).toISOString().split('T')[0];
             if (!analysisPerDay[day]) analysisPerDay[day] = { completed: 0, failed: 0, total: 0, avgTime: 0, times: [] };
             analysisPerDay[day].total++;
@@ -109,10 +109,10 @@ router.get('/analytics', authenticate, async (req: AuthRequest, res: Response) =
         ];
 
         // ═══ USER ACTIVITY ═══
-        const userActivity = allUsers.map(u => {
-            const userFiles = allFiles.filter(f => f.ownerId === u.id);
-            const userAnalyses = allAnalyses.filter(a => a.createdById === u.id);
-            const storageUsed = userFiles.reduce((sum, f) => sum + (Number(f.size) || 0), 0);
+        const userActivity = allUsers.map((u: any) => {
+            const userFiles = allFiles.filter((f: any) => f.ownerId === u.id);
+            const userAnalyses = allAnalyses.filter((a: any) => a.createdById === u.id);
+            const storageUsed = userFiles.reduce((sum: number, f: any) => sum + (Number(f.size) || 0), 0);
             return {
                 id: u.id,
                 email: u.email,
@@ -135,14 +135,14 @@ router.get('/analytics', authenticate, async (req: AuthRequest, res: Response) =
         const last7d = new Date(now.getTime() - 7 * 86400000);
         const last30d = new Date(now.getTime() - 30 * 86400000);
 
-        const uploads7d = allFiles.filter(f => new Date(f.createdAt) > last7d).length;
-        const uploads30d = allFiles.filter(f => new Date(f.createdAt) > last30d).length;
-        const analyses7d = allAnalyses.filter(a => new Date(a.createdAt) > last7d).length;
-        const analyses30d = allAnalyses.filter(a => new Date(a.createdAt) > last30d).length;
+        const uploads7d = allFiles.filter((f: any) => new Date(f.createdAt) > last7d).length;
+        const uploads30d = allFiles.filter((f: any) => new Date(f.createdAt) > last30d).length;
+        const analyses7d = allAnalyses.filter((a: any) => new Date(a.createdAt) > last7d).length;
+        const analyses30d = allAnalyses.filter((a: any) => new Date(a.createdAt) > last30d).length;
 
         // Upload timeline
         const uploadPerDay: Record<string, number> = {};
-        allFiles.forEach(f => {
+        allFiles.forEach((f: any) => {
             const day = new Date(f.createdAt).toISOString().split('T')[0];
             uploadPerDay[day] = (uploadPerDay[day] || 0) + 1;
         });
@@ -156,14 +156,14 @@ router.get('/analytics', authenticate, async (req: AuthRequest, res: Response) =
 
         // File type breakdown
         const filesByType: Record<string, number> = {};
-        allFiles.forEach(f => {
+        allFiles.forEach((f: any) => {
             const ext = (f.originalName || f.filename || '').split('.').pop()?.toLowerCase() || 'other';
             filesByType[ext] = (filesByType[ext] || 0) + 1;
         });
 
         // File size distribution
-        const fileSizes = allFiles.map(f => Number(f.size) || 0);
-        const totalStorage = fileSizes.reduce((a, b) => a + b, 0);
+        const fileSizes = allFiles.map((f: any) => Number(f.size) || 0);
+        const totalStorage = fileSizes.reduce((a: number, b: number) => a + b, 0);
 
         // ═══ RESPONSE ═══
         res.json({

@@ -6,7 +6,7 @@ export type NotificationPriority = 'low' | 'medium' | 'high' | 'critical' | stri
 
 export interface CreateNotificationInput {
     userId: string;
-    organizationId?: string;
+    organizationId?: string | null;
     title: string;
     message: string;
     category?: NotificationCategory;

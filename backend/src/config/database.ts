@@ -1,5 +1,7 @@
 import path from 'path';
 import { DataSource } from 'typeorm';
+import { PrismaClient } from '@prisma/client';
+import { createClient } from '@clickhouse/client';
 import { User } from '../entities/User';
 import { Organization } from '../entities/Organization';
 import { File } from '../entities/File';
@@ -84,3 +86,14 @@ export const initializeDatabase = async () => {
         throw error;
     }
 };
+
+// ─── Prisma Client (used by sprint-6 modules) ──────────────────────────────
+export const prisma = new PrismaClient();
+
+// ─── ClickHouse Client (used by ClickHouseService) ─────────────────────────
+export const clickhouse = createClient({
+    url: process.env.CLICKHOUSE_URL || 'http://localhost:8123',
+    username: process.env.CLICKHOUSE_USER || 'default',
+    password: process.env.CLICKHOUSE_PASSWORD || '',
+    database: process.env.CLICKHOUSE_DATABASE || 'default',
+});

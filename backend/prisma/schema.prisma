@@ -3,39 +3,227 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+model Organization {
+  id                    String    @id @default(uuid())
+  name                  String    @unique
+  slug                  String?   @unique
+  subscriptionTier      String    @default("free")
+  plan                  String    @default("free")
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  subscriptionStartedAt DateTime?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean   @default(false)
+  storageUsed           BigInt    @default(0)
+  storageLimit          BigInt    @default(104857600)
+  userLimit             Int       @default(1)
+  fileLimit             Int       @default(5)
+  maxUsers              Int       @default(5)
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  users       User[]
+  files       File[]
+  invitations UserInvitation[]
+  schedules   Schedule[]
+  webhooks    Webhook[]
+  alertRules  AlertRule[]
+  reports     Report[]
+}
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  files     File[]
-  reports   Report[]
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String
+  firstName      String?
+  lastName       String?
+  role           String    @default("member")
+  plan           String    @default("free")
+  isActive       Boolean   @default(true)
+  bio            String?
+  displayName    String?
+  avatarUrl      String?
+  stripeCustomerId      String?
+  subscriptionStatus    String  @default("inactive")
+  lastLogin      DateTime?
+  organizationId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization    Organization?    @relation(fields: [organizationId], references: [id])
+  files           File[]
+  analyses        Analysis[]
+  reports         Report[]
+  notifications   Notification[]
+  invitationsSent UserInvitation[] @relation("invitedBy")
+  analysisConfigs AnalysisConfiguration[]
+  schedules       Schedule[]
+  webhooks        Webhook[]
+  alertRules      AlertRule[]
 }
 
 model File {
-  id        Int      @id @default(autoincrement())
-  filename  String
-  path      String
-  mimetype  String
-  size      Int
-  createdAt DateTime @default(now())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  isFavorite Boolean @default(false)
-  status     String  @default("ready") // ready, processing, error, archived
+  id             String    @id @default(uuid())
+  filename       String
+  originalName   String?
+  mimeType       String?
+  size           BigInt    @default(0)
+  path           String?
+  s3Key          String?
+  status         String    @default("ready")
+  isFavorite     Boolean   @default(false)
+  isDeleted      Boolean   @default(false)
+  ownerId        String
+  organizationId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  owner        User          @relation(fields: [ownerId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  analyses     Analysis[]
+  schedules    Schedule[]
+}
+
+model Analysis {
+  id              String    @id @default(uuid())
+  fileId          String
+  createdById     String
+  status          String    @default("pending")
+  results         Json?
+  insights        Json?
+  statistics      Json?
+  processingTimeMs Int?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  file      File @relation(fields: [fileId], references: [id])
+  createdBy User @relation(fields: [createdById], references: [id])
 }
 
 model Report {
-  id        Int      @id @default(autoincrement())
-  title     String
-  config    String
-  createdAt DateTime @default(now())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  shareToken String? @unique
-  isPublic   Boolean @default(false)
+  id             String    @id @default(uuid())
+  title          String
+  config         Json
+  userId         String
+  organizationId String?
+  shareToken     String?   @unique
+  isPublic       Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+}
+
+model Notification {
+  id             String    @id @default(uuid())
+  userId         String
+  organizationId String?
+  title          String
+  message        String
+  category       String    @default("info")
+  priority       String    @default("medium")
+  source         String    @default("SYSTEM")
+  iconType       String    @default("bell")
+  color          String    @default("#6366f1")
+  actionLabel    String?
+  actionUrl      String?
+  prediction     String?
+  confidence     Float?
+  impactScore    Float?
+  metadata       Json      @default("{}")
+  read           Boolean   @default(false)
+  pinned         Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model UserInvitation {
+  id             String    @id @default(uuid())
+  email          String
+  role           String    @default("member")
+  token          String    @unique
+  organizationId String
+  inviterId      String
+  expiresAt      DateTime
+  status         String    @default("pending")
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  inviter      User         @relation("invitedBy", fields: [inviterId], references: [id])
+}
+
+model AnalysisConfiguration {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  mode        String    @default("standard")
+  isPreset    Boolean   @default(false)
+  isBuiltIn   Boolean   @default(false)
+  config      Json
+  ownerId     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  owner User? @relation(fields: [ownerId], references: [id])
+}
+
+model Schedule {
+  id                String    @id @default(uuid())
+  name              String
+  cronExpression    String
+  targetFileId      String?
+  config            Json?
+  isActive          Boolean   @default(true)
+  organizationId    String
+  createdByUserId   String
+  lastRun           DateTime?
+  nextRun           DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  createdBy     User         @relation(fields: [createdByUserId], references: [id])
+  targetFile    File?        @relation(fields: [targetFileId], references: [id])
+}
+
+model Webhook {
+  id                String    @id @default(uuid())
+  name              String
+  url               String
+  secret            String?
+  events            Json      @default("[\"analysis.completed\"]")
+  isActive          Boolean   @default(true)
+  organizationId    String
+  createdByUserId   String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  createdBy     User         @relation(fields: [createdByUserId], references: [id])
+}
+
+model AlertRule {
+  id                String    @id @default(uuid())
+  name              String
+  description       String?
+  metric            String
+  operator          String
+  threshold         Float
+  actions           Json      @default("{}")
+  isActive          Boolean   @default(true)
+  organizationId    String
+  createdByUserId   String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  createdBy     User         @relation(fields: [createdByUserId], references: [id])
 }
