@@ -32,7 +32,7 @@ const getOptions = (): any => {
     // Harden production configuration
     const config: any = {
         type: 'postgres',
-        synchronize: true, // Be careful with this in real production, but keeping it as per existing setup
+        synchronize: !isProd, // NEVER auto-synchronize in production — use migrations instead
         logging: false,
         entities,
         migrations: [path.join(__dirname, '../migrations/**/*.{ts,js}')],
