@@ -128,7 +128,7 @@ router.get('/analytics', authenticate, async (req: AuthRequest, res: Response) =
                 // Calculate login frequency
                 accountAgeDays: Math.max(1, Math.floor((Date.now() - new Date(u.createdAt).getTime()) / 86400000)),
             };
-        }).sort((a, b) => b.analysisCount - a.analysisCount);
+        }).sort((a: any, b: any) => b.analysisCount - a.analysisCount);
 
         // ═══ USAGE METRICS ═══
         const now = new Date();
