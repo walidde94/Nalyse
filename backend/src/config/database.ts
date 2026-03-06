@@ -76,11 +76,21 @@ export const AppDataSource = new DataSource(getOptions());
 export const initializeDatabase = async () => {
     try {
         const options = getOptions();
-        const connectionTarget = options.url
-            ? options.url.split('@')[1] // Log just the host part for security
-            : `${options.host}:${options.port}`;
+        let connectionTarget = '';
 
-        console.log(`🔌 Attempting to connect to database at: ${connectionTarget}`);
+        if (options.url) {
+            // Log username and host while hiding password: postgresql://username:****@host:port/db
+            const match = options.url.match(/postgresql:\/\/(.*?):.*?@(.*?)\//);
+            if (match) {
+                connectionTarget = `${match[1]}@${match[2]}`;
+            } else {
+                connectionTarget = options.url.split('@')[1] || 'unknown-host';
+            }
+        } else {
+            connectionTarget = `${options.username}@${options.host}:${options.port}`;
+        }
+
+        console.log(`🔌 Initializing database connection for: ${connectionTarget}`);
         await AppDataSource.initialize();
         console.log('✅ Database connection established.');
     } catch (error: any) {
