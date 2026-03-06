@@ -14,7 +14,6 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@prisma/client": "^5.22.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -33,7 +32,6 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
-    "prisma": "^5.22.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
@@ -68,6 +66,8 @@
     "socket.io": "^4.8.3",
     "stripe": "^20.3.1",
     "typeorm": "^0.3.28",
+    "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0",
     "uuid": "^13.0.0"
   }
 }
