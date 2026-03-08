@@ -48,6 +48,7 @@ const AutomationView = React.lazy(() => import('./features/automation/Automation
 const OrganizationView = React.lazy(() => import('./features/organization/OrganizationView').then(m => ({ default: m.OrganizationView })));
 const CollaborationView = React.lazy(() => import('./features/collaboration/CollaborationView').then(m => ({ default: m.CollaborationView })));
 const WebhookSystemView = React.lazy(() => import('./features/webhooks/WebhookSystemView').then(m => ({ default: m.WebhookSystemView })));
+const EmbedSDKView = React.lazy(() => import('./features/embed/EmbedSDKView').then(m => ({ default: m.EmbedSDKView })));
 
 
 
@@ -1058,6 +1059,10 @@ function AppContent() {
 
                 {tab.type === 'webhooks' && (
                   <WebhookSystemView token={token || ''} />
+                )}
+
+                {tab.type === 'embed' && (
+                  <EmbedSDKView token={token || ''} />
                 )}
 
                 {tab.type === 'diff' && (
