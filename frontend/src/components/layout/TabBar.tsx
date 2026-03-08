@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     LayoutDashboard, Settings, ArrowRightLeft, FileText,
     Database, Code2, Map, Users, X, Trash2,
-    ArrowRightFromLine, ArrowLeftFromLine, Files, BarChart3, Bot, Sparkles, Network, GitCompareArrows, Activity, ShieldAlert, Landmark, FlaskConical
+    ArrowRightFromLine, ArrowLeftFromLine, Files, BarChart3, Bot, Sparkles, Network, GitCompareArrows, Activity, ShieldAlert, Landmark, FlaskConical, Building2
 } from 'lucide-react';
 
 export interface TabType {
     id: string;
     title: string;
-    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'automation';
+    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'automation' | 'organization';
     data?: any;
     icon?: React.ReactNode;
 }
@@ -94,6 +94,7 @@ export const TabBar = ({
             'anomaly': <ShieldAlert size={13} />,
             'financial': <Landmark size={13} />,
             'simulation': <FlaskConical size={13} />,
+            'organization': <Building2 size={13} />,
 
         };
         return iconMap[tab.type] || <FileText size={13} />;

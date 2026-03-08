@@ -45,6 +45,7 @@ const AnomalyDetectionView = React.lazy(() => import('./features/anomaly/Anomaly
 const FinancialRiskView = React.lazy(() => import('./features/financial/FinancialRiskView').then(m => ({ default: m.FinancialRiskView })));
 const SimulationView = React.lazy(() => import('./features/simulation/SimulationView').then(m => ({ default: m.SimulationView })));
 const AutomationView = React.lazy(() => import('./features/automation/AutomationView').then(m => ({ default: m.AutomationView })));
+const OrganizationView = React.lazy(() => import('./features/organization/OrganizationView').then(m => ({ default: m.OrganizationView })));
 
 
 
@@ -1043,6 +1044,10 @@ function AppContent() {
 
                 {tab.type === 'automation' && (
                   <AutomationView />
+                )}
+
+                {tab.type === 'organization' && (
+                  <OrganizationView token={token || ''} />
                 )}
 
                 {tab.type === 'diff' && (

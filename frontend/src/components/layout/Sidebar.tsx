@@ -25,7 +25,8 @@ import {
     Activity,
     ShieldAlert,
     Landmark,
-    FlaskConical
+    FlaskConical,
+    Building2
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -211,6 +212,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     isActive={currentView === 'migration'} collapsed={collapsed}
                     hovered={hoveredItem === 'migration'} onHover={setHoveredItem}
                     onClick={() => onViewChange('migration')} />
+
+                <NavItem id="organization" label="Organization & RBAC" icon={<Building2 size={19} />}
+                    isActive={currentView === 'organization'} collapsed={collapsed}
+                    hovered={hoveredItem === 'organization'} onHover={setHoveredItem}
+                    onClick={() => onViewChange('organization')} />
 
                 <NavItem id="settings" label={t('nav.settings')} icon={<Settings size={19} />}
                     isActive={currentView === 'settings'} collapsed={collapsed}
