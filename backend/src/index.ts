@@ -22,6 +22,7 @@ import sourceRoutes from './routes/sources';
 import agentRoutes from './routes/agents';
 import pulseRoutes from './routes/pulse';
 import subscriptionRoutes from './routes/subscription';
+import aiRoutes from './routes/ai';
 
 
 const allowedOrigins = [
@@ -130,6 +131,7 @@ app.use('/api/sources', sourceRoutes);
 
 
 app.use('/api/agents', agentRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.use('/api/pulse', pulseRoutes);
 app.use('/api/subscription', subscriptionRoutes);
