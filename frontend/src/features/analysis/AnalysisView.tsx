@@ -45,13 +45,15 @@ import {
     Zap,
     Activity,
     Microscope,
-    Rocket
+    Rocket,
+    Sparkles
 } from 'lucide-react';
 import { ElasticSearch } from './components/ElasticSearch';
 import { ElasticFilterBar } from './components/ElasticFilterBar';
 import { ExecutiveFindings } from './components/ExecutiveFindings';
 import { PythonStudio } from './components/PythonStudio';
 import { DeployModal } from './components/DeployModal';
+import { NLQueryBar } from './components/NLQueryBar';
 
 interface ChartOption {
     title: string;
@@ -165,7 +167,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
     const { token } = useAuth();
     const { addToast } = useToast();
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'data' | 'sql' | 'insights' | 'presentation' | 'builder' | 'advanced' | 'graph' | 'map' | 'python'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'data' | 'sql' | 'insights' | 'presentation' | 'builder' | 'advanced' | 'graph' | 'map' | 'python' | 'ai'>('overview');
+    const [isNLQueryOpen, setIsNLQueryOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
     // SQL State
@@ -806,6 +809,28 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
         }
     };
 
+    // Compute schema for NL Query Bar
+    const nlqSchema = useMemo(() => {
+        if (!localData.length) return {};
+        const schema: Record<string, string> = {};
+        Object.keys(localData[0]).forEach(col => {
+            const val = localData[0][col];
+            schema[col] = typeof val === 'number' || (!isNaN(Number(val)) && String(val).trim() !== '') ? 'number' : 'string';
+        });
+        return schema;
+    }, [localData]);
+
+    // ⌘J shortcut for NL Query bar
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
+                e.preventDefault();
+                setIsNLQueryOpen(p => !p);
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, []);
 
     // Presentation Mode Loop
     useEffect(() => {
@@ -1387,6 +1412,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                         {
                             title: 'Data Analysis',
                             items: [
+                                { id: 'ai', icon: <Sparkles size={18} />, label: 'AI Query', roles: ['executive', 'analyst'], badge: 'NEW' },
                                 { id: 'overview', icon: <LayoutTemplate size={18} />, label: 'Overview', roles: ['executive', 'analyst'] },
                                 { id: 'builder', icon: <PenTool size={18} />, label: 'Visual Builder', roles: ['executive', 'analyst'] },
                                 { id: 'graph', icon: <Network size={18} />, label: 'Graph View', roles: ['analyst'] },
@@ -1446,6 +1472,17 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                     >
                                         <span style={{ color: activeTab === tab.id ? '#fff' : 'inherit' }}>{tab.icon}</span>
                                         {!isSidebarCollapsed && <span className="font-semibold" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{tab.label}</span>}
+                                        {!isSidebarCollapsed && tab.badge && (
+                                            <span style={{
+                                                marginLeft: 'auto', padding: '1px 6px', borderRadius: 99,
+                                                fontSize: 8, fontWeight: 900, letterSpacing: '0.1em',
+                                                textTransform: 'uppercase',
+                                                background: activeTab === tab.id ? 'rgba(255,255,255,0.25)' : 'rgba(99,102,241,0.2)',
+                                                color: activeTab === tab.id ? '#fff' : '#818cf8',
+                                                border: `1px solid ${activeTab === tab.id ? 'rgba(255,255,255,0.3)' : 'rgba(99,102,241,0.3)'}`,
+                                                animation: 'pulse 2s infinite',
+                                            }}>{tab.badge}</span>
+                                        )}
                                         {activeTab === tab.id && (
                                             <motion.div
                                                 layoutId="activeTabInner"
@@ -2252,6 +2289,103 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                         {activeTab === 'python' && (
                             <PythonStudio data={localData} />
                         )}
+
+                        {/* ── AI QUERY TAB ── */}
+                        {activeTab === 'ai' && (
+                            <div className="flex flex-col h-full overflow-y-auto" style={{ padding: '24px' }}>
+                                {/* Hero banner for AI Query */}
+                                <div style={{
+                                    padding: '28px 32px',
+                                    borderRadius: '20px',
+                                    background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 50%, rgba(236,72,153,0.05) 100%)',
+                                    border: '1px solid rgba(99,102,241,0.2)',
+                                    marginBottom: '24px',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                }}>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)' }} />
+                                    <div style={{ position: 'absolute', right: -20, top: -20, opacity: 0.06 }}>
+                                        <BrainCircuit size={160} />
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                                        <div style={{
+                                            padding: '8px', borderRadius: 12,
+                                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                            color: '#fff', display: 'flex'
+                                        }}>
+                                            <Sparkles size={20} />
+                                        </div>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <h2 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>AI Natural Language Query</h2>
+                                                <span style={{
+                                                    padding: '2px 8px', borderRadius: 99, fontSize: 9, fontWeight: 900,
+                                                    textTransform: 'uppercase', letterSpacing: '0.15em',
+                                                    background: 'rgba(99,102,241,0.2)', color: '#818cf8',
+                                                    border: '1px solid rgba(99,102,241,0.3)'
+                                                }}>Phase 1 — Ultimate Nalyse</span>
+                                            </div>
+                                            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '4px 0 0', fontWeight: 500 }}>
+                                                Ask questions in plain English. The AI reads your dataset schema, generates the query, executes it, and picks the best chart automatically.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsNLQueryOpen(true)}
+                                        style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: 10,
+                                            padding: '12px 24px', borderRadius: 14,
+                                            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                                            color: '#fff', fontWeight: 800, fontSize: 14,
+                                            border: 'none', cursor: 'pointer',
+                                            boxShadow: '0 4px 20px rgba(99,102,241,0.4)',
+                                        }}
+                                    >
+                                        <Sparkles size={16} />
+                                        Open Query Bar
+                                        <span style={{
+                                            padding: '2px 7px', borderRadius: 6,
+                                            background: 'rgba(255,255,255,0.2)',
+                                            fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 700
+                                        }}>⌘J</span>
+                                    </button>
+                                </div>
+
+                                {/* Feature cards */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
+                                    {[
+                                        { icon: '🧠', title: 'Plain English Queries', desc: 'Type like you talk. No SQL needed.' },
+                                        { icon: '📊', title: 'Auto Chart Selection', desc: 'AI picks bar, line, pie or table for you.' },
+                                        { icon: '💡', title: 'Instant Interpretation', desc: 'Each result includes a plain-English explanation.' },
+                                        { icon: '🔗', title: 'Follow-up Questions', desc: 'AI suggests 3 next questions to explore.' },
+                                    ].map((f, i) => (
+                                        <div key={i} style={{
+                                            padding: '18px 20px', borderRadius: 16,
+                                            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                                        }}>
+                                            <div style={{ fontSize: 24, marginBottom: 10 }}>{f.icon}</div>
+                                            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>{f.title}</div>
+                                            <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{f.desc}</div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <button
+                                        onClick={() => setIsNLQueryOpen(true)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 8,
+                                            padding: '10px 22px', borderRadius: 12,
+                                            background: 'var(--bg-surface)', border: '1px solid rgba(99,102,241,0.3)',
+                                            color: '#818cf8', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                                        }}
+                                    >
+                                        <Zap size={14} />
+                                        Try: "Show me the top 10 records by value"
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                         {activeTab === 'builder' && (
                             <div className="flex flex-col gap-6 fade-in h-full p-2 relative overflow-y-auto">
                                 {/* Ambient Backlight */}
@@ -2731,6 +2865,14 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                 onClose={() => setShowDeployModal(false)}
                 analysis={analysis}
                 onDeploy={handleDeployMethod}
+            />
+
+            {/* AI Natural Language Query Bar */}
+            <NLQueryBar
+                data={localData}
+                schema={nlqSchema}
+                isOpen={isNLQueryOpen}
+                onClose={() => setIsNLQueryOpen(false)}
             />
 
         </div >
