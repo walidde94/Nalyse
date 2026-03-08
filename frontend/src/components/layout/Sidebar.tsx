@@ -38,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     const [hoveredItem, setHoveredItem] = useState<string | null>(null);
     const { t } = useLanguage();
     const { user } = useAuth();
-    const isPro = (user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro';
+    const isPro = user && ((user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro');
 
     const NAV_GROUPS = [
         {
