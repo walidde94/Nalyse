@@ -27,7 +27,8 @@ import {
     Landmark,
     FlaskConical,
     Building2,
-    MessageSquare
+    MessageSquare,
+    Webhook
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -65,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 { id: 'nexus', label: 'Nexus AI', icon: <BrainCircuit size={19} /> },
                 { id: 'logistics', label: 'Road Intelligence', icon: <Map size={19} /> },
                 { id: 'developer', label: 'Developer API', icon: <Code2 size={19} /> },
+                { id: 'webhooks', label: 'Webhooks & API', icon: <Webhook size={19} /> },
             ]
         },
         {
