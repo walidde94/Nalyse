@@ -54,6 +54,7 @@ import { ExecutiveFindings } from './components/ExecutiveFindings';
 import { PythonStudio } from './components/PythonStudio';
 import { DeployModal } from './components/DeployModal';
 import { NLQueryBar } from './components/NLQueryBar';
+import { PredictiveForecasting } from './components/PredictiveForecasting';
 
 interface ChartOption {
     title: string;
@@ -1424,6 +1425,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                             title: 'Data Science',
                             items: [
                                 { id: 'advanced', icon: <Cpu size={18} />, label: 'Advanced Stats', roles: ['analyst'] },
+                                { id: 'forecast', icon: <TrendingUp size={18} />, label: 'Forecasting', roles: ['executive', 'analyst'], badge: 'NEW' },
                                 { id: 'insights', icon: <Lightbulb size={18} />, label: 'AI Insights', roles: ['executive', 'analyst'] },
                                 { id: 'map', icon: <Map size={18} />, label: 'Geo Mapping', roles: ['analyst'] },
                                 { id: 'python', icon: <Brackets size={18} />, label: 'Python Lab', roles: ['analyst'] },
@@ -2297,6 +2299,15 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                     data={localData}
                                     schema={nlqSchema}
                                     inline={true}
+                                />
+                            </div>
+                        )}
+                        {/* ── FORECASTING TAB ── */}
+                        {activeTab === 'forecast' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                                <PredictiveForecasting
+                                    data={localData}
+                                    schema={nlqSchema}
                                 />
                             </div>
                         )}

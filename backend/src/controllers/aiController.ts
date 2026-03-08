@@ -277,3 +277,106 @@ Return ONLY a JSON object with this exact structure:
         res.status(500).json({ error: 'Failed to perform root cause analysis' });
     }
 };
+
+// ─── Predictive Forecasting Engine ─────────────────────────────
+export const handleForecast = async (req: Request, res: Response) => {
+    try {
+        const { metric, historicalValues, historicalLabels, periods, stats, allMetrics } = req.body;
+
+        if (!metric || !historicalValues?.length) {
+            return res.status(400).json({ error: 'Metric and historical values are required' });
+        }
+
+        const systemPrompt = `You are an elite Predictive Analytics Engineer embedded in "Nalyse", a professional BI platform.
+
+Given historical time series data, generate a realistic forecast with confidence intervals.
+
+METRIC: ${metric}
+HISTORICAL DATA POINTS: ${historicalValues.length}
+STATISTICS:
+- Mean: ${stats?.mean?.toFixed(2)}
+- Min: ${stats?.min}
+- Max: ${stats?.max}
+- Std Dev: ${stats?.std?.toFixed(2)}
+- Recent trend (last 20): ${JSON.stringify(stats?.recentTrend?.slice(-10))}
+- Last label: ${stats?.lastLabel}
+
+ALL METRICS IN DATASET: ${(allMetrics || []).join(', ')}
+
+FULL HISTORICAL VALUES (last ${historicalValues.length}):
+${JSON.stringify(historicalValues.slice(-50))}
+
+LABELS (last 20):
+${JSON.stringify((historicalLabels || []).slice(-20))}
+
+FORECAST ${periods} periods into the future.
+
+RULES:
+1. Predictions must be REALISTIC — extrapolate from actual data patterns, not random
+2. Each period should have a value, upper bound (95% CI), and lower bound (95% CI)
+3. The confidence interval should WIDEN as you go further into the future
+4. Detect if there's seasonality, linear trend, or mean-reversion
+5. Label periods logically (continue the pattern from historicalLabels)
+6. Trend direction must match the actual recent data trajectory
+7. Values must stay within a reasonable range of historical min/max
+
+Return ONLY this JSON:
+{
+  "predictions": [
+    { "period": "string", "value": number, "upper": number, "lower": number }
+  ],
+  "trend": "up" | "down" | "stable",
+  "trendPct": number,
+  "seasonality": "none" | "weekly" | "monthly" | "quarterly" | "yearly" | "detected",
+  "accuracy": number (0-100, estimated model confidence),
+  "summary": "2-3 sentence forecast summary explaining what to expect and why",
+  "risks": ["risk 1", "risk 2", "risk 3"],
+  "opportunities": ["opportunity 1", "opportunity 2"],
+  "methodology": "Technical description of the forecasting approach used"
+}`;
+
+        const userPrompt = `Generate a ${periods}-period forecast for "${metric}" based on ${historicalValues.length} historical data points. Mean=${stats?.mean?.toFixed(2)}, StdDev=${stats?.std?.toFixed(2)}, recent values: ${JSON.stringify(stats?.recentTrend?.slice(-5))}.`;
+
+        const responseText = await aiService.generateText(userPrompt, systemPrompt);
+        const cleanJson = responseText
+            .replace(/```json\n?/g, '').replace(/```\n?/g, '')
+            .replace(/^\s*\n/gm, '').trim();
+
+        try {
+            const parsed = JSON.parse(cleanJson);
+            res.json(parsed);
+        } catch (parseErr) {
+            // Fallback: simple linear extrapolation
+            const mean = stats?.mean || 0;
+            const std = stats?.std || 1;
+            const lastVal = historicalValues[historicalValues.length - 1] || mean;
+            const trend = (lastVal - (historicalValues[historicalValues.length - 10] || mean)) / 10;
+
+            const predictions = Array.from({ length: periods }, (_, i) => {
+                const val = lastVal + trend * (i + 1);
+                const spread = std * 0.5 * (i + 1);
+                return {
+                    period: `Period ${i + 1}`,
+                    value: Math.round(val * 100) / 100,
+                    upper: Math.round((val + spread) * 100) / 100,
+                    lower: Math.round(Math.max(0, val - spread) * 100) / 100,
+                };
+            });
+
+            res.json({
+                predictions,
+                trend: trend > 0 ? 'up' : trend < 0 ? 'down' : 'stable',
+                trendPct: mean ? (trend / mean * 100) : 0,
+                seasonality: 'none',
+                accuracy: 55,
+                summary: `Linear extrapolation forecast for ${metric}. AI response was partial, showing basic trend continuation.`,
+                risks: ['Forecast based on limited pattern analysis', 'External factors not considered'],
+                opportunities: ['Trend continuation suggests growth potential'],
+                methodology: 'Simple linear extrapolation from recent data trend.'
+            });
+        }
+    } catch (error: any) {
+        console.error('Forecast Error:', error);
+        res.status(500).json({ error: 'Failed to generate forecast' });
+    }
+};
