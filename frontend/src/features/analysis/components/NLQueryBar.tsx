@@ -1,136 +1,204 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import alasql from 'alasql';
-import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, LineChart, Line, AreaChart, Area,
-    PieChart, Pie, Cell
-} from 'recharts';
 import { useAuth } from '../../../contexts/AuthContext';
 import { API_URL } from '../../../config';
 import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+    ResponsiveContainer, AreaChart, Area,
+    PieChart, Pie, Cell, ScatterChart, Scatter, ZAxis
+} from 'recharts';
+import {
     Sparkles, Search, X, Loader2, BarChart3, TrendingUp,
     Table2, ArrowRight, Lightbulb, ChevronRight, Zap,
-    BrainCircuit, RefreshCw
+    BrainCircuit, RefreshCw, Clock, Copy, Check,
+    ChevronDown, ChevronUp, Play, MessageSquare, Send,
+    Download, Maximize2, Filter, Hash, Type, ArrowUp
 } from 'lucide-react';
 
-const CHART_COLORS = ['#6366f1', '#34d399', '#f472b6', '#fbbf24', '#38bdf8', '#a78bfa', '#fb923c'];
+// ─── Constants ───────────────────────────────────────────────────
+const CHART_PALETTE = [
+    '#6366f1', '#34d399', '#f472b6', '#fbbf24', '#38bdf8',
+    '#a78bfa', '#fb923c', '#22d3ee', '#e879f9', '#4ade80'
+];
 
-interface NLQueryBarProps {
-    data: any[];
-    schema: Record<string, string>;
-    isOpen: boolean;
-    onClose: () => void;
-}
+const GRADIENT_PAIRS: Record<string, [string, string]> = {
+    bar: ['#6366f1', '#818cf8'],
+    line: ['#34d399', '#6ee7b7'],
+    area: ['#8b5cf6', '#a78bfa'],
+    pie: ['#ec4899', '#f472b6'],
+    scatter: ['#f59e0b', '#fbbf24'],
+    table: ['#06b6d4', '#22d3ee'],
+};
 
+// ─── Types ───────────────────────────────────────────────────────
 interface NLQResult {
     sql: string;
     chartType: string;
     chartTitle: string;
-    xAxis: string;
-    yAxis: string;
+    xAxis?: string;
+    yAxis?: string;
     interpretation: string;
-    suggestions: string[];
+    suggestions?: string[];
+    followUpQuestions?: string[];
 }
 
-const EXAMPLE_QUERIES = [
-    'Show me the top 10 records by value',
-    'Count records by category',
-    'What is the total of all numeric columns?',
-    'Show distribution of data by type',
-    'Find the average value grouped by name',
-];
+interface ConversationEntry {
+    id: string;
+    query: string;
+    result: NLQResult | null;
+    data: any[];
+    error: string | null;
+    timestamp: Date;
+    isLoading?: boolean;
+}
 
-export const NLQueryBar = ({ data, schema, isOpen, onClose }: NLQueryBarProps) => {
+interface NLQueryBarProps {
+    data: any[];
+    schema: Record<string, string>;
+    isOpen?: boolean;
+    onClose?: () => void;
+    inline?: boolean;
+}
+
+// ─── Custom Tooltip ──────────────────────────────────────────────
+const ChartTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <div style={{
+            background: 'rgba(10,10,20,0.95)', backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14,
+            padding: '12px 16px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+        }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{label}</div>
+            {payload.map((p: any, i: number) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
+                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>{p.name || p.dataKey}:</span>
+                    <span style={{ fontWeight: 800, color: '#fff', fontFamily: 'var(--font-mono)' }}>
+                        {typeof p.value === 'number' ? p.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : p.value}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+// ─── Skeleton Loader ─────────────────────────────────────────────
+const ResultSkeleton = () => (
+    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16, animation: 'pulse 1.5s infinite' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(99,102,241,0.1)' }} />
+            <div style={{ flex: 1 }}>
+                <div style={{ width: '40%', height: 14, borderRadius: 6, background: 'rgba(255,255,255,0.06)', marginBottom: 6 }} />
+                <div style={{ width: '25%', height: 10, borderRadius: 6, background: 'rgba(255,255,255,0.04)' }} />
+            </div>
+        </div>
+        <div style={{ width: '100%', height: 220, borderRadius: 16, background: 'rgba(255,255,255,0.03)' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ height: 80, borderRadius: 12, background: 'rgba(255,255,255,0.03)' }} />
+            <div style={{ height: 80, borderRadius: 12, background: 'rgba(255,255,255,0.03)' }} />
+        </div>
+    </div>
+);
+
+// ─── Main Component ──────────────────────────────────────────────
+export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NLQueryBarProps) => {
     const { token } = useAuth();
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
     const [query, setQuery] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [nlqResult, setNlqResult] = useState<NLQResult | null>(null);
-    const [queryData, setQueryData] = useState<any[]>([]);
-    const [queryError, setQueryError] = useState<string | null>(null);
-    const [history, setHistory] = useState<string[]>([]);
-    const [historyIndex, setHistoryIndex] = useState(-1);
-    const [showExamples, setShowExamples] = useState(true);
+    const [conversation, setConversation] = useState<ConversationEntry[]>([]);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
-    // Focus input when opened
-    useEffect(() => {
-        if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 100);
-            setShowExamples(true);
-        } else {
-            setQuery('');
-            setNlqResult(null);
-            setQueryData([]);
-            setQueryError(null);
+    // Smart example queries based on actual schema
+    const smartExamples = useMemo(() => {
+        const cols = Object.entries(schema);
+        const numCols = cols.filter(([, t]) => t === 'number').map(([n]) => n);
+        const strCols = cols.filter(([, t]) => t !== 'number').map(([n]) => n);
+        const examples: string[] = [];
+
+        if (numCols.length > 0 && strCols.length > 0) {
+            examples.push(`Show me the total ${numCols[0]} by ${strCols[0]}`);
+            examples.push(`What are the top 10 ${strCols[0]} by ${numCols[0]}?`);
         }
-    }, [isOpen]);
+        if (numCols.length >= 2) {
+            examples.push(`What's the average ${numCols[1] || numCols[0]} across all records?`);
+            examples.push(`Compare ${numCols[0]} and ${numCols[1] || numCols[0]} over time`);
+        }
+        if (strCols.length > 0) {
+            examples.push(`How many records are there per ${strCols[0]}?`);
+        }
+        examples.push(`Show me all records where ${numCols[0] || strCols[0]} is above average`);
+        examples.push(`Give me a summary of the entire dataset`);
+        return examples.slice(0, 6);
+    }, [schema]);
 
-    // Keyboard navigation
+    // Auto-scroll to bottom on new messages
     useEffect(() => {
-        const handleKeydown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-            if (e.key === 'ArrowUp' && history.length > 0) {
-                e.preventDefault();
-                const newIdx = Math.min(historyIndex + 1, history.length - 1);
-                setHistoryIndex(newIdx);
-                setQuery(history[newIdx]);
-            }
-            if (e.key === 'ArrowDown' && historyIndex > -1) {
-                e.preventDefault();
-                const newIdx = historyIndex - 1;
-                setHistoryIndex(newIdx);
-                setQuery(newIdx >= 0 ? history[newIdx] : '');
-            }
-        };
-        if (isOpen) window.addEventListener('keydown', handleKeydown);
-        return () => window.removeEventListener('keydown', handleKeydown);
-    }, [isOpen, history, historyIndex, onClose]);
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+        }
+    }, [conversation]);
+
+    // Focus on mount (inline mode)
+    useEffect(() => {
+        if (inline) setTimeout(() => inputRef.current?.focus(), 200);
+    }, [inline]);
 
     const runQuery = useCallback(async (q: string) => {
         if (!q.trim() || !data.length) return;
 
-        setIsLoading(true);
-        setNlqResult(null);
-        setQueryError(null);
-        setQueryData([]);
-        setShowExamples(false);
+        const entryId = `q-${Date.now()}`;
+        const entry: ConversationEntry = {
+            id: entryId, query: q, result: null, data: [],
+            error: null, timestamp: new Date(), isLoading: true
+        };
 
-        // Build schema + sample values for context
+        setConversation(prev => [...prev, entry]);
+        setQuery('');
+
+        // Build sample values for AI context
         const sampleValues: Record<string, any[]> = {};
         Object.keys(schema).forEach(col => {
-            sampleValues[col] = [...new Set(data.slice(0, 50).map(r => r[col]).filter(v => v != null))].slice(0, 5);
+            sampleValues[col] = [...new Set(data.slice(0, 100).map(r => r[col]).filter(v => v != null))].slice(0, 8);
         });
 
         try {
             const response = await fetch(`${API_URL}/api/ai/nlq`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ query: q, schema, sampleValues })
             });
 
-            if (!response.ok) throw new Error('AI service unavailable');
-            const result: NLQResult = await response.json();
+            if (!response.ok) throw new Error('AI service unavailable — check your API key');
+            const result = await response.json();
+            if (result.error) throw new Error(result.error);
 
-            setNlqResult(result);
-            setHistory(prev => [q, ...prev.filter(h => h !== q)].slice(0, 20));
-            setHistoryIndex(-1);
+            // Normalize suggestions/followUpQuestions
+            const nlqResult: NLQResult = {
+                ...result,
+                suggestions: result.suggestions || result.followUpQuestions || [],
+            };
 
-            // Execute the SQL on local data
+            // Execute SQL on local data
+            let queryData: any[] = [];
+            let sqlError: string | null = null;
             try {
-                const sqlResult = alasql(result.sql, [data]) as any[];
-                setQueryData(Array.isArray(sqlResult) ? sqlResult : []);
-            } catch (sqlErr: any) {
-                setQueryError(`SQL execution error: ${sqlErr.message}`);
+                const sqlResult = alasql(nlqResult.sql, [data]);
+                queryData = Array.isArray(sqlResult) ? sqlResult : [];
+            } catch (e: any) {
+                sqlError = `SQL Error: ${e.message}`;
             }
+
+            setConversation(prev => prev.map(e =>
+                e.id === entryId ? { ...e, result: nlqResult, data: queryData, error: sqlError, isLoading: false } : e
+            ));
         } catch (err: any) {
-            setQueryError(err.message || 'Failed to process query');
-        } finally {
-            setIsLoading(false);
+            setConversation(prev => prev.map(e =>
+                e.id === entryId ? { ...e, error: err.message || 'Failed to process', isLoading: false } : e
+            ));
         }
     }, [data, schema, token]);
 
@@ -139,404 +207,529 @@ export const NLQueryBar = ({ data, schema, isOpen, onClose }: NLQueryBarProps) =
         if (query.trim()) runQuery(query.trim());
     };
 
-    const renderChart = () => {
-        if (!nlqResult || !queryData.length) return null;
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit();
+        }
+    };
 
-        const { chartType, xAxis, yAxis } = nlqResult;
-        const keys = Object.keys(queryData[0] || {});
+    const copySQL = (sql: string, id: string) => {
+        navigator.clipboard.writeText(sql);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    const toggleCard = (id: string) => {
+        setExpandedCards(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    };
+
+    // ─── Chart Renderer ──────────────────────────────────────────
+    const renderChart = (entry: ConversationEntry) => {
+        if (!entry.result || !entry.data.length) return null;
+        const { chartType, xAxis, yAxis } = entry.result;
+        const keys = Object.keys(entry.data[0] || {});
         const xKey = xAxis || keys[0] || 'name';
         const yKey = yAxis || keys[1] || keys[0] || 'value';
+        const displayData = entry.data.slice(0, 60);
+        const [g1, g2] = GRADIENT_PAIRS[chartType] || GRADIENT_PAIRS.bar;
+        const gradId = `grad-${entry.id}`;
 
-        const commonProps = {
-            data: queryData.slice(0, 50),
-        };
-
-        if (chartType === 'table') return null; // handled separately
+        if (chartType === 'table') return null;
 
         return (
-            <ResponsiveContainer width="100%" height={280}>
-                {chartType === 'bar' ? (
-                    <BarChart {...commonProps} margin={{ top: 5, right: 20, left: 10, bottom: 40 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                        <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} angle={-35} textAnchor="end" height={55} />
-                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12 }} />
-                        <Bar dataKey={yKey} fill="#6366f1" radius={[6, 6, 0, 0]}>
-                            {queryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                        </Bar>
-                    </BarChart>
-                ) : chartType === 'line' || chartType === 'area' ? (
-                    <AreaChart {...commonProps} margin={{ top: 5, right: 20, left: 10, bottom: 20 }}>
-                        <defs>
-                            <linearGradient id="nlqGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                        <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
-                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12 }} />
-                        <Area type="monotone" dataKey={yKey} stroke="#6366f1" strokeWidth={3} fill={chartType === 'area' ? 'url(#nlqGrad)' : 'none'} dot={{ fill: '#6366f1', r: 4 }} />
-                    </AreaChart>
-                ) : chartType === 'pie' ? (
-                    <PieChart>
-                        <Pie data={queryData.slice(0, 8)} dataKey={yKey} nameKey={xKey} cx="50%" cy="50%" outerRadius={110} innerRadius={60} paddingAngle={3}>
-                            {queryData.slice(0, 8).map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                        </Pie>
-                        <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12 }} />
-                    </PieChart>
-                ) : (
-                    <BarChart {...commonProps} margin={{ top: 5, right: 20, left: 10, bottom: 40 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                        <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} angle={-35} textAnchor="end" height={55} />
-                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12 }} />
-                        <Bar dataKey={yKey} radius={[6, 6, 0, 0]}>
-                            {queryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                        </Bar>
-                    </BarChart>
-                )}
-            </ResponsiveContainer>
+            <div style={{
+                borderRadius: 18, overflow: 'hidden',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                padding: '16px 12px 4px',
+            }}>
+                <ResponsiveContainer width="100%" height={260}>
+                    {chartType === 'pie' ? (
+                        <PieChart>
+                            <Pie
+                                data={displayData.slice(0, 10)}
+                                dataKey={yKey} nameKey={xKey}
+                                cx="50%" cy="50%"
+                                outerRadius="85%" innerRadius="55%"
+                                paddingAngle={3} stroke="rgba(0,0,0,0.3)" strokeWidth={2}
+                            >
+                                {displayData.slice(0, 10).map((_, i) => (
+                                    <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip content={<ChartTooltip />} />
+                        </PieChart>
+                    ) : chartType === 'scatter' ? (
+                        <ScatterChart margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
+                            <YAxis dataKey={yKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
+                            <ZAxis range={[40, 200]} />
+                            <Tooltip content={<ChartTooltip />} />
+                            <Scatter data={displayData} fill="#6366f1" fillOpacity={0.7} />
+                        </ScatterChart>
+                    ) : chartType === 'line' || chartType === 'area' ? (
+                        <AreaChart data={displayData} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+                            <defs>
+                                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={g1} stopOpacity={chartType === 'area' ? 0.35 : 0} />
+                                    <stop offset="95%" stopColor={g1} stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
+                            <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
+                            <Tooltip content={<ChartTooltip />} />
+                            <Area type="monotone" dataKey={yKey} stroke={g1} strokeWidth={3} fill={`url(#${gradId})`} dot={{ fill: g1, r: 3, strokeWidth: 0 }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                        </AreaChart>
+                    ) : (
+                        <BarChart data={displayData} margin={{ top: 10, right: 20, left: 10, bottom: 30 }}>
+                            <defs>
+                                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={g1} stopOpacity={1} />
+                                    <stop offset="100%" stopColor={g2} stopOpacity={0.5} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} angle={-35} textAnchor="end" height={50} interval={0} />
+                            <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
+                            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                            <Bar dataKey={yKey} fill={`url(#${gradId})`} radius={[6, 6, 0, 0]} barSize={displayData.length > 20 ? 14 : 28} />
+                        </BarChart>
+                    )}
+                </ResponsiveContainer>
+            </div>
         );
     };
 
-    const chartIcon = (type: string) => {
-        if (type === 'table') return <Table2 size={14} />;
-        if (type === 'line' || type === 'area') return <TrendingUp size={14} />;
-        return <BarChart3 size={14} />;
+    // ─── Table Renderer ──────────────────────────────────────────
+    const renderTable = (entry: ConversationEntry) => {
+        if (!entry.data.length) return null;
+        const cols = Object.keys(entry.data[0]);
+        const isExpanded = expandedCards.has(`table-${entry.id}`);
+        const showRows = isExpanded ? entry.data.slice(0, 100) : entry.data.slice(0, 8);
+
+        return (
+            <div style={{
+                borderRadius: 14, overflow: 'hidden',
+                border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+                <div style={{ overflowX: 'auto', maxHeight: isExpanded ? 500 : 280 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead>
+                            <tr>
+                                {cols.map(c => (
+                                    <th key={c} style={{
+                                        padding: '10px 14px', textAlign: 'left',
+                                        fontWeight: 800, fontSize: 10, textTransform: 'uppercase',
+                                        letterSpacing: '0.08em', color: 'var(--text-tertiary)',
+                                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                        background: 'rgba(255,255,255,0.02)',
+                                        position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap',
+                                    }}>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                            {typeof entry.data[0]?.[c] === 'number'
+                                                ? <Hash size={10} style={{ opacity: 0.4 }} />
+                                                : <Type size={10} style={{ opacity: 0.4 }} />
+                                            }
+                                            {c}
+                                        </span>
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {showRows.map((row, i) => (
+                                <tr key={i} style={{ transition: 'background 0.1s' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.04)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                    {cols.map(c => (
+                                        <td key={c} style={{
+                                            padding: '8px 14px',
+                                            borderBottom: '1px solid rgba(255,255,255,0.03)',
+                                            color: 'var(--text-primary)',
+                                            fontFamily: typeof row[c] === 'number' ? 'var(--font-mono)' : 'inherit',
+                                            fontWeight: typeof row[c] === 'number' ? 600 : 400,
+                                            whiteSpace: 'nowrap', maxWidth: 200,
+                                            overflow: 'hidden', textOverflow: 'ellipsis',
+                                        }}>
+                                            {typeof row[c] === 'number'
+                                                ? row[c].toLocaleString(undefined, { maximumFractionDigits: 2 })
+                                                : String(row[c] ?? '—')
+                                            }
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                {entry.data.length > 8 && (
+                    <button onClick={() => toggleCard(`table-${entry.id}`)} style={{
+                        width: '100%', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        background: 'rgba(255,255,255,0.02)', border: 'none', borderTop: '1px solid rgba(255,255,255,0.04)',
+                        color: 'var(--text-tertiary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'color 0.15s',
+                    }}>
+                        {isExpanded ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> Show all {entry.data.length} rows</>}
+                    </button>
+                )}
+            </div>
+        );
     };
 
-    if (!isOpen) return null;
+    // ─── Render ──────────────────────────────────────────────────
+    const content = (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
 
-    return createPortal(
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="fixed inset-0 z-[9999] flex items-start justify-center pt-[8vh]"
-                style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
-                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-            >
-                <motion.div
-                    initial={{ opacity: 0, y: -24, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -24, scale: 0.97 }}
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                    style={{
-                        width: '100%',
-                        maxWidth: '780px',
-                        margin: '0 16px',
-                        borderRadius: '24px',
-                        background: 'var(--bg-card)',
-                        border: '1px solid var(--border-default)',
-                        boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.2), 0 0 60px rgba(99,102,241,0.1)',
-                        overflow: 'hidden',
-                        maxHeight: '82vh',
-                        display: 'flex',
-                        flexDirection: 'column',
-                    }}
-                >
-                    {/* ── Header / Input ── */}
-                    <div style={{
-                        padding: '0 20px',
-                        borderBottom: '1px solid var(--border-subtle)',
-                        background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, transparent 60%)',
-                    }}>
-                        {/* Top label */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 0 10px' }}>
+            {/* ── Conversation Area ── */}
+            <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '0 24px 16px', scrollBehavior: 'smooth' }}>
+
+                {/* Empty State */}
+                {conversation.length === 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        style={{ paddingTop: 20 }}
+                    >
+                        {/* Hero */}
+                        <div style={{
+                            textAlign: 'center', padding: '36px 20px 28px',
+                            borderRadius: 24,
+                            background: 'linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%)',
+                            border: '1px solid rgba(99,102,241,0.1)',
+                            marginBottom: 24, position: 'relative', overflow: 'hidden',
+                        }}>
+                            <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99,102,241,0.5) 1px, transparent 0)', backgroundSize: '32px 32px' }} />
                             <div style={{
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                padding: '4px 10px', borderRadius: 99,
-                                background: 'rgba(99,102,241,0.15)',
-                                border: '1px solid rgba(99,102,241,0.25)',
-                                color: '#818cf8', fontSize: 10, fontWeight: 900,
-                                textTransform: 'uppercase', letterSpacing: '0.15em'
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                width: 64, height: 64, borderRadius: 20,
+                                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                boxShadow: '0 12px 32px rgba(99,102,241,0.3)',
+                                marginBottom: 16,
                             }}>
-                                <BrainCircuit size={12} />
-                                NL Query Engine
+                                <BrainCircuit size={32} color="#fff" />
                             </div>
-                            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
-                                {data.length.toLocaleString()} rows · {Object.keys(schema).length} columns
-                            </span>
-                            <button onClick={onClose} style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                width: 28, height: 28, borderRadius: 8,
-                                background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-                                cursor: 'pointer', color: 'var(--text-secondary)'
-                            }}>
-                                <X size={14} />
-                            </button>
+                            <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px' }}>Ask Your Data Anything</h2>
+                            <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>
+                                Type a question in plain English. The AI interprets your intent, writes the query, executes it on <strong>{data.length.toLocaleString()}</strong> rows, and picks the perfect visualization.
+                            </p>
                         </div>
 
-                        {/* Input form */}
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 16 }}>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: 12,
-                                flex: 1, padding: '12px 16px',
-                                borderRadius: 16,
-                                background: 'var(--bg-surface)',
-                                border: '1px solid var(--border-default)',
-                            }}>
-                                {isLoading
-                                    ? <Loader2 size={18} style={{ color: '#6366f1', flexShrink: 0 }} className="animate-spin" />
-                                    : <Sparkles size={18} style={{ color: '#6366f1', flexShrink: 0 }} />
-                                }
-                                <input
-                                    ref={inputRef}
-                                    value={query}
-                                    onChange={e => setQuery(e.target.value)}
-                                    placeholder='Ask anything about your data… e.g. "Show me top 10 products by revenue"'
-                                    style={{
-                                        flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                                        color: 'var(--text-primary)', fontSize: 15, fontWeight: 500,
-                                    }}
-                                    disabled={isLoading}
-                                />
-                                {query && (
-                                    <button type="button" onClick={() => { setQuery(''); setNlqResult(null); setShowExamples(true); }} style={{ color: 'var(--text-tertiary)', cursor: 'pointer', display: 'flex' }}>
-                                        <X size={14} />
-                                    </button>
-                                )}
+                        {/* Smart example queries */}
+                        <div style={{ marginBottom: 20 }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-tertiary)', marginBottom: 10, paddingLeft: 4 }}>
+                                Try asking
                             </div>
-                            <button
-                                type="submit"
-                                disabled={!query.trim() || isLoading}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: 8,
-                                    padding: '12px 20px', borderRadius: 14,
-                                    background: query.trim() && !isLoading ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : 'var(--bg-surface)',
-                                    color: query.trim() && !isLoading ? '#fff' : 'var(--text-tertiary)',
-                                    border: '1px solid ' + (query.trim() && !isLoading ? 'transparent' : 'var(--border-subtle)'),
-                                    cursor: query.trim() && !isLoading ? 'pointer' : 'not-allowed',
-                                    fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap',
-                                    transition: 'all 0.2s',
-                                    boxShadow: query.trim() && !isLoading ? '0 4px 15px rgba(99,102,241,0.4)' : 'none',
-                                }}
-                            >
-                                <Zap size={15} />
-                                Analyse
-                            </button>
-                        </form>
-                    </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 8 }}>
+                                {smartExamples.map((eq, i) => (
+                                    <motion.button
+                                        key={i}
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.05 }}
+                                        onClick={() => { setQuery(eq); runQuery(eq); }}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 10,
+                                            padding: '11px 14px', borderRadius: 13, textAlign: 'left',
+                                            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                                            cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500,
+                                            transition: 'all 0.15s ease',
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'; e.currentTarget.style.background = 'rgba(99,102,241,0.06)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
+                                    >
+                                        <Sparkles size={13} style={{ color: '#6366f1', flexShrink: 0 }} />
+                                        <span style={{ flex: 1 }}>{eq}</span>
+                                        <ArrowRight size={12} style={{ opacity: 0.3, flexShrink: 0 }} />
+                                    </motion.button>
+                                ))}
+                            </div>
+                        </div>
 
-                    {/* ── Content Area ── */}
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+                        {/* Schema chips */}
+                        <div style={{
+                            padding: '14px 16px', borderRadius: 16,
+                            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                        }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginBottom: 10 }}>
+                                Available columns ({Object.keys(schema).length})
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                {Object.entries(schema).map(([col, type]) => (
+                                    <span key={col}
+                                        onClick={() => { setQuery(prev => prev + (prev.endsWith(' ') || !prev ? '' : ' ') + col); inputRef.current?.focus(); }}
+                                        style={{
+                                            padding: '4px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600,
+                                            background: type === 'number' ? 'rgba(52,211,153,0.08)' : 'rgba(99,102,241,0.08)',
+                                            color: type === 'number' ? '#34d399' : '#818cf8',
+                                            border: `1px solid ${type === 'number' ? 'rgba(52,211,153,0.15)' : 'rgba(99,102,241,0.15)'}`,
+                                            cursor: 'pointer', transition: 'opacity 0.15s',
+                                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                                        }}
+                                    >
+                                        {type === 'number' ? <Hash size={10} /> : <Type size={10} />}
+                                        {col}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
-                        {/* Example queries */}
-                        {showExamples && !isLoading && !nlqResult && (
-                            <div>
-                                <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-tertiary)', marginBottom: 12 }}>Example Queries</p>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                    {EXAMPLE_QUERIES.map((eq, i) => (
-                                        <button key={i} onClick={() => { setQuery(eq); runQuery(eq); }}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', gap: 10,
-                                                padding: '10px 14px', borderRadius: 12, textAlign: 'left',
-                                                background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-                                                cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500,
-                                                transition: 'all 0.15s',
-                                            }}
-                                            onMouseEnter={e => { (e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'); (e.currentTarget.style.color = 'var(--text-primary)'); }}
-                                            onMouseLeave={e => { (e.currentTarget.style.borderColor = 'var(--border-subtle)'); (e.currentTarget.style.color = 'var(--text-secondary)'); }}
-                                        >
-                                            <Search size={13} style={{ color: '#6366f1', flexShrink: 0 }} />
-                                            {eq}
-                                            <ChevronRight size={13} style={{ marginLeft: 'auto', opacity: 0.4 }} />
-                                        </button>
-                                    ))}
+                {/* ── Conversation Thread ── */}
+                <AnimatePresence>
+                    {conversation.map((entry, idx) => (
+                        <motion.div
+                            key={entry.id}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            style={{ marginTop: idx === 0 ? 20 : 24 }}
+                        >
+                            {/* User query bubble */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                                <div style={{
+                                    maxWidth: '75%', padding: '12px 18px',
+                                    borderRadius: '18px 18px 4px 18px',
+                                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                    color: '#fff', fontSize: 14, fontWeight: 600, lineHeight: 1.5,
+                                    boxShadow: '0 4px 16px rgba(99,102,241,0.3)',
+                                }}>
+                                    {entry.query}
                                 </div>
-                                {/* Schema preview */}
-                                <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 14, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-                                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginBottom: 10 }}>Dataset Columns Available</p>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                        {Object.entries(schema).map(([col, type]) => (
-                                            <span key={col} onClick={() => { setQuery(prev => prev + (prev ? ' ' : '') + col); inputRef.current?.focus(); }}
-                                                style={{
-                                                    padding: '4px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600,
-                                                    background: type === 'number' ? 'rgba(52,211,153,0.1)' : 'rgba(99,102,241,0.1)',
-                                                    color: type === 'number' ? '#34d399' : '#818cf8',
-                                                    border: `1px solid ${type === 'number' ? 'rgba(52,211,153,0.2)' : 'rgba(99,102,241,0.2)'}`,
-                                                    cursor: 'pointer'
+                            </div>
+
+                            {/* AI response */}
+                            <div style={{ display: 'flex', gap: 12 }}>
+                                {/* Avatar */}
+                                <div style={{
+                                    width: 32, height: 32, borderRadius: 10, flexShrink: 0, marginTop: 2,
+                                    background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))',
+                                    border: '1px solid rgba(99,102,241,0.2)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <BrainCircuit size={16} style={{ color: '#818cf8' }} />
+                                </div>
+
+                                {/* Response body */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    {entry.isLoading ? (
+                                        <ResultSkeleton />
+                                    ) : entry.error ? (
+                                        <div style={{
+                                            padding: '14px 18px', borderRadius: 16,
+                                            background: 'rgba(239,68,68,0.06)',
+                                            border: '1px solid rgba(239,68,68,0.15)',
+                                            color: '#ef4444', fontSize: 13, lineHeight: 1.5
+                                        }}>
+                                            <strong style={{ fontWeight: 800 }}>Error:</strong> {entry.error}
+                                        </div>
+                                    ) : entry.result && (
+                                        <div style={{
+                                            borderRadius: 20, overflow: 'hidden',
+                                            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                                        }}>
+                                            {/* Result header */}
+                                            <div style={{
+                                                padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+                                                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                                background: 'rgba(255,255,255,0.01)',
+                                            }}>
+                                                <div style={{
+                                                    display: 'flex', alignItems: 'center', gap: 5,
+                                                    padding: '3px 10px', borderRadius: 99,
+                                                    background: `rgba(${entry.result.chartType === 'pie' ? '236,72,153' : entry.result.chartType === 'line' || entry.result.chartType === 'area' ? '52,211,153' : '99,102,241'}, 0.1)`,
+                                                    border: `1px solid rgba(${entry.result.chartType === 'pie' ? '236,72,153' : entry.result.chartType === 'line' || entry.result.chartType === 'area' ? '52,211,153' : '99,102,241'}, 0.2)`,
+                                                    fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
+                                                    color: entry.result.chartType === 'pie' ? '#ec4899' : entry.result.chartType === 'line' || entry.result.chartType === 'area' ? '#34d399' : '#818cf8'
                                                 }}>
-                                                {col} <span style={{ opacity: 0.5 }}>{type}</span>
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Loading state */}
-                        {isLoading && (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '40px 0' }}>
-                                <div style={{ position: 'relative' }}>
-                                    <div style={{
-                                        width: 60, height: 60, borderRadius: '50%',
-                                        background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        animation: 'pulse 2s infinite'
-                                    }}>
-                                        <BrainCircuit size={28} style={{ color: '#6366f1' }} />
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'center' }}>
-                                    <p style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>Intelligence Engine Processing</p>
-                                    <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Translating your query into SQL & selecting the best visualization…</p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Error */}
-                        {queryError && !isLoading && (
-                            <div style={{
-                                padding: 16, borderRadius: 14, marginBottom: 16,
-                                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-                                color: '#ef4444', fontSize: 13
-                            }}>
-                                <strong>Error:</strong> {queryError}
-                            </div>
-                        )}
-
-                        {/* Results */}
-                        {nlqResult && !isLoading && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                {/* Result header */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: 6,
-                                        padding: '5px 12px', borderRadius: 99,
-                                        background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)',
-                                        color: '#34d399', fontSize: 11, fontWeight: 700
-                                    }}>
-                                        {chartIcon(nlqResult.chartType)}
-                                        {nlqResult.chartType.toUpperCase()} · {queryData.length} rows
-                                    </div>
-                                    <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{nlqResult.chartTitle}</h3>
-                                </div>
-
-                                {/* Chart */}
-                                {queryData.length > 0 && nlqResult.chartType !== 'table' && (
-                                    <div style={{
-                                        padding: '20px 16px 8px',
-                                        borderRadius: 16, background: 'var(--bg-surface)',
-                                        border: '1px solid var(--border-subtle)'
-                                    }}>
-                                        {renderChart()}
-                                    </div>
-                                )}
-
-                                {/* Table */}
-                                {queryData.length > 0 && (nlqResult.chartType === 'table' || true) && (
-                                    <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-                                        <div style={{ overflowX: 'auto', maxHeight: 300 }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                                                <thead>
-                                                    <tr style={{ background: 'var(--bg-surface)', position: 'sticky', top: 0 }}>
-                                                        {Object.keys(queryData[0] || {}).map(k => (
-                                                            <th key={k} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)', whiteSpace: 'nowrap', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                                {k}
-                                                            </th>
-                                                        ))}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {queryData.slice(0, 50).map((row, i) => (
-                                                        <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
-                                                            {Object.values(row).map((v: any, j) => (
-                                                                <td key={j} style={{ padding: '9px 14px', color: 'var(--text-primary)', fontFamily: typeof v === 'number' ? 'var(--font-mono)' : 'inherit', whiteSpace: 'nowrap', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                    {typeof v === 'number' ? v.toLocaleString() : String(v ?? '')}
-                                                                </td>
-                                                            ))}
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        {queryData.length > 50 && (
-                                            <div style={{ padding: '8px 14px', fontSize: 11, color: 'var(--text-tertiary)', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
-                                                Showing 50 of {queryData.length} results
+                                                    {entry.result.chartType === 'table' ? <Table2 size={11} /> : entry.result.chartType === 'line' || entry.result.chartType === 'area' ? <TrendingUp size={11} /> : <BarChart3 size={11} />}
+                                                    {entry.result.chartType}
+                                                </div>
+                                                <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0, flex: 1 }}>{entry.result.chartTitle}</h3>
+                                                <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>{entry.data.length} rows</span>
                                             </div>
-                                        )}
-                                    </div>
-                                )}
 
-                                {/* SQL + Interpretation */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                                    {/* Interpretation */}
-                                    <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, color: '#818cf8', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                            <Lightbulb size={12} /> Interpretation
+                                            {/* Chart */}
+                                            {entry.data.length > 0 && entry.result.chartType !== 'table' && (
+                                                <div style={{ padding: '12px 8px 4px' }}>
+                                                    {renderChart(entry)}
+                                                </div>
+                                            )}
+
+                                            {/* Table */}
+                                            {entry.data.length > 0 && (
+                                                <div style={{ padding: entry.result.chartType === 'table' ? '12px' : '0 12px 12px' }}>
+                                                    {renderTable(entry)}
+                                                </div>
+                                            )}
+
+                                            {/* Interpretation + SQL */}
+                                            <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                {/* Interpretation */}
+                                                <div style={{
+                                                    padding: '12px 16px', borderRadius: 14,
+                                                    background: 'rgba(99,102,241,0.05)',
+                                                    border: '1px solid rgba(99,102,241,0.1)',
+                                                    display: 'flex', gap: 10,
+                                                }}>
+                                                    <Lightbulb size={15} style={{ color: '#818cf8', flexShrink: 0, marginTop: 2 }} />
+                                                    <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                                                        {entry.result.interpretation}
+                                                    </p>
+                                                </div>
+
+                                                {/* SQL */}
+                                                <div style={{
+                                                    padding: '10px 14px', borderRadius: 12,
+                                                    background: 'rgba(0,0,0,0.2)',
+                                                    border: '1px solid rgba(255,255,255,0.04)',
+                                                    display: 'flex', alignItems: 'center', gap: 10,
+                                                }}>
+                                                    <code style={{ flex: 1, fontSize: 11, color: '#34d399', fontFamily: 'var(--font-mono)', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+                                                        {entry.result.sql}
+                                                    </code>
+                                                    <button onClick={() => copySQL(entry.result!.sql, entry.id)} style={{
+                                                        display: 'flex', padding: 4, borderRadius: 6, border: 'none',
+                                                        background: 'transparent', cursor: 'pointer',
+                                                        color: copiedId === entry.id ? '#34d399' : 'var(--text-tertiary)',
+                                                    }}>
+                                                        {copiedId === entry.id ? <Check size={13} /> : <Copy size={13} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Follow-up suggestions */}
+                                            {entry.result.suggestions && entry.result.suggestions.length > 0 && (
+                                                <div style={{ padding: '0 16px 16px' }}>
+                                                    <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginBottom: 8 }}>Follow-up</div>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                        {entry.result.suggestions.map((s, i) => (
+                                                            <button key={i} onClick={() => { setQuery(s); runQuery(s); }}
+                                                                style={{
+                                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                                    padding: '7px 12px', borderRadius: 10,
+                                                                    background: 'transparent', border: '1px solid var(--border-subtle)',
+                                                                    cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500,
+                                                                    transition: 'all 0.15s',
+                                                                }}
+                                                                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'; e.currentTarget.style.color = '#818cf8'; }}
+                                                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                                                            >
+                                                                <Sparkles size={10} style={{ color: '#6366f1' }} />
+                                                                {s}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-                                            {nlqResult.interpretation}
-                                        </p>
-                                    </div>
-                                    {/* Generated SQL */}
-                                    <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.15)' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, color: '#34d399', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                            <RefreshCw size={12} /> Generated SQL
-                                        </div>
-                                        <code style={{ fontSize: 11, color: '#34d399', fontFamily: 'var(--font-mono)', lineHeight: 1.6, wordBreak: 'break-all' }}>
-                                            {nlqResult.sql}
-                                        </code>
-                                    </div>
+                                    )}
                                 </div>
-
-                                {/* Follow-up suggestions */}
-                                {nlqResult.suggestions && nlqResult.suggestions.length > 0 && (
-                                    <div>
-                                        <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginBottom: 10 }}>Follow-up Questions</p>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                            {nlqResult.suggestions.map((s, i) => (
-                                                <button key={i} onClick={() => { setQuery(s); runQuery(s); }}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', gap: 10,
-                                                        padding: '9px 14px', borderRadius: 10, textAlign: 'left',
-                                                        background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-                                                        cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500,
-                                                        transition: 'all 0.15s',
-                                                    }}
-                                                    onMouseEnter={e => { (e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'); (e.currentTarget.style.color = 'var(--text-primary)'); }}
-                                                    onMouseLeave={e => { (e.currentTarget.style.borderColor = 'var(--border-subtle)'); (e.currentTarget.style.color = 'var(--text-secondary)'); }}
-                                                >
-                                                    <Sparkles size={12} style={{ color: '#6366f1', flexShrink: 0 }} />
-                                                    {s}
-                                                    <ArrowRight size={12} style={{ marginLeft: 'auto', opacity: 0.4 }} />
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
-                        )}
-                    </div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
 
-                    {/* ── Footer ── */}
-                    <div style={{
-                        padding: '10px 20px',
-                        borderTop: '1px solid var(--border-subtle)',
-                        background: 'var(--bg-surface)',
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        fontSize: 11, color: 'var(--text-tertiary)'
-                    }}>
-                        <kbd style={{ padding: '2px 6px', borderRadius: 5, background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>↑↓</kbd>
-                        <span>History</span>
-                        <kbd style={{ padding: '2px 6px', borderRadius: 5, background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>Enter</kbd>
-                        <span>Run</span>
-                        <kbd style={{ padding: '2px 6px', borderRadius: 5, background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>Esc</kbd>
-                        <span>Close</span>
-                        <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Sparkles size={10} style={{ color: '#6366f1' }} />
-                            Powered by Nexus AI
-                        </span>
-                    </div>
-                </motion.div>
-            </motion.div>
-        </AnimatePresence>,
-        document.body
+            {/* ── Input Area (always visible at bottom) ── */}
+            <div style={{
+                padding: '12px 24px 16px',
+                borderTop: '1px solid var(--border-subtle)',
+                background: 'var(--bg-card)',
+            }}>
+                <form onSubmit={handleSubmit} style={{
+                    display: 'flex', alignItems: 'flex-end', gap: 10,
+                    padding: '10px 14px',
+                    borderRadius: 18,
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-default)',
+                    transition: 'border-color 0.2s, box-shadow 0.2s',
+                }}>
+                    <BrainCircuit size={18} style={{ color: '#6366f1', flexShrink: 0, marginBottom: 6 }} />
+                    <textarea
+                        ref={inputRef}
+                        value={query}
+                        onChange={e => setQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder='Ask your data anything… e.g. "What product generates the most revenue?"'
+                        rows={1}
+                        disabled={conversation.some(e => e.isLoading)}
+                        style={{
+                            flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                            color: 'var(--text-primary)', fontSize: 14, fontWeight: 500,
+                            resize: 'none', lineHeight: 1.5, maxHeight: 120,
+                            fontFamily: 'inherit',
+                        }}
+                        onInput={(e: any) => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                    />
+                    <button
+                        type="submit"
+                        disabled={!query.trim() || conversation.some(e => e.isLoading)}
+                        style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: 36, height: 36, borderRadius: 12, flexShrink: 0,
+                            background: query.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.04)',
+                            color: query.trim() ? '#fff' : 'var(--text-tertiary)',
+                            border: 'none', cursor: query.trim() ? 'pointer' : 'not-allowed',
+                            transition: 'all 0.2s',
+                            boxShadow: query.trim() ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
+                        }}
+                    >
+                        {conversation.some(e => e.isLoading)
+                            ? <Loader2 size={16} className="animate-spin" />
+                            : <ArrowUp size={16} />
+                        }
+                    </button>
+                </form>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '0 4px', fontSize: 11, color: 'var(--text-tertiary)' }}>
+                    <kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>Enter</kbd>
+                    <span>Send</span>
+                    <kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>Shift+Enter</kbd>
+                    <span>New line</span>
+                    {conversation.length > 0 && (
+                        <button onClick={() => setConversation([])} style={{
+                            marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4,
+                            padding: '2px 8px', borderRadius: 6, background: 'transparent',
+                            border: '1px solid var(--border-subtle)', cursor: 'pointer',
+                            color: 'var(--text-tertiary)', fontSize: 11, fontWeight: 600,
+                        }}>
+                            <RefreshCw size={10} /> Clear
+                        </button>
+                    )}
+                    <span style={{ marginLeft: conversation.length > 0 ? 0 : 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Sparkles size={9} style={{ color: '#6366f1' }} /> Powered by Nexus AI
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+
+    // Inline mode: render directly
+    if (inline) return content;
+
+    // Modal mode (legacy support)
+    if (!isOpen) return null;
+    return (
+        <div
+            style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+            onClick={e => { if (e.target === e.currentTarget) onClose?.(); }}
+        >
+            <div style={{
+                width: '100%', maxWidth: 800, maxHeight: '85vh',
+                borderRadius: 24, overflow: 'hidden',
+                background: 'var(--bg-card)', border: '1px solid var(--border-default)',
+                boxShadow: '0 40px 80px rgba(0,0,0,0.5)',
+                display: 'flex', flexDirection: 'column',
+            }}>
+                {content}
+            </div>
+        </div>
     );
 };
 
