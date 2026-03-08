@@ -8,7 +8,7 @@ import {
 export interface TabType {
     id: string;
     title: string;
-    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'automation' | 'organization';
+    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'automation' | 'organization' | 'collaboration';
     data?: any;
     icon?: React.ReactNode;
 }
@@ -95,6 +95,7 @@ export const TabBar = ({
             'financial': <Landmark size={13} />,
             'simulation': <FlaskConical size={13} />,
             'organization': <Building2 size={13} />,
+            'collaboration': <Users size={13} />,
 
         };
         return iconMap[tab.type] || <FileText size={13} />;

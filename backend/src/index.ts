@@ -24,6 +24,7 @@ import pulseRoutes from './routes/pulse';
 import subscriptionRoutes from './routes/subscription';
 import aiRoutes from './routes/ai';
 import automationRoutes from './routes/automation';
+import collaborationRoutes from './routes/collaboration';
 
 
 const allowedOrigins = [
@@ -136,6 +137,7 @@ app.use('/api/ai', aiRoutes);
 
 app.use('/api/automation', automationRoutes);
 app.use('/api/pulse', pulseRoutes);
+app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

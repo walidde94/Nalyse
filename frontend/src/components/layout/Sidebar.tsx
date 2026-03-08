@@ -26,7 +26,8 @@ import {
     ShieldAlert,
     Landmark,
     FlaskConical,
-    Building2
+    Building2,
+    MessageSquare
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -78,6 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
             items: [
                 { id: 'democracy', label: 'Self-Service Studio', icon: <Sparkles size={19} /> },
                 { id: 'automation', label: 'Automated Reports', icon: <Activity size={19} /> },
+                { id: 'collaboration', label: 'Collaboration', icon: <MessageSquare size={19} /> },
             ]
         },
     ];

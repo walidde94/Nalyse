@@ -46,6 +46,7 @@ const FinancialRiskView = React.lazy(() => import('./features/financial/Financia
 const SimulationView = React.lazy(() => import('./features/simulation/SimulationView').then(m => ({ default: m.SimulationView })));
 const AutomationView = React.lazy(() => import('./features/automation/AutomationView').then(m => ({ default: m.AutomationView })));
 const OrganizationView = React.lazy(() => import('./features/organization/OrganizationView').then(m => ({ default: m.OrganizationView })));
+const CollaborationView = React.lazy(() => import('./features/collaboration/CollaborationView').then(m => ({ default: m.CollaborationView })));
 
 
 
@@ -1048,6 +1049,10 @@ function AppContent() {
 
                 {tab.type === 'organization' && (
                   <OrganizationView token={token || ''} />
+                )}
+
+                {tab.type === 'collaboration' && (
+                  <CollaborationView token={token || ''} />
                 )}
 
                 {tab.type === 'diff' && (
