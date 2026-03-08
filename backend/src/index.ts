@@ -23,6 +23,7 @@ import agentRoutes from './routes/agents';
 import pulseRoutes from './routes/pulse';
 import subscriptionRoutes from './routes/subscription';
 import aiRoutes from './routes/ai';
+import automationRoutes from './routes/automation';
 
 
 const allowedOrigins = [
@@ -133,6 +134,7 @@ app.use('/api/sources', sourceRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/ai', aiRoutes);
 
+app.use('/api/automation', automationRoutes);
 app.use('/api/pulse', pulseRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

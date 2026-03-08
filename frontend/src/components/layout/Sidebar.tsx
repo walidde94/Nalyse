@@ -76,6 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
             title: 'Self-Service',
             items: [
                 { id: 'democracy', label: 'Self-Service Studio', icon: <Sparkles size={19} /> },
+                { id: 'automation', label: 'Automated Reports', icon: <Activity size={19} /> },
             ]
         },
     ];

@@ -44,6 +44,7 @@ const VersionDiffView = React.lazy(() => import('./features/diff/VersionDiffView
 const AnomalyDetectionView = React.lazy(() => import('./features/anomaly/AnomalyDetectionView').then(m => ({ default: m.AnomalyDetectionView })));
 const FinancialRiskView = React.lazy(() => import('./features/financial/FinancialRiskView').then(m => ({ default: m.FinancialRiskView })));
 const SimulationView = React.lazy(() => import('./features/simulation/SimulationView').then(m => ({ default: m.SimulationView })));
+const AutomationView = React.lazy(() => import('./features/automation/AutomationView').then(m => ({ default: m.AutomationView })));
 
 
 
@@ -1038,6 +1039,10 @@ function AppContent() {
                     userPlan={(user as any)?.organization?.plan || 'free'}
                     onClose={() => openTab('dashboard', 'Dashboard')}
                   />
+                )}
+
+                {tab.type === 'automation' && (
+                  <AutomationView />
                 )}
 
                 {tab.type === 'diff' && (
