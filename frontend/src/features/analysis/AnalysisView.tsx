@@ -46,7 +46,8 @@ import {
     Activity,
     Microscope,
     Rocket,
-    Sparkles
+    Sparkles,
+    TrendingUp
 } from 'lucide-react';
 import { ElasticSearch } from './components/ElasticSearch';
 import { ElasticFilterBar } from './components/ElasticFilterBar';
