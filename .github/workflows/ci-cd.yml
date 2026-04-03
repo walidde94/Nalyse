@@ -38,11 +38,11 @@ jobs:
     - name: Install Dependencies & Build Backend
       run: |
         cd backend
-        npm ci
+        npm ci --legacy-peer-deps
         npm run build --if-present
 
     - name: Install Dependencies & Build Frontend
       run: |
         cd frontend
-        npm ci
+        npm ci --legacy-peer-deps
         npm run build --if-present
