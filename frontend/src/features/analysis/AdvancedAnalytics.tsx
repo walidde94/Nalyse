@@ -271,8 +271,8 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
                             </div>
 
                             <div style={{ background: '#09090b', padding: '32px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-                                {!abTestResult && !loading && <div style={{ m: 'auto', color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: 700, margin: 'auto' }}>Awaiting Experiment Data.</div>}
-                                {loading && <div style={{ m: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#34d399', gap: '16px', margin: 'auto' }}><Loader2 className="animate-spin" size={32} /> <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em' }}>CALCULATING P-VALUES...</span></div>}
+                                {!abTestResult && !loading && <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: 700, margin: 'auto' }}>Awaiting Experiment Data.</div>}
+                                {loading && <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#34d399', gap: '16px', margin: 'auto' }}><Loader2 className="animate-spin" size={32} /> <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em' }}>CALCULATING P-VALUES...</span></div>}
 
                                 {abTestResult && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
