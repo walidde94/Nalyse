@@ -4012,7 +4012,7 @@ textarea:focus,
 .aurora-overlay {
   position: absolute;
   inset: 0;
-  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVQIW2NkYGD4z8DAwMgAI0AMDA4wBQLwR1wAAAABJRU5ErkJggg==);
+  background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVQIW2NkYGD4z8DAwMgAI0AMDA4wBQLwR1wAAAABJRU5ErkJggg==");
   opacity: 0.15;
   mix-blend-mode: overlay;
   pointer-events: none;

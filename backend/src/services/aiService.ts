@@ -13,23 +13,139 @@ export class AiService {
         }
     }
 
-    async generateText(prompt: string, systemPrompt: string = "You are a helpful assistant."): Promise<string> {
+    async generateText(prompt: string, systemPrompt: string = "You are a helpful assistant.", forceJson: boolean = false): Promise<string> {
         if (!this.openai) {
             return this.simulateResponse(prompt);
         }
 
         try {
-            const completion = await this.openai.chat.completions.create({
+            const params: any = {
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: prompt }
                 ],
-                model: "gpt-4-turbo-preview",
-            });
+                model: "gpt-4o",
+            };
+
+            if (forceJson) {
+                params.response_format = { type: "json_object" };
+            }
+
+            const completion = await this.openai.chat.completions.create(params);
 
             return completion.choices[0].message.content || "No response generated.";
-        } catch (error) {
-            console.error("OpenAI API Error:", error);
+        } catch (error: any) {
+            console.error("OpenAI API Error:", error?.message || error);
+
+            // If we are forcing JSON (like in NLQ) and OpenAI fails, use smart local fallback
+            if (forceJson) {
+                const lowerPrompt = prompt.toLowerCase();
+
+                // Regex patterns to detect what the user is asking
+                const isPie = lowerPrompt.includes("pie");
+                const isBar = lowerPrompt.includes("bar");
+                const isLine = lowerPrompt.includes("line") || lowerPrompt.includes("trend") || lowerPrompt.includes("over time");
+                const isScatter = lowerPrompt.includes("scatter");
+                const isMap = lowerPrompt.includes("map") || lowerPrompt.includes("geography");
+
+                let chartType = "table";
+                if (isMap) chartType = "worldmap";
+                else if (isPie) chartType = "pie";
+                else if (isBar) chartType = "bar";
+                else if (isLine) chartType = "line";
+                else if (isScatter) chartType = "scatter";
+
+                // Schema awareness: Extract columns from the systemPrompt (Robust version)
+                const availableCols: { name: string, type: string }[] = [];
+                // Look for any line like "  - Name (Type)" or "- Name: Type" or similar
+                const colMatches = systemPrompt.matchAll(/^\s*[-*]\s+([a-zA-Z0-9_\s]+?)\s*\(([^)]+)\)/gm);
+                for (const match of colMatches) {
+                    availableCols.push({
+                        name: match[1].trim(),
+                        type: match[2].trim().toLowerCase()
+                    });
+                }
+
+                // If first pass fails, try simpler greedy match for any bulleted list in the schema section
+                if (availableCols.length === 0) {
+                    const lines = systemPrompt.split('\n');
+                    let inSchema = false;
+                    for (const line of lines) {
+                        if (line.includes("DATASET SCHEMA")) inSchema = true;
+                        if (inSchema && line.trim().startsWith('-')) {
+                            const nameMatch = line.match(/-\s+([^(:]+)/);
+                            if (nameMatch) {
+                                availableCols.push({ name: nameMatch[1].trim(), type: 'text' });
+                            }
+                        }
+                        if (inSchema && line.trim() === "" && availableCols.length > 5) inSchema = false;
+                    }
+                }
+
+                const categories = availableCols.filter(c => c.type.includes('category') || c.type.includes('text') || c.type.includes('city') || c.type.includes('country') || c.type.includes('date')).map(c => c.name);
+                const numbers = availableCols.filter(c => c.type.includes('number') || c.type.includes('currency') || c.type.includes('percent') || c.type.includes('int') || c.type.includes('float')).map(c => c.name);
+
+                // Extract groupings and metrics using regex
+                let xAxis = categories[0] || (availableCols[0]?.name) || "name";
+                let yAxis = numbers[0] || (availableCols.find(c => !categories.includes(c.name))?.name) || "value";
+                let sql = "SELECT * FROM ? LIMIT 20";
+                let interpretation = "Showing raw results.";
+
+                // Heuristic for selecting columns from the prompt
+                const findRequestedCol = (cols: string[]) => cols.find(c => lowerPrompt.includes(c.toLowerCase()));
+                const requestedCategory = findRequestedCol(categories) || findRequestedCol(availableCols.map(c => c.name));
+                const requestedNumber = findRequestedCol(numbers);
+
+                if (requestedCategory) xAxis = requestedCategory;
+                if (requestedNumber) yAxis = requestedNumber;
+
+                // Smart aggregation detection
+                const byMatch = lowerPrompt.match(/by\s+([a-zA-Z0-9_]+)/i);
+                const isAggregated = byMatch || lowerPrompt.includes("top") || lowerPrompt.includes("distribution") || lowerPrompt.includes("total") || (chartType !== 'table' && categories.length > 0 && numbers.length > 0);
+
+                if (isAggregated && chartType !== 'table') {
+                    if (byMatch) {
+                        const matched = availableCols.find(c => c.name.toLowerCase() === byMatch[1].toLowerCase());
+                        if (matched) xAxis = matched.name;
+                    }
+
+                    // Look for metric keywords if not found by name
+                    if (!requestedNumber) {
+                        const metricMatch = prompt.match(/(revenue|cost|sales|units|profit|amount|price|total)/i);
+                        if (metricMatch) {
+                            const found = numbers.find(n => n.toLowerCase().includes(metricMatch[1].toLowerCase()));
+                            if (found) yAxis = found;
+                        }
+                    }
+
+                    // Format keys for SQL — always use [brackets] for AlaSQL safety
+                    const displayY = `Total${yAxis.replace(/\s+/g, '')}`;
+
+                    sql = `SELECT [${xAxis}], SUM([${yAxis}]) as [${displayY}] FROM ? GROUP BY [${xAxis}] ORDER BY [${displayY}] DESC LIMIT 10`;
+
+                    if (systemPrompt.includes("CLICKHOUSE")) {
+                        const tableMatch = systemPrompt.match(/FROM\s+(nalyse_gen2\.dataset_[a-zA-Z0-9_]+)/i);
+                        const chTable = tableMatch ? tableMatch[1] : '?';
+                        const chX = `\`${xAxis}\``;
+                        const chY = `\`${yAxis}\``;
+                        sql = `SELECT ${chX}, sum(${chY}) as ${displayY} FROM ${chTable} GROUP BY ${chX} ORDER BY ${displayY} DESC LIMIT 10`;
+                    }
+
+                    yAxis = displayY; // UI expects the aliased column name
+                    interpretation = `This chart visualizes the distribution of ${yAxis} across ${xAxis}. Our local engine detected this as the most relevant aggregation for your request.`;
+                }
+
+                return JSON.stringify({
+                    sql,
+                    chartType,
+                    chartTitle: `Local Fallback: ${chartType.toUpperCase()}`,
+                    xAxis,
+                    yAxis,
+                    interpretation,
+                    suggestions: ["Show me the raw data table", "What's the average value?"]
+                });
+            }
+
             return "Error generating AI response. Please check backend logs.";
         }
     }

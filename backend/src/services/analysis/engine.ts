@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
+import * as xlsx from 'xlsx';
+import { XMLParser } from 'fast-xml-parser';
 import { AnalysisResult, AdvancedColumnType, Insight, AnalysisOption } from './types';
 import { inferColumnType, performDataCleaning } from './cleaner';
 import { generateInventoryInsights, generateCategoryInsights, generateTimeSeriesAnalysis, generateCorrelations, generateEntityInsights, generateKeyMetrics } from './stats';
@@ -169,8 +171,15 @@ export const analyzeFile = async (filePath: string, mimetype: string): Promise<A
         const buffer = fs.readFileSync(absoluteRequestedPath);
 
         if (mimetype === 'application/pdf' || filePath.endsWith('.pdf')) {
-
             return await analyzePDF(buffer);
+        }
+
+        if (mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || filePath.endsWith('.xlsx') || mimetype === 'application/vnd.ms-excel' || filePath.endsWith('.xls')) {
+            const workbook = xlsx.read(buffer, { type: 'buffer' });
+            const sheetName = workbook.SheetNames[0];
+            if (!sheetName) throw new Error("Excel file is empty");
+            const records: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            return analyzeRawData(records, 'Excel File');
         }
 
         const content = buffer.toString('utf-8');
@@ -186,12 +195,43 @@ export const analyzeFile = async (filePath: string, mimetype: string): Promise<A
             if (typeof data === 'object') return analyzeRawData([data], 'JSON Object');
         }
 
+        if (mimetype === 'application/xml' || mimetype === 'text/xml' || filePath.endsWith('.xml')) {
+            const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "" });
+            const jsonObj = parser.parse(content);
+
+            let records: any[] = [];
+            // Recursively search for the first array in the XML structure to represent rows
+            const extractRecords = (obj: any) => {
+                if (records.length > 0) return;
+                if (Array.isArray(obj)) {
+                    records = obj;
+                } else if (typeof obj === 'object' && obj !== null) {
+                    for (const key of Object.keys(obj)) {
+                        if (Array.isArray(obj[key])) {
+                            records = obj[key];
+                            return;
+                        } else {
+                            extractRecords(obj[key]);
+                        }
+                    }
+                }
+            };
+            extractRecords(jsonObj);
+
+            if (records.length === 0 && typeof jsonObj === 'object') {
+                records = [jsonObj];
+            }
+
+            return analyzeRawData(records, 'XML File');
+        }
+
         if (mimetype === 'text/csv' || filePath.endsWith('.csv')) {
             const records = parse(content, {
                 columns: true,
                 skip_empty_lines: true,
                 relax_column_count: true,
-                relax_quotes: true
+                relax_quotes: true,
+                cast: true
             });
             return analyzeRawData(records, 'CSV File');
         }

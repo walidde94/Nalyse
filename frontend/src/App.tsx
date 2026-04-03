@@ -106,6 +106,7 @@ function AppContent() {
   const [analysisStatus, setAnalysisStatus] = useState<'processing' | 'completed' | 'error'>('processing');
   const [analysisError, setAnalysisError] = useState<string | undefined>();
   const [lastWorkerResult, setLastWorkerResult] = useState<{ type: string; title: string; data: any } | null>(null);
+  const [overlayMode, setOverlayMode] = useState<'analysis' | 'upload'>('analysis');
   const [dragActive, setDragActive] = useState(false);
 
   // --- Theme State ---
@@ -119,6 +120,7 @@ function AppContent() {
     setAnalysisStage(0);
     setAnalysisStatus('processing');
     setAnalysisError(undefined);
+    setOverlayMode('analysis');
     setLastWorkerResult(null);
 
     let currentStage = 0;
@@ -577,10 +579,14 @@ function AppContent() {
     const files = Array.isArray(filesOrFile) ? filesOrFile : [filesOrFile];
     if (files.length === 0) return;
 
-    runAnalysisWithProgress(async () => {
+    setOverlayMode('upload');
+    setIsAnalyzing(true);
+    setAnalysisStage(0);
+    setAnalysisStatus('processing');
+    setAnalysisError(undefined);
+
+    try {
       let successCount = 0;
-      let lastAnalysisData = null;
-      let lastFilename = '';
 
       for (const file of files) {
         const formData = new FormData();
@@ -596,32 +602,22 @@ function AppContent() {
           const errorText = await uploadRes.text();
           throw new Error(`Upload failed for ${file.name}: ${errorText}`);
         }
-        const { file: newFile } = await uploadRes.json();
-
-        // Small delay to allow 'Validating' stage to feel real
-        await new Promise(r => setTimeout(r, 1000));
-
-        const analyzeRes = await fetch(`${API_URL}/api/files/${newFile.id}/analyze`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (analyzeRes.ok) {
-          const analysisData = await analyzeRes.json();
-          lastAnalysisData = analysisData;
-          lastFilename = newFile.filename;
-          successCount++;
-        } else {
-          const errorText = await analyzeRes.text();
-          throw new Error(`Strategic analysis failed for ${file.name}: ${errorText}`);
-        }
+        successCount++;
       }
 
+      // Stage 1: Indexing (refreshing file list)
+      setAnalysisStage(1);
       await fetchFiles();
 
-      if (successCount === 1 && lastAnalysisData) {
-        return { type: 'analysis', title: lastFilename, data: lastAnalysisData };
-      }
-    });
+      // Stage 2: Complete
+      setAnalysisStage(2);
+      setAnalysisStatus('completed');
+      addToast(`${successCount} dataset${successCount > 1 ? 's' : ''} uploaded. Click "Process" to analyze.`, 'success');
+
+    } catch (err: any) {
+      setAnalysisStatus('error');
+      setAnalysisError(err.message || 'Upload failed.');
+    }
   };
 
   const handleBiFileUpload = async (file: File, type: string) => {
@@ -683,7 +679,11 @@ function AppContent() {
       const res = await fetch(`${API_URL}/api/files/${file.id}/analyze`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Neural analysis encountered a structural fault.');
+      if (!res.ok) {
+        let msg = 'Neural analysis encountered a structural fault.';
+        try { const err = await res.json(); msg = err.error || err.message || msg; } catch (e) {}
+        throw new Error(msg);
+      }
       const data = await res.json();
       return { type: 'analysis', title: file.filename, data };
     });
@@ -1117,6 +1117,7 @@ function AppContent() {
         isVisible={isAnalyzing}
         stage={analysisStage}
         status={analysisStatus}
+        mode={overlayMode}
         errorDetails={analysisError}
         onViewResults={() => {
           if (lastWorkerResult) {

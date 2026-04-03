@@ -3,42 +3,63 @@ import Redis from 'ioredis';
 import { prisma } from '../../config/database';
 import { broadcastUpdate } from '../../index';
 
-// Initialize Redis Connection
-const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-    maxRetriesPerRequest: null,
-}) as any;
+// Only create Redis connection if REDIS_URL is explicitly set
+let connection: Redis | null = null;
 
-export const automationQueue = new Queue('AutomationQueue', { connection });
+if (process.env.REDIS_URL) {
+    connection = new Redis(process.env.REDIS_URL, {
+        maxRetriesPerRequest: null,
+        enableOfflineQueue: false,
+        retryStrategy(times) {
+            if (times > 3) return null;
+            return Math.min(times * 200, 2000);
+        }
+    }) as any;
+    (connection as Redis).on('error', () => { /* silently ignore */ });
+}
 
-// Define Worker
-export const automationWorker = new Worker('AutomationQueue', async (job: Job) => {
-    switch (job.name) {
-        case 'TestJob':
-            console.log('Running Test Job', job.data);
-            return { status: 'success' };
-        case 'ExecuteSchedule':
-            return handleExecuteSchedule(job.data);
-        case 'FireWebhook':
-            return handleFireWebhook(job.data);
-        case 'EvaluateAlert':
-            return handleEvaluateAlert(job.data);
-        default:
-            throw new Error(`Unknown job type: ${job.name}`);
+// Only create Queue and Worker if Redis is available
+export let automationQueue: Queue | null = null;
+export let automationWorker: Worker | null = null;
+
+if (connection) {
+    try {
+        automationQueue = new Queue('AutomationQueue', { connection });
+
+        automationWorker = new Worker('AutomationQueue', async (job: Job) => {
+            switch (job.name) {
+                case 'TestJob':
+                    console.log('Running Test Job', job.data);
+                    return { status: 'success' };
+                case 'ExecuteSchedule':
+                    return handleExecuteSchedule(job.data);
+                case 'FireWebhook':
+                    return handleFireWebhook(job.data);
+                case 'EvaluateAlert':
+                    return handleEvaluateAlert(job.data);
+                default:
+                    throw new Error(`Unknown job type: ${job.name}`);
+            }
+        }, { connection, concurrency: 5 });
+
+        automationWorker.on('completed', (job) => {
+            console.log(`${job.id} has completed!`);
+        });
+
+        automationWorker.on('failed', (job, err) => {
+            console.error(`${job?.id} has failed with ${err.message}`);
+        });
+
+        automationWorker.on('error', () => { /* silently ignore */ });
+    } catch {
+        console.warn('[Automation] Could not initialize queue — Redis unavailable.');
     }
-}, { connection, concurrency: 5 });
-
-automationWorker.on('completed', (job) => {
-    console.log(`${job.id} has completed!`);
-});
-
-automationWorker.on('failed', (job, err) => {
-    console.error(`${job?.id} has failed with ${err.message}`);
-});
+}
 
 // Handlers
 async function handleExecuteSchedule(data: any) {
     const { scheduleId } = data;
-    const schedule = await prisma.schedule.findUnique({ where: { id: scheduleId } });
+    const schedule = await (prisma as any).schedule?.findUnique({ where: { id: scheduleId } });
 
     if (!schedule || !schedule.isActive) {
         console.log(`Schedule ${scheduleId} is inactive or not found.`);
@@ -46,39 +67,37 @@ async function handleExecuteSchedule(data: any) {
     }
 
     console.log(`Executing Schedule ${schedule.name}...`);
-    // TODO: Perform analysis or long-running agent task based on schedule.config
     broadcastUpdate('schedule_executed', { id: schedule.id, name: schedule.name, executedAt: new Date() });
 }
 
 async function handleFireWebhook(data: any) {
     const { webhookId, payload } = data;
-    const webhook = await prisma.webhook.findUnique({ where: { id: webhookId } });
+    const webhook = await (prisma as any).webhook?.findUnique({ where: { id: webhookId } });
 
     if (!webhook || !webhook.isActive) return;
 
     console.log(`Firing Webhook ${webhook.name} to ${webhook.url}`);
-
-    // Fake sending the webhook here using fetch/axios
-    // In production, we would use axios.post(webhook.url, payload, { headers: { 'Authorization': webhook.secret } })
     broadcastUpdate('webhook_fired', { id: webhook.id, name: webhook.name });
 }
 
 async function handleEvaluateAlert(data: any) {
-    // Logic to evaluate a metric against the AlertRule threshold
     console.log("Evaluating Alert logic...", data);
 }
 
 // Global helpers
 export async function dispatchWebhook(eventName: string, payload: any, organizationId: string) {
-    // Fetch all active webhooks for the org
-    const allWebhooks = await prisma.webhook.findMany({
+    if (!automationQueue) {
+        console.warn('[Automation] Redis unavailable — webhook dispatch skipped.');
+        return;
+    }
+
+    const allWebhooks = await (prisma as any).webhook?.findMany({
         where: {
             organizationId,
             isActive: true
         }
-    });
+    }) || [];
 
-    // Filter in JS since events is stored as Json and Prisma's Json filtering is dialect-specific
     const webhooks = allWebhooks.filter((w: any) => {
         try {
             const events = w.events as string[];

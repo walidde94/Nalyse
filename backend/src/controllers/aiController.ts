@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import { AiService } from '../services/aiService';
+import { clickhouse } from '../config/database';
 
 const aiService = new AiService();
 
 export const handleNlqQuery = async (req: Request, res: Response) => {
     try {
-        const { query, schema, sampleValues } = req.body;
+        const { query, schema, sampleValues, datasetId } = req.body;
         if (!query) {
             return res.status(400).json({ error: 'Query is required' });
         }
@@ -19,12 +20,39 @@ export const handleNlqQuery = async (req: Request, res: Response) => {
             }).join('\n')
             : 'Unknown schema';
 
+        let isClickHouse = false;
+        let clickhouseTable = '';
+
+        if (datasetId) {
+            clickhouseTable = `dataset_${datasetId.replace(/-/g, '_')}`;
+            isClickHouse = true;
+        }
+
+        const sqlRules = isClickHouse ? `CLICKHOUSE SQL RULES:
+- The dataset is ALWAYS referenced as "nalyse_gen2.${clickhouseTable}"
+- Use backticks for column names with spaces: SELECT \`Customer Name\` FROM nalyse_gen2.${clickhouseTable}
+- Aggregation functions: sum(), avg(), count(), max(), min()
+- Always alias aggregated columns: sum(Revenue) AS TotalRevenue
+- For top-N: ORDER BY col DESC LIMIT N
+- Date comparisons: WHERE toDate(\`Date\`) >= '2024-01-01'
+- NO [brackets], ONLY \`backticks\` for column names
+- DO NOT add semicolons at the end` : `ALASQL RULES:
+- The dataset is ALWAYS referenced as "?" (e.g., SELECT col FROM ?)
+- Use [brackets] for column names with spaces: SELECT [Customer Name] FROM ?
+- Aggregation functions: SUM(), AVG(), COUNT(), MAX(), MIN()
+- Always alias aggregated columns: SUM(Revenue) AS TotalRevenue
+- For top-N: ORDER BY col DESC LIMIT N
+- For proportions/distributions: use GROUP BY with COUNT(*) or SUM()
+- Date comparisons: WHERE [Date] >= '2024-01-01'
+- NO backticks, ONLY [brackets] for identifiers
+- DO NOT add semicolons at the end`;
+
         const systemPrompt = `You are an elite Data Scientist AI embedded in "Nalyse", a professional business intelligence platform.
 Translate the user's natural language question about their dataset into:
-1. A valid AlaSQL query
+1. A valid SQL query
 2. The optimal chart visualization type
 3. A concise chart title
-4. The X and Y axis column names
+4. The X and Y axis column names (from the SQL result, not original data)
 5. A 2-3 sentence interpretation
 6. 3 smart follow-up questions
 
@@ -33,27 +61,29 @@ ${schemaLines}
 
 Total rows in dataset: ${req.body.totalRows || 'unknown'}
 
-ALASQL RULES:
-- The dataset is ALWAYS referenced as "?" (e.g., SELECT col FROM ?)
-- Use [brackets] for column names with spaces: SELECT [Customer Name] FROM ?
-- Aggregation functions: SUM(), AVG(), COUNT(), MAX(), MIN()
-- Always alias aggregated columns: SUM(Revenue) AS TotalRevenue
-- For top-N: ORDER BY col DESC LIMIT N
-- For proportions/distributions: use GROUP BY with COUNT(*)
-- Date comparisons: WHERE [Date] >= '2024-01-01'
-- For counting distinct: COUNT(DISTINCT col) is supported
-- NEVER use backticks, only [brackets] for identifiers
-- NEVER add semicolons at the end
+${sqlRules}
 
-CHART TYPE RULES (choose the BEST one):
+CRITICAL CHART RULES:
+- If the user asks for a "pie chart", "bar chart", "line chart", "world map", etc., you MUST set chartType accordingly.
+- For pie/bar/line/area charts: the SQL MUST use GROUP BY and aggregation (SUM, COUNT, AVG, etc.). NEVER return raw SELECT * for charts.
+- For "map" or "geography" queries: use GROUP BY on the country/city/region column with SUM() or COUNT() and set chartType to "worldmap".
+- For "distribution" or "breakdown" queries: use GROUP BY with COUNT(*) or SUM() and set chartType to "pie" or "bar".
+- For "trend" or "over time" queries: use GROUP BY on the date column and set chartType to "line" or "area".
+- For "top N" queries: use ORDER BY ... DESC LIMIT N and set chartType to "bar".
+- xAxis must be the categorical/grouped column name (as aliased in SQL).
+- yAxis must be the aggregated value column alias (e.g., "TotalRevenue", "Count").
+- Only use chartType "table" when the user explicitly asks for raw records or a detailed list.
+
+CHART TYPE OPTIONS (choose the BEST one):
 - "bar": comparisons across categories (top-N, by-group, vs benchmarks)
 - "line": time series, trends over ordered sequences
 - "area": cumulative trends, growth trajectories
 - "pie": proportions of a whole (max 8 slices, use for share/distribution)
 - "scatter": correlations between two numeric variables
+- "worldmap": geographical data (countries, cities, continents) natively plotted on a map
 - "table": raw records, detailed lists, or when >5 columns are needed
 
-RESPONSE FORMAT — return ONLY the JSON object below (no markdown, no explanation):
+You MUST respond with ONLY a valid JSON object, nothing else:
 {
   "sql": "SELECT ... FROM ? ...",
   "chartType": "bar",
@@ -68,7 +98,8 @@ RESPONSE FORMAT — return ONLY the JSON object below (no markdown, no explanati
   ]
 }`;
 
-        const responseText = await aiService.generateText(query, systemPrompt);
+        const responseText = await aiService.generateText(query, systemPrompt, true);
+        console.log('[NLQ] Raw AI response:', responseText.substring(0, 500));
 
         // Clean response
         const cleanJson = responseText
@@ -81,24 +112,55 @@ RESPONSE FORMAT — return ONLY the JSON object below (no markdown, no explanati
             const parsed = JSON.parse(cleanJson);
             // Sanitize SQL
             if (parsed.sql) {
-                parsed.sql = parsed.sql.replace(/;$/, '').replace(/`/g, '').trim();
+                parsed.sql = parsed.sql.replace(/;$/, '').trim();
+                // Only strip backticks for AlaSQL mode
+                if (!isClickHouse) {
+                    parsed.sql = parsed.sql.replace(/`/g, '');
+                }
             }
             // Normalize suggestions field
             if (!parsed.suggestions && parsed.followUpQuestions) {
                 parsed.suggestions = parsed.followUpQuestions;
             }
+
+            // If ClickHouse, execute the query securely on the backend!
+            if (isClickHouse && parsed.sql) {
+                try {
+                    console.log("[ClickHouse NLQ] Executing native SQL:", parsed.sql);
+                    const rs = await clickhouse.query({ query: parsed.sql });
+                    const resultData = await rs.json();
+                    parsed.data = (resultData as any).data || [];
+                } catch (chError: any) {
+                    const isConnError = chError.message?.includes('ECONNREFUSED') || chError.code === 'ECONNREFUSED' || (chError.errors && chError.errors.some((e: any) => e.code === 'ECONNREFUSED'));
+                    if (isConnError) {
+                        console.warn("[ClickHouse NLQ] ClickHouse connection refused. Falling back to frontend execution.");
+                    } else {
+                        console.error("[ClickHouse NLQ] Execution error:", chError.message || chError);
+                    }
+                    // Convert ClickHouse syntax back to basic SQL so AlaSQL can handle it on the frontend
+                    parsed.sql = parsed.sql.replace(/nalyse_gen2\.dataset_[a-zA-Z0-9_\-]+/gi, '?');
+                    parsed.sql = parsed.sql.replace(/`([^`]+)`/g, '[$1]'); // Convert backticks to brackets
+                    delete parsed.data;
+                    delete parsed.sqlError;
+                }
+            }
+
+            console.log('[NLQ] Parsed successfully — chartType:', parsed.chartType, '| SQL:', parsed.sql?.substring(0, 100));
             res.json(parsed);
         } catch (parseErr) {
+            console.error('[NLQ] JSON parse failed. Raw response:', cleanJson.substring(0, 500));
             // Attempt to extract SQL even from malformed response
             const sqlMatch = cleanJson.match(/"sql"\s*:\s*"([^"]+)"/);
             const titleMatch = cleanJson.match(/"chartTitle"\s*:\s*"([^"]+)"/);
+            const chartMatch = cleanJson.match(/"chartType"\s*:\s*"([^"]+)"/);
+            const interpMatch = cleanJson.match(/"interpretation"\s*:\s*"([^"]+)"/);
             res.json({
                 sql: sqlMatch ? sqlMatch[1].replace(/;$/, '') : 'SELECT * FROM ? LIMIT 20',
-                chartType: 'table',
+                chartType: chartMatch ? chartMatch[1] : 'table',
                 chartTitle: titleMatch ? titleMatch[1] : 'Query Result',
                 xAxis: 'name',
                 yAxis: 'value',
-                interpretation: 'The AI returned a partial response. Showing raw results.',
+                interpretation: interpMatch ? interpMatch[1] : 'The AI returned a partial response. Showing raw results.',
                 suggestions: []
             });
         }

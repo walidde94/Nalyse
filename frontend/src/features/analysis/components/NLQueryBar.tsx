@@ -15,6 +15,7 @@ import {
     ChevronDown, ChevronUp, Play, MessageSquare, Send,
     Download, Maximize2, Filter, Hash, Type, ArrowUp
 } from 'lucide-react';
+import { WorldMapChart } from './WorldMapChart';
 
 // ─── Constants ───────────────────────────────────────────────────
 const CHART_PALETTE = [
@@ -29,6 +30,7 @@ const GRADIENT_PAIRS: Record<string, [string, string]> = {
     pie: ['#ec4899', '#f472b6'],
     scatter: ['#f59e0b', '#fbbf24'],
     table: ['#06b6d4', '#22d3ee'],
+    worldmap: ['#3b82f6', '#8b5cf6'],
 };
 
 // ─── Types ───────────────────────────────────────────────────────
@@ -41,6 +43,8 @@ interface NLQResult {
     interpretation: string;
     suggestions?: string[];
     followUpQuestions?: string[];
+    data?: any[];
+    sqlError?: string;
 }
 
 interface ConversationEntry {
@@ -54,7 +58,8 @@ interface ConversationEntry {
 }
 
 interface NLQueryBarProps {
-    data: any[];
+    data?: any[];
+    datasetId?: string;
     schema: Record<string, string>;
     isOpen?: boolean;
     onClose?: () => void;
@@ -103,7 +108,7 @@ const ResultSkeleton = () => (
 );
 
 // ─── Main Component ──────────────────────────────────────────────
-export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NLQueryBarProps) => {
+export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inline = false }: NLQueryBarProps) => {
     const { token } = useAuth();
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -148,7 +153,8 @@ export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NL
     }, [inline]);
 
     const runQuery = useCallback(async (q: string) => {
-        if (!q.trim() || !data.length) return;
+        if (!q.trim()) return;
+        if (!datasetId && (!data || data.length === 0)) return;
 
         const entryId = `q-${Date.now()}`;
         const entry: ConversationEntry = {
@@ -161,15 +167,17 @@ export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NL
 
         // Build sample values for AI context
         const sampleValues: Record<string, any[]> = {};
-        Object.keys(schema).forEach(col => {
-            sampleValues[col] = [...new Set(data.slice(0, 100).map(r => r[col]).filter(v => v != null))].slice(0, 8);
-        });
+        if (data && data.length > 0) {
+            Object.keys(schema).forEach(col => {
+                sampleValues[col] = [...new Set(data.slice(0, 100).map(r => r[col]).filter(v => v != null))].slice(0, 8);
+            });
+        }
 
         try {
             const response = await fetch(`${API_URL}/api/ai/nlq`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ query: q, schema, sampleValues })
+                body: JSON.stringify({ query: q, schema, sampleValues, datasetId })
             });
 
             if (!response.ok) throw new Error('AI service unavailable — check your API key');
@@ -182,14 +190,44 @@ export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NL
                 suggestions: result.suggestions || result.followUpQuestions || [],
             };
 
-            // Execute SQL on local data
+            // Execute SQL
             let queryData: any[] = [];
             let sqlError: string | null = null;
-            try {
-                const sqlResult = alasql(nlqResult.sql, [data]);
-                queryData = Array.isArray(sqlResult) ? sqlResult : [];
-            } catch (e: any) {
-                sqlError = `SQL Error: ${e.message}`;
+
+            if (nlqResult.data && nlqResult.data.length > 0) {
+                // Backend ClickHouse execution returned real data
+                queryData = nlqResult.data;
+                sqlError = nlqResult.sqlError || null;
+            } else {
+                // Local fallback execution for in-memory uploads
+                try {
+                    // Critical: Coerce numeric-looking string values to real JS numbers.
+                    // CSV parsers often return everything as strings ("774.12" not 774.12).
+                    // AlaSQL's SUM/AVG/COUNT silently return null on string values.
+                    const typedData = (data || []).map((row: any) => {
+                        const typed: any = {};
+                        for (const [key, val] of Object.entries(row)) {
+                            if (val === null || val === undefined || val === '') {
+                                typed[key] = val;
+                            } else if (typeof val === 'string') {
+                                const stripped = val.replace(/[$€£,\s%]/g, '');
+                                if (stripped !== '' && !isNaN(Number(stripped)) && isFinite(Number(stripped))) {
+                                    typed[key] = Number(stripped);
+                                } else {
+                                    typed[key] = val;
+                                }
+                            } else {
+                                typed[key] = val;
+                            }
+                        }
+                        return typed;
+                    });
+
+                    const sqlResult = alasql(nlqResult.sql, [typedData]);
+                    queryData = Array.isArray(sqlResult) ? sqlResult : [];
+                } catch (e: any) {
+                    sqlError = `SQL Error: ${e.message}`;
+                }
             }
 
             setConversation(prev => prev.map(e =>
@@ -200,7 +238,7 @@ export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NL
                 e.id === entryId ? { ...e, error: err.message || 'Failed to process', isLoading: false } : e
             ));
         }
-    }, [data, schema, token]);
+    }, [data, datasetId, schema, token]);
 
     const handleSubmit = (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -233,13 +271,41 @@ export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NL
         if (!entry.result || !entry.data.length) return null;
         const { chartType, xAxis, yAxis } = entry.result;
         const keys = Object.keys(entry.data[0] || {});
-        const xKey = xAxis || keys[0] || 'name';
-        const yKey = yAxis || keys[1] || keys[0] || 'value';
+
+        // Robust key matching (ignores case/underscores from AI mapping)
+        const findKey = (suggested?: string, defaultIdx: number = 0) => {
+            if (!suggested) return keys[defaultIdx] || 'value';
+            const match = keys.find(k => k.toLowerCase() === suggested.toLowerCase() || k.replace(/_/g, '').toLowerCase() === suggested.replace(/_/g, '').toLowerCase());
+            return match || suggested; // Fallback to suggested if match fails (AlaSQL often creates aliased cols matching suggested exactly)
+        };
+
+        const xKey = findKey(xAxis, 0);
+        const yKey = findKey(yAxis, 1);
         const displayData = entry.data.slice(0, 60);
         const [g1, g2] = GRADIENT_PAIRS[chartType] || GRADIENT_PAIRS.bar;
         const gradId = `grad-${entry.id}`;
 
         if (chartType === 'table') return null;
+
+        // World Map chart — render directly without ResponsiveContainer
+        if (chartType === 'worldmap') {
+            const mapData = displayData.map((d: any) => ({
+                name: d[xKey] || d.name || d.country || d.city || d.region || '',
+                value: parseFloat(d[yKey] || d.value || d.count || 0) || 0
+            }));
+            return (
+                <div style={{
+                    borderRadius: 18, overflow: 'hidden',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    width: '100%',
+                    height: '400px',
+                    minHeight: '400px'
+                }}>
+                    <WorldMapChart data={mapData} title={entry.result?.chartTitle || 'Geospatial Intelligence'} />
+                </div>
+            );
+        }
 
         return (
             <div style={{
@@ -247,8 +313,11 @@ export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NL
                 background: 'rgba(255,255,255,0.02)',
                 border: '1px solid rgba(255,255,255,0.05)',
                 padding: '16px 12px 4px',
+                width: '100%',
+                height: '280px',
+                minHeight: '280px'
             }}>
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" height="100%">
                     {chartType === 'pie' ? (
                         <PieChart>
                             <Pie
@@ -416,7 +485,7 @@ export const NLQueryBar = ({ data, schema, isOpen, onClose, inline = false }: NL
                             </div>
                             <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px' }}>Ask Your Data Anything</h2>
                             <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>
-                                Type a question in plain English. The AI interprets your intent, writes the query, executes it on <strong>{data.length.toLocaleString()}</strong> rows, and picks the perfect visualization.
+                                Type a question in plain English. The AI interprets your intent, writes the query, executes it {datasetId ? "natively on ClickHouse" : `on ${data.length.toLocaleString()} rows`}, and picks the perfect visualization.
                             </p>
                         </div>
 

@@ -42,6 +42,7 @@
     "@apollo/server": "^5.4.0",
     "@as-integrations/express5": "^1.1.2",
     "@clickhouse/client": "^1.18.1",
+    "@prisma/client": "^5.22.0",
     "@types/uuid": "^10.0.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
@@ -51,6 +52,7 @@
     "dotenv": "^17.2.4",
     "express-rate-limit": "^8.2.1",
     "express-validator": "^7.3.1",
+    "fast-xml-parser": "^5.4.2",
     "google-auth-library": "^10.5.0",
     "graphql": "^16.13.1",
     "ioredis": "^5.9.2",
@@ -60,14 +62,14 @@
     "openai": "^6.18.0",
     "pdf-parse": "^2.4.5",
     "pg": "^8.17.2",
+    "prisma": "^5.22.0",
     "reflect-metadata": "^0.2.2",
     "regression": "^2.0.1",
     "simple-statistics": "^7.8.8",
     "socket.io": "^4.8.3",
     "stripe": "^20.3.1",
     "typeorm": "^0.3.28",
-    "@prisma/client": "^5.22.0",
-    "prisma": "^5.22.0",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "xlsx": "^0.18.5"
   }
 }

@@ -45,6 +45,19 @@ export const initAnalysisWorker = () => {
 
             await analysisRepo.save(analysis);
 
+            // Broadcast real-time completion to the frontend 
+            try {
+                const { broadcastUpdate } = require('../../index');
+                broadcastUpdate('file', {
+                    action: 'analysis_complete',
+                    fileId: file.id,
+                    userId: userId,
+                    analysis: analysisResult
+                });
+            } catch (err) {
+                console.error('[Worker] Broadcast failed:', err);
+            }
+
         } catch (error: any) {
             console.error(`[Worker] Analysis failed for file ${fileId}`, error);
         }

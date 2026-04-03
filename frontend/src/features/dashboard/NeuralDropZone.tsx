@@ -319,7 +319,8 @@ export const NeuralDropZone = ({
                                 <span className="neural-drop-format">.CSV</span>
                                 <span className="neural-drop-format">.JSON</span>
                                 <span className="neural-drop-format">.XLSX</span>
-                                <span className="neural-drop-format">.TSV</span>
+                                <span className="neural-drop-format">.XML</span>
+                                <span className="neural-drop-format">.PDF</span>
                             </motion.div>
 
                             {/* Dragged file preview pills */}
