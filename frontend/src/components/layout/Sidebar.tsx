@@ -25,7 +25,11 @@ import {
     Activity,
     ShieldAlert,
     Landmark,
-    FlaskConical
+    FlaskConical,
+    Building2,
+    MessageSquare,
+    Webhook,
+    Boxes
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -38,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     const [hoveredItem, setHoveredItem] = useState<string | null>(null);
     const { t } = useLanguage();
     const { user } = useAuth();
-    const isPro = (user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro';
+    const isPro = user && ((user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro');
 
     const NAV_GROUPS = [
         {
@@ -63,6 +67,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 { id: 'nexus', label: 'Nexus AI', icon: <BrainCircuit size={19} /> },
                 { id: 'logistics', label: 'Road Intelligence', icon: <Map size={19} /> },
                 { id: 'developer', label: 'Developer API', icon: <Code2 size={19} /> },
+                { id: 'webhooks', label: 'Webhooks & API', icon: <Webhook size={19} /> },
+                { id: 'embed', label: 'Embed SDK', icon: <Boxes size={19} /> },
             ]
         },
         {
@@ -76,6 +82,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
             title: 'Self-Service',
             items: [
                 { id: 'democracy', label: 'Self-Service Studio', icon: <Sparkles size={19} /> },
+                { id: 'automation', label: 'Automated Reports', icon: <Activity size={19} /> },
+                { id: 'collaboration', label: 'Collaboration', icon: <MessageSquare size={19} /> },
             ]
         },
     ];
@@ -210,6 +218,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     isActive={currentView === 'migration'} collapsed={collapsed}
                     hovered={hoveredItem === 'migration'} onHover={setHoveredItem}
                     onClick={() => onViewChange('migration')} />
+
+                <NavItem id="organization" label="Organization & RBAC" icon={<Building2 size={19} />}
+                    isActive={currentView === 'organization'} collapsed={collapsed}
+                    hovered={hoveredItem === 'organization'} onHover={setHoveredItem}
+                    onClick={() => onViewChange('organization')} />
 
                 <NavItem id="settings" label={t('nav.settings')} icon={<Settings size={19} />}
                     isActive={currentView === 'settings'} collapsed={collapsed}

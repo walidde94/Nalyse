@@ -41,7 +41,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
 
             {/* Desktop Sidebar */}
             <div
-                className={`${isMobileMenuOpen ? 'mobile-sidebar-open' : 'sidebar-mobile-hidden'} desktop-visible`}
+                className={isMobileMenuOpen ? 'mobile-sidebar-open' : 'sidebar-mobile-hidden desktop-visible'}
                 style={{ height: '100%', zIndex: 1000, position: 'relative' }}
             >
                 <Sidebar

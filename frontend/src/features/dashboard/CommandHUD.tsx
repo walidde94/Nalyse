@@ -2,25 +2,13 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Activity,
-    Cpu,
-    Wifi,
     Database,
-    Shield,
     Zap,
     BarChart3,
-    Globe,
     Clock,
-    TrendingUp,
     ArrowUpRight,
     Sparkles,
-    BrainCircuit,
-    Eye,
     Layers,
-    Radio,
-    HeartPulse,
-    Gauge,
-    Signal,
-    Fingerprint,
 } from 'lucide-react';
 
 /* ──────────────────────────────────────────────────────────
@@ -30,14 +18,10 @@ import {
 
 export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: number; storageUsed: string }) => {
     const [uptime, setUptime] = useState(0);
-    const [cpuSim, setCpuSim] = useState(23);
-    const [networkPulse, setNetworkPulse] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
             setUptime(prev => prev + 1);
-            setCpuSim(prev => Math.max(12, Math.min(45, prev + (Math.random() - 0.5) * 6)));
-            setNetworkPulse(prev => (prev + 1) % 100);
         }, 1000);
         return () => clearInterval(interval);
     }, []);
@@ -57,26 +41,6 @@ export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: numb
             className="ambient-status-strip"
         >
             <div className="strip-inner">
-                {/* Live pulse dot */}
-                <div className="strip-item">
-                    <div className="pulse-dot" />
-                    <span className="strip-label">NEXUS CORE</span>
-                    <span className="strip-value accent">ONLINE</span>
-                </div>
-
-                <div className="strip-divider" />
-
-                <div className="strip-item">
-                    <Cpu size={11} />
-                    <span className="strip-label">ENGINE</span>
-                    <span className="strip-value">{cpuSim.toFixed(1)}%</span>
-                    <div className="micro-bar">
-                        <div className="micro-bar-fill" style={{ width: `${cpuSim}%` }} />
-                    </div>
-                </div>
-
-                <div className="strip-divider" />
-
                 <div className="strip-item">
                     <Database size={11} />
                     <span className="strip-label">DATASETS</span>
@@ -94,36 +58,9 @@ export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: numb
                 <div className="strip-divider" />
 
                 <div className="strip-item">
-                    <Shield size={11} />
-                    <span className="strip-label">SHIELD</span>
-                    <span className="strip-value success">ACTIVE</span>
-                </div>
-
-                <div className="strip-divider" />
-
-                <div className="strip-item">
                     <Clock size={11} />
                     <span className="strip-label">SESSION</span>
                     <span className="strip-value mono">{formatUptime(uptime)}</span>
-                </div>
-
-                <div className="strip-divider" />
-
-                <div className="strip-item">
-                    <Radio size={11} />
-                    <span className="strip-label">SYNC</span>
-                    <div className="network-pulse">
-                        {[...Array(8)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="network-bar"
-                                style={{
-                                    height: `${Math.sin((networkPulse + i * 12) * 0.1) * 50 + 50}%`,
-                                    opacity: 0.3 + Math.sin((networkPulse + i * 12) * 0.1) * 0.3,
-                                }}
-                            />
-                        ))}
-                    </div>
                 </div>
             </div>
         </motion.div>
@@ -227,10 +164,6 @@ interface OrbProps {
 
 export const OrbitalMetric = ({ label, value, subValue, color, icon, trend, index, sparkData }: OrbProps) => {
     const orbRef = useRef<HTMLDivElement>(null);
-    const defaultSparkData = useMemo(() => {
-        return sparkData || Array.from({ length: 20 }, () => Math.random() * 100);
-    }, [sparkData]);
-
     return (
         <motion.div
             ref={orbRef}
@@ -257,38 +190,6 @@ export const OrbitalMetric = ({ label, value, subValue, color, icon, trend, inde
                 <div className="orb-label">{label}</div>
                 <div className="orb-value">{value}</div>
                 {subValue && <div className="orb-sub">{subValue}</div>}
-
-                {/* Inline Sparkline */}
-                <div className="orb-sparkline">
-                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="sparkline-svg">
-                        <defs>
-                            <linearGradient id={`spark-grad-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-                                <stop offset="100%" stopColor={color} stopOpacity="0" />
-                            </linearGradient>
-                        </defs>
-                        <motion.path
-                            d={`M0,${30 - (defaultSparkData[0] / 100) * 28} ${defaultSparkData.map((v, i) =>
-                                `L${(i / (defaultSparkData.length - 1)) * 100},${30 - (v / 100) * 28}`
-                            ).join(' ')} L100,30 L0,30 Z`}
-                            fill={`url(#spark-grad-${index})`}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 1 + index * 0.1 }}
-                        />
-                        <motion.path
-                            d={`M0,${30 - (defaultSparkData[0] / 100) * 28} ${defaultSparkData.map((v, i) =>
-                                `L${(i / (defaultSparkData.length - 1)) * 100},${30 - (v / 100) * 28}`
-                            ).join(' ')}`}
-                            fill="none"
-                            stroke={color}
-                            strokeWidth="1.5"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ delay: 0.8 + index * 0.1, duration: 1.5, ease: 'easeOut' }}
-                        />
-                    </svg>
-                </div>
 
                 {trend && (
                     <div className={`orb-trend ${trend.includes('-') ? 'negative' : 'positive'}`}>
@@ -320,7 +221,6 @@ export const QuickActionsBar = ({ onUpload, onViewReport, onUpgrade, fileCount }
     const actions = [
         { label: 'Upload Dataset', icon: Database, color: '#3b82f6', action: onUpload, shortcut: '⌘U' },
         { label: 'View Report', icon: BarChart3, color: '#8b5cf6', action: onViewReport, shortcut: '⌘R' },
-        { label: 'Intelligence Feed', icon: HeartPulse, color: '#ef4444', action: () => { }, shortcut: '⌘I' },
         { label: 'Upgrade Plan', icon: Sparkles, color: '#f59e0b', action: onUpgrade, shortcut: '⌘P' },
     ];
 
@@ -373,7 +273,7 @@ const getEventIcon = (type: string) => {
         case 'analysis': return <BarChart3 size={14} />;
         case 'anomaly': return <Activity size={14} />;
         case 'insight': return <Sparkles size={14} />;
-        case 'system': return <Cpu size={14} />;
+        case 'system': return <Zap size={14} />;
         default: return <Zap size={14} />;
     }
 };
@@ -414,24 +314,6 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
             }
         });
 
-        evts.push({
-            id: 'system-health',
-            type: 'system',
-            title: 'System Health Check',
-            description: 'All intelligence services nominal',
-            time: 'Now',
-            status: 'OK'
-        });
-
-        evts.push({
-            id: 'insight-gen',
-            type: 'insight',
-            title: 'Causality Engine Active',
-            description: 'Cross-dataset pattern recognition running',
-            time: 'Live',
-            status: 'Active'
-        });
-
         return evts.slice(0, 8);
     }, [files]);
 
@@ -445,7 +327,7 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
             <div className="timeline-header">
                 <div className="timeline-title-group">
                     <div className="timeline-icon-wrap">
-                        <HeartPulse size={16} />
+                        <Activity size={16} />
                     </div>
                     <h3>Intelligence Feed</h3>
                 </div>
@@ -490,65 +372,7 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
     );
 };
 
-/* ──────────────────────────────────────────────────────────
-   DATA HEALTH MATRIX — Visual health indicator grid
-   ────────────────────────────────────────────────────────── */
 
-export const DataHealthMatrix = ({ files }: { files: any[] }) => {
-    const [hoveredCell, setHoveredCell] = useState<number | null>(null);
-
-    const cells = useMemo(() => {
-        const totalCells = 64; // 8x8 grid
-        return Array.from({ length: totalCells }, (_, i) => {
-            const fileIndex = i % Math.max(files.length, 1);
-            const file = files[fileIndex];
-            const hasData = i < files.length * 8;
-            const isAnomaly = file?.filename?.toLowerCase().includes('distress') || file?.filename?.toLowerCase().includes('corrupt');
-            return {
-                active: hasData,
-                health: isAnomaly ? 'warning' : hasData ? 'healthy' : 'inactive',
-                intensity: hasData ? 0.3 + Math.random() * 0.7 : 0.05,
-            };
-        });
-    }, [files]);
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1.0, duration: 0.6 }}
-            className="health-matrix"
-        >
-            <div className="matrix-header">
-                <div className="matrix-title-group">
-                    <div className="matrix-icon-wrap">
-                        <Eye size={16} />
-                    </div>
-                    <h3>Data Health Matrix</h3>
-                </div>
-                <div className="matrix-legend">
-                    <span className="legend-item"><span className="legend-dot healthy" /> Optimal</span>
-                    <span className="legend-item"><span className="legend-dot warning" /> Review</span>
-                    <span className="legend-item"><span className="legend-dot inactive" /> Vacant</span>
-                </div>
-            </div>
-            <div className="matrix-grid">
-                {cells.map((cell, i) => (
-                    <div
-                        key={i}
-                        className={`matrix-cell ${cell.health}`}
-                        style={{
-                            opacity: hoveredCell === i ? 1 : cell.intensity,
-                            transform: hoveredCell === i ? 'scale(1.5)' : 'scale(1)',
-                        }}
-                        onMouseEnter={() => setHoveredCell(i)}
-                        onMouseLeave={() => setHoveredCell(null)}
-                    />
-                ))}
-            </div>
-        </motion.div>
-    );
-};
 
 /* ──────────────────────────────────────────────────────────
    LIVE CLOCK — animated time display

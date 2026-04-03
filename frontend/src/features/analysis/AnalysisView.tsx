@@ -45,13 +45,22 @@ import {
     Zap,
     Activity,
     Microscope,
-    Rocket
+    Rocket,
+    Sparkles,
+    TrendingUp,
+    CheckCircle2,
+    ChevronUp,
+    ChevronDown
 } from 'lucide-react';
 import { ElasticSearch } from './components/ElasticSearch';
 import { ElasticFilterBar } from './components/ElasticFilterBar';
-import { ExecutiveFindings } from './components/ExecutiveFindings';
 import { PythonStudio } from './components/PythonStudio';
 import { DeployModal } from './components/DeployModal';
+import { NLQueryBar } from './components/NLQueryBar';
+import { PredictiveForecasting } from './components/PredictiveForecasting';
+import { WorldMapChart } from './components/WorldMapChart';
+import { AnomalyDetection } from './components/AnomalyDetection';
+import { NexusAuditTrail } from './components/NexusAuditTrail';
 
 interface ChartOption {
     title: string;
@@ -165,7 +174,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
     const { token } = useAuth();
     const { addToast } = useToast();
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'data' | 'sql' | 'insights' | 'presentation' | 'builder' | 'advanced' | 'graph' | 'map' | 'python'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'data' | 'sql' | 'insights' | 'presentation' | 'builder' | 'advanced' | 'graph' | 'map' | 'python' | 'ai' | 'anomaly' | 'forecast'>('overview');
+    const [isNLQueryOpen, setIsNLQueryOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
     // SQL State
@@ -342,23 +352,55 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
         // If isStatic is set, always return the data as-is
         if (opt.isStatic) return opt.data;
 
-        // If we have very few filtered rows, just return original to avoid empty charts
-        if (filteredData.length === 0) return opt.data;
+        // If all data was filtered out, return empty properly so charts show empty state
+        if (filteredData.length === 0) return [];
 
         // If no filters are active, use original data
         if (filteredData.length === localData.length) return opt.data;
 
         try {
-            // Parse chart title to extract columns (e.g., "Sales by City" -> measure: Sales, dimension: City)
-            const titleMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
+            let measureName = '';
+            let dimensionName = '';
+            let isScatter = opt.chartType === 'scatter';
 
-            if (!titleMatch) {
-                // If title doesn't match pattern, just return original data
-                return opt.data;
+            // 1. Try standard "Measure by Dimension"
+            const byMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
+            
+            // 2. Try "Model: Measure vs Dimension" (for scatter)
+            const vsMatch = opt.title.match(/(?:.*:\s*)?(.+?)\s+vs\s+(.+)$/i);
+
+            if (byMatch) {
+                measureName = byMatch[1].trim();
+                dimensionName = byMatch[2].trim();
+            } else if (isScatter && vsMatch) {
+                measureName = vsMatch[1].trim(); // x
+                dimensionName = vsMatch[2].trim(); // y
+            } else {
+                // Heuristic: Infer dimension from opt.data[0].name
+                if (opt.data && opt.data.length > 0 && opt.data[0].name) {
+                    const sampleName = opt.data[0].name;
+                    
+                    // Specific handling for "Cumulative X" time series charts
+                    if (opt.title.toLowerCase().includes('cumulative')) {
+                         dimensionName = dimensions.find(d => d.toLowerCase().includes('date') || d.toLowerCase().includes('time')) || dimensions[0];
+                         measureName = measures.find(m => opt.title.toLowerCase().includes(m.toLowerCase())) || measures[0];
+                    } else {
+                         // Find which dimension in localData contains the sampleName
+                         dimensionName = dimensions.find(d => {
+                             return localData.some((row: any) => {
+                                 const val = row[d];
+                                 if (val == null) return false;
+                                 if (String(sampleName).match(/^\d{4}-\d{2}$/) && String(val).startsWith(sampleName)) return true;
+                                 return String(val) === String(sampleName);
+                             });
+                         }) || dimensions[0];
+                         
+                         measureName = measures.find(m => opt.title.toLowerCase().includes(m.toLowerCase())) || 'Volume';
+                    }
+                } else {
+                    return opt.data;
+                }
             }
-
-            const measureName = titleMatch[1].trim();
-            const dimensionName = titleMatch[2].trim();
 
             // Special handling for "Index" - it's not a real measure, use COUNT instead
             if (measureName.toLowerCase() === 'index' || measureName.toLowerCase() === 'trend') {
@@ -405,6 +447,16 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                 const query = `SELECT [${dimensionCol}] as name, COUNT(*) as val FROM ? GROUP BY [${dimensionCol}] ORDER BY val DESC`;
                 const result = alasql(query, [filteredData]) as any[];
                 return result.slice(0, 10).map(r => ({ name: r.name, value: r.val }));
+            }
+
+            // Scatter plot handling
+            if (isScatter) {
+                // Return up to 200 raw data points for scatter
+                return filteredData.slice(0, 200).map((r, k) => ({
+                    name: `Entry ${k}`,
+                    x: Number(r[measureName]) || 0,
+                    y: Number(r[dimensionName]) || 0
+                }));
             }
 
             // Build and execute aggregation query with proper escaping
@@ -713,11 +765,58 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
     useEffect(() => {
         let filtered = [...localData];
 
-        // Apply global filters (dimension-based)
+        // Apply global filters (dimension-based and operators)
         Object.entries(globalFilters).forEach(([column, values]) => {
-            if (values && values.length > 0) {
-                filtered = filtered.filter(row => values.includes(row[column]));
+            if (!values || values.length === 0) return;
+
+            if (column === '_global_search') {
+                // Handled separately below to search across all columns
+                return;
             }
+
+            if (column.startsWith('_op_')) {
+                // Handle numeric/comparison operator filters (e.g. _op_Revenue_>)
+                const parts = column.split('_');
+                const op = parts[parts.length - 1];
+                const field = parts.slice(2, parts.length - 1).join('_');
+
+                filtered = filtered.filter(row => {
+                    return values.some(val => {
+                        const rowVal = row[field];
+                        if (rowVal == null) return false;
+
+                        const numRowVal = Number(rowVal);
+                        const numVal = Number(val);
+
+                        if (!isNaN(numRowVal) && !isNaN(numVal)) {
+                            switch (op) {
+                                case '>': return numRowVal > numVal;
+                                case '<': return numRowVal < numVal;
+                                case '>=': return numRowVal >= numVal;
+                                case '<=': return numRowVal <= numVal;
+                                case '=': return numRowVal === numVal;
+                                default: return false;
+                            }
+                        } else {
+                            // String fallback
+                            const strRowVal = String(rowVal).toLowerCase();
+                            const strVal = String(val).toLowerCase();
+                            switch (op) {
+                                case '=': return strRowVal === strVal;
+                                case '!=': return strRowVal !== strVal;
+                                case '~': return strRowVal.includes(strVal);
+                                default: return false;
+                            }
+                        }
+                    });
+                });
+                return;
+            }
+
+            // Normal equality match/IN clause for standard column filters
+            filtered = filtered.filter(row => 
+                values.some(val => String(val).toLowerCase() === String(row[column] ?? '').toLowerCase())
+            );
         });
 
         // Apply date range filter
@@ -806,6 +905,28 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
         }
     };
 
+    // Compute schema for NL Query Bar
+    const nlqSchema = useMemo(() => {
+        if (!localData.length) return {};
+        const schema: Record<string, string> = {};
+        Object.keys(localData[0]).forEach(col => {
+            const val = localData[0][col];
+            schema[col] = typeof val === 'number' || (!isNaN(Number(val)) && String(val).trim() !== '') ? 'number' : 'string';
+        });
+        return schema;
+    }, [localData]);
+
+    // ⌘J shortcut for NL Query bar
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
+                e.preventDefault();
+                setIsNLQueryOpen(p => !p);
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, []);
 
     // Presentation Mode Loop
     useEffect(() => {
@@ -846,6 +967,14 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
         const colorAlt = '#34d399'; // Emerald (Dimension-based)
         // Use colorAlt for COUNT, colorMain for SUM/AVG
         const finalColor = builderConfig.aggregation === 'COUNT' ? colorAlt : colorMain;
+
+        if (type === 'worldmap') {
+            return (
+                <div className="w-full h-full" style={{ height: '400px', width: '100%', display: 'block' }}>
+                    <WorldMapChart data={data} title="Geospatial Preview" />
+                </div>
+            );
+        }
 
         return (
             <div className="w-full h-full" style={{ height: '400px', width: '100%', display: 'block' }}>
@@ -990,6 +1119,9 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
             return (
                 <div key={index} id={`chart-static`} className="flex-1 w-full h-full flex flex-col min-h-[350px]">
                     <div className="flex-1 w-full">
+                        {currentType === 'worldmap' ? (
+                            <WorldMapChart data={displayData} title={opt.title} />
+                        ) : (
                         <ResponsiveContainer width="100%" height="100%">
                             {currentType === 'area' || currentType === 'line' ? (
                                 <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -1030,6 +1162,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                 </BarChart>
                             )}
                         </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
             );
@@ -1073,6 +1206,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                             <option value="area">Area Graph</option>
                             <option value="pie">Pie Chart</option>
                             <option value="scatter">Scatter Plot</option>
+                            <option value="worldmap">World Map</option>
                         </select>
                         <div className="flex rounded-lg p-1 gap-1" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '2px', borderRadius: '8px' }}>
                             <button
@@ -1110,6 +1244,9 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                 </div>
 
                 <div style={{ flex: 1, width: '100%', minHeight: '300px' }}>
+                    {currentType === 'worldmap' ? (
+                        <WorldMapChart data={displayData} title={opt.title} />
+                    ) : (
                     <ResponsiveContainer width="100%" height="100%">
                         {currentType === 'area' || currentType === 'line' ? (
                             <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -1260,6 +1397,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                             </BarChart>
                         )}
                     </ResponsiveContainer>
+                    )}
                 </div>
             </div >
         );
@@ -1387,6 +1525,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                         {
                             title: 'Data Analysis',
                             items: [
+                                { id: 'ai', icon: <Sparkles size={18} />, label: 'AI Query', roles: ['executive', 'analyst'], badge: 'NEW' },
                                 { id: 'overview', icon: <LayoutTemplate size={18} />, label: 'Overview', roles: ['executive', 'analyst'] },
                                 { id: 'builder', icon: <PenTool size={18} />, label: 'Visual Builder', roles: ['executive', 'analyst'] },
                                 { id: 'graph', icon: <Network size={18} />, label: 'Graph View', roles: ['analyst'] },
@@ -1397,7 +1536,9 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                         {
                             title: 'Data Science',
                             items: [
+                                { id: 'anomaly', icon: <Activity size={18} />, label: 'Anomaly Det.', roles: ['executive', 'analyst'], badge: 'AI' },
                                 { id: 'advanced', icon: <Cpu size={18} />, label: 'Advanced Stats', roles: ['analyst'] },
+                                { id: 'forecast', icon: <TrendingUp size={18} />, label: 'Forecasting', roles: ['executive', 'analyst'], badge: 'NEW' },
                                 { id: 'insights', icon: <Lightbulb size={18} />, label: 'AI Insights', roles: ['executive', 'analyst'] },
                                 { id: 'map', icon: <Map size={18} />, label: 'Geo Mapping', roles: ['analyst'] },
                                 { id: 'python', icon: <Brackets size={18} />, label: 'Python Lab', roles: ['analyst'] },
@@ -1428,34 +1569,96 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                         {group.title}
                                     </div>
                                 )}
-                                {visibleItems.map((tab: any) => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => { setActiveTab(tab.id as any); if (tab.id === 'presentation') setIsPlaying(true); }}
-                                        className={`btn hover-lift active-press ${activeTab === tab.id ? 'btn-primary shadow-lg' : 'btn-ghost'}`}
-                                        style={{
-                                            justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
-                                            padding: '10px 12px',
-                                            width: '100%',
-                                            gap: '12px',
-                                            position: 'relative',
-                                            borderRadius: '10px',
-                                            minHeight: '40px'
-                                        }}
-                                        title={isSidebarCollapsed ? tab.label : ''}
-                                    >
-                                        <span style={{ color: activeTab === tab.id ? '#fff' : 'inherit' }}>{tab.icon}</span>
-                                        {!isSidebarCollapsed && <span className="font-semibold" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{tab.label}</span>}
-                                        {activeTab === tab.id && (
-                                            <motion.div
-                                                layoutId="activeTabInner"
-                                                className="absolute left-0 w-1 h-1/2 bg-white rounded-r-full"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                            />
-                                        )}
-                                    </button>
-                                ))}
+                                {visibleItems.map((tab: any) => {
+                                    const isActive = activeTab === tab.id;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => { setActiveTab(tab.id as any); if (tab.id === 'presentation') setIsPlaying(true); }}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
+                                                padding: isSidebarCollapsed ? '10px' : '9px 12px',
+                                                gap: '12px',
+                                                width: '100%',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                borderRadius: '10px',
+                                                position: 'relative',
+                                                fontFamily: 'var(--font-main)',
+                                                fontSize: '13.5px',
+                                                fontWeight: isActive ? 700 : 500,
+                                                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                                                background: isActive
+                                                    ? 'linear-gradient(135deg, var(--primary-subtle), rgba(139, 92, 246, 0.06))'
+                                                    : 'transparent',
+                                                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                                                boxShadow: isActive ? '0 0 0 1px var(--primary-glow), inset 0 1px 0 rgba(255,255,255,0.03)' : 'none',
+                                                minHeight: '40px'
+                                            }}
+                                            title={isSidebarCollapsed ? tab.label : ''}
+                                            onMouseEnter={(e) => {
+                                                if (!isActive) {
+                                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                                                    e.currentTarget.style.color = 'var(--text-primary)';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!isActive) {
+                                                    e.currentTarget.style.background = 'transparent';
+                                                    e.currentTarget.style.color = 'var(--text-secondary)';
+                                                }
+                                            }}
+                                        >
+                                            {/* Active indicator line */}
+                                            {isActive && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    left: '0',
+                                                    top: '25%',
+                                                    bottom: '25%',
+                                                    width: '3px',
+                                                    background: 'var(--primary)',
+                                                    borderRadius: '0 4px 4px 0',
+                                                    boxShadow: '0 0 12px var(--primary-glow)',
+                                                    animation: 'glow-pulse 2.5s infinite ease-in-out',
+                                                }} />
+                                            )}
+
+                                            <span style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                                transform: isActive ? 'scale(1.08)' : 'scale(1)',
+                                            }}>
+                                                {tab.icon}
+                                            </span>
+
+                                            {!isSidebarCollapsed && (
+                                                <span style={{
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                }}>
+                                                    {tab.label}
+                                                </span>
+                                            )}
+
+                                            {!isSidebarCollapsed && tab.badge && (
+                                                <span style={{
+                                                    marginLeft: 'auto', padding: '1px 6px', borderRadius: 99,
+                                                    fontSize: 8, fontWeight: 900, letterSpacing: '0.1em',
+                                                    textTransform: 'uppercase',
+                                                    background: isActive ? 'rgba(139, 92, 246, 0.15)' : 'rgba(99,102,241,0.1)',
+                                                    color: isActive ? 'var(--primary)' : '#818cf8',
+                                                    border: `1px solid ${isActive ? 'rgba(139, 92, 246, 0.3)' : 'rgba(99,102,241,0.2)'}`,
+                                                }}>{tab.badge}</span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )
                     })}
@@ -1580,6 +1783,9 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                     <div className={activeTab === 'presentation' ? 'hidden' : 'block'} style={{ position: 'sticky', top: '72px', zIndex: 30, background: 'var(--bg-app)', borderBottom: '1px solid var(--border-subtle)' }}>
                         <ElasticSearch
                             onSearch={parseQuery}
+                            dimensions={dimensions}
+                            measures={measures}
+                            sampleData={filteredData}
                             onTimeRangeChange={(range: any) => {
                                 // Find a date column if one isn't selected
                                 let col = dateRange.column;
@@ -1792,65 +1998,14 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                     ))}
                                 </div>
 
-                                <ExecutiveFindings
-                                    reasoning={analysis.executiveReasoning}
-                                    onDeploy={handleDeploy}
-                                    onPin={handlePinInsight}
-                                />
-
-                                {analysis.processingLog?.length > 0 && (() => {
-                                    const parseAuditEntry = (entry: string) => {
-                                        const e = entry.toLowerCase();
-                                        if (e.includes('starting') || e.includes('deep audit')) return { icon: 'rocket', color: 'var(--primary)' };
-                                        if (e.includes('complete') || e.includes('deduplication') || e.includes('resolved')) return { icon: 'check', color: 'var(--success)' };
-                                        if (e.includes('analytics insight') || e.includes('outlier')) return { icon: 'search', color: 'var(--accent)' };
-                                        return { icon: 'dot', color: 'var(--text-muted)' };
-                                    };
-                                    const outlierMatch = (entry: string) => entry.match(/Found (\d+) statistical outliers in '([^']+)'/);
-                                    const visibleLog = showFullAudit ? analysis.processingLog : analysis.processingLog.slice(0, 4);
-                                    return (
-                                        <div className="flex flex-col gap-4 mt-2 mb-6">
-                                            <h3 className="text-base font-semibold tracking-tight text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>Analytical Audit & Traceability</h3>
-                                            <div className="architect-section-card flex flex-col gap-0 rounded-xl p-5">
-                                                {visibleLog.map((entry: string, i: number) => {
-                                                    const { icon, color } = parseAuditEntry(entry);
-                                                    const outlier = outlierMatch(entry);
-                                                    return (
-                                                        <div key={i} className="flex gap-4 items-start py-3 border-b border-[var(--border-subtle)]/50 last:border-0 group">
-                                                            <div className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-opacity" style={{ background: `${color}18`, color }}>
-                                                                {icon === 'rocket' && <Rocket size={14} />}
-                                                                {icon === 'check' && <Activity size={14} />}
-                                                                {icon === 'search' && <Microscope size={14} />}
-                                                                {icon === 'dot' && <div className="w-2 h-2 rounded-full bg-current opacity-60" />}
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <span className="text-xs font-mono text-[var(--text-primary)] opacity-90 leading-relaxed">{entry}</span>
-                                                                {outlier && (
-                                                                    <button
-                                                                        type="button"
-                                                                        className="mt-2 text-[11px] font-semibold text-[var(--primary)] hover:underline block"
-                                                                        onClick={() => setActiveTab('data')}
-                                                                    >
-                                                                        Review {outlier[1]} outliers in {outlier[2]} →
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                                {analysis.processingLog.length > 4 && (
-                                                    <button
-                                                        type="button"
-                                                        className="mt-4 pt-4 border-t border-[var(--border-subtle)]/50 text-xs font-semibold text-[var(--primary)] hover:underline flex items-center gap-2"
-                                                        onClick={() => setShowFullAudit(!showFullAudit)}
-                                                    >
-                                                        {showFullAudit ? '− Collapse audit' : `+ View full ${analysis.processingLog.length} stage processing audit...`}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
+                                {analysis.processingLog?.length > 0 && (
+                                    <NexusAuditTrail
+                                        processingLog={analysis.processingLog}
+                                        showFullAudit={showFullAudit}
+                                        setShowFullAudit={setShowFullAudit}
+                                        onNavigateToData={() => setActiveTab('data')}
+                                    />
+                                )}
 
                                 {/* Warning when filters result in 0 rows */}
                                 {filteredData.length === 0 && activeFiltersList.length > 0 && (
@@ -2252,6 +2407,27 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                         {activeTab === 'python' && (
                             <PythonStudio data={localData} />
                         )}
+
+                        {/* ── AI QUERY TAB ── */}
+                        {activeTab === 'ai' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                                <NLQueryBar
+                                    datasetId={analysis.id}
+                                    data={localData}
+                                    schema={nlqSchema}
+                                    inline={true}
+                                />
+                            </div>
+                        )}
+                        {/* ── FORECASTING TAB ── */}
+                        {activeTab === 'forecast' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                                <PredictiveForecasting
+                                    data={localData}
+                                    schema={nlqSchema}
+                                />
+                            </div>
+                        )}
                         {activeTab === 'builder' && (
                             <div className="flex flex-col gap-6 fade-in h-full p-2 relative overflow-y-auto">
                                 {/* Ambient Backlight */}
@@ -2334,7 +2510,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                                 <BarChart3 size={12} /> Presentation
                                             </label>
                                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                                {['bar', 'line', 'area', 'pie', 'donut', 'scatter'].map(type => (
+                                                {['bar', 'line', 'area', 'pie', 'donut', 'scatter', 'worldmap'].map(type => (
                                                     <button
                                                         key={type}
                                                         onClick={() => setBuilderConfig(prev => ({ ...prev, chartType: type }))}
@@ -2519,6 +2695,12 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                         )}
                                     </AnimatePresence>
                                 </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'anomaly' && (
+                            <div className="w-full h-full flex flex-col p-4 animate-fade-in relative z-10" style={{ height: 'calc(100vh - 80px)' }}>
+                                <AnomalyDetection data={localData} schema={analysis.summary?.columnTypes || {}} />
                             </div>
                         )}
 
@@ -2731,6 +2913,15 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                 onClose={() => setShowDeployModal(false)}
                 analysis={analysis}
                 onDeploy={handleDeployMethod}
+            />
+
+            {/* AI Natural Language Query Bar */}
+            <NLQueryBar
+                datasetId={analysis.id}
+                data={localData}
+                schema={nlqSchema}
+                isOpen={isNLQueryOpen}
+                onClose={() => setIsNLQueryOpen(false)}
             />
 
         </div >

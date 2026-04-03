@@ -39,7 +39,11 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
             'text/csv': ['.csv'],
             'application/json': ['.json'],
             'application/vnd.ms-excel': ['.xls'],
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+            'application/xml': ['.xml'],
+            'text/xml': ['.xml'],
+            'application/pdf': ['.pdf'],
+            'text/html': ['.html']
         },
         multiple: true
     });
@@ -124,7 +128,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
                 <p className="dropzone-text">
                     {isDragActive ? 'Drop files here...' : 'Drag & drop files here, or click to select'}
                 </p>
-                <p className="dropzone-hint">Supports CSV, JSON, Excel files (up to 20 files)</p>
+                <p className="dropzone-hint">Supports CSV, JSON, Excel, XML, PDF, HTML files (up to 20 files)</p>
             </div>
 
             {/* File List */}

@@ -30,7 +30,6 @@ import {
 import { useToast } from '../../components/ui/Toast';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { ExecutiveFindings } from '../analysis/components/ExecutiveFindings';
 
 interface Department {
     id: string;
@@ -631,12 +630,6 @@ export const SelfServiceStudio = ({
                                             </div>
                                         )}
                                     </div>
-
-                                    {activeAnalysis?.executiveReasoning && (
-                                        <div className="mt-6">
-                                            <ExecutiveFindings reasoning={activeAnalysis.executiveReasoning} />
-                                        </div>
-                                    )}
 
                                     {activeAnalysis?.keyFindings?.length > 0 && (
                                         <div className="findings-grid mt-6">

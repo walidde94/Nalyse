@@ -37,9 +37,10 @@ import {
 import { calculatePulse } from './pulseEngine';
 import { useAuth } from '../../contexts/AuthContext';
 import { NeuralCanvas } from './NeuralCanvas';
-import { AmbientStatusStrip, OrbitalMetric, IntelligenceTimeline, DataHealthMatrix, PerformanceGauge, QuickActionsBar, LiveClock } from './CommandHUD';
-import { ProPowerBanner, ProHeroBadge, SystemThroughputGrid } from './ProBeastMode';
+import { AmbientStatusStrip, OrbitalMetric, IntelligenceTimeline, PerformanceGauge, QuickActionsBar, LiveClock } from './CommandHUD';
+import { ProPowerBanner, ProHeroBadge } from './ProBeastMode';
 import { NeuralDropZone } from './NeuralDropZone';
+
 
 // --- SUB-COMPONENTS for Dashboard ---
 
@@ -120,19 +121,19 @@ const ExecutiveSummary = ({ metrics, fileCount, anomalyCount, onViewReport, user
                 </div>
 
                 {isFree && (
-                    <div className="lg:border-l lg:border-white/10 lg:pl-8 flex flex-col gap-3">
+                    <div className="lg:border-l lg:border-[var(--border-subtle)] lg:pl-8 flex flex-col gap-3">
                         <div className="flex items-center gap-2">
                             <Sparkles size={14} className="text-amber-400" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Unlock Advanced Causality</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Upgrade Required</span>
                         </div>
-                        <p className="text-[11px] text-white/60 max-w-[200px] leading-tight font-medium">
-                            Manifest Neural Pro for detailed cross-departmental reasoning and unlimited datasets.
+                        <p className="text-[11px] text-[var(--text-secondary)] max-w-[200px] leading-tight font-medium">
+                            Upgrade to Professional for advanced analytics and unlimited dataset storage.
                         </p>
                         <button
                             onClick={onUpgrade}
                             className="text-xs font-black uppercase tracking-wider hover:text-white transition-colors flex items-center gap-2 group"
                         >
-                            <span className="shimmer-text">Get Pro Access</span> <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform text-[var(--primary)]" />
+                            <span className="shimmer-text">Upgrade Plan</span> <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform text-[var(--primary)]" />
                         </button>
                     </div>
                 )}
@@ -265,7 +266,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                                 </div>
                             )}
                             <span style={{ textShadow: `0 0 10px ${isFileLimitReached || isStorageLimitReached ? 'rgba(239,68,68,0.5)' : 'var(--primary)'}` }}>
-                                {isFileLimitReached || isStorageLimitReached ? 'SYSTEM QUOTA EXHAUSTED' : 'NEURAL CAPACITY PROTOCOL'}
+                                {isFileLimitReached || isStorageLimitReached ? 'SYSTEM QUOTA EXHAUSTED' : 'STORAGE QUOTA'}
                             </span>
                         </div>
 
@@ -291,8 +292,8 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             letterSpacing: '-0.02em',
                         }}>
                             {isFileLimitReached || isStorageLimitReached
-                                ? 'Intelligence Expansion Required'
-                                : 'Manifest Greater Intelligence'}
+                                ? 'Storage Limit Reached'
+                                : 'Upgrade to Professional Tier'}
                         </h2>
                         <p style={{
                             fontSize: 'clamp(15px, 1.5vw, 17px)',
@@ -303,8 +304,8 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             fontWeight: 500
                         }}>
                             {isFileLimitReached || isStorageLimitReached
-                                ? 'System resources have hit their hard limits. Upgrade to Nexus Tier for unlimited throughput and cross-dimensional data mapping.'
-                                : 'Break the boundaries of standard processing. Manifest Neural Pro to unlock unlimited data pipelines and real-time structural reasoning.'}
+                                ? 'System resources have hit their tier limits. Upgrade to Professional for unlimited throughput and advanced data mapping.'
+                                : 'Unlock the full potential of your data. Upgrade to the Professional Tier to remove limits and enable advanced enterprise capabilities.'}
                         </p>
                     </div>
                 </div>
@@ -414,7 +415,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             gap: '12px'
                         }}>
                             <Sparkles size={16} className="text-white/80" />
-                            Manifest Neural Pro
+                            Upgrade Now
                         </span>
                         <ArrowRight size={20} className="relative group-hover:translate-x-2 transition-transform duration-300" style={{ color: '#fff' }} />
                     </motion.button>
@@ -780,6 +781,8 @@ export const DashboardView = ({
                 />
             </div>
 
+
+
             {/* --- ACTIVE WORKSPACE (DATASET MATRIX) --- */}
             <motion.section
                 initial={{ opacity: 0, y: 20 }}
@@ -1118,18 +1121,12 @@ export const DashboardView = ({
                 </div>
             </motion.section>
 
-            {/* --- COMMAND CENTER INTELLIGENCE GRID --- */}
+            {/* --- INTELLIGENCE FEED --- */}
             <div className="command-center-grid">
                 <IntelligenceTimeline files={safeFiles} />
-                <DataHealthMatrix files={safeFiles} />
             </div>
 
-            {/* --- PRO: SYSTEM THROUGHPUT CHART --- */}
-            {(userPlan === 'pro' || userPlan === 'enterprise') && (
-                <SystemThroughputGrid metrics={metrics} />
-            )}
-
-            {/* --- COMMAND CENTER: WATCHLIST & INTELLIGENCE --- */}
+            {/* --- WATCHLIST & INTELLIGENCE --- */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1242,7 +1239,7 @@ export const DashboardView = ({
                                             </div>
                                             <div className="flex-1 overflow-hidden">
                                                 <div className="hud-artifact-name">{f.originalName || f.filename}</div>
-                                                <div className="hud-artifact-status">Ready for Discovery</div>
+                                                <div className="hud-artifact-status">{f.isProcessed ? '✓ Analysis Ready' : 'Awaiting Processing'}</div>
                                             </div>
                                             <div className="hud-artifact-arrow">
                                                 <ArrowRight size={12} />
@@ -1262,61 +1259,7 @@ export const DashboardView = ({
                         </div>
                     </div>
 
-                    {/* Pulse Actions */}
-                    <div className="hud-panel">
-                        <div className="hud-panel-header">
-                            <div className="hud-panel-title-group">
-                                <div className="hud-panel-icon" style={{
-                                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05))',
-                                    color: '#3b82f6',
-                                    border: '1px solid rgba(59, 130, 246, 0.2)'
-                                }}>
-                                    <Zap size={16} />
-                                </div>
-                                <div>
-                                    <h3 className="hud-panel-title">Pulse Actions</h3>
-                                    <span className="hud-panel-subtitle">Quick operations</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="hud-panel-body" style={{ padding: '12px 20px 20px' }}>
-                            <div className="flex flex-col gap-3">
-                                <div className="hud-action-card" style={{ '--action-color': '#3b82f6' } as React.CSSProperties}>
-                                    <div className="hud-action-card-accent" />
-                                    <div className="hud-action-card-icon">
-                                        <BarChart3 size={16} />
-                                    </div>
-                                    <div>
-                                        <h4 className="hud-action-card-title">Schedule Neural Report</h4>
-                                        <p className="hud-action-card-desc">Automate cross-cluster intelligence distribution for active streams.</p>
-                                    </div>
-                                    <ArrowRight size={14} className="hud-action-card-arrow" />
-                                </div>
-                                <div className="hud-action-card" style={{ '--action-color': '#f59e0b' } as React.CSSProperties}>
-                                    <div className="hud-action-card-accent" />
-                                    <div className="hud-action-card-icon">
-                                        <AlertTriangle size={16} />
-                                    </div>
-                                    <div>
-                                        <h4 className="hud-action-card-title">Drift Audit Required</h4>
-                                        <p className="hud-action-card-desc">{metrics.anomalies} anomalies detected in logistics variance. Structural review suggested.</p>
-                                    </div>
-                                    <ArrowRight size={14} className="hud-action-card-arrow" />
-                                </div>
-                                <div className="hud-action-card" style={{ '--action-color': '#10b981' } as React.CSSProperties}>
-                                    <div className="hud-action-card-accent" />
-                                    <div className="hud-action-card-icon">
-                                        <Target size={16} />
-                                    </div>
-                                    <div>
-                                        <h4 className="hud-action-card-title">Deploy Strategy</h4>
-                                        <p className="hud-action-card-desc">Push insights to live systems and activate decision agents.</p>
-                                    </div>
-                                    <ArrowRight size={14} className="hud-action-card-arrow" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
             </motion.div>
 
@@ -1523,13 +1466,7 @@ export const DashboardView = ({
                                                     <span className="text-xs font-bold uppercase tracking-widest opacity-60">No readable sectors found</span>
                                                 </div>
                                             )}
-                                            <div className="mt-4 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <Zap size={14} className="text-emerald-500" />
-                                                    <span className="text-[10px] text-emerald-500/70 font-medium tracking-tight">Enterprise Preview Engine: Displaying restricted bytecode sample.</span>
-                                                </div>
-                                                <span className="text-[9px] font-black text-[var(--text-tertiary)] uppercase">Ver 2.4.0-Stable</span>
-                                            </div>
+
                                         </div>
                                     )}
                                 </div>
@@ -1587,7 +1524,12 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                         </div>
                         <div className="pl-6">
                             <h4 className="font-bold text-sm truncate group-hover:text-primary transition-colors" title={f.originalName || f.filename}>{f.originalName || f.filename}</h4>
-                            <p className="text-xs text-secondary mt-1">{(f.size / 1024).toFixed(1)} KB • {new Date(f.createdAt).toLocaleDateString()}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <p className="text-xs text-secondary">{(f.size / 1024).toFixed(1)} KB</p>
+                                <span className={`px-1.5 py-0.5 rounded-[4px] text-[8px] font-black uppercase tracking-wider border ${f.isProcessed ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                                    {f.isProcessed ? '✓ Processed' : '○ Unprocessed'}
+                                </span>
+                            </div>
                             {f.size > 50 * 1024 * 1024 && (
                                 <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-[4px] bg-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-wider backdrop-blur-md border border-purple-500/10">
                                     BIG DATA
@@ -1597,7 +1539,7 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
 
                         <div className="mt-2 border-t border-[var(--border-subtle)] pt-3 flex gap-2">
                             <button className="btn btn-xs btn-primary flex-1 py-2 font-bold uppercase tracking-wider text-[9px]" onClick={(e) => { e.stopPropagation(); onFileSelect(f); }}>
-                                Analyze
+                                {f.isProcessed ? 'Open' : 'Process'}
                             </button>
                             <button
                                 className="btn btn-xs btn-secondary p-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] transition-all"
@@ -1723,6 +1665,17 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                 <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px' }}>
                                                     {f.originalName || f.filename}
                                                 </span>
+                                                <span style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '4px', width: 'fit-content',
+                                                    padding: '2px 8px', borderRadius: '6px', fontSize: '9px', fontWeight: 800,
+                                                    textTransform: 'uppercase', letterSpacing: '0.1em',
+                                                    background: f.isProcessed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                                    color: f.isProcessed ? '#10b981' : '#f59e0b',
+                                                    border: `1px solid ${f.isProcessed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`
+                                                }}>
+                                                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />
+                                                    {f.isProcessed ? 'Processed' : 'Awaiting Processing'}
+                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -1835,7 +1788,9 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                     height: '36px',
                                                     padding: '0 16px',
                                                     borderRadius: '10px',
-                                                    background: 'linear-gradient(135deg, var(--primary) 0%, #c026d3 100%)',
+                                                    background: f.isProcessed
+                                                        ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                                                        : 'linear-gradient(135deg, var(--primary) 0%, #c026d3 100%)',
                                                     border: 'none',
                                                     color: '#fff',
                                                     display: 'flex',
@@ -1845,12 +1800,14 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                     fontSize: '11px',
                                                     textTransform: 'uppercase',
                                                     letterSpacing: '0.05em',
-                                                    boxShadow: '0 4px 15px -5px rgba(192, 38, 211, 0.5)',
+                                                    boxShadow: f.isProcessed
+                                                        ? '0 4px 15px -5px rgba(16, 185, 129, 0.5)'
+                                                        : '0 4px 15px -5px rgba(192, 38, 211, 0.5)',
                                                     cursor: 'pointer'
                                                 }}
-                                                title="Commence Neural Analysis"
+                                                title={f.isProcessed ? 'Open cached analysis' : 'Process this dataset'}
                                             >
-                                                <BrainCircuit size={14} /> Process
+                                                <BrainCircuit size={14} /> {f.isProcessed ? 'Open' : 'Process'}
                                             </motion.button>
 
                                             <motion.button

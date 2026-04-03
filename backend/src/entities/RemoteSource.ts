@@ -10,7 +10,7 @@ export class RemoteSource {
     name: string;
 
     @Column()
-    type: 'postgresql' | 'mysql' | 'rest_api' | 's3_bucket';
+    type: string;
 
     @Column({ type: 'simple-json', nullable: true })
     config: any; // { host, port, user, password, database } OR { url, headers }

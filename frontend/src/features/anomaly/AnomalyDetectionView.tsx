@@ -17,6 +17,7 @@ import {
     runAnomalyDetection, fmt, pct, SEVERITY_COLORS, TYPE_COLORS, TYPE_LABELS,
     type DetectionResult, type DetectionConfig, type AnomalyPoint, type KpiSummary
 } from './anomalyHelpers';
+import { RCAPanel } from './RCAPanel';
 
 /* ─── Mini Sparkline ──────────────────────────────────────── */
 const Spark = ({ data, color, w = 60, h = 24 }: { data: number[]; color: string; w?: number; h?: number }) => {
@@ -93,6 +94,7 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
     const [activeSection, setActiveSection] = useState<'overview' | 'timeline' | 'feed' | 'recommendations'>('overview');
     const [selectedMetric, setSelectedMetric] = useState<string>('');
     const [severityFilter, setSeverityFilter] = useState<string>('all');
+    const [rcaAnomaly, setRcaAnomaly] = useState<AnomalyPoint | null>(null);
 
     const runDetection = useCallback(async () => {
         if (!selectedFileId) { addToast('Select a dataset first', 'error'); return; }
@@ -147,7 +149,7 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
 
     const selectedFile = files.find(f => f.id === selectedFileId);
 
-    return (
+    const mainContent = (
         <div id="anomaly-detection-view" style={{ height: '100%', overflowY: 'auto', padding: 'clamp(16px, 3vw, 32px)' }}>
 
             {/* ─── Header ─────────────────────────────────────── */}
@@ -402,6 +404,19 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
                                         <div className="flex items-center gap-4">
                                             <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Confidence: <strong style={{ color: anomaly.confidence > 80 ? '#34d399' : '#fbbf24' }}>{anomaly.confidence.toFixed(0)}%</strong></span>
                                             <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Z-Score: <strong style={{ fontFamily: 'var(--font-mono)' }}>{anomaly.zScore.toFixed(2)}</strong></span>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setRcaAnomaly(anomaly); }}
+                                                style={{
+                                                    marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5,
+                                                    padding: '4px 10px', borderRadius: 7, fontSize: '10px', fontWeight: 700,
+                                                    background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
+                                                    color: '#818cf8', cursor: 'pointer', transition: 'all 0.15s',
+                                                }}
+                                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.2)'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
+                                            >
+                                                <Brain size={11} /> Explain Why
+                                            </button>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -458,6 +473,30 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
                 </div>
             )}
         </div>
+    );
+
+
+    return (
+        <>
+            {mainContent}
+
+            {/* RCA Slide-in Panel */}
+            <AnimatePresence>
+                {rcaAnomaly && result && (
+                    <RCAPanel
+                        anomaly={rcaAnomaly}
+                        kpiSummary={result.kpis.find(k => k.metric === rcaAnomaly.metric)}
+                        allKpis={result.kpis}
+                        surroundingData={result.timeSeriesData
+                            .filter(p => Math.abs(p.index - rcaAnomaly.index) <= 10)
+                            .map(p => ({ ...p.values, _index: p.index, _timestamp: p.timestamp }))
+                        }
+                        datasetName={selectedFile?.filename || selectedFile?.originalName}
+                        onClose={() => setRcaAnomaly(null)}
+                    />
+                )}
+            </AnimatePresence>
+        </>
     );
 };
 

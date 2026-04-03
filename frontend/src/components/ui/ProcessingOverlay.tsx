@@ -20,15 +20,16 @@ import {
 
 interface ProcessingOverlayProps {
     isVisible: boolean;
-    stage: number; // 0 to 4
+    stage: number; // 0 to 4 (analysis) or 0 to 2 (upload)
     status?: 'processing' | 'completed' | 'error';
+    mode?: 'analysis' | 'upload';
     errorDetails?: string;
     onViewResults?: () => void;
     onRetry?: () => void;
     onClose?: () => void;
 }
 
-const STAGES = [
+const ANALYSIS_STAGES = [
     {
         id: 0,
         label: "Uploading Assets",
@@ -68,6 +69,33 @@ const STAGES = [
         icon: BarChart3,
         color: "#ec4899",
         audit: "Surface Ready // Manifested"
+    }
+];
+
+const UPLOAD_STAGES = [
+    {
+        id: 0,
+        label: "Transmitting Data",
+        desc: "Encrypting and transmitting dataset to the secure elastic vault.",
+        icon: CloudUpload,
+        color: "#3b82f6",
+        audit: "AES-256 Transfer // Active"
+    },
+    {
+        id: 1,
+        label: "Indexing Dataset",
+        desc: "Registering data topology and building structural metadata.",
+        icon: ShieldCheck,
+        color: "#10b981",
+        audit: "Schema Indexed // Verified"
+    },
+    {
+        id: 2,
+        label: "Dataset Secured",
+        desc: "Your dataset is now available in the workspace. Click Process to analyze.",
+        icon: CheckCircle2,
+        color: "#10b981",
+        audit: "Vault Sealed // Ready"
     }
 ];
 
@@ -148,11 +176,13 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
     isVisible,
     stage,
     status = 'processing',
+    mode = 'analysis',
     errorDetails,
     onViewResults,
     onRetry,
     onClose
 }) => {
+    const STAGES = mode === 'upload' ? UPLOAD_STAGES : ANALYSIS_STAGES;
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -239,7 +269,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                     style={{ background: accentColor, boxShadow: `0 0 12px ${accentColor}` }}
                                 />
                                 <span className="po-header-label">
-                                    {status === 'error' ? 'CORE ERROR DETECTED' : status === 'completed' ? 'PROCESSING FINALIZED' : 'NEURAL CORE ACTIVE'}
+                                    {status === 'error' ? 'CORE ERROR DETECTED' : status === 'completed' ? (mode === 'upload' ? 'UPLOAD COMPLETE' : 'PROCESSING FINALIZED') : (mode === 'upload' ? 'SECURE UPLOAD ACTIVE' : 'NEURAL CORE ACTIVE')}
                                 </span>
                             </div>
                             <div className="po-header-right">
@@ -312,7 +342,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                     transition={{ delay: 0.1, duration: 0.4 }}
                                     className="po-title"
                                 >
-                                    {status === 'error' ? 'Request Blocked' : status === 'completed' ? 'Neural Link Ready' : currentStage.label}
+                                    {status === 'error' ? 'Request Blocked' : status === 'completed' ? (mode === 'upload' ? 'Upload Complete' : 'Neural Link Ready') : currentStage.label}
                                 </motion.h2>
                                 <motion.p
                                     key={`desc-${status}-${stage}`}
@@ -324,7 +354,9 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                     {status === 'error'
                                         ? formatErrorMessage(errorDetails)
                                         : status === 'completed'
-                                            ? 'Dataset synthesis complete. Strategic intelligence has been manifested in your workspace.'
+                                            ? (mode === 'upload'
+                                                ? 'Your dataset has been securely ingested. Click "Process" from the dashboard to begin analysis.'
+                                                : 'Dataset synthesis complete. Strategic intelligence has been manifested in your workspace.')
                                             : currentStage.desc
                                     }
                                 </motion.p>
@@ -384,11 +416,18 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                     transition={{ delay: 0.25 }}
                                     className="po-completed-stats"
                                 >
-                                    {[
-                                        { label: 'Stages', value: '5/5', color: '#10b981' },
-                                        { label: 'Integrity', value: '100%', color: '#3b82f6' },
-                                        { label: 'Link', value: 'Secure', color: '#8b5cf6' },
-                                    ].map((stat) => (
+                                    {(mode === 'upload'
+                                        ? [
+                                            { label: 'Status', value: 'Indexed', color: '#10b981' },
+                                            { label: 'Integrity', value: '100%', color: '#3b82f6' },
+                                            { label: 'Vault', value: 'Secure', color: '#8b5cf6' },
+                                        ]
+                                        : [
+                                            { label: 'Stages', value: '5/5', color: '#10b981' },
+                                            { label: 'Integrity', value: '100%', color: '#3b82f6' },
+                                            { label: 'Link', value: 'Secure', color: '#8b5cf6' },
+                                        ]
+                                    ).map((stat) => (
                                         <div key={stat.label} className="po-stat-chip">
                                             <span className="po-stat-value" style={{ color: stat.color }}>{stat.value}</span>
                                             <span className="po-stat-label">{stat.label}</span>
@@ -401,7 +440,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                             {status === 'processing' && (
                                 <div className="po-bottom-progress">
                                     <div className="po-bp-meta">
-                                        <span className="po-bp-label">Cognitive Completion</span>
+                                        <span className="po-bp-label">{mode === 'upload' ? 'Upload Progress' : 'Cognitive Completion'}</span>
                                         <span className="po-bp-pct" style={{ color: accentColor }}>{progressPct}%</span>
                                     </div>
                                     <div className="po-bp-track">
@@ -429,7 +468,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                             whileTap={{ scale: 0.98 }}
                                         >
                                             <Sparkles size={18} />
-                                            <span>Manifest Analysis</span>
+                                            <span>{mode === 'upload' ? 'Return to Dashboard' : 'Manifest Analysis'}</span>
                                             <ArrowRight size={18} />
                                         </motion.button>
                                         <button onClick={onClose} className="po-btn po-btn-ghost">
@@ -452,7 +491,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                         </button>
                                     </>
                                 ) : (
-                                    <p className="po-hint">Do not close this panel during neural synthesis</p>
+                                    <p className="po-hint">{mode === 'upload' ? 'Transmitting data securely — please wait' : 'Do not close this panel during neural synthesis'}</p>
                                 )}
                             </div>
                         </div>

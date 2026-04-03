@@ -5,7 +5,7 @@ import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
+import { globalApiLimiter, authLimiter as redisAuthLimiter, webhookLimiter } from './middleware/rateLimiter';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { initializeDatabase } from './config/database';
@@ -22,6 +22,10 @@ import sourceRoutes from './routes/sources';
 import agentRoutes from './routes/agents';
 import pulseRoutes from './routes/pulse';
 import subscriptionRoutes from './routes/subscription';
+import aiRoutes from './routes/ai';
+import automationRoutes from './routes/automation';
+import collaborationRoutes from './routes/collaboration';
+import webhookRoutes from './routes/webhooks';
 
 
 const allowedOrigins = [
@@ -60,11 +64,7 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 
 // Rate limiting for External API
-const externalApiLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 1000, // Limit each IP to 1000 requests per windowMs
-    message: { error: 'Too many requests', message: 'Rate limit exceeded. Please contact enterprise support for higher limits.' }
-});
+const externalApiLimiter = globalApiLimiter;
 
 // Security middleware
 app.use(helmet({
@@ -98,23 +98,10 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true, limit: '500mb' }));
 
 // Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.'
-});
+app.use('/api/', globalApiLimiter);
 
-app.use('/api/', limiter);
-
-// Stricter rate limit for auth endpoints
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100, // Increased for development
-    message: 'Too many authentication attempts, please try again later.'
-});
-
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/login', redisAuthLimiter);
+app.use('/api/auth/register', redisAuthLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -130,8 +117,12 @@ app.use('/api/sources', sourceRoutes);
 
 
 app.use('/api/agents', agentRoutes);
+app.use('/api/ai', aiRoutes);
 
+app.use('/api/automation', automationRoutes);
 app.use('/api/pulse', pulseRoutes);
+app.use('/api/collaboration', collaborationRoutes);
+app.use('/api/webhooks', webhookLimiter, webhookRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -249,7 +240,8 @@ const startServer = async () => {
         initAnalysisWorker();
 
         // Start server
-        httpServer.listen(Number(PORT), '0.0.0.0', () => {
+        httpServer.listen(Number(PORT), () => {
+            console.log(`Server started on port ${PORT}`);
         });
     } catch (error) {
         console.error('Failed to start server:', error);

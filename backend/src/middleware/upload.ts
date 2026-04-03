@@ -27,18 +27,26 @@ export const upload = multer({
         const allowedMimes = [
             'text/csv',
             'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
             'application/json',
+            'application/pdf',
+            'text/html',
+            'application/xml',
+            'text/xml',
             'image/png',
             'image/jpeg',
             'image/gif',
             'image/webp'
         ];
 
-        if (allowedMimes.includes(file.mimetype) || file.originalname.endsWith('.csv')) {
+        // Also permit via explicit extensions if mimetypes get obscured by browsers
+        const allowedExtensions = ['.csv', '.xlsx', '.json', '.pdf', '.html', '.xml', '.png', '.jpg', '.jpeg', '.gif', '.webp'];
+        const hasValidExt = allowedExtensions.some(ext => file.originalname.toLowerCase().endsWith(ext));
+
+        if (allowedMimes.includes(file.mimetype) || hasValidExt) {
             cb(null, true);
         } else {
-            cb(new Error('Invalid file type. Only CSV, Excel, JSON, and Images (PNG/JPG/GIF/WEBP) are allowed.'));
+            cb(new Error('Invalid file type. Only CSV, Excel (XLSX), JSON, XML, PDF, HTML, and Images are allowed.'));
         }
     }
 });
