@@ -247,6 +247,14 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
         const duration = Date.now() - startTime;
         console.log(`[Analysis] Completed in ${duration}ms for file ${file.id}`);
 
+        if (analysisResult.type === 'Error') {
+            console.error(`[Analysis] Engine failed to process ${file.id}:`, analysisResult.dataLimitations);
+            return res.status(422).json({
+                error: 'ANALYSIS_FAILED',
+                message: analysisResult.dataLimitations?.[0] || 'The analysis engine could not process this dataset. It may be empty or corrupted.'
+            });
+        }
+
         // ─── Only persist if analysis actually has data ──────────────
         const hasData = (analysisResult.sampleData && analysisResult.sampleData.length > 0) ||
                         (analysisResult.options && analysisResult.options.length > 0);
