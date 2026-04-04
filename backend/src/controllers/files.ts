@@ -76,7 +76,16 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 throw err;
             }
 
-            if (Number(org.storageUsed) + fileSize > Number(org.storageLimit)) {
+            let effectiveStorageLimit = Number(org.storageLimit);
+            if (org.plan === 'enterprise') {
+                effectiveStorageLimit = 1099511627776; // 1TB
+            } else if (org.plan === 'pro') {
+                effectiveStorageLimit = 10737418240; // 10GB
+            } else {
+                effectiveStorageLimit = 104857600; // 100MB
+            }
+
+            if (Number(org.storageUsed) + fileSize > effectiveStorageLimit) {
                 const err = new Error('Storage quota exceeded');
                 (err as any).statusCode = 403;
                 throw err;
@@ -88,8 +97,12 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             });
 
             let effectiveLimit = org.fileLimit;
-            if (org.plan === 'free') {
-                effectiveLimit = 5; // Hard cap for free plan
+            if (org.plan === 'enterprise') {
+                effectiveLimit = 10000;
+            } else if (org.plan === 'pro') {
+                effectiveLimit = 1000;
+            } else {
+                effectiveLimit = 5;
             }
 
             if (fileCount >= effectiveLimit) {

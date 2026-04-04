@@ -287,16 +287,34 @@ export const uploadMultipleFilesHandler = async (req: AuthRequest, res: Response
                 fileDataList.push({ file, checksum });
             }
 
+            let effectiveLimit = org.fileLimit;
+            if (org.plan === 'enterprise') {
+                effectiveLimit = 10000;
+            } else if (org.plan === 'pro') {
+                effectiveLimit = 1000;
+            } else {
+                effectiveLimit = 5;
+            }
+
             // Check if adding the new batch will exceed the limit
-            if (existingFileCount + files.length > org.fileLimit) {
-                const err = new Error(`Dataset limit exceeded. Your plan allows up to ${org.fileLimit} datasets. You currently have ${existingFileCount} and are trying to upload ${files.length} more.`);
+            if (existingFileCount + files.length > effectiveLimit) {
+                const err = new Error(`Dataset limit exceeded. Your plan allows up to ${effectiveLimit} datasets. You currently have ${existingFileCount} and are trying to upload ${files.length} more.`);
                 (err as any).statusCode = 403;
                 throw err;
             }
 
             // Check storage limit for the whole batch
             const totalBatchSize = files.reduce((sum, f) => sum + f.size, 0);
-            if (Number(org.storageUsed) + totalBatchSize > Number(org.storageLimit)) {
+            let effectiveStorageLimit = Number(org.storageLimit);
+            if (org.plan === 'enterprise') {
+                effectiveStorageLimit = 1099511627776; // 1TB
+            } else if (org.plan === 'pro') {
+                effectiveStorageLimit = 10737418240; // 10GB
+            } else {
+                effectiveStorageLimit = 104857600; // 100MB
+            }
+
+            if (Number(org.storageUsed) + totalBatchSize > effectiveStorageLimit) {
                 const err = new Error('Batch upload exceeds storage quota');
                 (err as any).statusCode = 403;
                 throw err;

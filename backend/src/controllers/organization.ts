@@ -103,7 +103,14 @@ export const inviteMember = async (req: AuthRequest, res: Response) => {
             where: { organizationId: user.organization.id, status: 'pending' }
         });
 
-        const effectiveUserLimit = user.organization.plan === 'free' ? 1 : user.organization.userLimit;
+        let effectiveUserLimit = user.organization.userLimit;
+        if (user.organization.plan === 'enterprise') {
+            effectiveUserLimit = 100;
+        } else if (user.organization.plan === 'pro') {
+            effectiveUserLimit = 10;
+        } else {
+            effectiveUserLimit = 1; // Default for free plan
+        }
 
         if (memberCount + pendingInviteCount >= effectiveUserLimit) {
             return res.status(403).json({
