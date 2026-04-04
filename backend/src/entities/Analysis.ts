@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { File } from './File';
 import { User } from './User';
 
@@ -7,7 +7,8 @@ export class Analysis {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @ManyToOne(() => File, file => file.analyses)
+    @ManyToOne(() => File, file => file.analyses, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'fileId' })
     file: File;
 
     @Column()
