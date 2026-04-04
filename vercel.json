@@ -1,6 +1,7 @@
 {
     "version": 2,
     "public": true,
+    "ignoreCommand": "exit 0",
     "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build",
     "outputDirectory": "frontend/dist",
     "rewrites": [
