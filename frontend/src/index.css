@@ -5313,7 +5313,22 @@ textarea:focus,
   to { transform: rotate(360deg); }
 }
 
+@keyframes floatParticle {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.15; }
+  50% { opacity: 0.4; }
+  100% { transform: translate(30px, -40px) scale(1.4); opacity: 0.1; }
+}
+
 /* Z-index utility for modals */
 .z-max {
   z-index: 99999;
+}
+
+/* Auth input autofill styles for the new split-panel design */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px rgba(12,12,22,1) inset !important;
+  -webkit-text-fill-color: white !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
