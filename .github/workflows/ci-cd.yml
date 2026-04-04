@@ -6,20 +6,20 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
-# Automatically cancel in-progress runs if new commits are pushed
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # =========================================================
+  # 1. PARALLEL VALIDATION JOBS
+  # =========================================================
   validate-backend:
-    name: ⚙️ Backend Services
+    name: ⚙️ Validate Backend (Node 20)
     runs-on: ubuntu-latest
-    
     defaults:
       run:
         working-directory: ./backend
-
     steps:
     - name: 📥 Checkout Repository
       uses: actions/checkout@v4
@@ -36,19 +36,16 @@ jobs:
 
     - name: 🔒 Security Audit
       run: npm audit --audit-level=high || true
-      # '|| true' ensures the pipeline doesn't crash on audit warnings, just logs them
 
     - name: 🛠️ Typecheck & Build
       run: npm run build --if-present
 
   validate-frontend:
-    name: 🎨 Frontend Application
+    name: 🎨 Validate Frontend (Node 20)
     runs-on: ubuntu-latest
-    
     defaults:
       run:
         working-directory: ./frontend
-
     steps:
     - name: 📥 Checkout Repository
       uses: actions/checkout@v4
@@ -68,3 +65,62 @@ jobs:
 
     - name: 🛠️ Typecheck & Build
       run: npm run build --if-present
+
+  # =========================================================
+  # 2. CONTINUOUS DEPLOYMENT (Only runs if Validation Passes)
+  # =========================================================
+  deploy-backend:
+    name: 🚀 Deploy Backend to Render
+    needs: validate-backend
+    runs-on: ubuntu-latest
+    # Only run deployment on main branch pushes or sprint branches (adjust as needed)
+    if: github.event_name == 'push'
+    steps:
+      - name: Trigger Render Server Deployment
+        # We ping the Render Webhook with curl. It will only fire because 'needs: validate-backend' succeeded.
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            echo "Triggering Render webhook..."
+            HTTP_RESPONSE=$(curl -s -o response.txt -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}?ref=${{ github.ref }}")
+            if [ $HTTP_RESPONSE -ge 400 ]; then
+              echo "Deployment failed with HTTP code $HTTP_RESPONSE"
+              cat response.txt
+              exit 1
+            fi
+            echo "Render deployment triggered successfully!"
+          else
+            echo "⚠️ Secret RENDER_DEPLOY_HOOK not found. Skipping Render deployment."
+          fi
+
+  deploy-frontend:
+    name: 🚀 Deploy Frontend to Vercel
+    needs: validate-frontend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        continue-on-error: true # Continues even if secrets aren't setup yet
+
+      - name: Build Project Artifacts for Vercel
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        continue-on-error: true
+
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        continue-on-error: true
