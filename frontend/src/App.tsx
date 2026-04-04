@@ -80,6 +80,8 @@ interface FileData {
   createdAt: string;
   isFavorite?: boolean;
   groupId?: string;
+  isProcessed?: boolean;
+  processedAt?: string | null;
 }
 
 // Main App Component
@@ -685,6 +687,13 @@ function AppContent() {
         throw new Error(msg);
       }
       const data = await res.json();
+      
+      // Update local file state so UI turns to "Open" immediately
+      setFiles(prev => prev.map(f => f.id === file.id ? { ...f, isProcessed: true, processedAt: new Date().toISOString() } : f));
+      
+      // Fetch files from server in background to ensure sync
+      fetchFiles();
+
       return { type: 'analysis', title: file.filename, data };
     });
   };
