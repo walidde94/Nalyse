@@ -5292,3 +5292,28 @@ textarea:focus,
     justify-content: center;
   }
 }
+
+/* ===========================================
+   35. CINEMATIC UI ANIMATIONS
+   =========================================== */
+
+@keyframes sweepShine {
+  0% { transform: skewX(-20deg) translateX(-180%); }
+  40%, 100% { transform: skewX(-20deg) translateX(180%); }
+}
+
+@keyframes shimmerBg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Z-index utility for modals */
+.z-max {
+  z-index: 99999;
+}

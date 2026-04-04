@@ -1288,167 +1288,244 @@ export const DashboardView = ({
                 </div>
             )}
 
-            {/* Metadata Modal */}
+            {/* Metadata Modal — Cinematic Redesign */}
             {createPortal(
                 <AnimatePresence>
-                    {viewingMeta && (
+                    {viewingMeta && (() => {
+                        const fileExt = (viewingMeta.originalName || viewingMeta.filename || '').split('.').pop()?.toLowerCase() || 'dat';
+                        const isCsv = fileExt === 'csv';
+                        const displayName = viewingMeta.originalName || viewingMeta.filename;
+                        const sizeKB = (viewingMeta.size / 1024).toFixed(1);
+                        const sizeMB = (viewingMeta.size / 1024 / 1024).toFixed(2);
+                        const fileAge = Math.floor((Date.now() - new Date(viewingMeta.createdAt).getTime()) / 86400000);
+                        const accentColor = isCsv ? '#10b981' : '#6366f1';
+                        const accentGlow = isCsv ? 'rgba(16, 185, 129, 0.35)' : 'rgba(99, 102, 241, 0.35)';
+                        return (
                         <motion.div
                             key="modal-backdrop"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-max flex items-center justify-center p-4 backdrop-blur-md bg-black/60"
+                            transition={{ duration: 0.3 }}
+                            className="fixed inset-0 z-max flex items-center justify-center p-4"
+                            style={{ backdropFilter: 'blur(20px) saturate(1.8)', background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.78) 100%)' }}
                             onClick={() => setViewingMeta(null)}
                         >
-                            {/* Centered Modal Container */}
                             <motion.div
                                 key="modal-content"
-                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                                transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-                                className="relative w-full max-w-5xl rounded-2xl border shadow-2xl flex flex-col overflow-hidden"
+                                initial={{ scale: 0.88, opacity: 0, y: 40, rotateX: 8 }}
+                                animate={{ scale: 1, opacity: 1, y: 0, rotateX: 0 }}
+                                exit={{ scale: 0.92, opacity: 0, y: 30 }}
+                                transition={{ type: "spring", duration: 0.7, bounce: 0.18 }}
+                                className="relative w-full max-w-3xl rounded-3xl flex flex-col overflow-hidden"
                                 onClick={e => e.stopPropagation()}
                                 style={{
-                                    maxHeight: '90vh',
-                                    backgroundColor: 'var(--bg-secondary)',
-                                    borderColor: 'var(--border-default)',
-                                    boxShadow: '0 0 0 1px rgba(255,255,255,0.05), 0 20px 50px rgba(0,0,0,0.5)'
+                                    maxHeight: '88vh',
+                                    background: 'linear-gradient(170deg, rgba(15,15,25,0.97) 0%, rgba(8,8,18,0.99) 100%)',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 0 80px -20px ${accentGlow}, 0 40px 100px -30px rgba(0,0,0,0.7)`,
                                 }}
                             >
-                                {/* Header */}
-                                <div className="px-6 py-5 border-b flex items-start gap-4" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}>
-                                    <div className={`p-3 rounded-xl ${viewingMeta.filename.endsWith('.csv') ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'}`}>
-                                        {viewingMeta.filename.endsWith('.csv') ? <FileSpreadsheet size={24} /> : <FileText size={24} />}
+                                {/* Animated top border glow */}
+                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: `linear-gradient(90deg, transparent 0%, ${accentColor} 30%, #c084fc 70%, transparent 100%)`, opacity: 0.8 }} />
+
+                                {/* Hero Header */}
+                                <div style={{ position: 'relative', padding: '32px 32px 24px', overflow: 'hidden' }}>
+                                    {/* Gradient mesh background */}
+                                    <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 20% 50%, ${accentGlow} 0%, transparent 60%), radial-gradient(ellipse at 80% 30%, rgba(192,132,252,0.12) 0%, transparent 50%)`, pointerEvents: 'none' }} />
+                                    
+                                    {/* Close button */}
+                                    <motion.button 
+                                        whileHover={{ scale: 1.15, rotate: 90 }} 
+                                        whileTap={{ scale: 0.9 }} 
+                                        onClick={() => setViewingMeta(null)}
+                                        style={{ position: 'absolute', top: 20, right: 20, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', zIndex: 10, transition: 'color 0.2s' }}
+                                    >
+                                        <X size={16} />
+                                    </motion.button>
+
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 20 }}>
+                                        {/* Animated file icon orb */}
+                                        <motion.div
+                                            initial={{ scale: 0, rotate: -180 }}
+                                            animate={{ scale: 1, rotate: 0 }}
+                                            transition={{ type: 'spring', delay: 0.15, stiffness: 200, damping: 15 }}
+                                            style={{
+                                                width: 64, height: 64, borderRadius: 20,
+                                                background: `linear-gradient(135deg, ${accentColor}20 0%, ${accentColor}05 100%)`,
+                                                border: `1px solid ${accentColor}30`,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: accentColor,
+                                                boxShadow: `0 0 30px -8px ${accentGlow}, inset 0 1px 0 rgba(255,255,255,0.05)`,
+                                                position: 'relative', overflow: 'hidden'
+                                            }}
+                                        >
+                                            <div style={{ position: 'absolute', inset: 0, background: `conic-gradient(from 0deg, transparent, ${accentColor}15, transparent)`, animation: 'spin 4s linear infinite' }} />
+                                            {isCsv ? <FileSpreadsheet size={28} /> : <FileText size={28} />}
+                                        </motion.div>
+
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                                                    <span style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: accentColor, padding: '3px 10px', borderRadius: 6, background: `${accentColor}12`, border: `1px solid ${accentColor}20` }}>
+                                                        {fileExt.toUpperCase()} Dataset
+                                                    </span>
+                                                    {viewingMeta.isProcessed && (
+                                                        <span style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#10b981', padding: '3px 10px', borderRadius: 6, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                            <ShieldCheck size={10} /> Analyzed
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <h3 style={{ fontSize: 22, fontWeight: 900, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, letterSpacing: '-0.02em' }} title={displayName}>
+                                                    {displayName}
+                                                </h3>
+                                                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600, marginTop: 2, display: 'block' }}>
+                                                    Ingested {fileAge === 0 ? 'today' : fileAge === 1 ? 'yesterday' : `${fileAge} days ago`} · ID: {viewingMeta.id?.slice(0, 8)}…
+                                                </span>
+                                            </motion.div>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 min-w-0 pt-1">
-                                        <h3 className="text-lg font-black text-[var(--text-primary)] truncate leading-tight" title={viewingMeta.filename}>{viewingMeta.filename}</h3>
-                                        <span className="text-xs text-[var(--text-secondary)] font-medium opacity-70">Dataset Properties</span>
-                                    </div>
-                                    <button onClick={() => setViewingMeta(null)} className="btn btn-icon btn-ghost btn-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5">
-                                        <X size={20} />
-                                    </button>
                                 </div>
 
-                                {/* Tabs */}
-                                <div className="flex border-b px-6 gap-6" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}>
-                                    <button
-                                        onClick={() => setActiveTab('properties')}
-                                        className={`py-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === 'properties' ? 'border-[var(--primary)] text-[var(--text-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-60 hover:opacity-100'}`}
-                                    >
-                                        Properties
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('preview')}
-                                        className={`py-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all flex items-center gap-2 ${activeTab === 'preview' ? 'border-[var(--primary)] text-[var(--text-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-60 hover:opacity-100'}`}
-                                    >
-                                        <Eye size={14} /> Data Preview
-                                    </button>
+                                {/* Tabs — Pill Style */}
+                                <div style={{ padding: '0 32px', display: 'flex', gap: 4, background: 'rgba(255,255,255,0.015)' }}>
+                                    {(['properties', 'preview'] as const).map((tab) => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setActiveTab(tab)}
+                                            style={{
+                                                padding: '12px 20px', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em',
+                                                background: activeTab === tab ? 'rgba(255,255,255,0.06)' : 'transparent',
+                                                border: 'none', borderBottom: activeTab === tab ? `2px solid ${accentColor}` : '2px solid transparent',
+                                                color: activeTab === tab ? '#fff' : 'rgba(255,255,255,0.35)',
+                                                cursor: 'pointer', transition: 'all 0.25s', display: 'flex', alignItems: 'center', gap: 8,
+                                                borderRadius: '8px 8px 0 0'
+                                            }}
+                                        >
+                                            {tab === 'preview' && <Eye size={12} />}
+                                            {tab === 'properties' ? 'Properties' : 'Data Preview'}
+                                        </button>
+                                    ))}
                                 </div>
+                                <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }} />
 
                                 {/* Content */}
-                                <div className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                                     {activeTab === 'properties' ? (
-                                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                                            <div className="grid grid-cols-1 gap-4">
-                                                <div className="p-5 rounded-xl bg-[var(--bg-card)]/30 border border-[var(--border-subtle)] hover:border-emerald-500/30 transition-colors group">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-[10px] uppercase font-black tracking-wider text-[var(--text-secondary)] group-hover:text-emerald-500 transition-colors">File Size</span>
-                                                        <Database size={14} className="text-[var(--text-tertiary)]" />
-                                                    </div>
-                                                    <div className="text-2xl font-black font-mono text-[var(--text-primary)]">{(viewingMeta.size / 1024).toFixed(1)} <span className="text-sm text-[var(--text-secondary)] font-sans font-medium">KB</span></div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="p-5 rounded-xl bg-[var(--bg-card)]/30 border border-[var(--border-subtle)] hover:border-primary/30 transition-colors group">
-                                                        <span className="text-[10px] uppercase font-black tracking-wider text-[var(--text-secondary)] mb-2 block group-hover:text-primary transition-colors">Format</span>
-                                                        <div className="text-lg font-bold uppercase text-[var(--text-primary)]">{viewingMeta.filename.split('.').pop()}</div>
-                                                    </div>
-                                                    <div className="p-5 rounded-xl bg-[var(--bg-card)]/30 border border-[var(--border-subtle)] hover:border-purple-500/30 transition-colors group">
-                                                        <span className="text-[10px] uppercase font-black tracking-wider text-[var(--text-secondary)] mb-2 block group-hover:text-purple-500 transition-colors">Group</span>
-                                                        <div className="text-sm font-bold truncate flex items-center gap-2 text-[var(--text-primary)]">
-                                                            <Folder size={14} className="text-[var(--text-tertiary)]" />
-                                                            {getGroupName(viewingMeta.groupId)}
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: 28 }}>
+                                            {/* Stats Grid — 4 columns */}
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+                                                {[
+                                                    { label: 'Volume', value: sizeKB, unit: 'KB', sub: `${sizeMB} MB`, color: '#10b981', icon: <Database size={16} /> },
+                                                    { label: 'Format', value: fileExt.toUpperCase(), unit: '', sub: 'Structured', color: '#6366f1', icon: <Layers size={16} /> },
+                                                    { label: 'Status', value: viewingMeta.isProcessed ? 'Ready' : 'Pending', unit: '', sub: viewingMeta.isProcessed ? 'Analysis cached' : 'Awaiting process', color: viewingMeta.isProcessed ? '#10b981' : '#f59e0b', icon: viewingMeta.isProcessed ? <ShieldCheck size={16} /> : <Activity size={16} /> },
+                                                    { label: 'Age', value: fileAge === 0 ? '<1' : String(fileAge), unit: fileAge <= 1 ? 'day' : 'days', sub: new Date(viewingMeta.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: '#c084fc', icon: <Clock size={16} /> },
+                                                ].map((stat, si) => (
+                                                    <motion.div
+                                                        key={stat.label}
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: 0.1 + si * 0.06 }}
+                                                        style={{
+                                                            padding: 20, borderRadius: 16,
+                                                            background: 'rgba(255,255,255,0.02)',
+                                                            border: '1px solid rgba(255,255,255,0.05)',
+                                                            position: 'relative', overflow: 'hidden',
+                                                            transition: 'all 0.3s',
+                                                            cursor: 'default'
+                                                        }}
+                                                        className="hover:!border-[rgba(255,255,255,0.12)]"
+                                                    >
+                                                        <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: `${stat.color}06`, pointerEvents: 'none' }} />
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                                                            <span style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(255,255,255,0.35)' }}>{stat.label}</span>
+                                                            <div style={{ color: stat.color, opacity: 0.6 }}>{stat.icon}</div>
                                                         </div>
-                                                    </div>
-                                                </div>
+                                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                                                            <span style={{ fontSize: 26, fontWeight: 900, color: '#fff', fontFamily: 'var(--font-mono, monospace)', letterSpacing: '-0.03em', lineHeight: 1 }}>{stat.value}</span>
+                                                            {stat.unit && <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>{stat.unit}</span>}
+                                                        </div>
+                                                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 600, marginTop: 6, display: 'block' }}>{stat.sub}</span>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
 
-                                                <div className="p-5 rounded-xl bg-[var(--bg-card)]/30 border border-[var(--border-subtle)] hover:border-amber-500/30 transition-colors group">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-[10px] uppercase font-black tracking-wider text-[var(--text-secondary)] group-hover:text-amber-500 transition-colors">Created At</span>
-                                                        <Clock size={14} className="text-[var(--text-tertiary)]" />
+                                            {/* Metadata Rows */}
+                                            <div style={{ borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', background: 'rgba(255,255,255,0.015)' }}>
+                                                {[
+                                                    { label: 'Group', value: getGroupName(viewingMeta.groupId), icon: <Folder size={14} /> },
+                                                    { label: 'Created', value: new Date(viewingMeta.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), icon: <Clock size={14} /> },
+                                                    { label: 'Time', value: new Date(viewingMeta.createdAt).toLocaleTimeString(), icon: <Activity size={14} /> },
+                                                    { label: 'Node ID', value: viewingMeta.id || '—', icon: <Target size={14} /> },
+                                                ].map((row, ri) => (
+                                                    <div key={row.label} style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: ri < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none', gap: 14 }}>
+                                                        <div style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>{row.icon}</div>
+                                                        <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', minWidth: 80 }}>{row.label}</span>
+                                                        <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.8)', fontFamily: row.label === 'Node ID' ? 'var(--font-mono, monospace)' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
                                                     </div>
-                                                    <div className="text-sm font-bold text-[var(--text-primary)]">{new Date(viewingMeta.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                                                    <div className="text-xs text-[var(--text-secondary)] mt-1 font-mono opacity-60">{new Date(viewingMeta.createdAt).toLocaleTimeString()}</div>
-                                                </div>
+                                                ))}
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="flex-1 p-6 flex flex-col min-h-0">
                                             {loadingPreview ? (
-                                                <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 text-slate-400">
+                                                <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
                                                     <div className="relative">
-                                                        <Loader2 size={48} className="animate-spin text-primary opacity-20" />
-                                                        <Loader2 size={48} className="animate-spin text-primary absolute top-0 left-0" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
+                                                        <Loader2 size={48} className="animate-spin" style={{ color: accentColor, opacity: 0.2 }} />
+                                                        <Loader2 size={48} className="animate-spin absolute top-0 left-0" style={{ color: accentColor, animationDuration: '3s', animationDirection: 'reverse' }} />
                                                     </div>
                                                     <div className="text-center">
-                                                        <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--primary)] animate-pulse mb-1 block">Analyzing Schema</span>
-                                                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Inference engine: ACTIVE</span>
+                                                        <span style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: accentColor }} className="animate-pulse block mb-1">Analyzing Schema</span>
+                                                        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Inference engine: ACTIVE</span>
                                                     </div>
                                                 </div>
                                             ) : (previewData && previewData.rows && previewData.rows.length > 0) ? (
-                                                <div className="flex-1 flex flex-col gap-5 min-h-0">
-                                                    {/* Preview Metadata Bar - Premium Style */}
-                                                    <div className="flex items-center gap-3 p-1.5 bg-[var(--bg-main)]/40 rounded-2xl border border-[var(--border-subtle)] backdrop-blur-sm">
-                                                        <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-default)] shadow-sm">
-                                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                                                            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--text-primary)]">{previewData.metadata.rowCount} Rows <span className="text-[var(--text-tertiary)] font-bold">Loaded</span></span>
+                                                <div className="flex-1 flex flex-col gap-4 min-h-0">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 4px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.12)' }}>
+                                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px rgba(16,185,129,0.5)' }} />
+                                                            <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#10b981' }}>{previewData.metadata.rowCount} Rows</span>
                                                         </div>
-                                                        <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-default)] shadow-sm">
-                                                            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--text-primary)]">{previewData.columns.length} Fields <span className="text-[var(--text-tertiary)] font-bold">Inferred</span></span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)' }}>
+                                                            <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6366f1' }}>{previewData.columns.length} Fields</span>
                                                         </div>
-                                                        <div className="ml-auto pr-4 flex items-center gap-2">
-                                                            <div className="w-1 h-1 rounded-full bg-[var(--text-tertiary)] opacity-30"></div>
-                                                            <span className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em]">{previewData.metadata.format}</span>
-                                                        </div>
+                                                        <div style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.2)' }}>{previewData.metadata.format}</div>
                                                     </div>
-
-                                                    <div className="flex-1 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-main)]/30 backdrop-blur-sm flex flex-col min-h-0">
+                                                    <div style={{ flex: 1, overflow: 'hidden', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                                                         <div className="flex-1 overflow-auto custom-scrollbar">
                                                             <table className="w-full text-left border-collapse min-w-max">
                                                                 <thead className="sticky top-0 z-20">
-                                                                    <tr className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)] shadow-lg shadow-black/20">
-                                                                        <th className="p-4 w-12 text-[9px] font-black text-[var(--text-tertiary)] bg-[var(--bg-secondary)] sticky left-0 z-30 border-r border-[var(--border-default)]">#</th>
+                                                                    <tr style={{ background: 'rgba(15,15,25,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                                                                        <th style={{ padding: 14, width: 48, fontSize: 9, fontWeight: 900, color: 'rgba(255,255,255,0.2)', position: 'sticky', left: 0, zIndex: 30, background: 'rgba(15,15,25,0.95)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>#</th>
                                                                         {previewData.columns.map((col: any) => (
-                                                                            <th key={col.name} className="p-4 border-r border-[var(--border-default)]/50 last:border-0 group min-w-[120px]">
-                                                                                <div className="flex flex-col gap-1.5">
-                                                                                    <span className="text-[10px] font-black uppercase tracking-[0.05em] text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors">{col.name}</span>
-                                                                                    <div className={`text-[8px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-md w-fit border ${col.type.toLowerCase() === 'numeric' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                                                                                        col.type.toLowerCase() === 'date' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
-                                                                                            'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-default)]'
-                                                                                        }`}>
-                                                                                        {col.type}
-                                                                                    </div>
+                                                                            <th key={col.name} style={{ padding: 14, borderRight: '1px solid rgba(255,255,255,0.03)', minWidth: 120 }}>
+                                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                                                                    <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.7)' }}>{col.name}</span>
+                                                                                    <span style={{
+                                                                                        fontSize: 8, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em',
+                                                                                        padding: '2px 8px', borderRadius: 5, width: 'fit-content',
+                                                                                        background: col.type.toLowerCase() === 'numeric' ? 'rgba(16,185,129,0.08)' : col.type.toLowerCase() === 'date' ? 'rgba(192,132,252,0.08)' : 'rgba(255,255,255,0.03)',
+                                                                                        color: col.type.toLowerCase() === 'numeric' ? '#10b981' : col.type.toLowerCase() === 'date' ? '#c084fc' : 'rgba(255,255,255,0.3)',
+                                                                                        border: `1px solid ${col.type.toLowerCase() === 'numeric' ? 'rgba(16,185,129,0.15)' : col.type.toLowerCase() === 'date' ? 'rgba(192,132,252,0.15)' : 'rgba(255,255,255,0.05)'}`
+                                                                                    }}>{col.type}</span>
                                                                                 </div>
                                                                             </th>
                                                                         ))}
                                                                     </tr>
                                                                 </thead>
-                                                                <tbody className="divide-y divide-[var(--border-subtle)]/30">
+                                                                <tbody>
                                                                     {previewData.rows.map((row: any, i: number) => (
-                                                                        <tr key={i} className="hover:bg-[var(--primary)]/[0.03] transition-colors group/row">
-                                                                            <td className="p-4 w-12 text-[10px] font-black font-mono text-[var(--text-tertiary)] bg-[var(--bg-secondary)]/80 backdrop-blur-sm sticky left-0 z-10 group-hover/row:text-[var(--primary)] transition-colors border-r border-[var(--border-default)]">{i + 1}</td>
+                                                                        <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.025)', transition: 'background 0.15s' }} className="hover:!bg-[rgba(255,255,255,0.02)]">
+                                                                            <td style={{ padding: '12px 14px', width: 48, fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono, monospace)', color: 'rgba(255,255,255,0.15)', position: 'sticky', left: 0, zIndex: 10, background: 'rgba(10,10,20,0.8)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>{i + 1}</td>
                                                                             {previewData.columns.map((col: any) => {
                                                                                 const val = row[col.name];
                                                                                 const isNull = val === null || val === undefined || val === '';
                                                                                 return (
-                                                                                    <td key={col.name} className="p-4 text-[11px] font-medium border-r border-[var(--border-subtle)] last:border-0 truncate max-w-[220px]">
+                                                                                    <td key={col.name} style={{ padding: '12px 14px', fontSize: 11, fontWeight: 500, borderRight: '1px solid rgba(255,255,255,0.02)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                                         {isNull ? (
-                                                                                            <span className="text-[var(--text-tertiary)] italic font-bold opacity-30 text-[9px] tracking-wider">NULL</span>
+                                                                                            <span style={{ color: 'rgba(255,255,255,0.1)', fontStyle: 'italic', fontWeight: 700, fontSize: 9, letterSpacing: '0.1em' }}>NULL</span>
                                                                                         ) : (
-                                                                                            <span className={`${col.type.toLowerCase() === 'numeric' ? 'text-emerald-500 font-mono text-xs' : 'text-[var(--text-primary)]'} opacity-90 group-hover/row:opacity-100 transition-opacity`}>
-                                                                                                {String(val)}
-                                                                                            </span>
+                                                                                            <span style={{ color: col.type.toLowerCase() === 'numeric' ? '#10b981' : 'rgba(255,255,255,0.7)', fontFamily: col.type.toLowerCase() === 'numeric' ? 'var(--font-mono, monospace)' : 'inherit', fontSize: col.type.toLowerCase() === 'numeric' ? 12 : 11 }}>{String(val)}</span>
                                                                                         )}
                                                                                     </td>
                                                                                 );
@@ -1461,25 +1538,45 @@ export const DashboardView = ({
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 text-[var(--text-secondary)] bg-[var(--bg-card)]/20 rounded-xl border border-dashed border-[var(--border-subtle)]">
-                                                    <Table size={32} className="opacity-20" />
-                                                    <span className="text-xs font-bold uppercase tracking-widest opacity-60">No readable sectors found</span>
+                                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '60px 0', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)' }}>
+                                                    <Table size={32} style={{ opacity: 0.12, color: '#fff' }} />
+                                                    <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.2)' }}>No readable sectors found</span>
                                                 </div>
                                             )}
-
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Footer */}
-                                <div className="p-6 border-t flex flex-col gap-3" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}>
-                                    <button className="btn btn-primary w-full h-12 text-sm uppercase tracking-widest font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all" onClick={() => { onFileSelect(viewingMeta); setViewingMeta(null); }}>
-                                        Launch Analysis
-                                    </button>
+                                {/* Footer — Cinematic Launch Button */}
+                                <div style={{ padding: '20px 28px 24px', borderTop: '1px solid rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.15)' }}>
+                                    <motion.button
+                                        whileHover={{ scale: 1.015, y: -1 }}
+                                        whileTap={{ scale: 0.985 }}
+                                        onClick={() => { onFileSelect(viewingMeta); setViewingMeta(null); }}
+                                        style={{
+                                            width: '100%', height: 52, borderRadius: 14, border: 'none', cursor: 'pointer',
+                                            background: `linear-gradient(135deg, ${accentColor} 0%, #c084fc 50%, ${accentColor} 100%)`,
+                                            backgroundSize: '200% 100%',
+                                            color: '#fff', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.25em',
+                                            boxShadow: `0 8px 30px -8px ${accentGlow}, 0 2px 8px rgba(0,0,0,0.3)`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                                            position: 'relative', overflow: 'hidden',
+                                            animation: 'shimmerBg 3s ease infinite',
+                                            transition: 'box-shadow 0.3s'
+                                        }}
+                                    >
+                                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)', transform: 'skewX(-20deg) translateX(-100%)', animation: 'sweepShine 3s ease-in-out infinite' }} />
+                                        <BrainCircuit size={16} />
+                                        <span style={{ position: 'relative', zIndex: 1 }}>
+                                            {viewingMeta.isProcessed ? 'Open Analysis' : 'Launch Neural Analysis'}
+                                        </span>
+                                        <Sparkles size={14} style={{ opacity: 0.7 }} />
+                                    </motion.button>
                                 </div>
                             </motion.div>
                         </motion.div>
-                    )}
+                        );
+                    })()}
                 </AnimatePresence>,
                 document.body
             )}
@@ -1493,63 +1590,130 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
     if (files.length === 0) return null;
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-            {files.map((f: any) => {
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+            {files.map((f: any, idx: number) => {
                 const isSelected = selectedFiles.has(f.id);
+                const isCsv = (f.originalName || f.filename || '').endsWith('.csv');
+                const accent = isCsv ? '#10b981' : '#6366f1';
+                const accentGlow = isCsv ? 'rgba(16,185,129,0.25)' : 'rgba(99,102,241,0.25)';
+                const displayName = f.originalName || f.filename;
                 return (
-                    <div
+                    <motion.div
                         key={f.id}
-                        className={`card group transition-all relative ${isSelected ? 'border-[var(--primary)] ring-1 ring-[var(--primary)] bg-[var(--primary)]/5' : 'hover:border-[var(--primary)]'}`}
-                        style={{ padding: '16px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px' }}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ delay: idx * 0.04, duration: 0.35 }}
+                        whileHover={{ y: -4, scale: 1.02 }}
+                        style={{
+                            position: 'relative', borderRadius: 20, overflow: 'hidden', cursor: 'pointer',
+                            background: 'linear-gradient(160deg, rgba(18,18,30,0.95) 0%, rgba(10,10,22,0.98) 100%)',
+                            border: isSelected ? `1px solid ${accent}` : '1px solid rgba(255,255,255,0.06)',
+                            boxShadow: isSelected
+                                ? `0 0 0 1px ${accent}40, 0 8px 30px -10px ${accentGlow}`
+                                : '0 4px 20px -8px rgba(0,0,0,0.3)',
+                            transition: 'border-color 0.3s, box-shadow 0.3s',
+                            display: 'flex', flexDirection: 'column',
+                        }}
                     >
-                        <div className="absolute top-2 left-2 z-10" onClick={e => { e.stopPropagation(); onToggleSelection(f.id); }}>
-                            <input
-                                type="checkbox"
-                                className="checkbox"
-                                checked={isSelected}
-                                onChange={() => onToggleSelection(f.id)}
-                            />
-                        </div>
-                        <div className="flex justify-between items-start pl-6">
-                            <div className={`w-8 h-8 rounded flex items-center justify-center ${(f.originalName || f.filename).endsWith('.csv') ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                                {(f.originalName || f.filename).endsWith('.csv') ? <FileSpreadsheet size={16} /> : <FileText size={16} />}
+                        {/* Animated top accent line */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${accent}60, transparent)`, opacity: isSelected ? 1 : 0.4, transition: 'opacity 0.3s' }} />
+
+                        {/* Background gradient orb */}
+                        <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: `${accent}08`, pointerEvents: 'none', filter: 'blur(20px)' }} />
+
+                        {/* Top row: Icon + Favorite */}
+                        <div style={{ padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ position: 'relative' }}>
+                                <div onClick={e => { e.stopPropagation(); onToggleSelection(f.id); }} style={{ position: 'absolute', top: -4, left: -4, zIndex: 5, cursor: 'pointer' }}>
+                                    <input type="checkbox" className="checkbox" checked={isSelected} onChange={() => onToggleSelection(f.id)}
+                                        style={{ width: 16, height: 16, accentColor: accent, opacity: isSelected ? 1 : 0, transition: 'opacity 0.2s' }}
+                                    />
+                                </div>
+                                <div style={{
+                                    width: 44, height: 44, borderRadius: 14,
+                                    background: `linear-gradient(135deg, ${accent}15, ${accent}05)`,
+                                    border: `1px solid ${accent}25`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: accent,
+                                    boxShadow: `0 0 20px -6px ${accentGlow}`,
+                                }}>
+                                    {isCsv ? <FileSpreadsheet size={20} /> : <FileText size={20} />}
+                                </div>
                             </div>
-                            <button
-                                className="btn btn-icon btn-ghost btn-xs"
+                            <motion.button
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.85 }}
                                 onClick={(e) => { e.stopPropagation(); onToggleFavorite(f); }}
-                                style={{ color: f.isFavorite ? '#fbbf24' : 'var(--text-tertiary)' }}
+                                style={{
+                                    width: 32, height: 32, borderRadius: 10, border: 'none', cursor: 'pointer',
+                                    background: f.isFavorite ? 'rgba(251,191,36,0.1)' : 'transparent',
+                                    color: f.isFavorite ? '#fbbf24' : 'rgba(255,255,255,0.15)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                }}
                             >
-                                <Star size={14} fill={f.isFavorite ? 'currentColor' : 'none'} />
-                            </button>
-                        </div>
-                        <div className="pl-6">
-                            <h4 className="font-bold text-sm truncate group-hover:text-primary transition-colors" title={f.originalName || f.filename}>{f.originalName || f.filename}</h4>
-                            <div className="flex items-center gap-2 mt-1">
-                                <p className="text-xs text-secondary">{(f.size / 1024).toFixed(1)} KB</p>
-                                <span className={`px-1.5 py-0.5 rounded-[4px] text-[8px] font-black uppercase tracking-wider border ${f.isProcessed ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                                    {f.isProcessed ? '✓ Processed' : '○ Unprocessed'}
-                                </span>
-                            </div>
-                            {f.size > 50 * 1024 * 1024 && (
-                                <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-[4px] bg-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-wider backdrop-blur-md border border-purple-500/10">
-                                    BIG DATA
-                                </span>
-                            )}
+                                <Star size={15} fill={f.isFavorite ? 'currentColor' : 'none'} />
+                            </motion.button>
                         </div>
 
-                        <div className="mt-2 border-t border-[var(--border-subtle)] pt-3 flex gap-2">
-                            <button className="btn btn-xs btn-primary flex-1 py-2 font-bold uppercase tracking-wider text-[9px]" onClick={(e) => { e.stopPropagation(); onFileSelect(f); }}>
-                                {f.isProcessed ? 'Open' : 'Process'}
-                            </button>
-                            <button
-                                className="btn btn-xs btn-secondary p-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] transition-all"
-                                onClick={(e) => { e.stopPropagation(); onViewMeta(f); }}
-                                title="Quick Preview"
-                            >
-                                <Eye size={14} className="text-primary" />
-                            </button>
+                        {/* Title + Status */}
+                        <div style={{ padding: '14px 18px 0', flex: 1 }}>
+                            <h4 style={{ fontSize: 14, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3, letterSpacing: '-0.01em' }} title={displayName}>{displayName}</h4>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                                <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono, monospace)' }}>{(f.size / 1024).toFixed(1)} KB</span>
+                                <span style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                                    fontSize: 8, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em',
+                                    padding: '3px 8px', borderRadius: 6,
+                                    background: f.isProcessed ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)',
+                                    color: f.isProcessed ? '#10b981' : '#f59e0b',
+                                    border: `1px solid ${f.isProcessed ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}`,
+                                }}>
+                                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', boxShadow: f.isProcessed ? '0 0 6px rgba(16,185,129,0.5)' : '0 0 6px rgba(245,158,11,0.5)' }} />
+                                    {f.isProcessed ? 'Processed' : 'Pending'}
+                                </span>
+                            </div>
                         </div>
-                    </div>
+
+                        {/* Action Buttons */}
+                        <div style={{ padding: '14px 18px 18px', display: 'flex', gap: 8, marginTop: 4 }}>
+                            <motion.button
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={(e) => { e.stopPropagation(); onFileSelect(f); }}
+                                style={{
+                                    flex: 1, height: 38, borderRadius: 10, border: 'none', cursor: 'pointer',
+                                    background: f.isProcessed
+                                        ? 'linear-gradient(135deg, #10b981, #059669)'
+                                        : `linear-gradient(135deg, ${accent}, #c084fc)`,
+                                    color: '#fff', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em',
+                                    boxShadow: f.isProcessed
+                                        ? '0 4px 15px -5px rgba(16,185,129,0.4)'
+                                        : `0 4px 15px -5px ${accentGlow}`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                    position: 'relative', overflow: 'hidden'
+                                }}
+                            >
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)', transform: 'skewX(-20deg) translateX(-100%)', animation: 'sweepShine 4s ease-in-out infinite' }} />
+                                <BrainCircuit size={13} />
+                                <span style={{ position: 'relative', zIndex: 1 }}>{f.isProcessed ? 'Open' : 'Process'}</span>
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.08 }}
+                                whileTap={{ scale: 0.92 }}
+                                onClick={(e) => { e.stopPropagation(); onViewMeta(f); }}
+                                style={{
+                                    width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)',
+                                    background: 'rgba(255,255,255,0.03)', cursor: 'pointer',
+                                    color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'border-color 0.2s, background 0.2s'
+                                }}
+                                title="Inspect"
+                            >
+                                <Eye size={15} />
+                            </motion.button>
+                        </div>
+                    </motion.div>
                 );
             })}
         </div>
