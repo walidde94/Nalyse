@@ -159,8 +159,9 @@ export const analyzeFile = async (filePath: string, mimetype: string): Promise<A
         }
 
         if (!fs.existsSync(absoluteRequestedPath)) {
-
-            throw new Error(`File not found at path: ${filePath}`);
+            const err = new Error(`FILE_NOT_FOUND: The physical file is missing from the server. This can happen on cloud platforms with ephemeral storage (like Render). Please re-upload the dataset.`);
+            (err as any).code = 'FILE_NOT_FOUND';
+            throw err;
         }
 
         const stats = fs.statSync(absoluteRequestedPath);

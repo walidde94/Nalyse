@@ -101,11 +101,17 @@ export const FinancialRiskView = ({ files, token }: Props) => {
         try {
             setLoadStep(0);
             const res = await fetch(`${API_URL}/api/files/${selectedFileId}/analyze`, { headers: { Authorization: `Bearer ${token}` } });
-            if (!res.ok) throw new Error('Failed to load dataset');
+            if (!res.ok) {
+                const errorBody = await res.json().catch(() => ({}));
+                if (errorBody.error === 'FILE_NOT_FOUND' || res.status === 422) {
+                    throw new Error(errorBody.message || 'Dataset file is missing. Please re-upload from the Dashboard.');
+                }
+                throw new Error(errorBody.error || 'Failed to load dataset');
+            }
             setLoadStep(1);
             const analysis = await res.json();
             const data = analysis.sampleData || [];
-            if (!data.length) throw new Error('No data found');
+            if (!data.length) throw new Error('No financial data found in dataset');
             for (let i = 2; i <= 5; i++) { setLoadStep(i); await new Promise(r => setTimeout(r, 350)); }
             const analysisResult = runFinancialAnalysis(data);
             setLoadStep(6); await new Promise(r => setTimeout(r, 300));

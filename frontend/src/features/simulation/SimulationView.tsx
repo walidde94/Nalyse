@@ -161,7 +161,13 @@ export const SimulationView = ({ files, token }: Props) => {
 
             setLoadStep(0);
             const res = await fetch(`${API_URL}/api/files/${selectedFileId}/analyze`, { headers: { Authorization: `Bearer ${token}` } });
-            if (!res.ok) throw new Error('Failed to load dataset');
+            if (!res.ok) {
+                const errorBody = await res.json().catch(() => ({}));
+                if (errorBody.error === 'FILE_NOT_FOUND' || res.status === 422) {
+                    throw new Error(errorBody.message || 'Dataset file is missing. Please re-upload from the Dashboard.');
+                }
+                throw new Error(errorBody.error || 'Failed to load dataset');
+            }
             const analysis = await res.json();
             const data = analysis.sampleData || [];
             if (!data.length) throw new Error('No data found in dataset — upload a CSV with product/pricing columns');

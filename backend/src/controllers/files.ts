@@ -179,7 +179,7 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
         console.log(`[Debug] Result:`, file ? `Found ${file.id}` : 'Not found');
         if (!file) return res.status(404).json({ error: 'File not found' });
 
-        // ─── Check for cached analysis ───────────────────────────────
+        // ─── Check for cached analysis (serve even if physical file is gone) ───
         if (!forceReprocess) {
             const cached = await analysisRepo.findOne({
                 where: { fileId: file.id, status: 'completed' },
@@ -187,26 +187,57 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
             });
 
             if (cached && cached.results) {
-                console.log(`[Analysis] Returning cached result for file ${file.id} (processed ${cached.processingTimeMs}ms on ${cached.completedAt})`);
-                
-                // Reconstruct the full analysis shape from cached data
-                const cachedResult: any = {
-                    id: file.id,
-                    cached: true,
-                    cachedAt: cached.completedAt,
-                    processingTimeMs: cached.processingTimeMs,
-                    options: cached.results.options || cached.results,
-                    sampleData: cached.results.sampleData || [],
-                    aiInsights: cached.insights || [],
-                    summary: cached.statistics?.summary || cached.results.summary || {},
-                    dataHealth: cached.statistics?.health || cached.results.dataHealth || {},
-                    keyFindings: cached.statistics?.findings || cached.results.keyFindings || [],
-                    executiveReasoning: cached.results.executiveReasoning || null,
-                    processingLog: cached.results.processingLog || ['Loaded from cache']
-                };
+                // Validate that the cached result actually has data (not an empty error result)
+                const cachedSampleData = cached.results.sampleData || [];
+                const cachedOptions = cached.results.options || cached.results;
+                const isValidCache = cachedSampleData.length > 0 || (Array.isArray(cachedOptions) && cachedOptions.length > 0);
 
-                return res.json(cachedResult);
+                if (isValidCache) {
+                    console.log(`[Analysis] Returning cached result for file ${file.id} (processed ${cached.processingTimeMs}ms on ${cached.completedAt})`);
+                    
+                    const cachedResult: any = {
+                        id: file.id,
+                        cached: true,
+                        cachedAt: cached.completedAt,
+                        processingTimeMs: cached.processingTimeMs,
+                        options: cachedOptions,
+                        sampleData: cachedSampleData,
+                        aiInsights: cached.insights || [],
+                        summary: cached.statistics?.summary || cached.results.summary || {},
+                        dataHealth: cached.statistics?.health || cached.results.dataHealth || {},
+                        keyFindings: cached.statistics?.findings || cached.results.keyFindings || [],
+                        executiveReasoning: cached.results.executiveReasoning || null,
+                        processingLog: cached.results.processingLog || ['Loaded from cache']
+                    };
+
+                    return res.json(cachedResult);
+                } else {
+                    // Cached result was empty/error — delete it so we can try fresh
+                    console.log(`[Analysis] Cached result for file ${file.id} was empty/error — purging stale cache`);
+                    await analysisRepo.delete({ fileId: file.id });
+                }
             }
+        }
+
+        // ─── Check if physical file exists before attempting fresh analysis ───
+        const filePath = file.s3Key || file.filename;
+        const path = require('path');
+        const absoluteUploadsDir = path.resolve(process.cwd(), 'uploads');
+        let absoluteFilePath = filePath;
+        if (!filePath.includes('/') && !filePath.includes('\\')) {
+            absoluteFilePath = path.join(absoluteUploadsDir, filePath);
+        } else {
+            absoluteFilePath = path.resolve(process.cwd(), filePath);
+        }
+
+        if (!fs.existsSync(absoluteFilePath)) {
+            console.error(`[Analysis] Physical file missing for ${file.id}: ${absoluteFilePath}`);
+            return res.status(422).json({
+                error: 'FILE_NOT_FOUND',
+                message: `The dataset "${file.originalName || file.filename}" needs to be re-uploaded. The physical file is no longer available on the server (this happens on cloud platforms with ephemeral storage). Please go to the Dashboard and upload the file again.`,
+                fileId: file.id,
+                fileName: file.originalName || file.filename
+            });
         }
 
         // ─── Run fresh analysis ──────────────────────────────────────
@@ -216,37 +247,43 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
         const duration = Date.now() - startTime;
         console.log(`[Analysis] Completed in ${duration}ms for file ${file.id}`);
 
-        // ─── Persist complete result to DB ───────────────────────────
-        try {
-            // Delete any previous analyses for this file to keep only the latest
-            await analysisRepo.delete({ fileId: file.id });
+        // ─── Only persist if analysis actually has data ──────────────
+        const hasData = (analysisResult.sampleData && analysisResult.sampleData.length > 0) ||
+                        (analysisResult.options && analysisResult.options.length > 0);
 
-            const analysis = analysisRepo.create({
-                fileId: file.id,
-                createdById: userId,
-                status: 'completed',
-                results: {
-                    options: analysisResult.options,
-                    sampleData: analysisResult.sampleData,
-                    executiveReasoning: analysisResult.executiveReasoning,
-                    summary: analysisResult.summary,
-                    dataHealth: analysisResult.dataHealth,
-                    keyFindings: analysisResult.keyFindings,
-                    processingLog: analysisResult.processingLog
-                },
-                insights: analysisResult.aiInsights,
-                statistics: {
-                    summary: analysisResult.summary,
-                    health: analysisResult.dataHealth,
-                    findings: analysisResult.keyFindings
-                },
-                processingTimeMs: duration,
-                completedAt: new Date()
-            });
-            await analysisRepo.save(analysis);
-            console.log(`[Analysis] Persisted to DB for file ${file.id}`);
-        } catch (dbErr) {
-            console.error('[Analysis] Failed to persist analysis result:', dbErr);
+        if (hasData) {
+            try {
+                await analysisRepo.delete({ fileId: file.id });
+
+                const analysis = analysisRepo.create({
+                    fileId: file.id,
+                    createdById: userId,
+                    status: 'completed',
+                    results: {
+                        options: analysisResult.options,
+                        sampleData: analysisResult.sampleData,
+                        executiveReasoning: analysisResult.executiveReasoning,
+                        summary: analysisResult.summary,
+                        dataHealth: analysisResult.dataHealth,
+                        keyFindings: analysisResult.keyFindings,
+                        processingLog: analysisResult.processingLog
+                    },
+                    insights: analysisResult.aiInsights,
+                    statistics: {
+                        summary: analysisResult.summary,
+                        health: analysisResult.dataHealth,
+                        findings: analysisResult.keyFindings
+                    },
+                    processingTimeMs: duration,
+                    completedAt: new Date()
+                });
+                await analysisRepo.save(analysis);
+                console.log(`[Analysis] Persisted to DB for file ${file.id}`);
+            } catch (dbErr) {
+                console.error('[Analysis] Failed to persist analysis result:', dbErr);
+            }
+        } else {
+            console.warn(`[Analysis] Skipped caching empty/error result for file ${file.id}`);
         }
 
         // Return full analysis result to frontend
@@ -258,6 +295,15 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
     } catch (error: any) {
         require('fs').appendFileSync('error_debug.log', `[Analyze Error]: ${error?.stack || error}\n`);
         console.error('Failed to process analysis request:', error);
+
+        // Return clear error for FILE_NOT_FOUND
+        if (error.code === 'FILE_NOT_FOUND' || error.message?.includes('FILE_NOT_FOUND')) {
+            return res.status(422).json({
+                error: 'FILE_NOT_FOUND',
+                message: error.message.replace('FILE_NOT_FOUND: ', ''),
+            });
+        }
+
         res.status(500).json({ error: error?.message || 'Failed to process analysis job' });
     }
 };

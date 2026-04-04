@@ -99,7 +99,13 @@ export const VersionDiffView = ({ files, token }: Props) => {
 
     const fetchAnalysis = useCallback(async (fileId: string) => {
         const res = await fetch(`${API_URL}/api/files/${fileId}/analyze`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error('Analysis failed');
+        if (!res.ok) {
+            const errorBody = await res.json().catch(() => ({}));
+            if (errorBody.error === 'FILE_NOT_FOUND' || res.status === 422) {
+                throw new Error(errorBody.message || 'Dataset file is missing. Please re-upload from the Dashboard.');
+            }
+            throw new Error(errorBody.error || 'Analysis failed');
+        }
         return res.json();
     }, [token]);
 

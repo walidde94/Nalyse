@@ -102,11 +102,17 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
         try {
             setLoadStep(0);
             const res = await fetch(`${API_URL}/api/files/${selectedFileId}/analyze`, { headers: { Authorization: `Bearer ${token}` } });
-            if (!res.ok) throw new Error('Failed to load dataset');
+            if (!res.ok) {
+                const errorBody = await res.json().catch(() => ({}));
+                if (errorBody.error === 'FILE_NOT_FOUND' || res.status === 422) {
+                    throw new Error(errorBody.message || 'Dataset file is missing from the server. Please re-upload the file from the Dashboard.');
+                }
+                throw new Error(errorBody.error || 'Failed to load dataset');
+            }
             setLoadStep(1);
             const analysis = await res.json();
             const data = analysis.sampleData || [];
-            if (!data.length) throw new Error('No data found in dataset');
+            if (!data.length) throw new Error('No data found in dataset. The file may be empty or in an unsupported format. Try re-uploading from the Dashboard.');
             setLoadStep(2);
             await new Promise(r => setTimeout(r, 400));
             setLoadStep(3);
