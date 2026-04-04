@@ -300,6 +300,12 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
                 });
                 await analysisRepo.save(analysis);
                 console.log(`[Analysis] Persisted to DB for file ${file.id}`);
+
+                // Broadcast analysis completion to connected clients
+                try {
+                    const { broadcastUpdate } = require('../index');
+                    broadcastUpdate('file', { action: 'analysis_complete', fileId: file.id, userId: userId, analysis: analysisResult });
+                } catch (e) { }
             } catch (dbErr) {
                 console.error('[Analysis] Failed to persist analysis result:', dbErr);
             }
