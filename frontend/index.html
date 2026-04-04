@@ -25,5 +25,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Automatically reload the page if a dynamically imported chunk fails to load.
+      // This typically happens when a new version is deployed and the browser still
+      // holds the old index.html pointing to outdated JavaScript chunks.
+      window.addEventListener('vite:preloadError', (event) => {
+        console.warn('Vite preload error detected, reloading page to fetch latest version...');
+        window.location.reload();
+      });
+    </script>
   </body>
 </html>
