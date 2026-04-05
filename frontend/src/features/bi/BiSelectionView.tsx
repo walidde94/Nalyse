@@ -5,13 +5,23 @@ import {
     Megaphone, Cpu, Briefcase, ChevronRight, Upload, Play, Beaker, Star
 } from 'lucide-react';
 
+import { Database } from 'lucide-react';
+
+interface FileData {
+    id: string;
+    filename: string;
+    originalName?: string;
+}
+
 interface BiSelectionViewProps {
-    onLoadDemo: (type: string) => void;
+    files?: FileData[];
+    onSelectExistingFile?: (fileId: string, type: string) => void;
     onUploadFile: (file: File, type: string) => void;
 }
 
-export const BiSelectionView = ({ onLoadDemo, onUploadFile }: BiSelectionViewProps) => {
+export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile }: BiSelectionViewProps) => {
     const [selectedType, setSelectedType] = useState<string | null>(null);
+    const [selectedFileId, setSelectedFileId] = useState<string>('');
     const [hoveredCard, setHoveredCard] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -19,6 +29,15 @@ export const BiSelectionView = ({ onLoadDemo, onUploadFile }: BiSelectionViewPro
         if (e.target.files && e.target.files[0] && selectedType) {
             onUploadFile(e.target.files[0], selectedType);
             setSelectedType(null);
+            setSelectedFileId('');
+        }
+    };
+
+    const handleExistingFileConfirm = () => {
+        if (selectedFileId && selectedType && onSelectExistingFile) {
+            onSelectExistingFile(selectedFileId, selectedType);
+            setSelectedType(null);
+            setSelectedFileId('');
         }
     };
 
@@ -266,42 +285,82 @@ export const BiSelectionView = ({ onLoadDemo, onUploadFile }: BiSelectionViewPro
                                 </p>
                             </div>
 
-                            <div style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ padding: '0 32px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                
+                                {/* Existing File Selector */}
+                                {files.length > 0 && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginLeft: '4px' }}>
+                                            Select Workspace Dataset
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <div style={{ position: 'relative', flex: 1 }}>
+                                                <Database size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+                                                <select 
+                                                    value={selectedFileId} 
+                                                    onChange={e => setSelectedFileId(e.target.value)}
+                                                    style={{ 
+                                                        width: '100%', height: '48px', padding: '0 16px 0 40px', borderRadius: '12px',
+                                                        background: 'var(--bg-main)', border: '1px solid var(--border-default)', 
+                                                        color: 'var(--text-primary)', fontSize: '14px', fontWeight: 500,
+                                                        appearance: 'none', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <option value="" disabled>Choose a dataset...</option>
+                                                    {files.map(f => (
+                                                        <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'var(--text-tertiary)', pointerEvents: 'none' }} />
+                                            </div>
+                                            <motion.button
+                                                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                                onClick={handleExistingFileConfirm}
+                                                disabled={!selectedFileId}
+                                                style={{ 
+                                                    height: '48px', padding: '0 24px', borderRadius: '12px', border: 'none',
+                                                    background: 'var(--primary)', color: '#fff', fontSize: '14px', fontWeight: 700,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                                    cursor: selectedFileId ? 'pointer' : 'not-allowed', 
+                                                    opacity: selectedFileId ? 1 : 0.5,
+                                                    boxShadow: selectedFileId ? '0 8px 20px var(--primary-glow)' : 'none',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                Analyze
+                                            </motion.button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '4px 0' }}>
+                                    <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
+                                    <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Or Upload New</span>
+                                    <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
+                                </div>
+
                                 <motion.button
                                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                                     onClick={() => fileInputRef.current?.click()}
                                     style={{ 
-                                        width: '100%', height: '56px', borderRadius: '14px', border: 'none',
-                                        background: 'var(--primary)', color: '#fff', fontSize: '15px', fontWeight: 700,
+                                        width: '100%', height: '56px', borderRadius: '14px', 
+                                        background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border-default)', 
+                                        color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                                        cursor: 'pointer', boxShadow: '0 8px 24px var(--primary-glow)'
+                                        cursor: 'pointer', transition: 'all 0.2s'
                                     }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'var(--text-tertiary)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'var(--border-default)'; }}
                                 >
-                                    <Upload size={18} /> Upload Dataset
+                                    <Upload size={18} style={{ color: 'var(--text-tertiary)' }} /> Upload External CSV / JSON
                                 </motion.button>
                                 
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                                    onClick={() => { onLoadDemo(selectedType); setSelectedType(null); }}
-                                    style={{ 
-                                        width: '100%', height: '56px', borderRadius: '14px', 
-                                        background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-default)', 
-                                        color: 'var(--text-primary)', fontSize: '15px', fontWeight: 700,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                                        cursor: 'pointer', transition: 'background 0.2s'
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-                                >
-                                    <Beaker size={18} style={{ color: '#8b5cf6' }} /> Populate Demo Data
-                                </motion.button>
-
                                 <button 
-                                    onClick={() => setSelectedType(null)} 
+                                    onClick={() => { setSelectedType(null); setSelectedFileId(''); }} 
                                     style={{ 
                                         width: '100%', padding: '12px', background: 'transparent', border: 'none',
                                         color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: 600,
-                                        cursor: 'pointer', marginTop: '8px'
+                                        cursor: 'pointer', marginTop: '4px'
                                     }}
                                     onMouseEnter={e => e.currentTarget.style.color = 'var(--text-secondary)'}
                                     onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}

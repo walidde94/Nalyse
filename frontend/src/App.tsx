@@ -663,6 +663,32 @@ function AppContent() {
     });
   };
 
+  const handleBiFileSelect = async (fileId: string, type: string) => {
+    if (!token) return;
+    runAnalysisWithProgress(async () => {
+      try {
+        const analyzeRes = await fetch(`${API_URL}/api/files/${fileId}/analyze`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const errorBody = await analyzeRes.json().catch(() => ({}));
+        
+        if (!analyzeRes.ok) {
+           if (errorBody.error === 'FILE_NOT_FOUND' || analyzeRes.status === 422) {
+             throw new Error(errorBody.message || 'Dataset file is missing from the server. Please re-upload the file from the Dashboard.');
+           }
+           throw new Error(errorBody.error || 'Failed to load dataset');
+        }
+
+        openTab('bi', `BI: ${type}`, {
+          sampleData: errorBody.sampleData || [],
+          metadata: { type: 'bi', useCase: type }
+        });
+      } catch (e: any) {
+        addToast(e.message || 'Error processing file', 'error');
+      }
+    });
+  };
+
   const handleLoadDemo = async (type: string) => {
     runAnalysisWithProgress(async () => {
       try {
@@ -995,7 +1021,11 @@ function AppContent() {
 
 
                 {tab.type === 'bi' && !tab.data && (
-                  <BiSelectionView onLoadDemo={handleLoadDemo} onUploadFile={handleBiFileUpload} />
+                  <BiSelectionView 
+                     files={files}
+                     onUploadFile={handleBiFileUpload} 
+                     onSelectExistingFile={handleBiFileSelect}
+                  />
                 )}
 
                 {tab.type === 'bi' && tab.data && (
