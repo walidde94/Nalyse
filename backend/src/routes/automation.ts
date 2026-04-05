@@ -137,60 +137,6 @@ router.delete('/webhooks/:id', authenticate, requirePermission(Permission.MANAGE
     }
 });
 
-// ==========================================
-// ALERT RULES
-// ==========================================
 
-router.get('/alerts', authenticate, requirePermission(Permission.READ_ANALYSIS), async (req: AuthRequest, res: Response) => {
-    try {
-        const alerts = await prisma.alertRule.findMany({ where: { organizationId: req.user!.organizationId } });
-        res.json(alerts);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to fetch alerts' });
-    }
-});
-
-router.post('/alerts', authenticate, requirePermission(Permission.CREATE_ANALYSIS), async (req: AuthRequest, res: Response) => {
-    try {
-        const { name, description, metric, operator, threshold, actions, isActive } = req.body;
-
-        const alert = await prisma.alertRule.create({
-            data: {
-                name,
-                description,
-                metric,
-                operator,
-                threshold,
-                actions: actions || {},
-                isActive: isActive ?? true,
-                organizationId: req.user!.organizationId!,
-                createdByUserId: req.user!.userId!
-            }
-        });
-
-        res.status(201).json(alert);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to create alert rule' });
-    }
-});
-
-router.delete('/alerts/:id', authenticate, requirePermission(Permission.DELETE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-        const existing = await prisma.alertRule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId } });
-
-        if (!existing) {
-            res.status(404).json({ error: 'Alert not found' });
-            return;
-        }
-
-        await prisma.alertRule.delete({ where: { id: existing.id } });
-        res.status(204).send();
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to delete alert rule' });
-    }
-});
 
 export default router;

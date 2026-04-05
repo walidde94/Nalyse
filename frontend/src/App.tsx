@@ -49,7 +49,6 @@ const OrganizationView = React.lazy(() => import('./features/organization/Organi
 const CollaborationView = React.lazy(() => import('./features/collaboration/CollaborationView').then(m => ({ default: m.CollaborationView })));
 const WebhookSystemView = React.lazy(() => import('./features/webhooks/WebhookSystemView').then(m => ({ default: m.WebhookSystemView })));
 const DashboardCanvas = React.lazy(() => import('./features/canvas/DashboardCanvas').then(m => ({ default: m.DashboardCanvas })));
-const AlertingView = React.lazy(() => import('./features/alerting/AlertingView').then(m => ({ default: m.AlertingView })));
 const LensVisualizer = React.lazy(() => import('./features/lens/LensVisualizer').then(m => ({ default: m.LensVisualizer })));
 const EmbedSDKView = React.lazy(() => import('./features/embed/EmbedSDKView').then(m => ({ default: m.EmbedSDKView })));
 
@@ -934,7 +933,6 @@ function AppContent() {
                 id === 'agentic' ? 'Agentic Systems' :
                   id === 'democracy' ? 'Self-Service Studio' :
                     id === 'canvas' ? 'Dashboard Canvas' :
-                      id === 'alerting' ? 'Alerting & Rules' :
                         id === 'lens' ? 'Smart Lens' :
                     id.charAt(0).toUpperCase() + id.slice(1);
           openTab(id, title, data);
@@ -1074,10 +1072,6 @@ function AppContent() {
 
                 {tab.type === 'webhooks' && (
                   <WebhookSystemView token={token || ''} />
-                )}
-
-                {tab.type === 'alerting' && (
-                  <AlertingView token={token || ''} />
                 )}
 
                 {tab.type === 'canvas' && (

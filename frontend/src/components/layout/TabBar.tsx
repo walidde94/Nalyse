@@ -8,7 +8,7 @@ import {
 export interface TabType {
     id: string;
     title: string;
-    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'automation' | 'organization' | 'collaboration' | 'webhooks' | 'embed' | 'canvas' | 'alerting' | 'lens';
+    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'automation' | 'organization' | 'collaboration' | 'webhooks' | 'embed' | 'canvas' | 'lens';
     data?: any;
     icon?: React.ReactNode;
 }
@@ -99,7 +99,6 @@ export const TabBar = ({
             'webhooks': <Webhook size={13} />,
             'embed': <Boxes size={13} />,
             'canvas': <Layers size={13} />,
-            'alerting': <Bell size={13} />,
             'lens': <Sparkles size={13} />,
 
         };

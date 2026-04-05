@@ -34,7 +34,6 @@ model Organization {
   invitations UserInvitation[]
   schedules   Schedule[]
   webhooks    Webhook[]
-  alertRules  AlertRule[]
   reports     Report[]
   dashboards  Dashboard[]
 
@@ -69,7 +68,6 @@ model User {
   analysisConfigs AnalysisConfiguration[]
   schedules       Schedule[]
   webhooks        Webhook[]
-  alertRules      AlertRule[]
   dashboards      Dashboard[]
 
   @@map("users")
@@ -235,29 +233,6 @@ model Webhook {
 
   @@map("webhooks")
 }
-
-model AlertRule {
-  id                String    @id @default(uuid())
-  name              String
-  description       String?
-  metric            String    // Matches 'field' in UI
-  operator          String    // Matches 'condition' in UI
-  threshold         Float
-  window            String    @default("5m")
-  actions           Json      @default("{}") // Stores { type: 'webhook', target: '...' }
-  isActive          Boolean   @default(true)
-  lastTriggeredAt   DateTime?
-  organizationId    String
-  createdByUserId   String
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  organization  Organization @relation(fields: [organizationId], references: [id])
-  createdBy     User         @relation(fields: [createdByUserId], references: [id])
-
-  @@map("alert_rules")
-}
-
 model Dashboard {
   id             String    @id @default(uuid())
   name           String

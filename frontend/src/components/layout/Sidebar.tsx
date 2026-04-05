@@ -70,7 +70,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
 
                 { id: 'logistics', label: 'Road Intelligence', icon: <Map size={19} /> },
                 { id: 'developer', label: 'Developer API', icon: <Code2 size={19} /> },
-                { id: 'alerting', label: 'Alerting & Rules', icon: <Bell size={19} /> },
                 { id: 'webhooks', label: 'Webhooks & API', icon: <Webhook size={19} /> },
                 { id: 'embed', label: 'Embed SDK', icon: <Boxes size={19} /> },
             ]
