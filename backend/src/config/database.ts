@@ -94,6 +94,22 @@ export const initializeDatabase = async () => {
         console.log(`🔌 Initializing database connection for: ${connectionTarget}`);
         await AppDataSource.initialize();
         console.log('✅ Database connection established.');
+
+        // Lazy-sync dashboards table if it doesn't exist (helpful for new deployments without formal migrations yet)
+        if (!isTest) {
+            try {
+                const queryRunner = AppDataSource.createQueryRunner();
+                const table = await queryRunner.getTable('dashboards');
+                if (!table) {
+                    console.log('🔄 Dashboards table missing, synchronizing...');
+                    await AppDataSource.synchronize(false);
+                    console.log('✅ Synchronized successfully.');
+                }
+                await queryRunner.release();
+            } catch (e) {
+                console.error('⚠️ Could not check/sync dashboards table:', e);
+            }
+        }
     } catch (error: any) {
         console.error('❌ Database connection failed!');
         console.error('Error Message:', error.message);

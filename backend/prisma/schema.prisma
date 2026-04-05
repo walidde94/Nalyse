@@ -37,6 +37,8 @@ model Organization {
   alertRules  AlertRule[]
   reports     Report[]
   dashboards  Dashboard[]
+
+  @@map("organizations")
 }
 
 model User {
@@ -69,6 +71,8 @@ model User {
   webhooks        Webhook[]
   alertRules      AlertRule[]
   dashboards      Dashboard[]
+
+  @@map("users")
 }
 
 model File {
@@ -91,6 +95,8 @@ model File {
   organization Organization? @relation(fields: [organizationId], references: [id])
   analyses     Analysis[]
   schedules    Schedule[]
+
+  @@map("files")
 }
 
 model Analysis {
@@ -108,6 +114,8 @@ model Analysis {
 
   file      File @relation(fields: [fileId], references: [id])
   createdBy User @relation(fields: [createdById], references: [id])
+
+  @@map("analyses")
 }
 
 model Report {
@@ -123,6 +131,8 @@ model Report {
 
   user         User          @relation(fields: [userId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("reports")
 }
 
 model Notification {
@@ -147,6 +157,8 @@ model Notification {
   createdAt      DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
 }
 
 model UserInvitation {
@@ -162,6 +174,8 @@ model UserInvitation {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   inviter      User         @relation("invitedBy", fields: [inviterId], references: [id])
+
+  @@map("user_invitations")
 }
 
 model AnalysisConfiguration {
@@ -177,6 +191,8 @@ model AnalysisConfiguration {
   updatedAt   DateTime  @updatedAt
 
   owner User? @relation(fields: [ownerId], references: [id])
+
+  @@map("analysis_configurations")
 }
 
 model Schedule {
@@ -196,6 +212,8 @@ model Schedule {
   organization  Organization @relation(fields: [organizationId], references: [id])
   createdBy     User         @relation(fields: [createdByUserId], references: [id])
   targetFile    File?        @relation(fields: [targetFileId], references: [id])
+
+  @@map("schedules")
 }
 
 model Webhook {
@@ -212,6 +230,8 @@ model Webhook {
 
   organization  Organization @relation(fields: [organizationId], references: [id])
   createdBy     User         @relation(fields: [createdByUserId], references: [id])
+
+  @@map("webhooks")
 }
 
 model AlertRule {
@@ -232,6 +252,8 @@ model AlertRule {
 
   organization  Organization @relation(fields: [organizationId], references: [id])
   createdBy     User         @relation(fields: [createdByUserId], references: [id])
+
+  @@map("alert_rules")
 }
 
 model Dashboard {
@@ -246,4 +268,6 @@ model Dashboard {
 
   user         User          @relation(fields: [userId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("dashboards")
 }

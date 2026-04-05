@@ -297,18 +297,15 @@ export const DashboardCanvas: React.FC = () => {
                     setActiveDashboardId(data[0].id);
                 }
             } else {
+                const errorText = await res.text();
+                console.error('Failed to fetch dashboards from cloud:', errorText);
                 const local = loadDashboards();
                 setDashboards(local);
-                if (local.length > 0 && !activeDashboardId) {
-                    setActiveDashboardId(local[0].id);
-                }
             }
         } catch (e) {
+            console.error('Cloud dashboard sync error:', e);
             const local = loadDashboards();
             setDashboards(local);
-            if (local.length > 0 && !activeDashboardId) {
-                setActiveDashboardId(local[0].id);
-            }
         } finally {
             setIsLoading(false);
         }
