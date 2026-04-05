@@ -46,6 +46,33 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
+// Safe extractors for dynamic CSV/JSON datasets (handles case matching & string/number conversions)
+const getNum = (row: any, keys: string[]): number => {
+    for (const key of keys) {
+        // try lowercase, uppercase, capitalize
+        const variations = [key, key.toUpperCase(), key.toLowerCase(), key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()];
+        for (const v of variations) {
+            if (row[v] !== undefined && row[v] !== null && row[v] !== '') {
+                const val = Number(row[v].toString().replace(/[^0-9.-]+/g, ""));
+                if (!isNaN(val)) return val;
+            }
+        }
+    }
+    return 0;
+};
+
+const getStr = (row: any, keys: string[]): string => {
+    for (const key of keys) {
+        const variations = [key, key.toUpperCase(), key.toLowerCase(), key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()];
+        for (const v of variations) {
+            if (row[v] !== undefined && row[v] !== null && row[v] !== '') {
+                return row[v].toString();
+            }
+        }
+    }
+    return 'Unknown';
+};
+
 export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
 
     const { kpis, charts, title, accentColor, icon } = useMemo(() => {
@@ -64,26 +91,28 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     accentColor = '#34d399';
                     icon = <TrendingUp size={24} />;
                     
-                    const totalRev = data.reduce((sum, r) => sum + (r.Revenue || 0), 0);
-                    const totalUnits = data.reduce((sum, r) => sum + (r['Units Sold'] || 0), 0);
+                    const totalRev = data.reduce((sum, r) => sum + getNum(r, ['Revenue', 'Total Revenue']), 0);
+                    const totalUnits = data.reduce((sum, r) => sum + getNum(r, ['Units Sold', 'Units', 'Quantity']), 0);
                     const avgDeal = totalRev / (data.length || 1);
 
                     const trendMap = data.reduce((acc: any, r: any) => {
-                        acc[r.Date] = (acc[r.Date] || 0) + (r.Revenue || 0);
+                        const date = getStr(r, ['Date', 'Order Date', 'Month']);
+                        acc[date] = (acc[date] || 0) + getNum(r, ['Revenue', 'Total Revenue']);
                         return acc;
                     }, {});
                     const trendData = Object.keys(trendMap).map(d => ({ Date: d, Revenue: trendMap[d] })).sort((a, b) => a.Date.localeCompare(b.Date));
 
                     const prodMap = data.reduce((acc: any, r: any) => {
-                        acc[r.Product] = (acc[r.Product] || 0) + (r.Revenue || 0);
+                        const prod = getStr(r, ['Product', 'Item', 'Category']);
+                        acc[prod] = (acc[prod] || 0) + getNum(r, ['Revenue', 'Total Revenue']);
                         return acc;
                     }, {});
                     const productData = Object.keys(prodMap).map(p => ({ Product: p, Revenue: prodMap[p] }));
 
                     kpis = [
-                        { label: 'Total Revenue', value: `$${totalRev?.toLocaleString()}`, trend: '+14.2%', trendUp: true },
-                        { label: 'Units Sold', value: totalUnits?.toLocaleString(), trend: '+5.4%', trendUp: true },
-                        { label: 'Avg Deal Size', value: `$${Math.round(avgDeal)?.toLocaleString()}`, trend: '-2.1%', trendUp: false },
+                        { label: 'Total Revenue', value: `$${totalRev.toLocaleString()}`, trend: '+14.2%', trendUp: true },
+                        { label: 'Units Sold', value: totalUnits.toLocaleString(), trend: '+5.4%', trendUp: true },
+                        { label: 'Avg Deal Size', value: `$${Math.round(avgDeal).toLocaleString()}`, trend: '-2.1%', trendUp: false },
                     ];
                     charts = [
                         { type: 'area', title: 'Revenue Velocity Over Time', data: trendData, x: 'Date', y: 'Revenue', color: '#10b981' },
@@ -96,25 +125,27 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     accentColor = '#ec4899';
                     icon = <Megaphone size={24} />;
                     
-                    const totalSpend = data.reduce((sum, r) => sum + (r.Spend || 0), 0);
-                    const totalLeads = data.reduce((sum, r) => sum + (r.Leads || 0), 0);
-                    const avgCpl = data.length > 0 ? (totalSpend / totalLeads) : 0;
+                    const totalSpend = data.reduce((sum, r) => sum + getNum(r, ['Spend', 'Cost', 'Amount']), 0);
+                    const totalLeads = data.reduce((sum, r) => sum + getNum(r, ['Leads', 'Conversions']), 0);
+                    const avgCpl = totalLeads > 0 ? (totalSpend / totalLeads) : 0;
 
                     const channelMap = data.reduce((acc: any, r: any) => {
-                        acc[r.Channel] = (acc[r.Channel] || 0) + (r.Spend || 0);
+                        const channel = getStr(r, ['Channel', 'Source', 'Platform']);
+                        acc[channel] = (acc[channel] || 0) + getNum(r, ['Spend', 'Cost']);
                         return acc;
                     }, {});
                     const channelData = Object.keys(channelMap).map(c => ({ Channel: c, value: channelMap[c] }));
 
                     const campMap = data.reduce((acc: any, r: any) => {
-                        acc[r.Campaign] = (acc[r.Campaign] || 0) + (r.Leads || 0);
+                        const camp = getStr(r, ['Campaign', 'Name']);
+                        acc[camp] = (acc[camp] || 0) + getNum(r, ['Leads', 'Conversions']);
                         return acc;
                     }, {});
                     const campaignData = Object.keys(campMap).map(c => ({ Campaign: c, Leads: campMap[c] }));
 
                     kpis = [
-                        { label: 'Campaign Spend', value: `$${totalSpend?.toLocaleString()}`, trend: '+8.1%', trendUp: false },
-                        { label: 'Total Leads Generated', value: totalLeads?.toLocaleString(), trend: '+22.4%', trendUp: true },
+                        { label: 'Campaign Spend', value: `$${totalSpend.toLocaleString()}`, trend: '+8.1%', trendUp: false },
+                        { label: 'Total Leads Generated', value: totalLeads.toLocaleString(), trend: '+22.4%', trendUp: true },
                         { label: 'Blended Cost Per Lead', value: `$${Math.round(avgCpl)}`, trend: '-12.5%', trendUp: true },
                     ];
                     charts = [
@@ -128,27 +159,30 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     accentColor = '#f59e0b';
                     icon = <PackageSearch size={24} />;
                     
-                    const totalStock = data.reduce((sum, r) => sum + (r['Stock Level'] || 0), 0);
-                    const lowStockItems = data.filter((r: any) => (r['Stock Level'] || 0) < (r['Reorder Point'] || 0)).length;
+                    const totalStock = data.reduce((sum, r) => sum + getNum(r, ['Stock Level', 'Stock', 'Inventory']), 0);
+                    const lowStockItems = data.filter((r: any) => getNum(r, ['Stock Level', 'Stock']) < getNum(r, ['Reorder Point', 'Min Stock'])).length;
 
                     const supMap = data.reduce((acc: any, r: any) => {
-                        const s = r.Supplier || r['Supplier ID'] || 'Unknown';
+                        const s = getStr(r, ['Supplier', 'Supplier ID', 'Vendor']);
                         if (!acc[s]) acc[s] = { count: 0, sum: 0 };
                         acc[s].count++;
-                        acc[s].sum += (r['Delivery Time (Days)'] || r['Lead Time'] || 0);
+                        acc[s].sum += getNum(r, ['Delivery Time', 'Lead Time', 'Delivery Time (Days)']);
                         return acc;
                     }, {});
                     const deliveryData = Object.keys(supMap).map(s => ({ Supplier: s, Days: supMap[s].sum / supMap[s].count }));
 
-                    const stockData = [...data].sort((a, b) => (a['Stock Level'] || 0) - (b['Stock Level'] || 0)).slice(0, 6);
+                    const stockData = [...data].sort((a, b) => getNum(a, ['Stock Level', 'Stock']) - getNum(b, ['Stock Level', 'Stock'])).slice(0, 6);
 
                     kpis = [
-                        { label: 'Total Inventory Units', value: totalStock?.toLocaleString(), trend: '-1.4%', trendUp: false },
+                        { label: 'Total Inventory Units', value: totalStock.toLocaleString(), trend: '-1.4%', trendUp: false },
                         { label: 'Critical / Below Reorder', value: lowStockItems, trend: lowStockItems > 0 ? '+3' : '-1', trendUp: lowStockItems === 0 },
                         { label: 'Active Suppliers', value: Object.keys(supMap).length.toString(), trend: 'Stable', trendUp: true },
                     ];
+                    // Find actual keys representing product identifiers dynamically
+                    const getSkuKey = (r: any) => r['SKU'] !== undefined ? 'SKU' : (r['Product'] !== undefined ? 'Product' : 'ID');
+                    
                     charts = [
-                        { type: 'bar', title: 'Critical Stock Levels', data: stockData, x: data[0]?.SKU ? 'SKU' : 'Product', y: 'Stock Level', color: '#ef4444' },
+                        { type: 'bar', title: 'Critical Stock Levels', data: stockData.map(r => ({ Name: getStr(r, ['SKU', 'Product', 'Item']), Stock: getNum(r, ['Stock Level', 'Stock']) })), x: 'Name', y: 'Stock', color: '#ef4444' },
                         { type: 'area', title: 'Supplier Delivery Times (Avg Days)', data: deliveryData, x: 'Supplier', y: 'Days', color: '#f59e0b' }
                     ];
                     break;
@@ -159,13 +193,13 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     icon = <Users size={24} />;
                     
                     const totalUsers = data.length;
-                    const avgRetention = data.reduce((sum, r) => sum + (r['Retention Score'] || 0), 0) / (totalUsers || 1);
+                    const avgRetention = data.reduce((sum, r) => sum + getNum(r, ['Retention Score', 'Score']), 0) / (totalUsers || 1);
 
                     const planMap = data.reduce((acc: any, r: any) => {
-                        const p = r.Plan;
+                        const p = getStr(r, ['Plan', 'Tier', 'Segment']);
                         if (!acc[p]) acc[p] = { count: 0, sum: 0 };
                         acc[p].count++;
-                        acc[p].sum += (r['Retention Score'] || 0);
+                        acc[p].sum += getNum(r, ['Retention Score', 'Score']);
                         return acc;
                     }, {});
                     const retentionDist = Object.keys(planMap).map(p => ({ Plan: p, Score: planMap[p].sum / planMap[p].count }));
@@ -185,10 +219,10 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     accentColor = '#8b5cf6';
                     icon = <Cpu size={24} />;
                     
-                    const totalActive = data.reduce((sum, r) => sum + (r['Active Users'] || 0), 0);
-                    const avgSession = data.reduce((sum, r) => sum + (r['Avg Session (min)'] || r['Avg Duration'] || 0), 0) / (data.length || 1);
+                    const totalActive = data.reduce((sum, r) => sum + getNum(r, ['Active Users', 'Users']), 0);
+                    const avgSession = data.reduce((sum, r) => sum + getNum(r, ['Avg Session (min)', 'Avg Duration', 'Session Length']), 0) / (data.length || 1);
 
-                    const featureData = data.map((r: any) => ({ Feature: r.Feature, Users: r['Active Users'] })).sort((a, b) => b.Users - a.Users);
+                    const featureData = data.map((r: any) => ({ Feature: getStr(r, ['Feature', 'Module']), Users: getNum(r, ['Active Users', 'Users']) })).filter(r => r.Feature !== 'Unknown').sort((a, b) => b.Users - a.Users);
 
                     kpis = [
                         { label: 'Global Active Users', value: totalActive.toLocaleString(), trend: '+18.4%', trendUp: true },
@@ -205,9 +239,11 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     accentColor = '#eab308';
                     icon = <Briefcase size={24} />;
                     
-                    const totalRev = data.reduce((sum, r) => sum + (r.Revenue || r['Total Revenue'] || 0), 0);
-                    const totalProfit = data.reduce((sum, r) => sum + (r.Profit || r['Net Profit'] || 0), 0);
+                    const totalRev = data.reduce((sum, r) => sum + getNum(r, ['Revenue', 'Total Revenue']), 0);
+                    const totalProfit = data.reduce((sum, r) => sum + getNum(r, ['Profit', 'Net Profit']), 0);
                     const margin = totalRev > 0 ? (totalProfit / totalRev) * 100 : 0;
+
+                    const pnlData = data.map(r => ({ Month: getStr(r, ['Month', 'Date', 'Quarter']), Revenue: getNum(r, ['Revenue', 'Total Revenue']) }));
 
                     kpis = [
                         { label: 'Gross Revenue', value: '$' + (totalRev / 1000).toFixed(1) + 'k', trend: '+11.2%', trendUp: true },
@@ -215,7 +251,7 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                         { label: 'Profit Margin', value: Math.round(margin) + '%', trend: '+1.5%', trendUp: true }
                     ];
                     charts = [
-                        { type: 'area', title: 'P&L Trajectory', data: data, x: 'Month', y: data[0]?.Revenue !== undefined ? 'Revenue' : 'Total Revenue', color: '#eab308' }
+                        { type: 'area', title: 'P&L Trajectory', data: pnlData, x: 'Month', y: 'Revenue', color: '#eab308' }
                     ];
                     break;
                 }
