@@ -32,7 +32,7 @@ const LandingView = React.lazy(() => import('./features/landing/LandingView').th
 const BiSelectionView = React.lazy(() => import('./features/bi/BiSelectionView').then(m => ({ default: m.BiSelectionView })));
 const BiView = React.lazy(() => import('./features/bi/BiView').then(m => ({ default: m.BiView })));
 const MigrationView = React.lazy(() => import('./features/migration/MigrationView').then(m => ({ default: m.MigrationView })));
-const NexusView = React.lazy(() => import('./features/oracle/OracleView').then(m => ({ default: m.NexusView })));
+
 const ConnectorsView = React.lazy(() => import('./features/sources/ConnectorsView').then(m => ({ default: m.ConnectorsView })));
 const ProjectsView = React.lazy(() => import('./features/projects/ProjectsView').then(m => ({ default: m.ProjectsView })));
 const DeveloperView = React.lazy(() => import('./features/developer/DeveloperView').then(m => ({ default: m.DeveloperView })));
@@ -48,6 +48,7 @@ const AutomationView = React.lazy(() => import('./features/automation/Automation
 const OrganizationView = React.lazy(() => import('./features/organization/OrganizationView').then(m => ({ default: m.OrganizationView })));
 const CollaborationView = React.lazy(() => import('./features/collaboration/CollaborationView').then(m => ({ default: m.CollaborationView })));
 const WebhookSystemView = React.lazy(() => import('./features/webhooks/WebhookSystemView').then(m => ({ default: m.WebhookSystemView })));
+const DashboardCanvas = React.lazy(() => import('./features/canvas/DashboardCanvas').then(m => ({ default: m.DashboardCanvas })));
 const EmbedSDKView = React.lazy(() => import('./features/embed/EmbedSDKView').then(m => ({ default: m.EmbedSDKView })));
 
 
@@ -390,7 +391,7 @@ function AppContent() {
     // Smart Duplicate Prevention
     const existing = tabs.find(t => {
       if (t.type !== type) return false;
-      if (['dashboard', 'settings', 'correlate', 'landing', 'nexus', 'democracy'].includes(type)) return true;
+      if (['dashboard', 'settings', 'correlate', 'landing', 'democracy'].includes(type)) return true;
       if (type === 'bi' && !data && !t.data) return true; // BI Menu singleton
       if (t.title === title) return true; // Match by title (e.g. filename)
       return false;
@@ -929,10 +930,11 @@ function AppContent() {
           const data = typeof viewInfo === 'string' ? undefined : viewInfo.data;
 
           const title = id === 'diff' ? 'Version Diff' :
-            id === 'nexus' ? 'Nexus AI' :
+
               id === 'logistics' ? 'Road Intelligence' :
                 id === 'agentic' ? 'Agentic Systems' :
                   id === 'democracy' ? 'Self-Service Studio' :
+                    id === 'canvas' ? 'Dashboard Canvas' :
                     id.charAt(0).toUpperCase() + id.slice(1);
           openTab(id, title, data);
         }}
@@ -1018,16 +1020,7 @@ function AppContent() {
                   <MigrationView onClose={() => openTab('dashboard', 'Dashboard')} />
                 )}
 
-                {tab.type === 'nexus' && (
-                  <NexusView
-                    files={files}
-                    groups={groups}
-                    token={token || ''}
-                    userPlan={(user as any)?.organization?.plan || 'free'}
-                    onProjectCreated={() => openTab('projects', 'Strategic Board')}
-                    runWithProgress={runAnalysisWithProgress}
-                  />
-                )}
+
 
                 {tab.type === 'projects' && (
                   <ProjectsView token={token || ''} />
@@ -1080,6 +1073,10 @@ function AppContent() {
 
                 {tab.type === 'webhooks' && (
                   <WebhookSystemView token={token || ''} />
+                )}
+
+                {tab.type === 'canvas' && (
+                  <DashboardCanvas />
                 )}
 
                 {tab.type === 'embed' && (

@@ -8,7 +8,7 @@ import {
     LayoutDashboard,
     Database,
     Briefcase,
-    BrainCircuit,
+
     Map,
     Code2,
     BarChart3,
@@ -29,7 +29,8 @@ import {
     Building2,
     MessageSquare,
     Webhook,
-    Boxes
+    Boxes,
+    Layers
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -64,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
         {
             title: 'Predictive Models',
             items: [
-                { id: 'nexus', label: 'Nexus AI', icon: <BrainCircuit size={19} /> },
+
                 { id: 'logistics', label: 'Road Intelligence', icon: <Map size={19} /> },
                 { id: 'developer', label: 'Developer API', icon: <Code2 size={19} /> },
                 { id: 'webhooks', label: 'Webhooks & API', icon: <Webhook size={19} /> },
@@ -74,6 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
         {
             title: 'Business Intelligence',
             items: [
+                { id: 'canvas', label: 'Dashboard Canvas', icon: <Layers size={19} /> },
                 { id: 'bi', label: t('nav.bi'), icon: <BarChart3 size={19} /> },
                 { id: 'projects', label: 'Strategic Board', icon: <Briefcase size={19} /> },
             ]

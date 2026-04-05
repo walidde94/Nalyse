@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from '../common/Logo';
-import { Search, Bell, Sparkles, Command, Activity, Hexagon, Terminal, Radio, Shield, Settings, LogOut, Zap, Fingerprint } from 'lucide-react';
+import { Search, Bell, Activity, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { UserProfile } from '../UserProfile';
@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [currentTime, setCurrentTime] = useState('');
-    const [searchFocused, setSearchFocused] = useState(false);
+
     const [pulseTrack, setPulseTrack] = useState<number[]>([10, 25, 15, 30, 20, 35, 25, 40]);
     const isDark = theme === 'dark' || theme === 'midnight';
     const isMidnight = theme === 'midnight';
@@ -168,97 +168,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         </div>
                     </div>
 
-                    {/* Highly Advanced Neural Command Prompt */}
-                    <div id="tour-nexus-ai" className="desktop-only" style={{
-                        position: 'relative',
-                        width: '460px',
-                        marginLeft: '24px',
-                    }}>
-                        <div style={{
-                            position: 'relative',
-                            display: 'flex',
-                            alignItems: 'center',
-                            transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                            transform: searchFocused ? 'scale(1.01) translateY(-1px)' : 'scale(1)',
-                        }}>
-                            {/* Halo Effect */}
-                            {searchFocused && (
-                                <div style={{
-                                    position: 'absolute',
-                                    inset: '-2px',
-                                    background: 'linear-gradient(90deg, #6366f1, #ec4899, #8b5cf6)',
-                                    borderRadius: '14px',
-                                    filter: 'blur(10px)',
-                                    opacity: 0.4,
-                                    animation: 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-                                }} />
-                            )}
 
-                            {/* Inner Box */}
-                            <div style={{
-                                position: 'relative',
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                background: searchFocused ? (isDark ? 'rgba(15, 15, 25, 0.9)' : '#fff') : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'),
-                                border: `1px solid ${searchFocused ? 'rgba(99, 102, 241, 0.5)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')}`,
-                                borderRadius: '12px',
-                                overflow: 'hidden',
-                                boxShadow: searchFocused ? 'inset 0 0 20px rgba(99, 102, 241, 0.1)' : 'inset 0 1px 2px rgba(0,0,0,0.05)',
-                            }}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '0 12px',
-                                    color: searchFocused ? '#a855f7' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)'),
-                                    transition: 'color 0.3s'
-                                }}>
-                                    {searchFocused ? <Sparkles size={16} className="sparkle-spin" /> : <Terminal size={16} />}
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Enter natural language query or system command..."
-                                    onFocus={() => setSearchFocused(true)}
-                                    onBlur={() => setSearchFocused(false)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '11px 0',
-                                        background: 'transparent',
-                                        border: 'none',
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        color: isDark ? '#fff' : '#0f172a',
-                                        outline: 'none',
-                                        letterSpacing: '0.02em',
-                                    }}
-                                />
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '0 10px',
-                                    gap: '6px'
-                                }}>
-                                    {!searchFocused && (
-                                        <div style={{
-                                            padding: '4px 8px',
-                                            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-                                            borderRadius: '6px',
-                                            fontSize: '10px',
-                                            fontWeight: 800,
-                                            color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(15,23,42,0.4)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                        }}>
-                                            <Command size={10} />K
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Right Side (Ultra-Premium Enterprise Telemetry) */}

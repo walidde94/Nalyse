@@ -1,7 +1,33 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, Calendar, ChevronDown, RefreshCw, Hash, Type, Columns, Zap, ArrowRight } from 'lucide-react';
+import { Search, Calendar, ChevronDown, RefreshCw, Hash, Type, Columns, Zap, ArrowRight, Star, Clock, Trash2, Bookmark, Save, X } from 'lucide-react';
 import { TimePicker } from './TimePicker';
 import { motion, AnimatePresence } from 'framer-motion';
+
+/* ─── Saved Queries Storage ─── */
+interface SavedQuery {
+    id: string;
+    name: string;
+    query: string;
+    starred: boolean;
+    createdAt: number;
+}
+
+const STORAGE_KEY_SAVED = 'nalyse_saved_queries';
+const STORAGE_KEY_HISTORY = 'nalyse_query_history';
+const MAX_HISTORY = 20;
+
+function loadSavedQueries(): SavedQuery[] {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY_SAVED) || '[]'); } catch { return []; }
+}
+function persistSavedQueries(queries: SavedQuery[]) {
+    localStorage.setItem(STORAGE_KEY_SAVED, JSON.stringify(queries));
+}
+function loadHistory(): string[] {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || '[]'); } catch { return []; }
+}
+function persistHistory(history: string[]) {
+    localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+}
 
 /* ─── Types ─── */
 interface ElasticSearchProps {
@@ -99,6 +125,71 @@ export const ElasticSearch = ({
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cursorPos, setCursorPos] = useState(0);
 
+    // ═══ Saved Queries & History State ═══
+    const [savedQueries, setSavedQueries] = useState<SavedQuery[]>(loadSavedQueries);
+    const [queryHistory, setQueryHistory] = useState<string[]>(loadHistory);
+    const [showSavedPanel, setShowSavedPanel] = useState(false);
+    const [showSaveDialog, setShowSaveDialog] = useState(false);
+    const [saveQueryName, setSaveQueryName] = useState('');
+    const [savedPanelTab, setSavedPanelTab] = useState<'history' | 'saved'>('history');
+
+    const addToHistory = useCallback((q: string) => {
+        if (!q.trim()) return;
+        setQueryHistory(prev => {
+            const filtered = prev.filter(h => h !== q);
+            const updated = [q, ...filtered].slice(0, MAX_HISTORY);
+            persistHistory(updated);
+            return updated;
+        });
+    }, []);
+
+    const handleSaveQuery = useCallback(() => {
+        if (!query.trim() || !saveQueryName.trim()) return;
+        const newQuery: SavedQuery = {
+            id: `sq_${Date.now()}`,
+            name: saveQueryName.trim(),
+            query: query.trim(),
+            starred: false,
+            createdAt: Date.now(),
+        };
+        setSavedQueries(prev => {
+            const updated = [newQuery, ...prev];
+            persistSavedQueries(updated);
+            return updated;
+        });
+        setShowSaveDialog(false);
+        setSaveQueryName('');
+    }, [query, saveQueryName]);
+
+    const toggleStarQuery = useCallback((id: string) => {
+        setSavedQueries(prev => {
+            const updated = prev.map(q => q.id === id ? { ...q, starred: !q.starred } : q);
+            persistSavedQueries(updated);
+            return updated;
+        });
+    }, []);
+
+    const deleteSavedQuery = useCallback((id: string) => {
+        setSavedQueries(prev => {
+            const updated = prev.filter(q => q.id !== id);
+            persistSavedQueries(updated);
+            return updated;
+        });
+    }, []);
+
+    const clearHistory = useCallback(() => {
+        setQueryHistory([]);
+        persistHistory([]);
+    }, []);
+
+    const applySavedQuery = useCallback((q: string) => {
+        setQuery(q);
+        setShowSavedPanel(false);
+        setShowSuggestions(false);
+        onSearch(q);
+        addToHistory(q);
+    }, [onSearch, addToHistory]);
+
     const inputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -112,6 +203,8 @@ export const ElasticSearch = ({
         const handleClickOutside = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 setShowSuggestions(false);
+                setShowSavedPanel(false);
+                setShowSaveDialog(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -293,7 +386,9 @@ export const ElasticSearch = ({
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         setShowSuggestions(false);
+        setShowSavedPanel(false);
         onSearch(query);
+        addToHistory(query);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -336,7 +431,13 @@ export const ElasticSearch = ({
         const val = e.target.value;
         setQuery(val);
         setCursorPos(e.target.selectionStart || val.length);
-        setShowSuggestions(true);
+        if (val.trim() === '') {
+            setShowSuggestions(false);
+            if (queryHistory.length > 0 || savedQueries.length > 0) setShowSavedPanel(true);
+        } else {
+            setShowSavedPanel(false);
+            setShowSuggestions(true);
+        }
     };
 
     const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -347,7 +448,10 @@ export const ElasticSearch = ({
     };
 
     const handleInputFocus = () => {
-        if (allFields.length > 0) {
+        if (query.trim() === '' && (queryHistory.length > 0 || savedQueries.length > 0)) {
+            setShowSavedPanel(true);
+            setShowSuggestions(false);
+        } else if (allFields.length > 0) {
             setCursorPos(inputRef.current?.selectionStart || query.length);
             setShowSuggestions(true);
         }
@@ -416,6 +520,23 @@ export const ElasticSearch = ({
                             spellCheck={false}
                         />
                         <div className="flex items-center gap-2 pr-3">
+                            {/* Save Query Button */}
+                            {query.trim() && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setShowSaveDialog(!showSaveDialog); }}
+                                    title="Save this query"
+                                    style={{
+                                        background: 'transparent', border: 'none', cursor: 'pointer',
+                                        color: 'var(--text-muted)', opacity: 0.5, padding: '2px',
+                                        display: 'flex', alignItems: 'center', transition: 'all 0.15s',
+                                    }}
+                                    onMouseEnter={e => { (e.target as HTMLElement).style.opacity = '1'; (e.target as HTMLElement).style.color = 'var(--warning)'; }}
+                                    onMouseLeave={e => { (e.target as HTMLElement).style.opacity = '0.5'; (e.target as HTMLElement).style.color = 'var(--text-muted)'; }}
+                                >
+                                    <Bookmark size={14} />
+                                </button>
+                            )}
                             {allFields.length > 0 && (
                                 <span style={{
                                     fontSize: '9px', fontWeight: 800, letterSpacing: '0.08em',
@@ -538,6 +659,184 @@ export const ElasticSearch = ({
                                         </div>
                                     );
                                 })}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* ═══ SAVE QUERY DIALOG ═══ */}
+                    <AnimatePresence>
+                        {showSaveDialog && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -4, scale: 0.96 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute left-0 right-0 top-[calc(100%+4px)] rounded-xl overflow-hidden"
+                                style={{
+                                    background: 'var(--bg-elevated)',
+                                    border: '1px solid var(--border-glow, var(--border-subtle))',
+                                    boxShadow: '0 12px 40px -8px rgba(0,0,0,0.6)',
+                                    backdropFilter: 'blur(20px)',
+                                    zIndex: 101, padding: '16px',
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                                    <Save size={14} style={{ color: 'var(--warning)' }} />
+                                    <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>Save Query</span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input
+                                        autoFocus
+                                        value={saveQueryName}
+                                        onChange={e => setSaveQueryName(e.target.value)}
+                                        onKeyDown={e => { if (e.key === 'Enter') handleSaveQuery(); if (e.key === 'Escape') setShowSaveDialog(false); }}
+                                        placeholder="Query name (e.g. High-value Errors)"
+                                        style={{
+                                            flex: 1, background: 'var(--bg-main)', border: '1px solid var(--border-default)',
+                                            padding: '8px 12px', borderRadius: '8px', color: 'var(--text-primary)',
+                                            fontSize: '12px', outline: 'none',
+                                        }}
+                                    />
+                                    <button
+                                        onClick={handleSaveQuery}
+                                        disabled={!saveQueryName.trim()}
+                                        style={{
+                                            background: 'var(--primary)', border: 'none', padding: '8px 16px',
+                                            borderRadius: '8px', color: '#fff', fontSize: '11px', fontWeight: 700,
+                                            cursor: 'pointer', opacity: saveQueryName.trim() ? 1 : 0.4,
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                    >Save</button>
+                                    <button
+                                        onClick={() => setShowSaveDialog(false)}
+                                        style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                                    ><X size={16} /></button>
+                                </div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', opacity: 0.5, marginTop: '8px', fontFamily: 'var(--font-mono)' }}>
+                                    {query.length > 60 ? query.substring(0, 60) + '...' : query}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* ═══ SAVED QUERIES & HISTORY PANEL ═══ */}
+                    <AnimatePresence>
+                        {showSavedPanel && !showSuggestions && (queryHistory.length > 0 || savedQueries.length > 0) && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -4, scaleY: 0.96 }}
+                                animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                                exit={{ opacity: 0, y: -4, scaleY: 0.96 }}
+                                transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                                className="absolute left-0 right-0 top-[calc(100%+4px)] rounded-xl overflow-hidden"
+                                style={{
+                                    background: 'var(--bg-elevated)',
+                                    border: '1px solid var(--border-glow, var(--border-subtle))',
+                                    boxShadow: '0 12px 40px -8px rgba(0,0,0,0.6), 0 0 0 1px var(--border-subtle)',
+                                    backdropFilter: 'blur(20px)',
+                                    maxHeight: '380px', overflowY: 'auto',
+                                    zIndex: 100, transformOrigin: 'top',
+                                }}
+                            >
+                                {/* Tab Header */}
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: '0', borderBottom: '1px solid var(--border-subtle)',
+                                }}>
+                                    {(['history', 'saved'] as const).map(tab => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setSavedPanelTab(tab)}
+                                            style={{
+                                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                                                padding: '10px 12px', cursor: 'pointer',
+                                                background: savedPanelTab === tab ? 'var(--primary-subtle)' : 'transparent',
+                                                borderBottom: savedPanelTab === tab ? '2px solid var(--primary)' : '2px solid transparent',
+                                                color: savedPanelTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
+                                                fontSize: '10px', fontWeight: 800, textTransform: 'uppercase',
+                                                letterSpacing: '0.08em', border: 'none', transition: 'all 0.2s',
+                                            }}
+                                        >
+                                            {tab === 'history' ? <Clock size={12} /> : <Star size={12} />}
+                                            {tab === 'history' ? `Recent (${queryHistory.length})` : `Saved (${savedQueries.length})`}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* History Tab */}
+                                {savedPanelTab === 'history' && (
+                                    <div>
+                                        {queryHistory.length === 0 ? (
+                                            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', opacity: 0.5 }}>No search history yet</div>
+                                        ) : (
+                                            <>
+                                                {queryHistory.map((h, i) => (
+                                                    <div
+                                                        key={`${h}-${i}`}
+                                                        onClick={() => applySavedQuery(h)}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', gap: '10px',
+                                                            padding: '8px 12px', cursor: 'pointer',
+                                                            transition: 'background 0.1s',
+                                                        }}
+                                                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-subtle)')}
+                                                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                                    >
+                                                        <Clock size={12} style={{ color: 'var(--text-muted)', opacity: 0.4, flexShrink: 0 }} />
+                                                        <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h}</span>
+                                                    </div>
+                                                ))}
+                                                <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '6px 12px', display: 'flex', justifyContent: 'flex-end' }}>
+                                                    <button onClick={clearHistory} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', fontSize: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.6 }}>
+                                                        <Trash2 size={10} /> Clear history
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Saved Tab */}
+                                {savedPanelTab === 'saved' && (
+                                    <div>
+                                        {savedQueries.length === 0 ? (
+                                            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', opacity: 0.5 }}>
+                                                <Bookmark size={20} style={{ margin: '0 auto 8px', opacity: 0.3 }} />
+                                                No saved queries. Type a query and click <Bookmark size={10} style={{ display: 'inline', verticalAlign: '-1px' }} /> to save.
+                                            </div>
+                                        ) : (
+                                            [...savedQueries].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0)).map(sq => (
+                                                <div
+                                                    key={sq.id}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: '10px',
+                                                        padding: '8px 12px', cursor: 'pointer',
+                                                        transition: 'background 0.1s',
+                                                    }}
+                                                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-subtle)')}
+                                                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                                >
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); toggleStarQuery(sq.id); }}
+                                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px', color: sq.starred ? 'var(--warning)' : 'var(--text-muted)', opacity: sq.starred ? 1 : 0.3, transition: 'all 0.15s', flexShrink: 0 }}
+                                                    >
+                                                        <Star size={13} fill={sq.starred ? 'currentColor' : 'none'} />
+                                                    </button>
+                                                    <div onClick={() => applySavedQuery(sq.query)} style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sq.name}</div>
+                                                        <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', opacity: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{sq.query}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); deleteSavedQuery(sq.id); }}
+                                                        style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', opacity: 0, transition: 'opacity 0.15s' }}
+                                                        onMouseEnter={e => { (e.currentTarget.style.opacity as any) = '1'; e.currentTarget.style.color = 'var(--danger)'; }}
+                                                        onMouseLeave={e => { (e.currentTarget.style.opacity as any) = '0'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>
