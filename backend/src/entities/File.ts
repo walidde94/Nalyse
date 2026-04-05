@@ -65,4 +65,10 @@ export class File {
 
     @Column({ nullable: true })
     checksum: string;
+
+    @Column({ default: false })
+    isProcessed: boolean;
+
+    @Column({ type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamp', nullable: true })
+    processedAt: Date;
 }

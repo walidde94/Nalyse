@@ -278,10 +278,13 @@ export const DashboardCanvas: React.FC = () => {
     const { width: gridWidth, containerRef: gridContainerRef, mounted: gridMounted } = useContainerWidth({ initialWidth: 1200 });
 
     // ─── API Sync ───
-    const fetchDashboards = useCallback(async () => {
+    const activeDashboardIdRef = useRef<string | null>(null);
+    activeDashboardIdRef.current = activeDashboardId;
+
+    const fetchDashboards = useCallback(async (silent = false) => {
         if (!token) {
             setDashboards(loadDashboards());
-            setIsLoading(false);
+            if (!silent) setIsLoading(false);
             return;
         }
 
@@ -293,27 +296,37 @@ export const DashboardCanvas: React.FC = () => {
                 const data = await res.json();
                 setDashboards(data);
                 persistDashboards(data);
-                if (data.length > 0 && !activeDashboardId) {
+                // Auto-select first dashboard if none active
+                if (data.length > 0 && !activeDashboardIdRef.current) {
                     setActiveDashboardId(data[0].id);
                 }
             } else {
-                const errorText = await res.text();
-                console.error('Failed to fetch dashboards from cloud:', errorText);
+                if (!silent) {
+                    const local = loadDashboards();
+                    setDashboards(local);
+                }
+            }
+        } catch (e) {
+            if (!silent) {
                 const local = loadDashboards();
                 setDashboards(local);
             }
-        } catch (e) {
-            console.error('Cloud dashboard sync error:', e);
-            const local = loadDashboards();
-            setDashboards(local);
         } finally {
-            setIsLoading(false);
+            if (!silent) setIsLoading(false);
         }
-    }, [token, activeDashboardId]);
+    }, [token]); // No activeDashboardId dependency — use ref instead
 
+    // Initial fetch
     useEffect(() => {
         fetchDashboards();
     }, [fetchDashboards]);
+
+    // Cross-device polling — every 15 seconds, silently check for updates
+    useEffect(() => {
+        if (!token) return;
+        const interval = setInterval(() => fetchDashboards(true), 15000);
+        return () => clearInterval(interval);
+    }, [token, fetchDashboards]);
 
     // Active dashboard
     const activeDashboard = useMemo(() => dashboards.find(d => d.id === activeDashboardId), [dashboards, activeDashboardId]);

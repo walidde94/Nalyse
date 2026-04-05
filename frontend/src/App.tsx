@@ -88,9 +88,6 @@ interface FileData {
 }
 
 // Main App Component
-// Used to locally track which files have been successfully processed in this session 
-// to prevent UI reversion if the backend gets out of sync or Vercel caches responses.
-const locallyProcessedFiles = new Set<string>();
 
 function AppContent() {
   const { user, token, isAuthenticated, isLoading: authLoading, logout } = useAuth();
@@ -497,11 +494,7 @@ function AppContent() {
       });
       if (res.ok) {
         const data = await res.json();
-        const syncData = data.map((f: any) => ({
-            ...f,
-            isProcessed: locallyProcessedFiles.has(f.id) ? true : f.isProcessed
-        }));
-        setFiles(syncData);
+        setFiles(data);
       }
     } catch (e) {
       // Silent fail - files will be empty array
@@ -535,6 +528,13 @@ function AppContent() {
       }
     }
   }, [isAuthenticated, fetchFiles, fetchGroups]);
+
+  // Cross-device file status polling — every 20 seconds
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(() => fetchFiles(), 20000);
+    return () => clearInterval(interval);
+  }, [token, fetchFiles]);
 
   // --- Real-time WebSocket Updates ---
   useEffect(() => {
@@ -697,9 +697,6 @@ function AppContent() {
         try { const err = await res.json(); msg = err.error || err.message || msg; } catch (e) {}
         throw new Error(msg);
       }
-      
-      // Permanently memoize that THIS specific payload was processed in this browser session
-      locallyProcessedFiles.add(file.id);
       
       const data = await res.json();
       

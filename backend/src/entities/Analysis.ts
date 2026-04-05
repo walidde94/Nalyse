@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { File } from './File';
 import { User } from './User';
 
+const isTest = process.env.NODE_ENV === 'test';
+
 @Entity('analyses')
 export class Analysis {
     @PrimaryGeneratedColumn('uuid')
@@ -23,14 +25,14 @@ export class Analysis {
     @Column({ type: 'varchar', default: 'pending' })
     status: 'pending' | 'processing' | 'completed' | 'failed';
 
-    @Column({ type: 'simple-json', nullable: true })
-    results: any; // Store analysis results
+    @Column({ type: isTest ? 'simple-json' : 'jsonb', nullable: true })
+    results: any;
 
-    @Column({ type: 'simple-json', nullable: true })
-    insights: any; // Store AI-generated insights
+    @Column({ type: isTest ? 'simple-json' : 'jsonb', nullable: true })
+    insights: any;
 
-    @Column({ type: 'simple-json', nullable: true })
-    statistics: any; // Store statistical analysis
+    @Column({ type: isTest ? 'simple-json' : 'jsonb', nullable: true })
+    statistics: any;
 
     @Column({ type: 'text', nullable: true })
     errorMessage: string;
@@ -44,6 +46,6 @@ export class Analysis {
     @UpdateDateColumn()
     updatedAt: Date;
 
-    @Column({ type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamp', nullable: true })
+    @Column({ type: isTest ? 'datetime' : 'timestamp', nullable: true })
     completedAt: Date;
 }

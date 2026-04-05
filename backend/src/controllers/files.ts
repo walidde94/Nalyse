@@ -156,19 +156,31 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
         const files = await fileRepo.find({
             where: { ownerId: userId, isDeleted: false },
             order: { createdAt: 'DESC' },
-            relations: ['analyses']
         });
 
-        // Enrich each file with processing status derived from analysis records
-        const enriched = files.map(f => {
-            const completedAnalysis = f.analyses?.find((a: any) => a.status === 'completed');
-            return {
+        // Back-fill: if file has no isProcessed but has a completed analysis, fix it
+        const { Analysis } = require('../entities/Analysis');
+        const analysisRepo = AppDataSource.getRepository(Analysis);
+        
+        const enriched = [];
+        for (const f of files) {
+            if (!f.isProcessed) {
+                // Quick check if there's a completed analysis we missed persisting
+                const cached = await analysisRepo.findOne({
+                    where: { fileId: f.id, status: 'completed' },
+                    select: ['id', 'completedAt']
+                });
+                if (cached) {
+                    f.isProcessed = true;
+                    f.processedAt = cached.completedAt;
+                    await fileRepo.save(f);
+                }
+            }
+            enriched.push({
                 ...f,
-                analyses: undefined, // Don't leak full analysis data in the list
-                isProcessed: !!completedAnalysis,
-                processedAt: completedAnalysis?.completedAt || null
-            };
-        });
+                analyses: undefined
+            });
+        }
 
         res.json(enriched);
     } catch (error) {
@@ -300,6 +312,12 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
                 });
                 await analysisRepo.save(analysis);
                 console.log(`[Analysis] Persisted to DB for file ${file.id}`);
+
+                // Mark file as processed directly on the File record
+                file.isProcessed = true;
+                file.processedAt = new Date();
+                await fileRepo.save(file);
+                console.log(`[Analysis] Marked file ${file.id} as processed`);
 
                 // Broadcast analysis completion to connected clients
                 try {

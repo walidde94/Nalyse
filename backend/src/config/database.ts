@@ -95,19 +95,23 @@ export const initializeDatabase = async () => {
         await AppDataSource.initialize();
         console.log('✅ Database connection established.');
 
-        // Lazy-sync dashboards table if it doesn't exist (helpful for new deployments without formal migrations yet)
+        // Lazy-sync schema changes for new deployments
         if (!isTest) {
             try {
                 const queryRunner = AppDataSource.createQueryRunner();
-                const table = await queryRunner.getTable('dashboards');
-                if (!table) {
-                    console.log('🔄 Dashboards table missing, synchronizing...');
+                const dashTable = await queryRunner.getTable('dashboards');
+                const filesTable = await queryRunner.getTable('files');
+                const needsSync = !dashTable || 
+                    (filesTable && !filesTable.findColumnByName('isProcessed'));
+                
+                if (needsSync) {
+                    console.log('🔄 Schema drift detected, synchronizing...');
                     await AppDataSource.synchronize(false);
-                    console.log('✅ Synchronized successfully.');
+                    console.log('✅ Schema synchronized successfully.');
                 }
                 await queryRunner.release();
             } catch (e) {
-                console.error('⚠️ Could not check/sync dashboards table:', e);
+                console.error('⚠️ Schema sync check failed:', e);
             }
         }
     } catch (error: any) {
