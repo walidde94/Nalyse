@@ -463,6 +463,16 @@ export const DashboardView = ({
     const [loadingPreview, setLoadingPreview] = useState(false);
     const [activeTab, setActiveTab] = useState<'properties' | 'preview'>('properties');
     const { token } = useAuth();
+    const safeFiles = Array.isArray(files) ? files : [];
+
+    useEffect(() => {
+        if (viewingMeta) {
+            const latest = safeFiles.find(f => f.id === viewingMeta.id);
+            if (latest && (latest.isProcessed !== viewingMeta.isProcessed || latest.isFavorite !== viewingMeta.isFavorite || latest.groupId !== viewingMeta.groupId)) {
+                setViewingMeta(latest);
+            }
+        }
+    }, [safeFiles, viewingMeta]);
 
     useEffect(() => {
         if (viewingMeta) {
@@ -539,7 +549,7 @@ export const DashboardView = ({
         };
     }, []);
 
-    const safeFiles = Array.isArray(files) ? files : [];
+
 
     // Derived State
     const metrics = useMemo(() => calculatePulse(safeFiles), [safeFiles]);

@@ -27,6 +27,7 @@ import automationRoutes from './routes/automation';
 import collaborationRoutes from './routes/collaboration';
 import webhookRoutes from './routes/webhooks';
 import alertRoutes from './routes/alerts';
+import dashboardRoutes from './routes/dashboards';
 import { startAlertEngine } from './services/alertEngine';
 import { startScheduleEngine } from './services/scheduleEngine';
 const allowedOrigins = [
@@ -130,6 +131,7 @@ app.use('/api/pulse', pulseRoutes);
 app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/webhooks', webhookLimiter, webhookRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/dashboards', dashboardRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

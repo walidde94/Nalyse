@@ -6,8 +6,11 @@ import {
     FileText, AreaChart, RefreshCw, Settings, GripVertical,
     X, Copy, Edit3, ChevronDown, Lock, Unlock, Grid3X3,
     Download, Upload, Eye, EyeOff, Layers, Layout as LayoutIcon, Clock,
-    Check, Sparkles
+    Check, Sparkles, AlertCircle, Loader2
 } from 'lucide-react';
+import { API_URL } from '../../config';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../components/ui/Toast';
 import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import type { LayoutItem, Layout as RGLLayout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -257,7 +260,11 @@ function panelIcon(type: PanelConfig['type']) {
    ═══════════════════════════════════════ */
 
 export const DashboardCanvas: React.FC = () => {
-    const [dashboards, setDashboards] = useState<DashboardLayout[]>(loadDashboards);
+    const { token, isAuthenticated } = useAuth();
+    const { addToast } = useToast();
+    const [dashboards, setDashboards] = useState<DashboardLayout[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [activeDashboardId, setActiveDashboardId] = useState<string | null>(null);
     const [showAddPanel, setShowAddPanel] = useState(false);
     const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -269,6 +276,47 @@ export const DashboardCanvas: React.FC = () => {
     const [lastRefresh, setLastRefresh] = useState(Date.now());
     const containerRef = useRef<HTMLDivElement>(null);
     const { width: gridWidth, containerRef: gridContainerRef, mounted: gridMounted } = useContainerWidth({ initialWidth: 1200 });
+
+    // ─── API Sync ───
+    const fetchDashboards = useCallback(async () => {
+        if (!token) {
+            setDashboards(loadDashboards());
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/dashboards`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setDashboards(data);
+                persistDashboards(data);
+                if (data.length > 0 && !activeDashboardId) {
+                    setActiveDashboardId(data[0].id);
+                }
+            } else {
+                const local = loadDashboards();
+                setDashboards(local);
+                if (local.length > 0 && !activeDashboardId) {
+                    setActiveDashboardId(local[0].id);
+                }
+            }
+        } catch (e) {
+            const local = loadDashboards();
+            setDashboards(local);
+            if (local.length > 0 && !activeDashboardId) {
+                setActiveDashboardId(local[0].id);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }, [token, activeDashboardId]);
+
+    useEffect(() => {
+        fetchDashboards();
+    }, [fetchDashboards]);
 
     // Active dashboard
     const activeDashboard = useMemo(() => dashboards.find(d => d.id === activeDashboardId), [dashboards, activeDashboardId]);
@@ -305,14 +353,17 @@ export const DashboardCanvas: React.FC = () => {
         };
         window.addEventListener('storage', handleStorage);
         // also listen to a custom event for same window sync
-        const customSync = () => setDashboards(loadDashboards());
+        const customSync = () => {
+            if (token) fetchDashboards();
+            else setDashboards(loadDashboards());
+        };
         window.addEventListener('sync-dashboard', customSync);
         
         return () => {
             window.removeEventListener('storage', handleStorage);
             window.removeEventListener('sync-dashboard', customSync);
         };
-    }, []);
+    }, [token, fetchDashboards]);
 
     // Fullscreen
     const toggleFullscreen = useCallback(() => {
@@ -367,29 +418,70 @@ export const DashboardCanvas: React.FC = () => {
     }, []);
 
     // Save Dashboard
-    const saveDashboard = useCallback(() => {
+    const saveDashboard = useCallback(async () => {
         if (!saveName.trim()) return;
+        setIsSaving(true);
         const now = Date.now();
         const existing = dashboards.find(d => d.id === activeDashboardId);
+        
+        let updatedDashboards = [...dashboards];
+        let targetId = activeDashboardId;
+
         if (existing) {
-            const updated = dashboards.map(d => d.id === activeDashboardId
-                ? { ...d, name: saveName, panels, gridLayout, updatedAt: now }
-                : d);
-            setDashboards(updated);
-            persistDashboards(updated);
+            const updated = { ...existing, name: saveName, panels, gridLayout, updatedAt: now };
+            updatedDashboards = dashboards.map(d => d.id === activeDashboardId ? updated : d);
+            
+            if (token) {
+                try {
+                    await fetch(`${API_URL}/api/dashboards/${activeDashboardId}`, {
+                        method: 'PUT',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({ name: saveName, panels, gridLayout })
+                    });
+                } catch (e) {
+                    addToast('Failed to sync with cloud. Saved locally.', 'warning');
+                }
+            }
         } else {
+            const newId = `dash_${now}`;
             const newDash: DashboardLayout = {
-                id: `dash_${now}`, name: saveName, panels, gridLayout,
+                id: newId, name: saveName, panels, gridLayout,
                 createdAt: now, updatedAt: now,
             };
-            const updated = [newDash, ...dashboards];
-            setDashboards(updated);
-            persistDashboards(updated);
-            setActiveDashboardId(newDash.id);
+            
+            if (token) {
+                try {
+                    const res = await fetch(`${API_URL}/api/dashboards`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({ name: saveName, panels, gridLayout })
+                    });
+                    if (res.ok) {
+                        const saved = await res.json();
+                        newDash.id = saved.id;
+                        targetId = saved.id;
+                    }
+                } catch (e) {
+                    addToast('Failed to sync with cloud. Saved locally.', 'warning');
+                }
+            }
+            updatedDashboards = [newDash, ...dashboards];
+            setActiveDashboardId(targetId || newDash.id);
         }
+
+        setDashboards(updatedDashboards);
+        persistDashboards(updatedDashboards);
         setShowSaveDialog(false);
         setSaveName('');
-    }, [saveName, panels, gridLayout, dashboards, activeDashboardId]);
+        setIsSaving(false);
+        addToast('Dashboard saved successfully', 'success');
+    }, [saveName, panels, gridLayout, dashboards, activeDashboardId, token, addToast]);
 
     // Load Dashboard
     const loadDashboard = useCallback((id: string) => {
@@ -398,16 +490,31 @@ export const DashboardCanvas: React.FC = () => {
     }, []);
 
     // Delete Dashboard
-    const deleteDashboard = useCallback((id: string) => {
-        const updated = dashboards.filter(d => d.id !== id);
-        setDashboards(updated);
-        persistDashboards(updated);
+    const deleteDashboard = useCallback(async (id: string) => {
+        if (!confirm('Are you sure you want to delete this dashboard?')) return;
+        
+        let updatedDashboards = dashboards.filter(d => d.id !== id);
+        
+        if (token) {
+            try {
+                await fetch(`${API_URL}/api/dashboards/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            } catch (e) {
+                addToast('Failed to sync deletion with cloud.', 'error');
+            }
+        }
+
+        setDashboards(updatedDashboards);
+        persistDashboards(updatedDashboards);
         if (activeDashboardId === id) {
             setActiveDashboardId(null);
             setPanels([]);
             setGridLayout([]);
         }
-    }, [dashboards, activeDashboardId]);
+        addToast('Dashboard deleted', 'success');
+    }, [dashboards, activeDashboardId, token, addToast]);
 
     // New Dashboard
     const newDashboard = useCallback(() => {

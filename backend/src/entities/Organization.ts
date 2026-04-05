@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { User } from './User';
 import { File } from './File';
+import { Dashboard } from './Dashboard';
 
 @Entity('organizations')
 export class Organization {
@@ -48,6 +49,9 @@ export class Organization {
 
     @OneToMany(() => File, file => file.organization)
     files: File[];
+
+    @OneToMany(() => Dashboard, dashboard => dashboard.organization)
+    dashboards: Dashboard[];
 
     @CreateDateColumn()
     createdAt: Date;

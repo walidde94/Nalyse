@@ -3,6 +3,7 @@ import { Organization } from './Organization';
 import { File } from './File';
 import { Group } from './Group';
 import { Report } from './Report';
+import { Dashboard } from './Dashboard';
 
 @Entity('users')
 export class User {
@@ -50,6 +51,9 @@ export class User {
 
     @OneToMany(() => Report, report => report.user)
     reports: Report[];
+
+    @OneToMany(() => Dashboard, dashboard => dashboard.user)
+    dashboards: Dashboard[];
 
     @CreateDateColumn()
     createdAt: Date;

@@ -505,15 +505,11 @@ export const LensVisualizer: React.FC = () => {
                         </button>
                         <button 
                             disabled={!activeChart} 
-                            onClick={() => {
+                            onClick={async () => {
                                 const storageKey = 'nalyse_canvas_dashboards';
                                 const now = Date.now();
                                 const dbs = JSON.parse(localStorage.getItem(storageKey) || '[]');
                                 let dash = dbs[0];
-                                if (!dash) {
-                                    dash = { id: `dash_${now}`, name: 'Main Dashboard', panels: [], gridLayout: [], createdAt: now, updatedAt: now };
-                                    dbs.push(dash);
-                                }
                                 
                                 const panelId = `panel_${now}`;
                                 const newPanel = {
@@ -524,18 +520,65 @@ export const LensVisualizer: React.FC = () => {
                                         data: previewData,
                                         xAxisKey: 'category',
                                         yAxisKey: 'value',
-                                        color: '#818cf8'
+                                        color: '#818cf8',
+                                        sourceLens: true
                                     },
                                     locked: false
                                 };
-                                
-                                dash.panels.push(newPanel);
-                                dash.gridLayout.push({ i: panelId, x: 0, y: Infinity, w: 6, h: 4, minW: 2, minH: 2 });
-                                dash.updatedAt = now;
-                                
-                                localStorage.setItem(storageKey, JSON.stringify(dbs));
-                                window.dispatchEvent(new CustomEvent('sync-dashboard'));
+                                const newLayoutItem = { i: panelId, x: 0, y: Infinity, w: 6, h: 4, minW: 2, minH: 2 };
 
+                                if (dash) {
+                                    // Local Update
+                                    dash.panels.push(newPanel);
+                                    dash.gridLayout.push(newLayoutItem);
+                                    dash.updatedAt = now;
+                                    localStorage.setItem(storageKey, JSON.stringify(dbs));
+
+                                    // API Sync
+                                    if (token) {
+                                        try {
+                                            await fetch(`${API_URL}/api/dashboards/${dash.id}`, {
+                                                method: 'PUT',
+                                                headers: { 
+                                                    'Content-Type': 'application/json',
+                                                    Authorization: `Bearer ${token}` 
+                                                },
+                                                body: JSON.stringify({
+                                                    panels: dash.panels,
+                                                    gridLayout: dash.gridLayout
+                                                })
+                                            });
+                                        } catch (e) {
+                                            console.error('Failed to sync lens save with cloud:', e);
+                                        }
+                                    }
+                                } else {
+                                    // No dashboard yet, create one
+                                    const newDash = { id: `dash_${now}`, name: 'Main Dashboard', panels: [newPanel], gridLayout: [newLayoutItem], createdAt: now, updatedAt: now };
+                                    dbs.push(newDash);
+                                    localStorage.setItem(storageKey, JSON.stringify(dbs));
+
+                                    if (token) {
+                                        try {
+                                            await fetch(`${API_URL}/api/dashboards`, {
+                                                method: 'POST',
+                                                headers: { 
+                                                    'Content-Type': 'application/json',
+                                                    Authorization: `Bearer ${token}` 
+                                                },
+                                                body: JSON.stringify({
+                                                    name: 'Main Dashboard',
+                                                    panels: [newPanel],
+                                                    gridLayout: [newLayoutItem]
+                                                })
+                                            });
+                                        } catch (e) {
+                                          console.error('Failed to sync new dashboard with cloud:', e);
+                                        }
+                                    }
+                                }
+                                
+                                window.dispatchEvent(new CustomEvent('sync-dashboard'));
                                 addToast(`Pinned ${activeChart} visualization to Dashboard Canvas`, 'success');
                                 setZones(prev => prev.map(z => ({...z, field: null})));
                                 setDraggedField(null);

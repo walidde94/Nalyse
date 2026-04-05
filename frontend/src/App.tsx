@@ -567,11 +567,11 @@ function AppContent() {
         }
       }
 
-      // Handle Source Updates (Connectors)
-      if (payload.entity === 'source_data') {
-        // Find if any analysis tab is open that matches this source
-        // This is tricky because "source" analysis tabs might not have a clean ID path
-        // but we can look for specific metadata if we added it.
+      // Handle Dashboard Updates
+      if (payload.entity === 'dashboard') {
+        if (payload.data.userId === user?.id) {
+          window.dispatchEvent(new CustomEvent('sync-dashboard'));
+        }
       }
     });
 
