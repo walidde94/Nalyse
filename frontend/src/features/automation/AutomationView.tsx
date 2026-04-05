@@ -163,30 +163,21 @@ export const AutomationView = () => {
             <div style={{ position: 'fixed', top: '-10%', right: '-10%', width: '40vw', height: '40vh', background: 'radial-gradient(circle, rgba(99,102,241,0.05), transparent 70%)', filter: 'blur(100px)', zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'fixed', bottom: '-10%', left: '-10%', width: '30vw', height: '30vh', background: 'radial-gradient(circle, rgba(16,185,129,0.03), transparent 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }} />
 
-            <div className="fade-in" style={{ position: 'relative', zIndex: 1, maxWidth: '1400px', margin: '0 auto', fontFamily: 'Dubai, sans-serif' }}>
+            <div className="fade-in" style={{ position: 'relative', zIndex: 1, maxWidth: '1400px', margin: '0 auto' }}>
 
-                {/* ─── Header ───────────────────────────────────── */}
-                <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
-                            <div style={{
-                                width: '48px', height: '48px', borderRadius: '14px',
-                                background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(16,185,129,0.1))',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-                            }}>
-                                <Zap size={24} color="#818cf8" />
-                            </div>
-                            <div>
-                                <h1 style={{ fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', margin: 0 }}>Automated Reporting</h1>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                                    <span className="px-2 py-0.5 bg-[var(--success)]/20 text-[var(--success)] border border-[var(--success)]/30 rounded-full text-[10px] font-bold uppercase tracking-widest">Phase 5</span>
-                                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: 500, margin: 0 }}>
-                                        Schedule Enterprise AI Dashboards for delivery via Email or Webhooks.
-                                    </p>
-                                </div>
-                            </div>
+                {/* ─── Premium Header ────────────────────────────────────────── */}
+                <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div className="flex items-center gap-3" style={{ marginBottom: '6px' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(52,211,153,0.2))', border: '1px solid rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Zap size={24} style={{ color: '#818cf8' }} />
+                        </div>
+                        <div>
+                            <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #818cf8 0%, #34d399 50%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
+                                Automated Reporting
+                            </h1>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, margin: '4px 0 0 0' }}>
+                                Schedule Enterprise AI Dashboards · Distribute via Email or Webhooks
+                            </p>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>

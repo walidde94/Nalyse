@@ -26,8 +26,9 @@ import aiRoutes from './routes/ai';
 import automationRoutes from './routes/automation';
 import collaborationRoutes from './routes/collaboration';
 import webhookRoutes from './routes/webhooks';
-
-
+import alertRoutes from './routes/alerts';
+import { startAlertEngine } from './services/alertEngine';
+import { startScheduleEngine } from './services/scheduleEngine';
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
@@ -53,13 +54,18 @@ const io = new Server(httpServer, {
 
 let liveDataCount = 252; // Starting count
 
-// Broadcast helper
 export const broadcastUpdate = (entity: string, data: any) => {
     io.emit('live_update', { entity, data, timestamp: new Date() });
 };
 
 io.on('connection', (socket) => {
 });
+
+// Start the Alerting Cron Engine
+startAlertEngine(30000); // Evaluates rules every 30 seconds
+
+// Start the Automated Reporting Cron Engine
+startScheduleEngine(20000); // Evaluates reporting schedules every 20 seconds
 
 const PORT = process.env.PORT || 3000;
 
@@ -123,6 +129,7 @@ app.use('/api/automation', automationRoutes);
 app.use('/api/pulse', pulseRoutes);
 app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/webhooks', webhookLimiter, webhookRoutes);
+app.use('/api/alerts', alertRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

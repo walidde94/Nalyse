@@ -30,7 +30,8 @@ import {
     MessageSquare,
     Webhook,
     Boxes,
-    Layers
+    Layers,
+    Bell
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -56,6 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
             title: 'Analytics Studio',
             items: [
                 { id: 'dashboard', label: t('nav.workspace'), icon: <LayoutDashboard size={19} /> },
+                { id: 'lens', label: 'Smart Lens', icon: <Sparkles size={19} /> },
                 { id: 'correlate', label: t('nav.correlation'), icon: <Link2 size={19} /> },
                 { id: 'diff', label: 'Version Diff', icon: <GitCompareArrows size={19} /> },
                 { id: 'anomaly', label: 'Anomaly Detection', icon: <ShieldAlert size={19} /> },
@@ -68,6 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
 
                 { id: 'logistics', label: 'Road Intelligence', icon: <Map size={19} /> },
                 { id: 'developer', label: 'Developer API', icon: <Code2 size={19} /> },
+                { id: 'alerting', label: 'Alerting & Rules', icon: <Bell size={19} /> },
                 { id: 'webhooks', label: 'Webhooks & API', icon: <Webhook size={19} /> },
                 { id: 'embed', label: 'Embed SDK', icon: <Boxes size={19} /> },
             ]

@@ -216,11 +216,13 @@ model AlertRule {
   id                String    @id @default(uuid())
   name              String
   description       String?
-  metric            String
-  operator          String
+  metric            String    // Matches 'field' in UI
+  operator          String    // Matches 'condition' in UI
   threshold         Float
-  actions           Json      @default("{}")
+  window            String    @default("5m")
+  actions           Json      @default("{}") // Stores { type: 'webhook', target: '...' }
   isActive          Boolean   @default(true)
+  lastTriggeredAt   DateTime?
   organizationId    String
   createdByUserId   String
   createdAt         DateTime  @default(now())

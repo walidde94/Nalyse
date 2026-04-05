@@ -14,14 +14,14 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {
     BarChart, Bar, LineChart, Line, PieChart as RechartsPie, Pie, Cell,
-    AreaChart as RechartsArea, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+    AreaChart as RechartsArea, Area, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, Legend
 } from 'recharts';
 
 /* ─── Types ─── */
 interface PanelConfig {
     id: string;
-    type: 'metric' | 'bar' | 'line' | 'pie' | 'area' | 'table' | 'markdown';
+    type: 'metric' | 'bar' | 'line' | 'pie' | 'area' | 'table' | 'markdown' | 'scatter';
     title: string;
     config: Record<string, any>;
     locked: boolean;
@@ -78,6 +78,7 @@ const PANEL_TEMPLATES: { type: PanelConfig['type']; label: string; icon: React.R
     { type: 'line', label: 'Line Chart', icon: <TrendingUp size={18} />, desc: 'Trends over time' },
     { type: 'pie', label: 'Pie / Donut', icon: <PieChart size={18} />, desc: 'Distribution breakdown' },
     { type: 'area', label: 'Area Chart', icon: <AreaChart size={18} />, desc: 'Filled trend area' },
+    { type: 'scatter', label: 'Scatter Plot', icon: <Hash size={18} />, desc: 'Correlation analysis' },
     { type: 'table', label: 'Data Table', icon: <Table2 size={18} />, desc: 'Tabular data view' },
     { type: 'markdown', label: 'Markdown', icon: <FileText size={18} />, desc: 'Rich text annotation' },
 ];
@@ -89,6 +90,7 @@ function defaultConfig(type: PanelConfig['type']): Record<string, any> {
         case 'bar': return { dataKey: 'revenue', color: '#6366f1' };
         case 'line': return { dataKey: 'profit', color: '#10b981' };
         case 'pie': return {};
+        case 'scatter': return { dataKey: 'revenue', xAxisKey: 'users', color: '#ec4899' };
         case 'area': return { dataKey: 'users', color: '#8b5cf6' };
         case 'table': return {};
         case 'markdown': return { content: '## Notes\n\nAdd your insights here...' };
@@ -99,7 +101,7 @@ function defaultConfig(type: PanelConfig['type']): Record<string, any> {
 function defaultLayout(type: PanelConfig['type']): { w: number; h: number } {
     switch (type) {
         case 'metric': return { w: 3, h: 2 };
-        case 'bar': case 'line': case 'area': return { w: 6, h: 4 };
+        case 'bar': case 'line': case 'area': case 'scatter': return { w: 6, h: 4 };
         case 'pie': return { w: 4, h: 4 };
         case 'table': return { w: 6, h: 4 };
         case 'markdown': return { w: 4, h: 3 };
@@ -127,33 +129,33 @@ const MetricPanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
 
 const BarPanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
     <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={DEMO_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+        <BarChart data={config.data || DEMO_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-            <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+            <XAxis dataKey={config.xAxisKey || "category"} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
             <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
             <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px' }} />
-            <Bar dataKey={config.dataKey || 'revenue'} fill={config.color || '#6366f1'} radius={[4, 4, 0, 0]} />
+            <Bar dataKey={config.yAxisKey || config.dataKey || 'value'} fill={config.color || '#6366f1'} radius={[4, 4, 0, 0]} />
         </BarChart>
     </ResponsiveContainer>
 );
 
 const LinePanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
     <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={DEMO_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+        <LineChart data={config.data || DEMO_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-            <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+            <XAxis dataKey={config.xAxisKey || "category"} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
             <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
             <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px' }} />
-            <Line type="monotone" dataKey={config.dataKey || 'profit'} stroke={config.color || '#10b981'} strokeWidth={2.5} dot={{ r: 4, fill: config.color || '#10b981' }} />
+            <Line type="monotone" dataKey={config.yAxisKey || config.dataKey || 'value'} stroke={config.color || '#10b981'} strokeWidth={2.5} dot={{ r: 4, fill: config.color || '#10b981' }} />
         </LineChart>
     </ResponsiveContainer>
 );
 
-const PiePanel: React.FC = () => (
+const PiePanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
     <ResponsiveContainer width="100%" height="100%">
         <RechartsPie>
-            <Pie data={PIE_DATA} cx="50%" cy="50%" innerRadius="40%" outerRadius="75%" paddingAngle={3} dataKey="value">
-                {PIE_DATA.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            <Pie data={config.data || PIE_DATA} cx="50%" cy="50%" innerRadius="40%" outerRadius="75%" paddingAngle={3} dataKey={config.yAxisKey || "value"} nameKey={config.xAxisKey || "category"}>
+                {(config.data || PIE_DATA).map((_: any, i: number) => <Cell key={i} fill={config.color || CHART_COLORS[i % CHART_COLORS.length]} />)}
             </Pie>
             <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px' }} />
             <Legend wrapperStyle={{ fontSize: '10px', color: 'var(--text-muted)' }} />
@@ -163,19 +165,31 @@ const PiePanel: React.FC = () => (
 
 const AreaPanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
     <ResponsiveContainer width="100%" height="100%">
-        <RechartsArea data={DEMO_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+        <RechartsArea data={config.data || DEMO_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <defs>
-                <linearGradient id={`gradient-${config.dataKey}`} x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`gradient-${config.yAxisKey || 'users'}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={config.color || '#8b5cf6'} stopOpacity={0.3} />
                     <stop offset="95%" stopColor={config.color || '#8b5cf6'} stopOpacity={0} />
                 </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-            <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+            <XAxis dataKey={config.xAxisKey || "category"} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
             <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
             <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px' }} />
-            <Area type="monotone" dataKey={config.dataKey || 'users'} stroke={config.color || '#8b5cf6'} fillOpacity={1} fill={`url(#gradient-${config.dataKey})`} />
+            <Area type="monotone" dataKey={config.yAxisKey || config.dataKey || 'users'} stroke={config.color || '#8b5cf6'} fillOpacity={1} fill={`url(#gradient-${config.yAxisKey || 'users'})`} />
         </RechartsArea>
+    </ResponsiveContainer>
+);
+
+const ScatterPanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
+    <ResponsiveContainer width="100%" height="100%">
+        <ScatterChart margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+            <XAxis dataKey={config.xAxisKey || "category"} type="category" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+            <YAxis dataKey={config.yAxisKey || config.dataKey || 'value'} type="number" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px' }} />
+            <Scatter data={config.data || DEMO_DATA} fill={config.color || '#ec4899'} />
+        </ScatterChart>
     </ResponsiveContainer>
 );
 
@@ -224,8 +238,9 @@ function renderPanel(panel: PanelConfig) {
         case 'metric': return <MetricPanel config={panel.config} />;
         case 'bar': return <BarPanel config={panel.config} />;
         case 'line': return <LinePanel config={panel.config} />;
-        case 'pie': return <PiePanel />;
+        case 'pie': return <PiePanel config={panel.config} />;
         case 'area': return <AreaPanel config={panel.config} />;
+        case 'scatter': return <ScatterPanel config={panel.config} />;
         case 'table': return <TablePanel />;
         case 'markdown': return <MarkdownPanel config={panel.config} />;
         default: return <div>Unknown panel type</div>;
@@ -273,6 +288,31 @@ export const DashboardCanvas: React.FC = () => {
         const interval = setInterval(() => setLastRefresh(Date.now()), autoRefresh * 1000);
         return () => clearInterval(interval);
     }, [autoRefresh]);
+
+    // Auto-select first dashboard if none is active
+    useEffect(() => {
+        if (!activeDashboardId && dashboards.length > 0) {
+            setActiveDashboardId(dashboards[0].id);
+        }
+    }, [dashboards, activeDashboardId]);
+
+    // Sync with other window events (like Lens saving to Dashboard)
+    useEffect(() => {
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === STORAGE_KEY) {
+                setDashboards(loadDashboards());
+            }
+        };
+        window.addEventListener('storage', handleStorage);
+        // also listen to a custom event for same window sync
+        const customSync = () => setDashboards(loadDashboards());
+        window.addEventListener('sync-dashboard', customSync);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorage);
+            window.removeEventListener('sync-dashboard', customSync);
+        };
+    }, []);
 
     // Fullscreen
     const toggleFullscreen = useCallback(() => {

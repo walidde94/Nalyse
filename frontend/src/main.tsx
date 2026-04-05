@@ -8,6 +8,15 @@ import { ToastProvider } from './components/ui/Toast';
 // NOTE: Replace this with your actual Google Client ID from Google Cloud Console
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PLACEHOLDER_CLIENT_ID_REPLACE_ME";
 
+// Unregister any lingering service workers (e.g. from previous projects on localhost:5173)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
