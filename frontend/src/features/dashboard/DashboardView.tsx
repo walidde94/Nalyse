@@ -693,8 +693,10 @@ export const DashboardView = ({
                             transition={{ delay: 0.5, duration: 0.6 }}
                             className="hero-subtitle"
                         >
-                            {metrics.revenueGrowth === '—' || metrics.revenueGrowth === 'Waiting for Data' ? (
-                                <>Your intelligence engine is actively <strong>mapping {fileCount} data topologies</strong>. All systems nominal.</>
+                            {fileCount === 0 ? (
+                                <>Intelligence engine is in <strong>standby mode</strong>. Upload a dataset to begin neural mapping.</>
+                            ) : metrics.revenueGrowth === '—' || metrics.revenueGrowth === 'Waiting for Data' ? (
+                                <>Active engine is currently <strong>mapping {fileCount} data topologies</strong>. Analyzing structures...</>
                             ) : (
                                 <>Across <strong>{fileCount} active datasets</strong>, intelligence indicates a <strong>{metrics.revenueGrowth} growth trajectory</strong>. {metrics.anomalies > 0 ? `${metrics.anomalies} anomalies require attention.` : 'Data stability is optimal.'}</>
                             )}
@@ -739,7 +741,7 @@ export const DashboardView = ({
                         transition={{ delay: 0.6, duration: 0.8 }}
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}
                     >
-                        <PerformanceGauge value={metrics.anomalies > 0 ? 72 : 96} label="System Health" />
+                        <PerformanceGauge value={fileCount === 0 ? 0 : (metrics.anomalies > 0 ? 76 : 98)} label={fileCount === 0 ? "Standby Mode" : "System Health"} />
                         <LiveClock />
                     </motion.div>
                 </div>
