@@ -77,17 +77,7 @@ export const SpatialView = ({ files, token }: Props) => {
             let lngKey = keys.find(k => k.toLowerCase().includes('lon') || k.toLowerCase().includes('lng'));
             
             if (!latKey || !lngKey) {
-                // Generate Mock geographical data around random nodes just to showcase the capability
-                // If it's a real dataset with no GIS, we'd normally error. We'll mock it so the user can see the UI.
-                for (let i = 0; i < 40; i++) {
-                    structuredData.push({
-                        lat: (Math.random() * 80) - 40,
-                        lng: (Math.random() * 160) - 80,
-                        magnitude: Math.random() * 100,
-                        raw: { 'Mock Generated': 'No Lat/Long detected in dataset' }
-                    });
-                }
-                addToast('No exact lat/long columns found. Mapping synthetic projection.', 'warning');
+                throw new Error('No geospatial coordinates (Latitude/Longitude) detected in this dataset. To map this data, ensure your file contains columns named "Lat" and "Long".');
             } else {
                 for (const row of rows) {
                     const lat = parseFloat(row[latKey]);
