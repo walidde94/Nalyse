@@ -45,12 +45,6 @@ export const inferColumnType = (header: string, values: any[]): AdvancedColumnTy
         return 'url';
     }
 
-    // Phone detection
-    if (/phone|mobile|tel|fax|cell/i.test(header) ||
-        sample.filter(v => /^[\+\(]?\d[\d\-\(\)\s\.]{6,18}\d$/.test(String(v).trim())).length / sample.length >= threshold) {
-        return 'phone';
-    }
-
     // Date detection — strict (must be > 5 chars, parseable, not just a year)
     const dateMatch = sample.filter(v => {
         const s = String(v).trim();
@@ -60,6 +54,12 @@ export const inferColumnType = (header: string, values: any[]): AdvancedColumnTy
         return !isNaN(d);
     }).length / sample.length;
     if (dateMatch >= threshold) return 'date';
+
+    // Phone detection
+    if (/phone|mobile|tel|fax|cell/i.test(header) ||
+        sample.filter(v => /^[\+\(]?\d[\d\-\(\)\s\.]{6,18}\d$/.test(String(v).trim())).length / sample.length >= threshold) {
+        return 'phone';
+    }
 
     // Number detection (strip currency/percent symbols)
     const numberMatch = sample.filter(v => {
