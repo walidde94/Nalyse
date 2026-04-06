@@ -41,6 +41,9 @@ const AgenticSystemsView = React.lazy(() => import('./features/agentic/AgenticSy
 const SelfServiceStudio = React.lazy(() => import('./features/democratization/SelfServiceStudio').then(m => ({ default: m.SelfServiceStudio })));
 const MultiAnalysisView = React.lazy(() => import('./features/analysis/MultiAnalysisView').then(m => ({ default: m.MultiAnalysisView })));
 const VersionDiffView = React.lazy(() => import('./features/diff/VersionDiffView').then(m => ({ default: m.VersionDiffView })));
+const ForecastingView = React.lazy(() => import('./features/forecast/ForecastingView').then(m => ({ default: m.ForecastingView })));
+const SpatialView = React.lazy(() => import('./features/spatial/SpatialView').then(m => ({ default: m.SpatialView })));
+const AutoMLView = React.lazy(() => import('./features/automl/AutoMLView').then(m => ({ default: m.AutoMLView })));
 const AnomalyDetectionView = React.lazy(() => import('./features/anomaly/AnomalyDetectionView').then(m => ({ default: m.AnomalyDetectionView })));
 const FinancialRiskView = React.lazy(() => import('./features/financial/FinancialRiskView').then(m => ({ default: m.FinancialRiskView })));
 const SimulationView = React.lazy(() => import('./features/simulation/SimulationView').then(m => ({ default: m.SimulationView })));
@@ -1192,6 +1195,27 @@ function AppContent() {
 
                 {tab.type === 'simulation' && (
                   <SimulationView
+                    files={files}
+                    token={token || ''}
+                  />
+                )}
+
+                {tab.type === 'forecast' && (
+                  <ForecastingView
+                    files={files}
+                    token={token || ''}
+                  />
+                )}
+
+                {tab.type === 'spatial' && (
+                  <SpatialView
+                    files={files}
+                    token={token || ''}
+                  />
+                )}
+
+                {tab.type === 'automl' && (
+                  <AutoMLView
                     files={files}
                     token={token || ''}
                   />

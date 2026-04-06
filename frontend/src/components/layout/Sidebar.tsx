@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import {
     Home,
+    TrendingUp,
+    BrainCircuit,
     LayoutDashboard,
     Database,
     Briefcase,
@@ -67,8 +69,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
         {
             title: 'Predictive Models',
             items: [
-
-                { id: 'logistics', label: 'Road Intelligence', icon: <Map size={19} /> },
+                { id: 'forecast', label: 'Forecasting Engine', icon: <TrendingUp size={19} /> },
+                { id: 'spatial', label: 'Geospatial Intelligence', icon: <Map size={19} /> },
+                { id: 'automl', label: 'AutoML Intelligence', icon: <BrainCircuit size={19} /> },
                 { id: 'developer', label: 'Developer API', icon: <Code2 size={19} /> },
                 { id: 'webhooks', label: 'Webhooks & API', icon: <Webhook size={19} /> },
                 { id: 'embed', label: 'Embed SDK', icon: <Boxes size={19} /> },

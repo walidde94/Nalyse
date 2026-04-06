@@ -8,7 +8,7 @@ import {
 export interface TabType {
     id: string;
     title: string;
-    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'automation' | 'organization' | 'collaboration' | 'webhooks' | 'embed' | 'canvas' | 'lens';
+    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'forecast' | 'spatial' | 'automl' | 'automation' | 'organization' | 'collaboration' | 'webhooks' | 'embed' | 'canvas' | 'lens';
     data?: any;
     icon?: React.ReactNode;
 }
