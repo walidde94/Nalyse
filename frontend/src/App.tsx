@@ -78,12 +78,15 @@ const PageLoader = () => (
 interface FileData {
   id: string;
   filename: string;
+  originalName?: string;
   size: number;
+  mimeType?: string;
   createdAt: string;
   isFavorite?: boolean;
   groupId?: string;
   isProcessed?: boolean;
   processedAt?: string | null;
+  checksum?: string;
 }
 
 // Main App Component
@@ -540,33 +543,26 @@ function AppContent() {
     if (!token) return;
 
     const socket = io(API_URL);
+    let refreshDebounce: ReturnType<typeof setTimeout> | null = null;
 
     socket.on('live_update', (payload: any) => {
-      // Handle File Updates
       if (payload.entity === 'file') {
-        // Refresh file list if it belongs to current user
         if (payload.data.userId === user?.id || !payload.data.userId) {
-          fetchFiles();
+          // Debounce file refreshes to avoid hammering the API
+          if (refreshDebounce) clearTimeout(refreshDebounce);
+          refreshDebounce = setTimeout(() => fetchFiles(), 500);
 
-          // If it's an analysis update and the tab is open, update the tab data
-          if (payload.data.action === 'analysis_complete' && payload.data.analysis) {
-            setTabs(prevTabs => prevTabs.map(tab => {
-              if (tab.type === 'analysis' && tab.data?.fileId === payload.data.fileId) {
-                return { ...tab, data: payload.data.analysis };
-              }
-              // Also handle matches by filename if fileId is not in tab data
-              if (tab.type === 'analysis' && tab.title === payload.data.analysis.filename) {
-                return { ...tab, data: payload.data.analysis };
-              }
-              return tab;
-            }));
-
-            addToast(`Live update: ${payload.data.analysis.filename || 'Source'} refreshed`, 'success');
+          // If analysis completed, update the file's processed state locally
+          if (payload.data.action === 'analysis_complete' && payload.data.fileId) {
+            setFiles(prev => prev.map(f =>
+              f.id === payload.data.fileId
+                ? { ...f, isProcessed: true, processedAt: new Date().toISOString() }
+                : f
+            ));
           }
         }
       }
 
-      // Handle Dashboard Updates
       if (payload.entity === 'dashboard') {
         if (payload.data.userId === user?.id) {
           window.dispatchEvent(new CustomEvent('sync-dashboard'));
@@ -575,9 +571,10 @@ function AppContent() {
     });
 
     return () => {
+      if (refreshDebounce) clearTimeout(refreshDebounce);
       socket.disconnect();
     };
-  }, [token, user?.id, fetchFiles, addToast]);
+  }, [token, user?.id, fetchFiles]);
 
 
   // --- Action Handlers ---
@@ -588,43 +585,75 @@ function AppContent() {
       return;
     }
 
-    const files = Array.isArray(filesOrFile) ? filesOrFile : [filesOrFile];
-    if (files.length === 0) return;
+    const fileList = Array.isArray(filesOrFile) ? filesOrFile : [filesOrFile];
+    if (fileList.length === 0) return;
 
     setOverlayMode('upload');
     setIsAnalyzing(true);
     setAnalysisStage(0);
     setAnalysisStatus('processing');
     setAnalysisError(undefined);
+    setLastWorkerResult(null);
 
     try {
       let successCount = 0;
 
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
 
-        const uploadRes = await fetch(`${API_URL}/api/files/upload`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData
+        // Use XMLHttpRequest for real upload progress
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', `${API_URL}/api/files/upload`);
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              // Map upload progress (0-100) to stage 0 progression
+              const filePct = e.loaded / e.total;
+              const overallPct = (i + filePct) / fileList.length;
+              // Stage 0 = uploading (0-60%), Stage 1 = indexing (60-90%), Stage 2 = done (100%)
+              if (overallPct < 0.95) setAnalysisStage(0);
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              successCount++;
+              // Optimistically add file to local state
+              try {
+                const resp = JSON.parse(xhr.responseText);
+                if (resp.file) {
+                  setFiles(prev => [resp.file, ...prev]);
+                }
+              } catch (_) { }
+              resolve();
+            } else {
+              let msg = `Upload failed for ${file.name}`;
+              try {
+                const err = JSON.parse(xhr.responseText);
+                msg = err.error || msg;
+              } catch (_) { }
+              reject(new Error(msg));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error(`Network error uploading ${file.name}`));
+
+          const formData = new FormData();
+          formData.append('file', file);
+          xhr.send(formData);
         });
-
-        if (!uploadRes.ok) {
-          const errorText = await uploadRes.text();
-          throw new Error(`Upload failed for ${file.name}: ${errorText}`);
-        }
-        successCount++;
       }
 
-      // Stage 1: Indexing (refreshing file list)
+      // Stage 1: Indexing
       setAnalysisStage(1);
-      await fetchFiles();
+      await fetchFiles(); // Sync with server to get final state
 
       // Stage 2: Complete
       setAnalysisStage(2);
       setAnalysisStatus('completed');
-      addToast(`${successCount} dataset${successCount > 1 ? 's' : ''} uploaded. Click "Process" to analyze.`, 'success');
+      addToast(`${successCount} dataset${successCount > 1 ? 's' : ''} uploaded. Click \"Process\" to analyze.`, 'success');
 
     } catch (err: any) {
       setAnalysisStatus('error');
@@ -709,29 +738,53 @@ function AppContent() {
   };
 
   const handleAnalyzeFile = async (file: FileData) => {
-    if (!token) {
-      return;
+    if (!token) return;
+
+    // ── FAST PATH: File already processed → skip overlay, fetch from cache silently ──
+    if (file.isProcessed) {
+      try {
+        const res = await fetch(`${API_URL}/api/files/${file.id}/analyze`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          let msg = 'Failed to load analysis.';
+          try { const err = await res.json(); msg = err.message || err.error || msg; } catch (_) {}
+          // If file is missing on server, fall through to full reprocess
+          if (res.status === 422) {
+            addToast(msg, 'error');
+            return;
+          }
+          throw new Error(msg);
+        }
+        const data = await res.json();
+        openTab('analysis' as any, file.filename || file.originalName || 'Analysis', data);
+        return;
+      } catch (e: any) {
+        addToast(e.message || 'Failed to load cached analysis', 'error');
+        return;
+      }
     }
 
+    // ── FULL PATH: First-time processing → show overlay ──
     runAnalysisWithProgress(async () => {
       const res = await fetch(`${API_URL}/api/files/${file.id}/analyze`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
         let msg = 'Neural analysis encountered a structural fault.';
-        try { const err = await res.json(); msg = err.message || err.error || msg; } catch (e) {}
+        try { const err = await res.json(); msg = err.message || err.error || msg; } catch (_) {}
         throw new Error(msg);
       }
-      
+
       const data = await res.json();
-      
-      // Update local file state so UI turns to "Open" immediately
+
+      // Update local file state immediately
       setFiles(prev => prev.map(f => f.id === file.id ? { ...f, isProcessed: true, processedAt: new Date().toISOString() } : f));
-      
-      // Fetch files from server in background to ensure sync
+
+      // Background sync
       fetchFiles();
 
-      return { type: 'analysis', title: file.filename, data };
+      return { type: 'analysis', title: file.filename || file.originalName || 'Analysis', data };
     });
   };
 
@@ -1175,12 +1228,25 @@ function AppContent() {
             openTab(lastWorkerResult.type as any, lastWorkerResult.title, lastWorkerResult.data);
           }
           setIsAnalyzing(false);
+          setAnalysisStage(0);
+          setAnalysisStatus('processing');
+          setAnalysisError(undefined);
+          setLastWorkerResult(null);
         }}
         onRetry={() => {
           setIsAnalyzing(false);
-          addToast('Retry sequence initiated. Please re-trigger the action.', 'info');
+          setAnalysisStage(0);
+          setAnalysisStatus('processing');
+          setAnalysisError(undefined);
+          setLastWorkerResult(null);
         }}
-        onClose={() => setIsAnalyzing(false)}
+        onClose={() => {
+          setIsAnalyzing(false);
+          setAnalysisStage(0);
+          setAnalysisStatus('processing');
+          setAnalysisError(undefined);
+          setLastWorkerResult(null);
+        }}
       />
     </div>
   );
