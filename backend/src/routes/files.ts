@@ -12,7 +12,7 @@ router.post('/upload', authenticate, checkStorageLimit, upload.single('file'), u
 router.post('/upload-multiple', authenticate, checkFeatureAccess('multi_dataset'), checkStorageLimit, upload.array('files', 20), uploadMultipleFilesHandler);
 router.post('/analyze-multiple', authenticate, checkFeatureAccess('multi_dataset'), analyzeMultipleDatasetsHandler);
 router.get('/', authenticate, getFiles);
-router.get('/:id/analyze', analyzeFileHandler);
+router.get('/:id/analyze', authenticate, analyzeFileHandler);
 router.get('/:id/preview', authenticate, previewFileHandler);
 router.post('/:id/transform', authenticate, transformFileHandler);
 router.delete('/:id', authenticate, deleteFileHandler);
