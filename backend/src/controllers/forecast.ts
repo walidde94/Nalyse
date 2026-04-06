@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import { AppDataSource } from '../config/database';
 import { File } from '../entities/File';
 import fs from 'fs';
+import path from 'path';
 import { parse } from 'csv-parse/sync';
 import { runLinearForecast, runHoltWintersForecast } from '../services/forecastEngine';
 
@@ -21,9 +22,23 @@ export const runForecastHandler = async (req: AuthRequest, res: Response) => {
         if (!file || file.ownerId !== userId) return res.status(404).json({ error: 'File not found' });
 
         const filePath = file.s3Key || file.filename;
-        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File content not found on server storage' });
+        const uploadsDir = process.env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
+        let absolutePath = filePath;
+        if (!filePath.includes('/') && !filePath.includes('\\')) {
+            absolutePath = path.join(uploadsDir, filePath);
+        } else {
+            absolutePath = path.resolve(process.cwd(), filePath);
+        }
 
-        const rawContent = fs.readFileSync(filePath);
+        if (!fs.existsSync(absolutePath)) {
+            return res.status(422).json({
+                error: 'FILE_NOT_FOUND',
+                message: `The dataset "${file.originalName || file.filename}" needs to be re-uploaded. It seems to have been removed from server storage.`,
+                fileId: file.id
+            });
+        }
+
+        const rawContent = fs.readFileSync(absolutePath);
         let allData: any[] = [];
 
         if (file.mimeType.includes('json') || file.filename.endsWith('.json')) {

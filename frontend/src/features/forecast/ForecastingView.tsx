@@ -133,7 +133,11 @@ export const ForecastingView = ({ files, token }: Props) => {
             addToast('Predictive model trained successfully', 'success');
 
         } catch (e: any) {
-            addToast(e.message || 'Forecasting failed', 'error');
+            if (e.message === 'FILE_NOT_FOUND') {
+                addToast('Server storage reset. Please re-upload this dataset to enable Forecasting.', 'error');
+            } else {
+                addToast(e.message || 'Forecasting failed', 'error');
+            }
         } finally {
             setLoading(false);
         }

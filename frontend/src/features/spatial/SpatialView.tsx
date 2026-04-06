@@ -56,7 +56,15 @@ export const SpatialView = ({ files, token }: Props) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
-            if (!res.ok) throw new Error('Failed to extract dataset');
+            if (!res.ok) {
+                if (res.status === 422) {
+                    const err = await res.json();
+                    if (err.error === 'FILE_NOT_FOUND') {
+                        throw new Error('STORAGE_RESET');
+                    }
+                }
+                throw new Error('Extraction failed');
+            }
             const result = await res.json();
             
             const structuredData: SpatialData[] = [];
@@ -103,7 +111,11 @@ export const SpatialView = ({ files, token }: Props) => {
             }
 
         } catch (e: any) {
-            addToast(e.message || 'Spatial extraction failed', 'error');
+            if (e.message === 'STORAGE_RESET') {
+                addToast('Server storage reset. Please re-upload this dataset to enable Mapping.', 'error');
+            } else {
+                addToast(e.message || 'Spatial extraction failed', 'error');
+            }
             setMapData([]);
         } finally {
             setLoading(false);

@@ -129,7 +129,11 @@ export const AutoMLView = ({ files, token }: Props) => {
             addToast(`Successfully synthesized ${kClusters} algorithmic clusters`, 'success');
 
         } catch (e: any) {
-            addToast(e.message || 'AutoML failed', 'error');
+            if (e.message === 'FILE_NOT_FOUND') {
+                addToast('Server storage reset. Please re-upload this dataset to enable AutoML.', 'error');
+            } else {
+                addToast(e.message || 'AutoML failed', 'error');
+            }
         } finally {
             setLoading(false);
         }
