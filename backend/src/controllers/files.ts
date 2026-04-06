@@ -213,34 +213,26 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
             });
 
             if (cached && cached.results) {
-                // Validate that the cached result actually has data (not an empty error result)
-                const cachedSampleData = cached.results.sampleData || [];
-                const cachedOptions = cached.results.options || cached.results;
-                const isValidCache = cachedSampleData.length > 0 || (Array.isArray(cachedOptions) && cachedOptions.length > 0);
-
-                if (isValidCache) {
-                    console.log(`[Analysis] Returning cached result for file ${file.id} (processed ${cached.processingTimeMs}ms on ${cached.completedAt})`);
-                    
-                    const cachedResult: any = {
+                // If it's a simple query (no NLQ), return immediately
+                const query = req.query.q as string;
+                if (!query) {
+                    console.log(`[Analysis] [CACHE HIT] Returning full results for file ${file.id}`);
+                    return res.json({
                         id: file.id,
                         cached: true,
                         cachedAt: cached.completedAt,
-                        processingTimeMs: cached.processingTimeMs,
-                        options: cachedOptions,
-                        sampleData: cachedSampleData,
+                        type: cached.results.type || 'Enterprise Strategic Intelligence',
                         aiInsights: cached.insights || [],
-                        summary: cached.statistics?.summary || cached.results.summary || {},
-                        dataHealth: cached.statistics?.health || cached.results.dataHealth || {},
-                        keyFindings: cached.statistics?.findings || cached.results.keyFindings || [],
+                        summary: cached.results.summary || cached.statistics?.summary || {},
+                        dataHealth: cached.results.dataHealth || cached.statistics?.health || {},
+                        keyFindings: cached.results.keyFindings || cached.statistics?.findings || [],
+                        options: cached.results.options || [],
+                        sampleData: cached.results.sampleData || [],
                         executiveReasoning: cached.results.executiveReasoning || null,
-                        processingLog: cached.results.processingLog || ['Loaded from cache']
-                    };
-
-                    return res.json(cachedResult);
-                } else {
-                    // Cached result was empty/error — delete it so we can try fresh
-                    console.log(`[Analysis] Cached result for file ${file.id} was empty/error — purging stale cache`);
-                    await analysisRepo.delete({ fileId: file.id });
+                        metrics: cached.results.metrics || [],
+                        processingLog: cached.results.processingLog || ['Pipeline state recovered from neural cache.'],
+                        processingTimeMs: cached.processingTimeMs || 0
+                    });
                 }
             }
         }

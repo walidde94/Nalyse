@@ -227,25 +227,37 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
 
     const fetchAnalysis = useCallback(async (customQuery?: string) => {
         if (!selectedFileId) return;
+
         const worker = async () => {
             setIsLoading(true);
             try {
-                const res = await fetch(`${apiUrl}/api/files/${selectedFileId}/analyze`, {
+                const url = new URL(`${apiUrl}/api/files/${selectedFileId}/analyze`);
+                if (customQuery) url.searchParams.append('q', customQuery);
+                
+                const res = await fetch(url.toString(), {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error('Analysis failed');
                 const data = await res.json();
                 setActiveAnalysis(data);
-                if (customQuery) addToast(`Query results loaded for "${customQuery}"`, 'success');
+                if (data.cached) {
+                    addToast(`Neural cache retrieved (${data.id.substring(0, 8)})`, 'success');
+                }
+                if (customQuery) addToast(`Strategic query results loaded for "${customQuery}"`, 'success');
             } catch (e: any) {
                 addToast(e.message || 'Failed to analyze', 'error');
             } finally {
                 setIsLoading(false);
             }
         };
-        if (runWithProgress) await runWithProgress(worker);
-        else await worker();
-    }, [selectedFileId, token, apiUrl, runWithProgress, addToast]);
+
+        // UI OPTIMIZATION: Only show full-screen overlay if file is not already processed or if it's a new query
+        if (runWithProgress && !activeFile?.isProcessed) {
+            await runWithProgress(worker);
+        } else {
+            await worker();
+        }
+    }, [selectedFileId, token, apiUrl, runWithProgress, addToast, activeFile]);
 
     React.useEffect(() => { if (selectedFileId && token) fetchAnalysis(); }, [selectedFileId, token]);
 
