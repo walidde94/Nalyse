@@ -1,27 +1,40 @@
-export type AdvancedColumnType = 'text' | 'number' | 'date' | 'category' | 'email' | 'currency' | 'percent' | 'id' | 'country' | 'city';
+// ═══════════════════════════════════════════════════════════════════════════════
+// Nalyse Analysis Engine — Type System v3.0
+// Enterprise-grade type definitions for the analytical intelligence pipeline
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export type AdvancedColumnType =
+    | 'text' | 'number' | 'date' | 'category' | 'email'
+    | 'currency' | 'percent' | 'id' | 'country' | 'city'
+    | 'boolean' | 'url' | 'phone' | 'coordinate' | 'json';
 
 export interface AnalysisOption {
     id: string;
     title: string;
     description: string;
-    chartType: 'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'treemap' | 'dual-axis';
+    chartType: 'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'treemap' | 'dual-axis' | 'heatmap' | 'radar';
     data: any[];
+    priority?: number;  // Higher = more important, used for sorting
 }
 
 export interface Insight {
     id: string;
-    type: 'pattern' | 'anomaly' | 'correlation' | 'trend' | 'quality' | 'segment';
+    type: 'pattern' | 'anomaly' | 'correlation' | 'trend' | 'quality' | 'segment' | 'prediction' | 'risk';
     description: string;
     confidence: number;
     isVerified: boolean;
+    severity?: 'info' | 'warning' | 'critical';
+    category?: string;
 }
 
 export interface ColumnHealth {
     column: string;
     type: string;
-    completeness: number; // 0-100
-    uniqueness: number;   // 0-100
-    validity: number;     // 0-100
+    completeness: number;
+    uniqueness: number;
+    validity: number;
+    entropy?: number;       // Shannon entropy for information density
+    skewness?: number;      // Distribution skewness for numeric columns
 }
 
 export interface DataHealth {
@@ -37,6 +50,9 @@ export interface AnalysisResult {
         rows: number;
         columns: number;
         columnTypes: Record<string, AdvancedColumnType>;
+        dimensions?: string[];
+        measures?: string[];
+        statistics?: Record<string, ColumnStatistics>;
         [key: string]: any;
     };
     options: AnalysisOption[];
@@ -44,7 +60,7 @@ export interface AnalysisResult {
     keyFindings: Insight[];
     dataLimitations: string[];
     processingLog: string[];
-    sampleData: any[]; // Subset for frontend
+    sampleData: any[];
     dataHealth: DataHealth;
     executiveReasoning?: {
         executiveSummary: string;
@@ -52,6 +68,7 @@ export interface AnalysisResult {
         priorityMatrix: Array<{ task: string; impact: string; effort: string }>;
     };
     metrics?: KeyMetric[];
+    processingTimeMs?: number;
 }
 
 export interface KeyMetric {
@@ -60,4 +77,17 @@ export interface KeyMetric {
     trend: string;
     color: string;
     icon: string;
+}
+
+export interface ColumnStatistics {
+    min?: number;
+    max?: number;
+    mean?: number;
+    median?: number;
+    stdDev?: number;
+    p25?: number;
+    p75?: number;
+    nullCount: number;
+    distinctCount: number;
+    topValues?: Array<{ value: string; count: number }>;
 }

@@ -196,7 +196,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
             const parsed = typeof err === 'string' && err.includes('{"error":')
                 ? JSON.parse(err.substring(err.indexOf('{')))
                 : { error: err };
-            let message = parsed.error || parsed.message || err;
+            let message = parsed.message || parsed.error || err;
             if (message.startsWith('Upload failed for')) {
                 message = message.split(':').slice(1).join(':').trim();
             }

@@ -9,6 +9,7 @@ import { analyzeFile, analyzeRawData } from '../services/analyzer';
 import { queueService } from '../services/queue';
 import { scrapeUrl } from '../services/scraper';
 import fs from 'fs';
+import path from 'path';
 import crypto from 'crypto';
 import { parse } from 'csv-parse/sync';
 
@@ -246,8 +247,7 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
 
         // ─── Check if physical file exists before attempting fresh analysis ───
         const filePath = file.s3Key || file.filename;
-        const path = require('path');
-        const absoluteUploadsDir = path.resolve(process.cwd(), 'uploads');
+        const absoluteUploadsDir = process.env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
         let absoluteFilePath = filePath;
         if (!filePath.includes('/') && !filePath.includes('\\')) {
             absoluteFilePath = path.join(absoluteUploadsDir, filePath);
@@ -517,7 +517,7 @@ export const transformFileHandler = async (req: AuthRequest, res: Response) => {
             baseName = baseName.substring(0, baseName.length - extension.length);
         }
         const newFilename = baseName + extension;
-        const newPath = 'uploads/' + newFilename.replace(/[^a-z0-9.]/gi, '_') + '_' + Date.now();
+        const newPath = path.join(process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads'), newFilename.replace(/[^a-z0-9.]/gi, '_') + '_' + Date.now());
 
         fs.writeFileSync(newPath, newContent);
 

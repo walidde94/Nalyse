@@ -1,0 +1,9 @@
+SKU,Product,Stock Level,Reorder Point,Supplier,Delivery Time (Days)
+SV-ALPHA-01,Enterprise Server Alpha,12,15,SuperMicro,14
+CC-STD-05,Cloud Compute Standard,450,200,Dell EMC,7
+SG-SEC-88,Security Gateway,8,20,Cisco,21
+NN-API-10,Neural AI Processing API,9999,100,Nvidia,3
+SV-OMEGA-09,Enterprise Server Omega,2,5,SuperMicro,30
+RT-CORE-22,Core Router V2,45,50,Juniper,18
+SW-EDGE-44,Edge Switch Pro,110,80,Cisco,12
+PWR-850W,Server PSU 850W,5,50,Corsair,5

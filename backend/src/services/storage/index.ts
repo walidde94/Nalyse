@@ -11,7 +11,7 @@ export interface IStorageService {
 export class LocalStorageService implements IStorageService {
     private uploadDir: string;
 
-    constructor(uploadDir: string = 'uploads/') {
+    constructor(uploadDir: string = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')) {
         this.uploadDir = uploadDir;
         if (!fs.existsSync(this.uploadDir)) {
             fs.mkdirSync(this.uploadDir, { recursive: true });

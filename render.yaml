@@ -21,6 +21,12 @@ services:
         value: "production"
       - key: FRONTEND_URL
         value: "https://nalyse.vercel.app" # You will need to update this after Vercel deployment completes
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+    disk:
+      name: uploads
+      mountPath: /var/data
+      sizeGB: 1
 # Automatically provision a PostgreSQL database
 databases:
   - name: nalyse-db

@@ -1,0 +1,12 @@
+Date,Product,Revenue,Units Sold
+2025-01-01,Enterprise Server Alpha,120500.50,15
+2025-01-02,Cloud Compute Standard,45300.20,150
+2025-01-08,Security Gateway,67800.00,85
+2025-01-14,Enterprise Server Alpha,108000.00,12
+2025-01-20,Neural AI Processing API,350000.00,450
+2025-01-25,Cloud Compute Standard,52100.40,165
+2025-02-02,Enterprise Server Alpha,135000.00,18
+2025-02-05,Security Gateway,81200.00,105
+2025-02-12,Neural AI Processing API,410000.00,520
+2025-02-19,Enterprise Server Omega,240000.00,10
+2025-02-28,Cloud Compute Standard,61000.75,200

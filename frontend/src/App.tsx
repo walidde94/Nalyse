@@ -719,7 +719,7 @@ function AppContent() {
       });
       if (!res.ok) {
         let msg = 'Neural analysis encountered a structural fault.';
-        try { const err = await res.json(); msg = err.error || err.message || msg; } catch (e) {}
+        try { const err = await res.json(); msg = err.message || err.error || msg; } catch (e) {}
         throw new Error(msg);
       }
       
