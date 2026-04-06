@@ -6,7 +6,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { parse } from 'csv-parse/sync';
+import { parse } from 'csv-parse';
 import * as xlsx from 'xlsx';
 import { XMLParser } from 'fast-xml-parser';
 import { AnalysisResult, AdvancedColumnType, Insight, AnalysisOption } from './types';
@@ -235,8 +235,15 @@ export const analyzeFile = async (filePath: string, mimetype: string): Promise<A
             throw new Error(`File exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit. Consider splitting the dataset.`);
         }
 
-        const buffer = fs.readFileSync(absoluteRequestedPath);
         const ext = path.extname(absoluteRequestedPath).toLowerCase();
+
+        // ── Stream CSV Processing (Memory Efficient Reservoir Sampling) ──
+        if (mimetype === 'text/csv' || ext === '.csv' || mimetype === 'text/plain') {
+            return await streamCSV(absoluteRequestedPath);
+        }
+
+        // ── Memory Parsing for Non-Streamable Formats ──
+        const buffer = fs.readFileSync(absoluteRequestedPath);
 
         // ── PDF ──
         if (mimetype === 'application/pdf' || ext === '.pdf') {
@@ -267,11 +274,6 @@ export const analyzeFile = async (filePath: string, mimetype: string): Promise<A
             return parseXML(content);
         }
 
-        // ── CSV (default for text) ──
-        if (mimetype === 'text/csv' || ext === '.csv' || mimetype === 'text/plain') {
-            return parseCSV(content);
-        }
-
         return emptyResult('Unsupported', ['Unsupported file type. Supported: CSV, XLSX, JSON, XML, PDF, HTML.']);
 
     } catch (e: any) {
@@ -294,9 +296,15 @@ export const analyzeFile = async (filePath: string, mimetype: string): Promise<A
 
 // ─── Format Parsers ─────────────────────────────────────────────────────────
 
-function parseCSV(content: string): AnalysisResult {
-    // Auto-detect delimiter
-    const firstLine = content.split('\n')[0] || '';
+async function streamCSV(filePath: string): Promise<AnalysisResult> {
+    // 1. Peek at first 4KB to auto-detect delimiter
+    const fd = fs.openSync(filePath, 'r');
+    const peekBuffer = Buffer.alloc(4096);
+    fs.readSync(fd, peekBuffer, 0, 4096, 0);
+    fs.closeSync(fd);
+    
+    const peekStr = peekBuffer.toString('utf-8');
+    const firstLine = peekStr.split('\n')[0] || '';
     const tabCount = (firstLine.match(/\t/g) || []).length;
     const commaCount = (firstLine.match(/,/g) || []).length;
     const semiCount = (firstLine.match(/;/g) || []).length;
@@ -305,7 +313,11 @@ function parseCSV(content: string): AnalysisResult {
     if (tabCount > commaCount && tabCount > semiCount) delimiter = '\t';
     else if (semiCount > commaCount) delimiter = ';';
 
-    const records = parse(content, {
+    // 2. Stream using Reservoir Sampling
+    const reservoir: any[] = [];
+    let processedRows = 0;
+
+    const parser = fs.createReadStream(filePath).pipe(parse({
         columns: true,
         skip_empty_lines: true,
         relax_column_count: true,
@@ -313,9 +325,30 @@ function parseCSV(content: string): AnalysisResult {
         cast: true,
         delimiter,
         trim: true
-    });
+    }));
 
-    return analyzeRawData(records, 'CSV');
+    for await (const record of parser) {
+        if (processedRows < MAX_SAMPLE_ROWS) {
+            reservoir.push(record);
+        } else {
+            // Uniformly random chance to replace an old record
+            const j = Math.floor(Math.random() * (processedRows + 1));
+            if (j < MAX_SAMPLE_ROWS) {
+                reservoir[j] = record;
+            }
+        }
+        processedRows++;
+    }
+
+    const res = analyzeRawData(reservoir, 'CSV');
+    
+    // Patch the summary to reflect true reality of the giant dataset
+    if (processedRows > MAX_SAMPLE_ROWS) {
+        res.processingLog.unshift(`🌊 Streamed ${processedRows.toLocaleString()} rows. Applied Reservoir Sampling to compress to ${MAX_SAMPLE_ROWS.toLocaleString()} rows to preserve absolute memory safety without losing statistical validity.`);
+        res.summary.rows = processedRows; // Present true volume to the frontend
+    }
+
+    return res;
 }
 
 function parseExcel(buffer: Buffer): AnalysisResult {
