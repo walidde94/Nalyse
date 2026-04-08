@@ -44,6 +44,7 @@ export const SpatialView = ({ files, token }: Props) => {
     const [center, setCenter] = useState<[number, number]>([20, 0]);
     const [zoom, setZoom] = useState(2);
     const [renderStyle, setRenderStyle] = useState<'heat' | 'points'>('points');
+    const [mapKey] = useState(() => `spatial-map-${Math.random()}`);
 
     const fetchSpatialData = useCallback(async () => {
         if (!selectedFile) return;
@@ -185,7 +186,7 @@ export const SpatialView = ({ files, token }: Props) => {
                 </AnimatePresence>
 
                 {/* Leaflet instance */}
-                <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }} zoomControl={false} attributionControl={false}>
+                <MapContainer key={mapKey} center={center} zoom={zoom} style={{ height: '100%', width: '100%' }} zoomControl={false} attributionControl={false}>
                     <TileLayer url={MAP_TILES} attribution={MAP_ATTR} />
                     <MapUpdater center={center} zoom={zoom} />
 

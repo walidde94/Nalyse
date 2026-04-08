@@ -36,6 +36,7 @@ const MapRecenter = ({ bounds }: { bounds: L.LatLngBoundsExpression | null }) =>
 export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
     const [geoColumns, setGeoColumns] = useState<{ lat: string; lng: string } | null>(null);
     const [measureCol, setMeasureCol] = useState<string | null>(null);
+    const [mapKey] = useState(() => `analysis-map-${Math.random()}`);
 
     // Identify geographical columns
     useEffect(() => {
@@ -148,7 +149,7 @@ export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
                     }
                 `}</style>
                 <MapContainer
-                    key={`map-${processedData.length > 0 ? processedData[0]._lat : 'empty'}`}
+                    key={mapKey}
                     center={[20, 0]}
                     zoom={2}
                     scrollWheelZoom={true}

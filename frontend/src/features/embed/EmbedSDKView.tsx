@@ -13,6 +13,21 @@ export const EmbedSDKView = ({ token }: { token?: string }) => {
     const [theme, setTheme] = useState<'dark' | 'light'>('dark');
     const [copiedBlock, setCopiedBlock] = useState<string | null>(null);
     const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+    const [keys, setKeys] = useState<any[]>([]);
+
+    const fetchKeys = async () => {
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_URL}/api/apikeys`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) setKeys(await res.json());
+        } catch (e) {}
+    };
+
+    useState(() => { fetchKeys(); });
+
+    const activeKey = keys.length > 0 ? 'sk_live_••••••••' : 'YOUR_SECRET_KEY';
 
     const copyCode = (code: string, id: string) => {
         navigator.clipboard.writeText(code);
@@ -26,7 +41,7 @@ export const EmbedSDKView = ({ token }: { token?: string }) => {
 function App() {
   return (
     <NalyseEmbed
-      apiKey="nal_key_YOUR_API_KEY"
+      apiKey="${activeKey}"
       type="${embedType}"
       dashboardId="dash-001"
       theme="${theme}"
@@ -42,7 +57,7 @@ function App() {
 <script>
   Nalyse.embed({
     container: '#nalyse-embed',
-    apiKey: 'nal_key_YOUR_API_KEY',
+    apiKey: '${activeKey}',
     type: '${embedType}',
     dashboardId: 'dash-001',
     theme: '${theme}',
@@ -51,7 +66,7 @@ function App() {
 </script>`;
 
     const iframeCode = `<iframe
-  src="${API_URL}/embed/dash-001?key=nal_key_YOUR_API_KEY&theme=${theme}"
+  src="${API_URL}/embed/dash-001?key=${activeKey}&theme=${theme}"
   width="100%"
   height="400"
   frameborder="0"
@@ -67,18 +82,18 @@ function App() {
     return (
         <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto', fontFamily: 'var(--font-main)', position: 'relative', minHeight: '100%' }}>
             {/* Atmosphere */}
-            <div style={{ position: 'absolute', top: '-5%', left: '25%', width: '50vw', height: '50vh', background: 'radial-gradient(ellipse, rgba(99, 102, 241, 0.06), transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'absolute', top: '-5%', left: '25%', width: '50vw', height: '50vh', background: 'radial-gradient(ellipse, rgba(99, 102, 241, 0.08), transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
                 <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '12px', margin: 0, letterSpacing: '-0.03em' }}>
+                    <h1 style={{ fontSize: '28px', fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '12px', margin: 0, letterSpacing: '-0.03em' }}>
                         <div style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #6366f1, #ec4899)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px -6px rgba(99, 102, 241, 0.5)' }}>
                             <Boxes size={22} color="#fff" />
                         </div>
                         Embedded Analytics SDK
                     </h1>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '8px', fontWeight: 500, marginLeft: '52px' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px', fontWeight: 500, marginLeft: '52px' }}>
                         Embed Nalyse analytics directly into your product. React, HTML, or iframe — your choice.
                     </p>
                 </div>
@@ -91,23 +106,23 @@ function App() {
                     return (
                         <button key={w.id} onClick={() => setEmbedType(w.id as any)} style={{
                             padding: '20px', borderRadius: '16px', cursor: 'pointer', textAlign: 'left',
-                            background: isActive ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.06))' : 'rgba(255,255,255,0.02)',
-                            border: `1px solid ${isActive ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255,255,255,0.06)'}`,
-                            color: '#fff', transition: 'all 0.3s', position: 'relative', overflow: 'hidden'
+                            background: isActive ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.06))' : 'var(--bg-secondary)',
+                            border: `1px solid ${isActive ? 'rgba(99, 102, 241, 0.3)' : 'var(--border-subtle)'}`,
+                            color: 'var(--text-primary)', transition: 'all 0.3s', position: 'relative', overflow: 'hidden'
                         }}>
                             {isActive && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #6366f1, #ec4899)' }} />}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                                <div style={{ color: isActive ? '#818cf8' : 'rgba(255,255,255,0.4)' }}>{w.icon}</div>
+                                <div style={{ color: isActive ? '#6366f1' : 'var(--text-tertiary)' }}>{w.icon}</div>
                                 <span style={{ fontSize: '15px', fontWeight: 800 }}>{w.label}</span>
                             </div>
-                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{w.desc}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 }}>{w.desc}</p>
                         </button>
                     );
                 })}
             </div>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', position: 'relative', zIndex: 1, flexWrap: 'wrap' }}>
                 {[
                     { id: 'quickstart', label: 'Quick Start Code', icon: <Code2 size={15} /> },
                     { id: 'preview', label: 'Live Preview', icon: <Eye size={15} /> },
@@ -117,9 +132,9 @@ function App() {
                     return (
                         <button key={t.id} onClick={() => setActiveTab(t.id as any)} style={{
                             display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '10px',
-                            background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                            border: `1px solid ${isActive ? 'rgba(255,255,255,0.12)' : 'transparent'}`,
-                            color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                            background: isActive ? 'var(--bg-surface)' : 'transparent',
+                            border: `1px solid ${isActive ? 'var(--border-default)' : 'transparent'}`,
+                            color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                             fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
                         }}>
                             {t.icon} {t.label}
@@ -127,9 +142,9 @@ function App() {
                     );
                 })}
 
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '4px' }}>
-                    <button onClick={() => setTheme('dark')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer', background: theme === 'dark' ? '#6366f1' : 'transparent', color: '#fff' }}>Dark</button>
-                    <button onClick={() => setTheme('light')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer', background: theme === 'light' ? '#6366f1' : 'transparent', color: '#fff' }}>Light</button>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '4px' }}>
+                    <button onClick={() => setTheme('dark')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer', background: theme === 'dark' ? '#6366f1' : 'transparent', color: theme === 'dark' ? '#fff' : 'var(--text-secondary)' }}>Dark</button>
+                    <button onClick={() => setTheme('light')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer', background: theme === 'light' ? '#6366f1' : 'transparent', color: theme === 'light' ? '#fff' : 'var(--text-secondary)' }}>Light</button>
                 </div>
             </div>
 
@@ -163,9 +178,9 @@ function App() {
                                     ].map(d => (
                                         <button key={d.id} onClick={() => setPreviewDevice(d.id as any)} style={{
                                             display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
-                                            background: previewDevice === d.id ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.03)',
-                                            border: `1px solid ${previewDevice === d.id ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255,255,255,0.08)'}`,
-                                            color: previewDevice === d.id ? '#818cf8' : 'rgba(255,255,255,0.5)', cursor: 'pointer'
+                                            background: previewDevice === d.id ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-secondary)',
+                                            border: `1px solid ${previewDevice === d.id ? 'rgba(99, 102, 241, 0.3)' : 'var(--border-subtle)'}`,
+                                            color: previewDevice === d.id ? '#6366f1' : 'var(--text-secondary)', cursor: 'pointer'
                                         }}>
                                             {d.icon} {d.label}
                                         </button>
@@ -177,7 +192,7 @@ function App() {
                                         width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '375px',
                                         transition: 'width 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                                         background: theme === 'dark' ? '#0f172a' : '#f8fafc',
-                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        border: '1px solid var(--border-default)',
                                         borderRadius: '20px', padding: '24px', minHeight: '400px',
                                         position: 'relative', overflow: 'hidden'
                                     }}>
@@ -187,7 +202,7 @@ function App() {
                                             <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }} />
                                             <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }} />
                                             <div style={{ flex: 1, height: '24px', background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: '4px', marginLeft: '8px', display: 'flex', alignItems: 'center', paddingLeft: '8px' }}>
-                                                <span style={{ fontSize: '10px', color: theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', fontFamily: 'var(--font-mono)' }}>your-app.com/analytics</span>
+                                                <span style={{ fontSize: '10px', color: theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.5)', fontFamily: 'var(--font-mono)' }}>your-app.com/analytics</span>
                                             </div>
                                         </div>
 
@@ -197,16 +212,16 @@ function App() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <div style={{ width: '20px', height: '20px', background: '#6366f1', borderRadius: '4px' }} />
                                                     <span style={{ fontSize: '14px', fontWeight: 800, color: theme === 'dark' ? '#fff' : '#1e293b' }}>Nalyse Embed</span>
-                                                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', textTransform: 'uppercase' }}>{embedType}</span>
+                                                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1', textTransform: 'uppercase' }}>{embedType}</span>
                                                 </div>
-                                                <span style={{ fontSize: '10px', color: theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>Powered by Nalyse</span>
+                                                <span style={{ fontSize: '10px', color: theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)' }}>Powered by Nalyse</span>
                                             </div>
 
                                             {embedType === 'chart' && (
                                                 <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '8px', padding: '0 16px' }}>
                                                     {[65, 45, 78, 92, 55, 88, 70, 95, 60, 82, 73, 97].map((h, i) => (
                                                         <motion.div key={i} initial={{ height: 0 }} animate={{ height: `${h}%` }} transition={{ delay: i * 0.05, duration: 0.5, type: 'spring' }}
-                                                            style={{ flex: 1, background: `linear-gradient(0deg, #6366f1, ${i % 2 === 0 ? '#818cf8' : '#a78bfa'})`, borderRadius: '4px 4px 0 0', opacity: 0.8 }} />
+                                                            style={{ flex: 1, background: `linear-gradient(0deg, #6366f1, ${theme === 'dark' ? '#818cf8' : '#a78bfa'})`, borderRadius: '4px 4px 0 0', opacity: 0.8 }} />
                                                     ))}
                                                 </div>
                                             )}
@@ -240,8 +255,8 @@ function App() {
                         {activeTab === 'customize' && (
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '24px' }}>
-                                        <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px' }}>SDK Configuration</h3>
+                                    <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '24px' }}>
+                                        <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>SDK Configuration</h3>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                             <SettingRow label="Border Radius" value="12px" type="text" />
                                             <SettingRow label="Font Family" value="Inter, system-ui" type="text" />
@@ -254,8 +269,8 @@ function App() {
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '24px' }}>
-                                        <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px' }}>Security & Access</h3>
+                                    <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '24px' }}>
+                                        <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Security & Access</h3>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                             <SettingRow label="Allowed Domains" value="*.mycompany.com" type="text" />
                                             <SettingRow label="JWT Auth Mode" value="false" type="toggle" />
@@ -266,10 +281,10 @@ function App() {
 
                                     <div style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(236, 72, 153, 0.04))', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '16px', padding: '20px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                            <Sparkles size={16} color="#818cf8" />
-                                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#818cf8' }}>Pro Feature</span>
+                                            <Sparkles size={16} color="#6366f1" />
+                                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#6366f1' }}>Pro Feature</span>
                                         </div>
-                                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
+                                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                                             Enterprise SDK users get access to SSO-based embed authentication, custom CSS injection, and white-label branding removal.
                                         </p>
                                     </div>
@@ -289,17 +304,17 @@ const CodeBlock = ({ title, language, code, id, copiedBlock, onCopy }: {
     title: string; language: string; code: string; id: string;
     copiedBlock: string | null; onCopy: (code: string, id: string) => void;
 }) => (
-    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{title}</span>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '16px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', textTransform: 'uppercase' }}>{language}</span>
-                <button onClick={() => onCopy(code, id)} style={{ background: copiedBlock === id ? '#10b981' : 'rgba(255,255,255,0.05)', border: 'none', padding: '6px 12px', borderRadius: '6px', color: '#fff', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1', textTransform: 'uppercase' }}>{language}</span>
+                <button onClick={() => onCopy(code, id)} style={{ background: copiedBlock === id ? '#10b981' : 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '6px 12px', borderRadius: '6px', color: copiedBlock === id ? '#fff' : 'var(--text-secondary)', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
                     {copiedBlock === id ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
                 </button>
             </div>
         </div>
-        <pre style={{ padding: '20px', margin: 0, fontSize: '12px', lineHeight: 1.8, color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-mono)', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+        <pre className="bg-[#09090b] border-t border-[var(--border-subtle)]" style={{ padding: '20px', margin: 0, fontSize: '12px', lineHeight: 1.8, color: '#d4d4d8', fontFamily: 'var(--font-mono)', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
             {code}
         </pre>
     </div>
@@ -307,18 +322,18 @@ const CodeBlock = ({ title, language, code, id, copiedBlock, onCopy }: {
 
 const SettingRow = ({ label, value, type }: { label: string; value: string; type: string }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>{label}</span>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{label}</span>
         {type === 'toggle' ? (
-            <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: value === 'true' ? '#6366f1' : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
-                <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: value === 'true' ? '18px' : '2px', transition: 'left 0.2s' }} />
+            <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: value === 'true' ? '#6366f1' : 'var(--border-default)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: value === 'true' ? '18px' : '2px', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
             </div>
         ) : type === 'color' ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: value, border: '1px solid rgba(255,255,255,0.2)' }} />
-                <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.5)' }}>{value}</span>
+                <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: value, border: '1px solid var(--border-subtle)' }} />
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{value}</span>
             </div>
         ) : (
-            <input type="text" defaultValue={value} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '6px', color: '#fff', fontSize: '12px', textAlign: 'right', width: '200px', outline: 'none', fontFamily: 'var(--font-mono)' }} />
+            <input type="text" defaultValue={value} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: '6px 12px', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', textAlign: 'right', width: '200px', outline: 'none', fontFamily: 'var(--font-mono)' }} />
         )}
     </div>
 );
