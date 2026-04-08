@@ -25,14 +25,14 @@ export const sendWorkspaceInvitation = async (req: Request, res: Response) => {
         // Get inviter + org
         const inviter = await prisma.user.findUnique({
             where: { id: userId },
-            include: { organization: true }
+            include: { Organization: true }
         });
 
-        if (!inviter?.organization) {
+        if (!inviter?.Organization) {
             return res.status(400).json({ error: 'You must belong to an organization to send invitations' });
         }
 
-        const org = inviter.organization;
+        const org = inviter.Organization;
 
         // Check org user limit
         const currentUserCount = await prisma.user.count({
@@ -119,7 +119,7 @@ export const acceptInvitation = async (req: Request, res: Response) => {
 
         const invitation = await prisma.userInvitation.findUnique({
             where: { token: token as string },
-            include: { organization: true }
+            include: { Organization: true }
         });
 
         if (!invitation) return res.status(404).json({ error: 'Invitation not found' });
@@ -163,7 +163,7 @@ export const acceptInvitation = async (req: Request, res: Response) => {
         });
 
         res.json({
-            message: `Successfully joined ${invitation.organization?.name || 'the workspace'}`,
+            message: `Successfully joined ${invitation.Organization?.name || 'the workspace'}`,
             organizationId: invitation.organizationId,
             role: invitation.role
         });
