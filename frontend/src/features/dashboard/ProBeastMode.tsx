@@ -76,7 +76,7 @@ export const ProPowerBanner = ({ fileCount, storageUsed, maxStorage }: {
                                 <div className="ppb-badge-dot" />
                             </div>
                             <h2 className="ppb-heading">Neural Pro <span className="ppb-activated">Activated</span></h2>
-                            <p className="ppb-sub">Advanced Analytics • {maxStorage / 1024}GB Storage • Full Intelligence Suite</p>
+                            <p className="ppb-sub">Unlimited datasets • 10GB storage • Full intelligence suite</p>
                         </div>
                     </div>
 

@@ -36,7 +36,6 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
     const [playbackIndex, setPlaybackIndex] = useState(-1);
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
-    const [mapKey] = useState(() => `roadgraph-map-${Math.random()}`);
 
     // Auto Play Logic
     useEffect(() => {
@@ -167,7 +166,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                     </div>
                 ) : (
                     <MapContainer
-                        key={`${mapKey}-${trackData.length > 0 ? 'active' : 'idle'}-${mapStyle}`} // Force remount on data load or style change to prevent reuse errors
+                        key={`${trackData.length > 0 ? 'active' : 'idle'}-${mapStyle}`} // Force remount on data load or style change to prevent reuse errors
                         center={[0, 0]}
                         zoom={3}
                         style={{ height: '100%', width: '100%' }}

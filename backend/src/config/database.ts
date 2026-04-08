@@ -15,10 +15,8 @@ import { AgentTask } from '../entities/AgentTask';
 import { AgentLog } from '../entities/AgentLog';
 import { Report } from '../entities/Report';
 import { Dashboard } from '../entities/Dashboard';
-import { Webhook } from '../entities/Webhook';
-import { WebhookLog } from '../entities/WebhookLog';
 
-const entities = [User, Organization, File, Analysis, Group, Project, ApiKey, RemoteSource, Agent, AgentTask, AgentLog, Report, Dashboard, Webhook, WebhookLog];
+const entities = [User, Organization, File, Analysis, Group, Project, ApiKey, RemoteSource, Agent, AgentTask, AgentLog, Report, Dashboard];
 
 const isTest = process.env.NODE_ENV === 'test';
 const isProd = process.env.NODE_ENV === 'production';

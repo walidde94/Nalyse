@@ -248,9 +248,9 @@ export const AutoMLView = ({ files, token }: Props) => {
                         <div style={{ height: '500px', padding: '20px 40px 20px 20px' }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <ScatterChart>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-                                    <XAxis type="number" dataKey="x" name={featureX} stroke="var(--text-tertiary)" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
-                                    <YAxis type="number" dataKey="y" name={featureY} stroke="var(--text-tertiary)" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                    <XAxis type="number" dataKey="x" name={featureX} stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} />
+                                    <YAxis type="number" dataKey="y" name={featureY} stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} />
                                     <ZAxis type="number" range={[50, 50]} />
                                     <Tooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: '3 3' }} />
                                     

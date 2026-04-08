@@ -9,516 +9,242 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Agent {
-  id          String      @id
-  userId      String
-  name        String
-  role        String
-  currentGoal String
-  status      String
-  finalReport String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime
-  User        User        @relation(fields: [userId], references: [id])
-  AgentLog    AgentLog[]
-  AgentTask   AgentTask[]
+model Organization {
+  id                    String    @id @default(uuid())
+  name                  String    @unique
+  slug                  String?   @unique
+  subscriptionTier      String    @default("free")
+  plan                  String    @default("free")
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  subscriptionStartedAt DateTime?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean   @default(false)
+  storageUsed           BigInt    @default(0)
+  storageLimit          BigInt    @default(104857600)
+  userLimit             Int       @default(1)
+  fileLimit             Int       @default(5)
+  maxUsers              Int       @default(5)
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  users       User[]
+  files       File[]
+  invitations UserInvitation[]
+  schedules   Schedule[]
+  webhooks    Webhook[]
+  reports     Report[]
+  dashboards  Dashboard[]
+
+  @@map("organizations")
 }
 
-model AgentLog {
-  id        String   @id
-  agentId   String
-  message   String
-  level     String   @default("info")
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  Agent     Agent    @relation(fields: [agentId], references: [id])
-}
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String
+  firstName      String?
+  lastName       String?
+  role           String    @default("member")
+  plan           String    @default("free")
+  isActive       Boolean   @default(true)
+  bio            String?
+  displayName    String?
+  avatarUrl      String?
+  stripeCustomerId      String?
+  subscriptionStatus    String  @default("inactive")
+  lastLogin      DateTime?
+  organizationId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-model AgentTask {
-  id          String   @id
-  agentId     String
-  description String
-  status      String   @default("pending")
-  result      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime
-  Agent       Agent    @relation(fields: [agentId], references: [id])
-}
+  organization    Organization?    @relation(fields: [organizationId], references: [id])
+  files           File[]
+  analyses        Analysis[]
+  reports         Report[]
+  notifications   Notification[]
+  invitationsSent UserInvitation[] @relation("invitedBy")
+  analysisConfigs AnalysisConfiguration[]
+  schedules       Schedule[]
+  webhooks        Webhook[]
+  dashboards      Dashboard[]
 
-model AlertRule {
-  id              String       @id
-  name            String
-  description     String?
-  metric          String
-  operator        String
-  threshold       Float
-  actions         Json
-  isActive        Boolean      @default(true)
-  organizationId  String
-  createdByUserId String
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime
-  User            User         @relation(fields: [createdByUserId], references: [id])
-  Organization    Organization @relation(fields: [organizationId], references: [id])
-}
-
-model Analysis {
-  id               String    @id
-  fileId           String
-  createdById      String
-  status           String    @default("pending")
-  results          Json?
-  insights         Json?
-  statistics       Json?
-  errorMessage     String?
-  processingTimeMs Int?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime
-  completedAt      DateTime?
-  User             User      @relation(fields: [createdById], references: [id])
-  File             File      @relation(fields: [fileId], references: [id])
-}
-
-model AnalysisConfiguration {
-  id          String   @id
-  name        String
-  description String?
-  mode        String   @default("basic")
-  isPreset    Boolean  @default(false)
-  isBuiltIn   Boolean  @default(false)
-  config      Json
-  ownerId     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime
-  User        User?    @relation(fields: [ownerId], references: [id])
-}
-
-model ApiKey {
-  id             String       @id
-  name           String
-  keyHash        String       @unique
-  scopes         String[]     @default(["read"])
-  lastUsedAt     DateTime?
-  expiresAt      DateTime?
-  ownerId        String
-  organizationId String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime
-  Organization   Organization @relation(fields: [organizationId], references: [id])
-  User           User         @relation(fields: [ownerId], references: [id])
+  @@map("users")
 }
 
 model File {
-  id             String       @id
+  id             String    @id @default(uuid())
   filename       String
-  originalName   String
-  mimeType       String
-  size           Int
+  originalName   String?
+  mimeType       String?
+  size           BigInt    @default(0)
+  path           String?
   s3Key          String?
+  status         String    @default("ready")
+  isFavorite     Boolean   @default(false)
+  isDeleted      Boolean   @default(false)
+  isProcessed    Boolean   @default(false)
+  processedAt    DateTime?
   ownerId        String
-  organizationId String
-  groupId        String?
-  isFavorite     Boolean      @default(false)
-  isDeleted      Boolean      @default(false)
-  checksum       String?
-  metadata       Json?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime
-  Analysis       Analysis[]
-  Group          Group?       @relation(fields: [groupId], references: [id])
-  Organization   Organization @relation(fields: [organizationId], references: [id])
-  User           User         @relation(fields: [ownerId], references: [id])
-  Schedule       Schedule[]
+  organizationId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  owner        User          @relation(fields: [ownerId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  analyses     Analysis[]
+  schedules    Schedule[]
+
+  @@map("files")
 }
 
-model Group {
-  id             String       @id
-  name           String
-  description    String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime
-  organizationId String
-  File           File[]
-  Organization   Organization @relation(fields: [organizationId], references: [id])
-  Project        Project[]
+model Analysis {
+  id              String    @id @default(uuid())
+  fileId          String
+  createdById     String
+  status          String    @default("pending")
+  results         Json?
+  insights        Json?
+  statistics      Json?
+  processingTimeMs Int?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  file      File @relation(fields: [fileId], references: [id])
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@map("analyses")
+}
+
+model Report {
+  id             String    @id @default(uuid())
+  title          String
+  config         Json
+  userId         String
+  organizationId String?
+  shareToken     String?   @unique
+  isPublic       Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("reports")
 }
 
 model Notification {
-  id             String        @id
+  id             String    @id @default(uuid())
+  userId         String
+  organizationId String?
   title          String
   message        String
-  category       String        @default("info")
-  priority       String        @default("medium")
-  source         String        @default("SYSTEM")
-  iconType       String        @default("bell")
-  color          String        @default("#6366f1")
+  category       String    @default("info")
+  priority       String    @default("medium")
+  source         String    @default("SYSTEM")
+  iconType       String    @default("bell")
+  color          String    @default("#6366f1")
   actionLabel    String?
   actionUrl      String?
   prediction     String?
   confidence     Float?
   impactScore    Float?
-  metadata       Json?
-  read           Boolean       @default(false)
-  pinned         Boolean       @default(false)
-  userId         String
-  organizationId String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime
-  Organization   Organization? @relation(fields: [organizationId], references: [id])
-  User           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Organization {
-  id                    String           @id
-  name                  String
-  domain                String?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime
-  storageLimit          BigInt           @default(1073741824)
-  storageUsed           BigInt           @default(0)
-  maxUsers              Int              @default(5)
-  features              Json             @default("{\"apiAccess\": false, \"canExportPdf\": true}")
-  stripeCustomerId      String?
-  subscriptionTier      String           @default("hobby")
-  cancelAtPeriodEnd     Boolean          @default(false)
-  currentPeriodEnd      DateTime?
-  stripeSubscriptionId  String?
-  subscriptionStartedAt DateTime?
-  AlertRule             AlertRule[]
-  ApiKey                ApiKey[]
-  File                  File[]
-  Group                 Group[]
-  Notification          Notification[]
-  Project               Project[]
-  Schedule              Schedule[]
-  User                  User[]
-  UserInvitation        UserInvitation[]
-  Webhook               Webhook[]
-}
-
-model Project {
-  id             String       @id
-  name           String
-  description    String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime
-  organizationId String
-  groupId        String?
-  Group          Group?       @relation(fields: [groupId], references: [id])
-  Organization   Organization @relation(fields: [organizationId], references: [id])
-}
-
-model RemoteSource {
-  id           String    @id
-  name         String
-  type         String    @default("api")
-  config       Json
-  lastSyncedAt DateTime?
-  status       String    @default("active")
-  syncInterval Int?
-  ownerId      String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime
-  User         User      @relation(fields: [ownerId], references: [id])
-}
-
-model Report {
-  id             String    @id
-  title          String
-  config         Json
-  userId         String
-  shareToken     String?   @unique
-  sharePassword  String?
-  shareExpiresAt DateTime?
-  isPublic       Boolean   @default(false)
-  viewCount      Int       @default(0)
+  metadata       Json      @default("{}")
+  read           Boolean   @default(false)
+  pinned         Boolean   @default(false)
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime
-  User           User      @relation(fields: [userId], references: [id])
-}
 
-model Schedule {
-  id              String       @id
-  name            String
-  cronExpression  String
-  targetFileId    String?
-  config          Json
-  isActive        Boolean      @default(true)
-  organizationId  String
-  createdByUserId String
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime
-  User            User         @relation(fields: [createdByUserId], references: [id])
-  Organization    Organization @relation(fields: [organizationId], references: [id])
-  File            File?        @relation(fields: [targetFileId], references: [id])
-}
+  user User @relation(fields: [userId], references: [id])
 
-model User {
-  id                    String                  @id
-  email                 String                  @unique
-  passwordHash          String
-  firstName             String
-  lastName              String
-  role                  String                  @default("member")
-  isEmailVerified       Boolean                 @default(false)
-  avatarUrl             String?
-  lastLogin             DateTime?
-  preferences           Json?
-  organizationId        String
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime
-  Agent                 Agent[]
-  AlertRule             AlertRule[]
-  Analysis              Analysis[]
-  AnalysisConfiguration AnalysisConfiguration[]
-  ApiKey                ApiKey[]
-  File                  File[]
-  Notification          Notification[]
-  RemoteSource          RemoteSource[]
-  Report                Report[]
-  Schedule              Schedule[]
-  Organization          Organization            @relation(fields: [organizationId], references: [id])
-  UserInvitation        UserInvitation[]
-  Webhook               Webhook[]
+  @@map("notifications")
 }
 
 model UserInvitation {
-  id             String       @id
+  id             String    @id @default(uuid())
   email          String
-  role           String       @default("member")
-  token          String       @unique
-  status         String       @default("pending")
-  expiresAt      DateTime
-  inviterId      String
+  role           String    @default("member")
+  token          String    @unique
   organizationId String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime
-  User           User         @relation(fields: [inviterId], references: [id])
-  Organization   Organization @relation(fields: [organizationId], references: [id])
+  inviterId      String
+  expiresAt      DateTime
+  status         String    @default("pending")
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  inviter      User         @relation("invitedBy", fields: [inviterId], references: [id])
+
+  @@map("user_invitations")
+}
+
+model AnalysisConfiguration {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  mode        String    @default("standard")
+  isPreset    Boolean   @default(false)
+  isBuiltIn   Boolean   @default(false)
+  config      Json
+  ownerId     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  owner User? @relation(fields: [ownerId], references: [id])
+
+  @@map("analysis_configurations")
+}
+
+model Schedule {
+  id                String    @id @default(uuid())
+  name              String
+  cronExpression    String
+  targetFileId      String?
+  config            Json?
+  isActive          Boolean   @default(true)
+  organizationId    String
+  createdByUserId   String
+  lastRun           DateTime?
+  nextRun           DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  createdBy     User         @relation(fields: [createdByUserId], references: [id])
+  targetFile    File?        @relation(fields: [targetFileId], references: [id])
+
+  @@map("schedules")
 }
 
 model Webhook {
-  id              String       @id
-  name            String
-  url             String
-  secret          String?
-  events          Json
-  isActive        Boolean      @default(true)
-  organizationId  String
-  createdByUserId String
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime
-  User            User         @relation(fields: [createdByUserId], references: [id])
-  Organization    Organization @relation(fields: [organizationId], references: [id])
+  id                String    @id @default(uuid())
+  name              String
+  url               String
+  secret            String?
+  events            Json      @default("[\"analysis.completed\"]")
+  isActive          Boolean   @default(true)
+  organizationId    String
+  createdByUserId   String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  createdBy     User         @relation(fields: [createdByUserId], references: [id])
+
+  @@map("webhooks")
 }
+model Dashboard {
+  id             String    @id @default(uuid())
+  name           String
+  panels         Json      @default("[]")
+  gridLayout     Json      @default("[]")
+  userId         String
+  organizationId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-model agent {
-  id          String       @id(map: "PK_1000e989398c5d4ed585cf9a46f") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name        String       @db.VarChar
-  role        String       @db.VarChar
-  status      String       @db.VarChar
-  currentGoal String?      @db.VarChar
-  finalReport String?
-  userId      String       @db.Uuid
-  createdAt   DateTime     @default(now()) @db.Timestamp(6)
-  updatedAt   DateTime     @default(now()) @db.Timestamp(6)
-  users       users        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_15baaa1eb6dd8d1f0a92a17d667")
-  agent_log   agent_log[]
-  agent_task  agent_task[]
-}
+  user         User          @relation(fields: [userId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
 
-model agent_log {
-  id        String   @id(map: "PK_f3ebbdd2bd3c8a39c8a4e667f02") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  message   String   @db.VarChar
-  level     String   @default("info") @db.VarChar
-  agentId   String   @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamp(6)
-  agent     agent    @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_b6a6c18a3c83f0567548169f7ff")
-}
-
-model agent_task {
-  id          String   @id(map: "PK_0c37b15dd842ad1ab744c2ad67a") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  description String   @db.VarChar
-  status      String   @default("pending") @db.VarChar
-  result      String?
-  agentId     String   @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamp(6)
-  agent       agent    @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_92274c0987635a5ca2012512d74")
-}
-
-model analyses {
-  id               String    @id(map: "PK_91421900ca225ed9865d016a940") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  fileId           String    @db.Uuid
-  createdById      String    @db.Uuid
-  status           String    @default("pending") @db.VarChar
-  errorMessage     String?
-  processingTimeMs Int?
-  createdAt        DateTime  @default(now()) @db.Timestamp(6)
-  updatedAt        DateTime  @default(now()) @db.Timestamp(6)
-  completedAt      DateTime? @db.Timestamp(6)
-  results          Json?
-  insights         Json?
-  statistics       Json?
-  users            users     @relation(fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_3b3457019a92b10835bcb543e3a")
-  files            files     @relation(fields: [fileId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_b4bf162e28a0473bd289116ea87")
-}
-
-model api_keys {
-  id              String    @id(map: "PK_5c8a79801b44bd27b79228e1dad") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name            String    @db.VarChar
-  key             String    @unique(map: "UQ_e42cf55faeafdcce01a82d24849") @db.VarChar
-  isActive        Boolean   @default(true)
-  requestsPerHour Int       @default(1000)
-  lastUsedAt      DateTime? @db.Timestamp(6)
-  ownerId         String    @db.Uuid
-  createdAt       DateTime  @default(now()) @db.Timestamp(6)
-  updatedAt       DateTime  @default(now()) @db.Timestamp(6)
-  users           users     @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_fecb5973ea7fc35f94d46378174")
-
-  @@index([key], map: "IDX_e42cf55faeafdcce01a82d2484")
-}
-
-model dashboards {
-  id             String         @id(map: "PK_1b4b4bc346118e0d335f16c5344") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name           String         @db.VarChar
-  panels         Json           @default("[]")
-  gridLayout     Json           @default("[]")
-  userId         String         @db.Uuid
-  organizationId String?        @db.Uuid
-  createdAt      DateTime       @default(now()) @db.Timestamp(6)
-  updatedAt      DateTime       @default(now()) @db.Timestamp(6)
-  organizations  organizations? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_9236a2cd3f6652b5e6fb93ebf19")
-  users          users          @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_f82f5f19534c72468280610ac64")
-}
-
-model files {
-  id             String        @id(map: "PK_6c16b9093a142e0e7613b04a3d9") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  filename       String        @db.VarChar
-  originalName   String        @db.VarChar
-  size           BigInt
-  mimeType       String        @db.VarChar
-  s3Key          String?       @db.VarChar
-  s3Bucket       String?       @db.VarChar
-  ownerId        String        @db.Uuid
-  organizationId String        @db.Uuid
-  groupId        String?       @db.Uuid
-  isFavorite     Boolean       @default(false)
-  metadata       String?
-  createdAt      DateTime      @default(now()) @db.Timestamp(6)
-  updatedAt      DateTime      @default(now()) @db.Timestamp(6)
-  isDeleted      Boolean       @default(false)
-  checksum       String?       @db.VarChar
-  isProcessed    Boolean       @default(false)
-  processedAt    DateTime?     @db.Timestamp(6)
-  analyses       analyses[]
-  organizations  organizations @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_91251e0e4807922dd5b3c14a6b0")
-  users          users         @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_a23484d1055e34d75b25f616792")
-  groups         groups?       @relation(fields: [groupId], references: [id], onUpdate: NoAction, map: "FK_dbd64f45bf3535f311a03207d39")
-}
-
-model groups {
-  id          String   @id(map: "PK_659d1483316afb28afd3a90646e") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name        String   @db.VarChar
-  description String?  @db.VarChar
-  ownerId     String   @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamp(6)
-  updatedAt   DateTime @default(now()) @db.Timestamp(6)
-  files       files[]
-  users       users    @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_4d8d8897aef1c049336d8dde13f")
-}
-
-model organizations {
-  id                    String       @id(map: "PK_6b031fcd0863e3f6b44230163f9") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name                  String       @unique(map: "UQ_9b7ca6d30b94fef571cff876884") @db.VarChar
-  slug                  String?      @unique(map: "UQ_963693341bd612aa01ddf3a4b68") @db.VarChar
-  plan                  String       @default("free") @db.VarChar
-  stripeCustomerId      String?      @db.VarChar
-  stripeSubscriptionId  String?      @db.VarChar
-  subscriptionStartedAt DateTime?    @db.Timestamp(6)
-  currentPeriodEnd      DateTime?    @db.Timestamp(6)
-  cancelAtPeriodEnd     Boolean      @default(false)
-  storageUsed           BigInt       @default(0)
-  storageLimit          BigInt       @default(104857600)
-  userLimit             Int          @default(1)
-  fileLimit             Int          @default(5)
-  createdAt             DateTime     @default(now()) @db.Timestamp(6)
-  updatedAt             DateTime     @default(now()) @db.Timestamp(6)
-  isActive              Boolean      @default(true)
-  dashboards            dashboards[]
-  files                 files[]
-  users                 users[]
-}
-
-model projects {
-  id          String   @id(map: "PK_6271df0a7aed1d6c0691ce6ac50") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  title       String   @db.VarChar
-  description String
-  objective   String   @db.VarChar
-  actions     String?
-  status      String   @default("active") @db.VarChar
-  impact      String?  @db.VarChar
-  ownerId     String   @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamp(6)
-  updatedAt   DateTime @default(now()) @db.Timestamp(6)
-  users       users    @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_a8e7e6c3f9d9528ed35fe5bae33")
-}
-
-model remote_sources {
-  id           String    @id(map: "PK_38da13c62fc57b8e8724533d60b") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name         String    @db.VarChar
-  type         String    @db.VarChar
-  config       String?
-  status       String    @default("active") @db.VarChar
-  lastSyncedAt DateTime? @db.Timestamp(6)
-  ownerId      String    @db.Uuid
-  createdAt    DateTime  @default(now()) @db.Timestamp(6)
-  updatedAt    DateTime  @default(now()) @db.Timestamp(6)
-  users        users     @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_411dbcea5fac917f9bb97e77e64")
-}
-
-model reports {
-  id         String   @id(map: "PK_d9013193989303580053c0b5ef6") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  title      String   @db.VarChar
-  config     String
-  createdAt  DateTime @default(now()) @db.Timestamp(6)
-  userId     String   @db.Uuid
-  shareToken String?  @unique(map: "UQ_75659a330bde3b68ca5a07821c9") @db.VarChar
-  isPublic   Boolean  @default(false)
-  users      users    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_bed415cd29716cd707e9cb3c09c")
-}
-
-model users {
-  id                      String           @id(map: "PK_a3ffb1c0c8416b9fc6f907b7433") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  email                   String           @unique(map: "UQ_97672ac88f789774dd47f7c8be3") @db.VarChar
-  passwordHash            String           @db.VarChar
-  firstName               String?          @db.VarChar
-  lastName                String?          @db.VarChar
-  emailVerified           Boolean          @default(false)
-  emailVerificationToken  String?          @db.VarChar
-  passwordResetToken      String?          @db.VarChar
-  passwordResetExpires    DateTime?        @db.Timestamp(6)
-  role                    String           @default("user") @db.VarChar
-  organizationId          String?          @db.Uuid
-  createdAt               DateTime         @default(now()) @db.Timestamp(6)
-  updatedAt               DateTime         @default(now()) @db.Timestamp(6)
-  lastLoginAt             DateTime?        @db.Timestamp(6)
-  isActive                Boolean          @default(true)
-  bio                     String?          @db.VarChar
-  displayName             String?          @db.VarChar
-  avatarUrl               String?          @db.VarChar
-  notificationPreferences String           @default("{}")
-  apiKeys                 String           @default("[]")
-  plan                    String           @default("free") @db.VarChar
-  stripeCustomerId        String?          @db.VarChar
-  subscriptionStatus      String           @default("inactive") @db.VarChar
-  agent                   agent[]
-  analyses                analyses[]
-  api_keys                api_keys[]
-  dashboards              dashboards[]
-  files                   files[]
-  groups                  groups[]
-  projects                projects[]
-  remote_sources          remote_sources[]
-  reports                 reports[]
-  organizations           organizations?   @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_f3d6aea8fcca58182b2e80ce979")
+  @@map("dashboards")
 }
