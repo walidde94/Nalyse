@@ -82,12 +82,15 @@ export async function getUnreadCounts(userId: string) {
     return counts;
 }
 
+import crypto from 'crypto';
+
 /**
  * Create a new notification for a user. Returns the created entity.
  */
 export async function createNotification(input: CreateNotificationInput) {
     const n = await prisma.notification.create({
         data: {
+            id: crypto.randomUUID(),
             userId: input.userId,
             organizationId: input.organizationId || null,
             title: input.title,
@@ -103,6 +106,7 @@ export async function createNotification(input: CreateNotificationInput) {
             confidence: input.confidence ?? null,
             impactScore: input.impactScore ?? null,
             metadata: input.metadata || {},
+            updatedAt: new Date(),
         }
     });
     broadcastUpdate('notification', { action: 'new', notification: n });
