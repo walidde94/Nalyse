@@ -77,12 +77,14 @@ export const sendWorkspaceInvitation = async (req: Request, res: Response) => {
 
         const invitation = await prisma.userInvitation.create({
             data: {
+                id: crypto.randomUUID(),
                 email: email.toLowerCase().trim(),
                 role: role,
                 token,
-                organizationId: org.id,
-                inviterId: userId,
+                Organization: { connect: { id: org.id } },
+                User: { connect: { id: userId } },
                 expiresAt,
+                updatedAt: new Date(),
             }
         });
 
