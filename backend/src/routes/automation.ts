@@ -13,7 +13,7 @@ router.get('/schedules', authenticate, requirePermission(Permission.READ_ANALYSI
     try {
         const schedules = await prisma.schedule.findMany({
             where: { organizationId: req.user!.organizationId },
-            include: { File: true }
+            include: { targetFile: true }
         });
         res.json(schedules);
     } catch (error) {
@@ -28,15 +28,13 @@ router.post('/schedules', authenticate, requirePermission(Permission.CREATE_ANAL
 
         const schedule = await prisma.schedule.create({
             data: {
-                id: crypto.randomUUID(),
                 name,
                 cronExpression,
                 targetFileId: targetFileId || null,
                 config,
                 isActive: isActive ?? true,
                 organizationId: req.user!.organizationId!,
-                createdByUserId: req.user!.userId!,
-                updatedAt: new Date(),
+                createdByUserId: req.user!.userId!
             }
         });
 
@@ -105,15 +103,13 @@ router.post('/webhooks', authenticate, requirePermission(Permission.MANAGE_ORG),
 
         const webhook = await prisma.webhook.create({
             data: {
-                id: crypto.randomUUID(),
                 name,
                 url,
                 secret,
                 events: events || ['analysis.completed'],
                 isActive: isActive ?? true,
                 organizationId: req.user!.organizationId!,
-                createdByUserId: req.user!.userId!,
-                updatedAt: new Date(),
+                createdByUserId: req.user!.userId!
             }
         });
 

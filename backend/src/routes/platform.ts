@@ -18,7 +18,7 @@ router.get('/analytics', authenticate, async (req: AuthRequest, res: Response) =
                 role: true,
                 createdAt: true,
                 lastLogin: true,
-                Organization: {
+                organization: {
                     select: {
                         subscriptionTier: true
                     }
@@ -118,7 +118,7 @@ router.get('/analytics', authenticate, async (req: AuthRequest, res: Response) =
                 email: u.email,
                 name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email,
                 role: u.role,
-                plan: u.Organization?.subscriptionTier || 'hobby',
+                plan: u.organization?.subscriptionTier || 'hobby',
                 isActive: true, // We removed this field
                 createdAt: u.createdAt,
                 lastLoginAt: u.lastLogin,

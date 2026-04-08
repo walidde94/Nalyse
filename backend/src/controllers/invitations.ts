@@ -25,14 +25,14 @@ export const sendWorkspaceInvitation = async (req: Request, res: Response) => {
         // Get inviter + org
         const inviter = await prisma.user.findUnique({
             where: { id: userId },
-            include: { Organization: true }
+            include: { organization: true }
         });
 
-        if (!inviter?.Organization) {
+        if (!inviter?.organization) {
             return res.status(400).json({ error: 'You must belong to an organization to send invitations' });
         }
 
-        const org = inviter.Organization;
+        const org = inviter.organization;
 
         // Check org user limit
         const currentUserCount = await prisma.user.count({
@@ -77,14 +77,12 @@ export const sendWorkspaceInvitation = async (req: Request, res: Response) => {
 
         const invitation = await prisma.userInvitation.create({
             data: {
-                id: crypto.randomUUID(),
                 email: email.toLowerCase().trim(),
                 role: role,
                 token,
-                Organization: { connect: { id: org.id } },
-                User: { connect: { id: userId } },
+                organizationId: org.id,
+                inviterId: userId,
                 expiresAt,
-                updatedAt: new Date(),
             }
         });
 
@@ -121,7 +119,7 @@ export const acceptInvitation = async (req: Request, res: Response) => {
 
         const invitation = await prisma.userInvitation.findUnique({
             where: { token: token as string },
-            include: { Organization: true }
+            include: { organization: true }
         });
 
         if (!invitation) return res.status(404).json({ error: 'Invitation not found' });
@@ -165,7 +163,7 @@ export const acceptInvitation = async (req: Request, res: Response) => {
         });
 
         res.json({
-            message: `Successfully joined ${invitation.Organization?.name || 'the workspace'}`,
+            message: `Successfully joined ${invitation.organization?.name || 'the workspace'}`,
             organizationId: invitation.organizationId,
             role: invitation.role
         });

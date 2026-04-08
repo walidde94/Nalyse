@@ -44,8 +44,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 router.patch('/:id', authenticate, async (req: Request, res: Response) => {
     const orgId = (req as any).user.organizationId;
     const webhookRepo = AppDataSource.getRepository(Webhook);
-    const whId = req.params.id as string;
-    const wh = await webhookRepo.findOne({ where: { id: whId, organizationId: orgId } });
+    const wh = await webhookRepo.findOne({ where: { id: req.params.id, organizationId: orgId } });
     
     if (!wh) return res.status(404).json({ success: false, error: 'Webhook not found' });
     
@@ -63,8 +62,7 @@ router.patch('/:id', authenticate, async (req: Request, res: Response) => {
 router.delete('/:id', authenticate, async (req: Request, res: Response) => {
     const orgId = (req as any).user.organizationId;
     const webhookRepo = AppDataSource.getRepository(Webhook);
-    const whId = req.params.id as string;
-    await webhookRepo.delete({ id: whId, organizationId: orgId });
+    await webhookRepo.delete({ id: req.params.id, organizationId: orgId });
     res.json({ success: true });
 });
 
@@ -72,8 +70,7 @@ router.delete('/:id', authenticate, async (req: Request, res: Response) => {
 router.patch('/:id/toggle', authenticate, async (req: Request, res: Response) => {
     const orgId = (req as any).user.organizationId;
     const webhookRepo = AppDataSource.getRepository(Webhook);
-    const whId = req.params.id as string;
-    const wh = await webhookRepo.findOne({ where: { id: whId, organizationId: orgId } });
+    const wh = await webhookRepo.findOne({ where: { id: req.params.id, organizationId: orgId } });
     
     if (wh) {
         wh.status = wh.status === 'active' ? 'paused' : 'active';
@@ -83,8 +80,10 @@ router.patch('/:id/toggle', authenticate, async (req: Request, res: Response) =>
 });
 
 // ── Rotate secret ──
-    const whId = req.params.id as string;
-    const wh = await webhookRepo.findOne({ where: { id: whId, organizationId: orgId } });
+router.post('/:id/rotate-secret', authenticate, async (req: Request, res: Response) => {
+    const orgId = (req as any).user.organizationId;
+    const webhookRepo = AppDataSource.getRepository(Webhook);
+    const wh = await webhookRepo.findOne({ where: { id: req.params.id, organizationId: orgId } });
     
     if (!wh) return res.status(404).json({ success: false, error: 'Not found' });
     
@@ -117,8 +116,7 @@ router.get('/logs', authenticate, async (req: Request, res: Response) => {
 router.post('/:id/test', authenticate, async (req: Request, res: Response) => {
     const orgId = (req as any).user.organizationId;
     const webhookRepo = AppDataSource.getRepository(Webhook);
-    const whId = req.params.id as string;
-    const wh = await webhookRepo.findOne({ where: { id: whId, organizationId: orgId } });
+    const wh = await webhookRepo.findOne({ where: { id: req.params.id, organizationId: orgId } });
     
     if (!wh) return res.status(404).json({ success: false, error: 'Webhook not found' });
 

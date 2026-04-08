@@ -243,7 +243,6 @@ model Schedule {
   cronExpression  String
   targetFileId    String?
   config          Json
-  lastRun         DateTime?
   isActive        Boolean      @default(true)
   organizationId  String
   createdByUserId String

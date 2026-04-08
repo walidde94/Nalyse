@@ -30,7 +30,6 @@ export class AnalysisConfigService {
 
         const saved = await prisma.analysisConfiguration.create({
             data: {
-                id: crypto.randomUUID(),
                 name: dto.name,
                 description: dto.description || null,
                 mode: dto.mode,
@@ -38,7 +37,6 @@ export class AnalysisConfigService {
                 isBuiltIn: false,
                 config: fullConfig as any,
                 ownerId: userId,
-                updatedAt: new Date(),
             }
         });
 
@@ -94,7 +92,6 @@ export class AnalysisConfigService {
 
         const preset = await prisma.analysisConfiguration.create({
             data: {
-                id: crypto.randomUUID(),
                 name: presetName || `${source.name} (Preset)`,
                 description: source.description,
                 mode: source.mode,
@@ -102,7 +99,6 @@ export class AnalysisConfigService {
                 isBuiltIn: false,
                 config: { ...(source.config as object), name: presetName || source.name, isPreset: true },
                 ownerId: userId,
-                updatedAt: new Date(),
             }
         });
 
@@ -181,7 +177,6 @@ export class AnalysisConfigService {
             if (!exists) {
                 await prisma.analysisConfiguration.create({
                     data: {
-                        id: crypto.randomUUID(),
                         name: preset.name,
                         description: preset.description,
                         mode: 'advanced',
@@ -189,7 +184,6 @@ export class AnalysisConfigService {
                         isBuiltIn: true,
                         config: { ...preset.config, name: preset.name, description: preset.description, mode: 'advanced', isPreset: true } as any,
                         ownerId: null,
-                        updatedAt: new Date(),
                     }
                 });
             }
