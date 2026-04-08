@@ -72,13 +72,13 @@ function App() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
                 <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '12px', margin: 0, letterSpacing: '-0.03em' }}>
+                    <h1 style={{ fontSize: '28px', fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '12px', margin: 0, letterSpacing: '-0.03em' }}>
                         <div style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #6366f1, #ec4899)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px -6px rgba(99, 102, 241, 0.5)' }}>
                             <Boxes size={22} color="#fff" />
                         </div>
                         Embedded Analytics SDK
                     </h1>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '8px', fontWeight: 500, marginLeft: '52px' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px', fontWeight: 500, marginLeft: '52px' }}>
                         Embed Nalyse analytics directly into your product. React, HTML, or iframe — your choice.
                     </p>
                 </div>
@@ -91,16 +91,16 @@ function App() {
                     return (
                         <button key={w.id} onClick={() => setEmbedType(w.id as any)} style={{
                             padding: '20px', borderRadius: '16px', cursor: 'pointer', textAlign: 'left',
-                            background: isActive ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.06))' : 'rgba(255,255,255,0.02)',
-                            border: `1px solid ${isActive ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255,255,255,0.06)'}`,
-                            color: '#fff', transition: 'all 0.3s', position: 'relative', overflow: 'hidden'
+                            background: isActive ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.06))' : 'var(--bg-card)',
+                            border: `1px solid ${isActive ? 'rgba(99, 102, 241, 0.3)' : 'var(--border-subtle)'}`,
+                            color: 'var(--text-primary)', transition: 'all 0.3s', position: 'relative', overflow: 'hidden'
                         }}>
                             {isActive && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #6366f1, #ec4899)' }} />}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                                <div style={{ color: isActive ? '#818cf8' : 'rgba(255,255,255,0.4)' }}>{w.icon}</div>
+                                <div style={{ color: isActive ? '#818cf8' : 'var(--text-muted)' }}>{w.icon}</div>
                                 <span style={{ fontSize: '15px', fontWeight: 800 }}>{w.label}</span>
                             </div>
-                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{w.desc}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>{w.desc}</p>
                         </button>
                     );
                 })}
@@ -117,9 +117,9 @@ function App() {
                     return (
                         <button key={t.id} onClick={() => setActiveTab(t.id as any)} style={{
                             display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '10px',
-                            background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                            border: `1px solid ${isActive ? 'rgba(255,255,255,0.12)' : 'transparent'}`,
-                            color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                            background: isActive ? 'var(--bg-surface)' : 'transparent',
+                            border: `1px solid ${isActive ? 'var(--border-color)' : 'transparent'}`,
+                            color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                             fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
                         }}>
                             {t.icon} {t.label}
@@ -240,8 +240,8 @@ function App() {
                         {activeTab === 'customize' && (
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '24px' }}>
-                                        <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px' }}>SDK Configuration</h3>
+                                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '24px' }}>
+                                        <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>SDK Configuration</h3>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                             <SettingRow label="Border Radius" value="12px" type="text" />
                                             <SettingRow label="Font Family" value="Inter, system-ui" type="text" />
@@ -254,8 +254,8 @@ function App() {
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '24px' }}>
-                                        <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px' }}>Security & Access</h3>
+                                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '24px' }}>
+                                        <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Security & Access</h3>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                             <SettingRow label="Allowed Domains" value="*.mycompany.com" type="text" />
                                             <SettingRow label="JWT Auth Mode" value="false" type="toggle" />
@@ -289,17 +289,17 @@ const CodeBlock = ({ title, language, code, id, copiedBlock, onCopy }: {
     title: string; language: string; code: string; id: string;
     copiedBlock: string | null; onCopy: (code: string, id: string) => void;
 }) => (
-    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{title}</span>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '16px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', textTransform: 'uppercase' }}>{language}</span>
-                <button onClick={() => onCopy(code, id)} style={{ background: copiedBlock === id ? '#10b981' : 'rgba(255,255,255,0.05)', border: 'none', padding: '6px 12px', borderRadius: '6px', color: '#fff', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
+                <button onClick={() => onCopy(code, id)} style={{ background: copiedBlock === id ? '#10b981' : 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
                     {copiedBlock === id ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
                 </button>
             </div>
         </div>
-        <pre style={{ padding: '20px', margin: 0, fontSize: '12px', lineHeight: 1.8, color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-mono)', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+        <pre style={{ padding: '20px', margin: 0, fontSize: '12px', lineHeight: 1.8, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', overflowX: 'auto', whiteSpace: 'pre-wrap', background: 'var(--bg-main)' }}>
             {code}
         </pre>
     </div>
@@ -307,18 +307,18 @@ const CodeBlock = ({ title, language, code, id, copiedBlock, onCopy }: {
 
 const SettingRow = ({ label, value, type }: { label: string; value: string; type: string }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>{label}</span>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{label}</span>
         {type === 'toggle' ? (
             <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: value === 'true' ? '#6366f1' : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
                 <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: value === 'true' ? '18px' : '2px', transition: 'left 0.2s' }} />
             </div>
         ) : type === 'color' ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: value, border: '1px solid rgba(255,255,255,0.2)' }} />
-                <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.5)' }}>{value}</span>
+                <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: value, border: '1px solid var(--border-color)' }} />
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>{value}</span>
             </div>
         ) : (
-            <input type="text" defaultValue={value} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '6px', color: '#fff', fontSize: '12px', textAlign: 'right', width: '200px', outline: 'none', fontFamily: 'var(--font-mono)' }} />
+            <input type="text" defaultValue={value} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', textAlign: 'right', width: '200px', outline: 'none', fontFamily: 'var(--font-mono)' }} />
         )}
     </div>
 );
