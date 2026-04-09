@@ -207,9 +207,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
     const filePercent = Math.min(100, Math.round((fileCount / fileLimit) * 100));
     const storagePercent = Math.min(100, Math.round((storageUsed / maxStorage) * 100));
 
-    if (isPro) return (
-        <ProPowerBanner fileCount={fileCount} storageUsed={storageUsed} maxStorage={maxStorage} />
-    );
+    if (isPro) return null;
 
     return (
         <motion.div
@@ -1298,7 +1296,7 @@ export const DashboardView = ({
                                         <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-primary, #000)', textTransform: 'uppercase', letterSpacing: '0.15em', fontStyle: 'italic' }}>Neural Telemetry</span>
                                     </div>
                                     <div style={{ marginLeft: 'auto' }}>
-                                        <button onClick={() => setShowTelemetry(false)} style={{ background: 'none', border: 'none', p: 0, cursor: 'pointer', color: 'var(--text-secondary, rgba(0,0,0,0.3))' }}>
+                                        <button onClick={() => setShowTelemetry(false)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-secondary, rgba(0,0,0,0.3))' }}>
                                             <X size={14} />
                                         </button>
                                     </div>
