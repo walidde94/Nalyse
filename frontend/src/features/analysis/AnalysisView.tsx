@@ -104,6 +104,7 @@ interface AnalysisViewProps {
     onClose: () => void;
     onShare?: () => Promise<void>;
     onUpgradeRequested?: () => void;
+    onUpdate?: (data: AnalysisData) => void;
 }
 
 
@@ -170,7 +171,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 import { API_URL } from '../../config';
 
-export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }: AnalysisViewProps) => {
+export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, onUpdate }: AnalysisViewProps) => {
     const { token } = useAuth();
     const { addToast } = useToast();
 
@@ -723,34 +724,62 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                     setDebugMsg(`Switched to COUNT because ${validY} is non-numeric`);
                 }
 
+                const isScatter = builderConfig.chartType === 'scatter';
+                const isXNumeric = measures.includes(builderConfig.xAxis);
+                const isYNumeric = measures.includes(builderConfig.yAxis);
+
                 // Dynamic Aggregation Query with strict numeric conversion
-                const query = actualAgg === 'COUNT'
-                    ? `SELECT [${xCol}] AS [name], COUNT(*) AS [value] FROM ? GROUP BY [${xCol}]`
-                    : `SELECT [${xCol}] AS [name], ${actualAgg}(CAST([${yCol}] AS FLOAT)) AS [value] FROM ? GROUP BY [${xCol}]`;
+                let query = '';
+                // Scatter Mode: If both are numeric, show raw correlations. 
+                // If X is categorical, show aggregated distribution (Dot Plot).
+                if (isScatter && isXNumeric && isYNumeric) {
+                    query = `SELECT [${xCol}] AS [x], [${yCol}] AS [y] FROM ? LIMIT 1000`;
+                } else {
+                    query = actualAgg === 'COUNT'
+                        ? `SELECT [${xCol}] AS [name], COUNT(*) AS [value] FROM ? GROUP BY [${xCol}]`
+                        : `SELECT [${xCol}] AS [name], ${actualAgg}(CAST([${yCol}] AS FLOAT)) AS [value] FROM ? GROUP BY [${xCol}]`;
+                }
 
                 const res = alasql(query, [filteredData]) as any[];
 
                 if (!res || res.length === 0) {
-                    setDebugMsg(`Zero records returned for ${actualAgg} of ${yCol}`);
+                    setDebugMsg(`Zero records returned for ${isScatter ? 'Scatter' : actualAgg} of ${yCol}`);
                     setBuilderData([]);
                 } else {
                     setDebugMsg('');
-                    let cleaned = res.map((r: any) => ({
-                        name: String(r.name || 'N/A'),
-                        value: isNaN(Number(r.value)) ? 0 : Number(r.value)
-                    }));
+                    let cleaned = [];
 
-                    if (builderConfig.sortBy === 'valueAsc') {
-                        cleaned.sort((a, b) => a.value - b.value);
-                    } else if (builderConfig.sortBy === 'labelAsc') {
-                        cleaned.sort((a, b) => a.name.localeCompare(b.name));
-                    } else if (builderConfig.sortBy === 'labelDesc') {
-                        cleaned.sort((a, b) => b.name.localeCompare(a.name));
+                    if (isScatter && isXNumeric && isYNumeric) {
+                        cleaned = res.map((r: any) => ({
+                            x: isNaN(Number(r.x)) ? 0 : Number(r.x),
+                            y: isNaN(Number(r.y)) ? 0 : Number(r.y),
+                            name: `Entry`
+                        }));
+                    } else if (isScatter) {
+                        // Dot Plot (Categorical X)
+                        cleaned = res.map((r: any) => ({
+                            x: String(r.name || 'N/A'),
+                            y: isNaN(Number(r.value)) ? 0 : Number(r.value),
+                            name: String(r.name || 'N/A')
+                        }));
                     } else {
-                        cleaned.sort((a, b) => b.value - a.value); // default valueDesc
-                    }
+                        cleaned = res.map((r: any) => ({
+                            name: String(r.name || 'N/A'),
+                            value: isNaN(Number(r.value)) ? 0 : Number(r.value)
+                        }));
 
-                    cleaned = cleaned.slice(0, builderConfig.topN || 30);
+                        if (builderConfig.sortBy === 'valueAsc') {
+                            cleaned.sort((a, b) => a.value - b.value);
+                        } else if (builderConfig.sortBy === 'labelAsc') {
+                            cleaned.sort((a, b) => a.name.localeCompare(b.name));
+                        } else if (builderConfig.sortBy === 'labelDesc') {
+                            cleaned.sort((a, b) => b.name.localeCompare(a.name));
+                        } else {
+                            cleaned.sort((a, b) => b.value - a.value); // default valueDesc
+                        }
+
+                        cleaned = cleaned.slice(0, builderConfig.topN || 30);
+                    }
 
                     setBuilderData(cleaned);
                 }
@@ -949,10 +978,6 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
             setQueryError(e.message);
         }
     };
-
-
-
-
     const renderStaticChart = (data: any[], type: string) => {
         if (!data || data.length === 0) return (
             <div className="w-full h-full flex items-center justify-center opacity-20">
@@ -965,22 +990,21 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
 
         const colorMain = '#818cf8'; // Indigo (Measure-based)
         const colorAlt = '#34d399'; // Emerald (Dimension-based)
-        // Use colorAlt for COUNT, colorMain for SUM/AVG
         const finalColor = builderConfig.aggregation === 'COUNT' ? colorAlt : colorMain;
 
         if (type === 'worldmap') {
             return (
-                <div className="w-full h-full" style={{ height: '400px', width: '100%', display: 'block' }}>
-                    <WorldMapChart data={data} title="Geospatial Preview" />
+                <div className="w-full h-full" style={{ height: '500px', width: '100%', display: 'block' }}>
+                    <WorldMapChart data={data} title="Geospatial Intelligence Preview" />
                 </div>
             );
         }
 
         return (
-            <div className="w-full h-full" style={{ height: '400px', width: '100%', display: 'block' }}>
+            <div className="w-full h-full" style={{ height: '500px', width: '100%', display: 'block' }}>
                 <ResponsiveContainer width="100%" height="100%">
                     {type === 'bar' ? (
-                        <BarChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 40 }}>
+                        <BarChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 80 }}>
                             <defs>
                                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor={finalColor} stopOpacity={1} />
@@ -994,43 +1018,49 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                     </feMerge>
                                 </filter>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" strokeOpacity={0.1} vertical={false} />
                             <XAxis
                                 dataKey="name"
-                                stroke="rgba(255,255,255,0.2)"
-                                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 600 }}
+                                stroke="var(--text-muted)"
+                                strokeOpacity={0.3}
+                                tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}
                                 angle={-45}
                                 textAnchor="end"
                                 interval={0}
                                 axisLine={false}
                                 tickLine={false}
-                                height={60}
+                                height={80}
                             />
                             <YAxis
-                                stroke="rgba(255,255,255,0.2)"
-                                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 600 }}
+                                stroke="var(--text-muted)"
+                                strokeOpacity={0.3}
+                                tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}
                                 axisLine={false}
                                 tickLine={false}
                                 tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
                             />
                             <Tooltip
-                                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                cursor={{ fill: 'var(--primary-subtle)', opacity: 0.1 }}
                                 contentStyle={{
-                                    background: 'rgba(10, 10, 15, 0.95)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    background: 'var(--bg-card)',
+                                    border: '1px solid var(--border-default)',
                                     borderRadius: '16px',
-                                    backdropFilter: 'blur(20px)',
-                                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                                    backdropFilter: 'blur(30px)',
+                                    boxShadow: 'var(--shadow-lg)'
                                 }}
                                 itemStyle={{ color: finalColor, fontWeight: 'bold' }}
                                 content={<CustomTooltip />}
                             />
-                            <Bar dataKey="value" fill="url(#barGradient)" radius={[6, 6, 0, 0]} style={{ filter: 'url(#glow)' }} barSize={32} />
+                            <Bar dataKey="value" fill="url(#barGradient)" radius={[8, 8, 0, 0]} style={{ filter: 'url(#glow)' }} barSize={38}>
+                                {data.map((_, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Bar>
                         </BarChart>
-                    ) : type === 'pie' ? (
+                    ) : (type === 'pie' || type === 'donut') ? (
                         <PieChart>
                             <defs>
-                                <filter id="pieGlow">
+                                <filter id="pieGlow" x="-20%" y="-20%" width="140%" height="140%">
                                     <feGaussianBlur stdDeviation="5" result="coloredBlur" />
                                     <feMerge>
                                         <feMergeNode in="coloredBlur" />
@@ -1043,10 +1073,12 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                 dataKey="value"
                                 nameKey="name"
                                 outerRadius="85%"
-                                innerRadius="65%"
-                                paddingAngle={4}
-                                stroke="rgba(0,0,0,0.5)"
-                                strokeWidth={2}
+                                innerRadius={type === 'donut' ? "65%" : "0%"}
+                                paddingAngle={type === 'donut' ? 4 : 0}
+                                stroke="var(--bg-secondary)"
+                                strokeWidth={type === 'donut' ? 3 : 1}
+                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                labelLine={{ stroke: 'var(--text-muted)', strokeWidth: 1 }}
                             >
                                 {data.map((_, i) => (
                                     <Cell
@@ -1058,31 +1090,80 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                             </Pie>
                             <Tooltip
                                 contentStyle={{
-                                    background: 'rgba(10, 10, 15, 0.95)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: '16px'
+                                    background: 'var(--bg-card)',
+                                    border: '1px solid var(--border-default)',
+                                    borderRadius: '16px',
+                                    backdropFilter: 'blur(30px)'
                                 }}
                             />
                         </PieChart>
+                    ) : type === 'scatter' ? (
+                        <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" strokeOpacity={0.1} />
+                            <XAxis
+                                type={typeof data[0]?.x === 'number' ? 'number' : 'category'}
+                                dataKey="x"
+                                name={builderConfig.xAxis}
+                                stroke="var(--text-muted)"
+                                strokeOpacity={0.3}
+                                tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}
+                                angle={typeof data[0]?.x === 'number' ? 0 : -45}
+                                textAnchor={typeof data[0]?.x === 'number' ? 'middle' : 'end'}
+                                interval={0}
+                                axisLine={false}
+                                tickLine={false}
+                                tickFormatter={(val) => (typeof val === 'number' && val >= 1000) ? `${(val / 1000).toFixed(1)}k` : val}
+                                height={typeof data[0]?.x === 'number' ? 40 : 80}
+                            />
+                            <YAxis
+                                type="number"
+                                dataKey="y"
+                                name={builderConfig.yAxis}
+                                stroke="var(--text-muted)"
+                                strokeOpacity={0.3}
+                                tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}
+                                axisLine={false}
+                                tickLine={false}
+                                tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
+                            />
+                            <Tooltip
+                                cursor={{ strokeDasharray: '3 3' }}
+                                contentStyle={{
+                                    background: 'var(--bg-card)',
+                                    border: '1px solid var(--border-default)',
+                                    borderRadius: '16px',
+                                    backdropFilter: 'blur(30px)'
+                                }}
+                                content={<CustomTooltip />}
+                            />
+                            <Scatter name="Data Points" data={data} fill={finalColor} style={{ filter: 'drop-shadow(0 0 8px var(--primary-glow))' }}>
+                                {data.map((_, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Scatter>
+                        </ScatterChart>
                     ) : (
-                        <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+                        <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
                             <defs>
                                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={finalColor} stopOpacity={0.6} />
+                                    <stop offset="5%" stopColor={finalColor} stopOpacity={0.7} />
                                     <stop offset="95%" stopColor={finalColor} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" strokeOpacity={0.1} vertical={false} />
                             <XAxis
                                 dataKey="name"
-                                stroke="rgba(255,255,255,0.2)"
-                                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 600 }}
+                                stroke="var(--text-muted)"
+                                strokeOpacity={0.3}
+                                tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}
                                 axisLine={false}
                                 tickLine={false}
+                                height={40}
                             />
                             <YAxis
-                                stroke="rgba(255,255,255,0.2)"
-                                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 600 }}
+                                stroke="var(--text-muted)"
+                                strokeOpacity={0.3}
+                                tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}
                                 axisLine={false}
                                 tickLine={false}
                                 tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
@@ -1092,10 +1173,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                 type="monotone"
                                 dataKey="value"
                                 stroke={finalColor}
-                                strokeWidth={4}
+                                strokeWidth={5}
                                 fill={type === 'line' ? 'none' : "url(#areaGrad)"}
-                                dot={{ fill: finalColor, r: 4, strokeWidth: 2, stroke: '#000' }}
-                                activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
+                                dot={{ fill: finalColor, r: 5, strokeWidth: 2, stroke: 'var(--bg-main)' }}
+                                activeDot={{ r: 8, stroke: 'var(--primary)', strokeWidth: 2 }}
                             />
                         </AreaChart>
                     )}
@@ -2559,7 +2640,14 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
 
                                 {/* Preview Area */}
                                 <div className="flex-1 min-h-[650px] flex flex-col gap-6">
-                                    <div className="flex-1 bg-black/40 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 p-10 relative overflow-hidden flex flex-col inner-bevel shadow-2xl">
+                                    <div 
+                                        className="flex-1 backdrop-blur-3xl rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col inner-bevel shadow-2xl transition-all duration-500"
+                                        style={{ 
+                                            background: 'var(--bg-card)', 
+                                            border: '1px solid var(--border-default)',
+                                            boxShadow: 'var(--shadow-xl), inset 0 0 0 1px var(--glass-border)' 
+                                        }}
+                                    >
                                         <div className="absolute inset-0 glass-noise opacity-10 pointer-events-none" />
 
                                         {builderConfig.xAxis && builderConfig.yAxis ? (
@@ -2597,8 +2685,13 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested }:
                                                                     data: builderData,
                                                                     isStatic: true
                                                                 };
-                                                                (analysis as any).options = [...(analysis.options || []), newOpt];
-                                                                alert('Chart added to analysis reports!');
+                                                                if (onUpdate) {
+                                                                    onUpdate({
+                                                                        ...analysis,
+                                                                        options: [...(analysis.options || []), newOpt]
+                                                                    });
+                                                                    addToast('Chart added to strategic presentation', 'success');
+                                                                }
                                                             }}
                                                         >
                                                             <ArrowRight size={16} />

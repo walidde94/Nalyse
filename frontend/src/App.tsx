@@ -425,6 +425,10 @@ function AppContent() {
     setActiveTabId(newTab.id);
   }, [tabs]);
 
+  const updateTab = (id: string, updates: Partial<TabType>) => {
+    setTabs(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+  };
+
   const closeTab = useCallback((id: string) => {
     const newTabs = tabs.filter(t => t.id !== id);
     if (newTabs.length === 0) {
@@ -760,7 +764,7 @@ function AppContent() {
           throw new Error(msg);
         }
         const data = await res.json();
-        openTab('analysis' as any, file.filename || file.originalName || 'Analysis', data);
+        openTab('analysis' as any, file.originalName || file.filename || 'Analysis', data);
         return;
       } catch (e: any) {
         addToast(e.message || 'Failed to load cached analysis', 'error');
@@ -787,7 +791,7 @@ function AppContent() {
       // Background sync
       fetchFiles();
 
-      return { type: 'analysis', title: file.filename || file.originalName || 'Analysis', data };
+      return { type: 'analysis', title: file.originalName || file.filename || 'Analysis', data };
     });
   };
 
@@ -883,7 +887,7 @@ function AppContent() {
 
   const handleDeleteFile = async (file: FileData) => {
     if (!token) return;
-    if (!confirm(`Delete "${file.filename}"?`)) return;
+    if (!confirm(`Delete "${file.originalName || file.filename}"?`)) return;
     try {
       await fetch(`${API_URL}/api/files/${file.id}`, {
         method: 'DELETE',
@@ -1070,6 +1074,7 @@ function AppContent() {
                     analysis={tab.data}
                     onClose={() => closeTab(tab.id)}
                     onShare={handleShare}
+                    onUpdate={(newData) => updateTab(tab.id, { data: newData })}
                     onUpgradeRequested={() => openTab('settings', 'Settings', { initialTab: 'subscription' })}
                   />
                 )}

@@ -152,7 +152,7 @@ const RecentActivityItem = ({ file, onClick }: any) => (
                 {file.filename.endsWith('.csv') ? <FileSpreadsheet size={18} /> : <FileText size={18} />}
             </div>
             <div>
-                <h4 className="font-semibold text-sm text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors">{file.filename}</h4>
+                <h4 className="font-semibold text-sm text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors">{file.originalName || file.filename}</h4>
                 <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
                     <Clock size={12} />
                     <span>Updated {new Date(file.createdAt).toLocaleDateString()}</span>
