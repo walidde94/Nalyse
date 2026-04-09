@@ -71,7 +71,7 @@ export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: numb
    RADIAL PERFORMANCE GAUGE — Animated SVG ring gauge
    ────────────────────────────────────────────────────────── */
 
-export const PerformanceGauge = ({ value = 94, label = 'System Health' }: { value?: number; label?: string }) => {
+export const PerformanceGauge = ({ value = 94, label = 'System Health', onClick }: { value?: number; label?: string; onClick?: () => void }) => {
     const radius = 58;
     const stroke = 6;
     const circumference = 2 * Math.PI * radius;
@@ -83,7 +83,8 @@ export const PerformanceGauge = ({ value = 94, label = 'System Health' }: { valu
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, type: 'spring', stiffness: 200, damping: 20 }}
-            className="performance-gauge"
+            className={`performance-gauge ${onClick ? 'cursor-pointer hover:scale-[1.02] transition-transform' : ''}`}
+            onClick={onClick}
         >
             <svg width="140" height="140" viewBox="0 0 140 140">
                 {/* Background track */}

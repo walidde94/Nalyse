@@ -34,7 +34,7 @@ const BiView = React.lazy(() => import('./features/bi/BiView').then(m => ({ defa
 const MigrationView = React.lazy(() => import('./features/migration/MigrationView').then(m => ({ default: m.MigrationView })));
 
 const ConnectorsView = React.lazy(() => import('./features/sources/ConnectorsView').then(m => ({ default: m.ConnectorsView })));
-const ProjectsView = React.lazy(() => import('./features/projects/ProjectsView').then(m => ({ default: m.ProjectsView })));
+
 const DeveloperView = React.lazy(() => import('./features/developer/DeveloperView').then(m => ({ default: m.DeveloperView })));
 const RoadGraphView = React.lazy(() => import('./features/logistics/RoadGraphView'));
 const AgenticSystemsView = React.lazy(() => import('./features/agentic/AgenticSystemsView').then(m => ({ default: m.AgenticSystemsView })));
@@ -1065,7 +1065,7 @@ function AppContent() {
                     dragActive={dragActive}
                     handleDrag={(e: any) => { e.preventDefault(); setDragActive(e.type === 'dragenter' || e.type === 'dragover'); }}
                     handleDrop={(e: any) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files.length > 0) handleUpload(Array.from(e.dataTransfer.files)); }}
-                    onViewReport={() => openTab('projects', 'Strategic Board')}
+
                   />
                 )}
 
@@ -1112,9 +1112,7 @@ function AppContent() {
 
 
 
-                {tab.type === 'projects' && (
-                  <ProjectsView token={token || ''} />
-                )}
+
 
                 {tab.type === 'developer' && (
                   <DeveloperView token={token || ''} />
