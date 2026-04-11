@@ -5,7 +5,6 @@ import { useToast } from '../../components/ui/Toast';
 import { PricingView } from '../subscription/PricingView';
 import { PremiumGate } from '../../components/subscription/PremiumGate';
 import { ThemeStudio } from './ThemeStudio';
-import { ThemeStudio } from './ThemeStudio';
 
 // Icons
 const Icons = {

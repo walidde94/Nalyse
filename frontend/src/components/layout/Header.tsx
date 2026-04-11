@@ -548,7 +548,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     {[
                                         { title: 'Identity Matrix', sub: 'Profile & Security', icon: Fingerprint, color: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)', settingsTab: 'profile' as const },
-                                        { title: 'Core Settings', sub: 'System Parameters', icon: Settings, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', settingsTab: 'layout' as const }
+                                        { title: 'Core Settings', sub: 'System Parameters', icon: Settings, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', settingsTab: 'profile' as const }
                                     ].map((item, i) => (
                                         <button
                                             key={i}
