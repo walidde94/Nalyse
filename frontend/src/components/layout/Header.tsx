@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from '../common/Logo';
-import { Search, Bell, Activity, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint } from 'lucide-react';
+import { Search, Bell, Activity, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint, Compass } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useArchitect } from '../../contexts/ArchitectContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { UserProfile } from '../UserProfile';
+import { ArchitectNode } from './ArchitectNode';
 
-export type SettingsNavTab = 'profile' | 'api' | 'notifications' | 'subscription' | 'layout';
+export type SettingsNavTab = 'profile' | 'api' | 'notifications' | 'subscription';
 
 interface HeaderProps {
     theme: 'dark' | 'light' | 'midnight';
@@ -16,6 +18,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuToggle, onNavigate }) => {
     const { user } = useAuth();
+    const { isArchitectMode, toggleArchitectMode } = useArchitect();
     const { language, setLanguage, t } = useLanguage();
     const [showProfile, setShowProfile] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -112,112 +115,114 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 </div>
 
                 {/* Left: Logo + App Context */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
-                    <button
-                        className="mobile-only btn-ghost"
-                        onClick={onMenuToggle}
-                        style={{ padding: '8px', color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(15,23,42,0.7)', background: 'transparent', border: 'none' }}
-                    >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
-                        </svg>
-                    </button>
+                <ArchitectNode id="header-identity" label="Core Identity" isDraggable={false}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+                        <button
+                            className="mobile-only btn-ghost"
+                            onClick={onMenuToggle}
+                            style={{ padding: '8px', color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(15,23,42,0.7)', background: 'transparent', border: 'none' }}
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
+                            </svg>
+                        </button>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative' }}>
-                        {/* Glowing Logo Wrap */}
-                        <div style={{ position: 'relative' }}>
-                            <div style={{
-                                position: 'absolute', inset: '-8px', background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)',
-                                borderRadius: '50%', filter: 'blur(8px)', opacity: 0.6
-                            }} />
-                            <Logo />
-                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative' }}>
+                            {/* Glowing Logo Wrap */}
+                            <div style={{ position: 'relative' }}>
+                                <div style={{
+                                    position: 'absolute', inset: '-8px', background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)',
+                                    borderRadius: '50%', filter: 'blur(8px)', opacity: 0.6
+                                }} />
+                                <Logo />
+                            </div>
 
-                        <div className="desktop-only" style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                            paddingLeft: '16px',
-                            height: '36px'
-                        }}>
-                            <span style={{
-                                fontSize: '9px',
-                                fontWeight: 800,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.2em',
-                                background: 'linear-gradient(90deg, #94a3b8, #475569)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                marginBottom: '2px',
-                                textShadow: isDark ? '0 0 10px rgba(148, 163, 184, 0.2)' : 'none'
-                            }}>Synthesis Engine</span>
-                            <span style={{
-                                fontSize: '13px',
-                                fontWeight: 500,
-                                color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(15,23,42,0.6)',
+                            <div className="desktop-only" style={{
                                 display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                                paddingLeft: '16px',
+                                height: '36px'
                             }}>
-                                <span>{greeting.includes('header.') ? t('header.welcome') : greeting}</span>
                                 <span style={{
-                                    color: isDark ? '#fff' : '#0f172a',
-                                    fontWeight: 700,
-                                    textShadow: isDark ? '0 0 12px rgba(255,255,255,0.3)' : 'none',
-                                }}>{user?.firstName}</span>
-                            </span>
+                                    fontSize: '9px',
+                                    fontWeight: 800,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.2em',
+                                    background: 'linear-gradient(90deg, #94a3b8, #475569)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    marginBottom: '2px',
+                                    textShadow: isDark ? '0 0 10px rgba(148, 163, 184, 0.2)' : 'none'
+                                }}>Synthesis Engine</span>
+                                <span style={{
+                                    fontSize: '13px',
+                                    fontWeight: 500,
+                                    color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(15,23,42,0.6)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}>
+                                    <span>{greeting.includes('header.') ? t('header.welcome') : greeting}</span>
+                                    <span style={{
+                                        color: isDark ? '#fff' : '#0f172a',
+                                        fontWeight: 700,
+                                        textShadow: isDark ? '0 0 12px rgba(255,255,255,0.3)' : 'none',
+                                    }}>{user?.firstName}</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
-
-
-                </div>
+                </ArchitectNode>
 
                 {/* Right Side (Ultra-Premium Enterprise Telemetry) */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
 
                     {/* Living Telemetry Panel */}
-                    <div className="desktop-only" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '6px 14px',
-                        background: isMidnight ? `${customPrimary}10` : isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)',
-                        border: `1px solid ${isMidnight ? `${customPrimary}20` : isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0,0,0,0.05)'}`,
-                        borderRadius: '24px',
-                        boxShadow: isMidnight ? `inset 0 1px 3px rgba(10,5,0,0.3), 0 0 12px ${customPrimary}10` : isDark ? 'inset 0 1px 3px rgba(0,0,0,0.3), 0 0 10px rgba(16, 185, 129, 0.05)' : 'none'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', height: '14px', gap: '2px', opacity: 0.8 }}>
-                            {pulseTrack.map((val, idx) => (
-                                <div key={idx} style={{
-                                    width: '3px',
-                                    height: `${val}%`,
-                                    background: isMidnight ? (connStatus === 'online' ? customPrimary : '#fbbf24') : (connStatus === 'online' ? '#10b981' : '#f59e0b'),
-                                    borderRadius: '2px',
-                                    transition: 'height 0.3s ease'
-                                }} />
-                            ))}
+                    <ArchitectNode id="header-telemetry" label="Vital Streams" isDraggable={false}>
+                        <div className="desktop-only" style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '6px 14px',
+                            background: isMidnight ? `${customPrimary}10` : isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)',
+                            border: `1px solid ${isMidnight ? `${customPrimary}20` : isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0,0,0,0.05)'}`,
+                            borderRadius: '24px',
+                            boxShadow: isMidnight ? `inset 0 1px 3px rgba(10,5,0,0.3), 0 0 12px ${customPrimary}10` : isDark ? 'inset 0 1px 3px rgba(0,0,0,0.3), 0 0 10px rgba(16, 185, 129, 0.05)' : 'none'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-end', height: '14px', gap: '2px', opacity: 0.8 }}>
+                                {pulseTrack.map((val, idx) => (
+                                    <div key={idx} style={{
+                                        width: '3px',
+                                        height: `${val}%`,
+                                        background: isMidnight ? (connStatus === 'online' ? customPrimary : '#fbbf24') : (connStatus === 'online' ? '#10b981' : '#f59e0b'),
+                                        borderRadius: '2px',
+                                        transition: 'height 0.3s ease'
+                                    }} />
+                                ))}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <span style={{
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    fontFamily: 'var(--font-mono)',
+                                    color: isDark ? 'rgba(255,255,255,0.8)' : '#0f172a',
+                                    letterSpacing: '0.05em',
+                                    lineHeight: 1
+                                }}>{currentTime}</span>
+                                <span style={{
+                                    fontSize: '8px',
+                                    fontWeight: 900,
+                                    color: isMidnight ? (connStatus === 'online' ? customPrimary : '#fbbf24') : (connStatus === 'online' ? '#10b981' : '#f59e0b'),
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.15em',
+                                    marginTop: '2px',
+                                    textShadow: isMidnight ? (connStatus === 'online' ? `0 0 10px ${customPrimary}80` : 'none') : (connStatus === 'online' && isDark) ? '0 0 8px rgba(16, 185, 129, 0.5)' : 'none'
+                                }}>{connStatus === 'online' ? 'SYS_NOMINAL' : 'SYS_SYNC'}</span>
+                            </div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <span style={{
-                                fontSize: '11px',
-                                fontWeight: 800,
-                                fontFamily: 'var(--font-mono)',
-                                color: isDark ? 'rgba(255,255,255,0.8)' : '#0f172a',
-                                letterSpacing: '0.05em',
-                                lineHeight: 1
-                            }}>{currentTime}</span>
-                            <span style={{
-                                fontSize: '8px',
-                                fontWeight: 900,
-                                color: isMidnight ? (connStatus === 'online' ? customPrimary : '#fbbf24') : (connStatus === 'online' ? '#10b981' : '#f59e0b'),
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.15em',
-                                marginTop: '2px',
-                                textShadow: isMidnight ? (connStatus === 'online' ? `0 0 10px ${customPrimary}80` : 'none') : (connStatus === 'online' && isDark) ? '0 0 8px rgba(16, 185, 129, 0.5)' : 'none'
-                            }}>{connStatus === 'online' ? 'SYS_NOMINAL' : 'SYS_SYNC'}</span>
-                        </div>
-                    </div>
+                    </ArchitectNode>
 
                     <div style={{ width: '1px', height: '24px', background: isMidnight ? `${customPrimary}25` : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
 
@@ -382,6 +387,21 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             </div>
                         </button>
                     </div>
+
+                    {/* Architect Toggle */}
+                    <button
+                        onClick={toggleArchitectMode}
+                        className="nexus-icon-btn"
+                        title={isArchitectMode ? "Exit Architect mode" : "Enter Architect mode"}
+                        style={{
+                            borderColor: isArchitectMode ? 'var(--primary)' : undefined,
+                            background: isArchitectMode ? 'var(--primary-alpha)' : undefined,
+                            color: isArchitectMode ? 'var(--primary)' : undefined,
+                            boxShadow: isArchitectMode ? '0 0 15px var(--primary-glow)' : undefined
+                        }}
+                    >
+                        <Compass size={18} className={isArchitectMode ? 'animate-spin' : ''} style={{ animationDuration: '10s' }} />
+                    </button>
 
                     <div style={{ width: '1px', height: '24px', background: isMidnight ? `${customPrimary}25` : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
 

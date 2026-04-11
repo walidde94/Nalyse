@@ -5,7 +5,7 @@ import { useToast } from '../../components/ui/Toast';
 import { PricingView } from '../subscription/PricingView';
 import { PremiumGate } from '../../components/subscription/PremiumGate';
 import { ThemeStudio } from './ThemeStudio';
-import { LayoutWorkspaceSettings } from './LayoutWorkspaceSettings';
+import { ThemeStudio } from './ThemeStudio';
 
 // Icons
 const Icons = {
@@ -28,7 +28,7 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
     const { addToast } = useToast();
     const { t } = useLanguage();
 
-    const [activeTab, setActiveTab] = useState<'profile' | 'api' | 'notifications' | 'subscription' | 'layout'>(
+    const [activeTab, setActiveTab] = useState<'profile' | 'api' | 'notifications' | 'subscription'>(
         initialTab || 'profile'
     );
 
@@ -217,7 +217,6 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
     const TABS = [
         { id: 'profile', label: 'Account', icon: <Icons.User /> },
         { id: 'subscription', label: 'Billing & Plans', icon: <Icons.CreditCard /> },
-        { id: 'layout', label: 'Layout & workspace', icon: <Icons.Layout /> },
         { id: 'api', label: 'API Keys', icon: <Icons.Key /> },
         { id: 'notifications', label: 'Notifications', icon: <Icons.Bell /> }
     ];
@@ -414,7 +413,6 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
                         </div>
                     )}
 
-                    {activeTab === 'layout' && <LayoutWorkspaceSettings t={t} />}
 
                     {/* API Tab */}
                     {activeTab === 'api' && (

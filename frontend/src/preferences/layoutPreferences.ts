@@ -63,6 +63,8 @@ export type LayoutPreferencesV1 = {
     /** @deprecated use tabBarDensity; still written for compatibility */
     compactTabBar: boolean;
     tabBarDensity: TabBarDensity;
+    blur: number;
+    opacity: number;
 };
 
 const DEFAULT_PREFS: LayoutPreferencesV1 = {
@@ -74,41 +76,29 @@ const DEFAULT_PREFS: LayoutPreferencesV1 = {
     sidebarCollapsedDefault: false,
     compactTabBar: false,
     tabBarDensity: 'comfortable',
+    blur: 16,
+    opacity: 0.85,
 };
 
 function normalizeGroupOrder(raw: unknown): string[] {
     const valid = new Set<string>(DEFAULT_GROUP_ORDER);
-    const arr = Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string' && valid.has(x)) : [];
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const g of arr) {
-        if (!seen.has(g)) {
-            seen.add(g);
-            out.push(g);
-        }
-    }
-    for (const g of DEFAULT_GROUP_ORDER) {
-        if (!seen.has(g)) out.push(g);
-    }
-    return out;
+    const arr = Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string' && valid.has(x)) : null;
+    
+    // If we have a saved order, respect it exactly (don't add back missing items automatically)
+    // unless it's empty, in which case we use defaults.
+    if (arr && arr.length > 0) return arr;
+    
+    return [...DEFAULT_GROUP_ORDER];
 }
 
 function normalizeItemOrder(group: SidebarGroupKey, raw: unknown): string[] {
     const defaults = [...DEFAULT_ITEMS[group]];
     const valid = new Set(defaults);
-    const arr = Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string' && valid.has(x)) : [];
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const id of arr) {
-        if (!seen.has(id)) {
-            seen.add(id);
-            out.push(id);
-        }
-    }
-    for (const id of defaults) {
-        if (!seen.has(id)) out.push(id);
-    }
-    return out;
+    const arr = Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string' && valid.has(x)) : null;
+    
+    if (arr && arr.length > 0) return arr;
+    
+    return defaults;
 }
 
 function normalizeFooterOrder(raw: unknown): string[] {
@@ -160,6 +150,8 @@ export function loadLayoutPreferences(): LayoutPreferencesV1 {
             sidebarCollapsedDefault: !!parsed.sidebarCollapsedDefault,
             tabBarDensity,
             compactTabBar: tabBarDensity === 'compact' || tabBarDensity === 'minimal',
+            blur: typeof parsed.blur === 'number' ? parsed.blur : 16,
+            opacity: typeof parsed.opacity === 'number' ? parsed.opacity : 0.85,
         };
     } catch {
         return { ...DEFAULT_PREFS };

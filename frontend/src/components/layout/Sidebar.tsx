@@ -1,4 +1,5 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
+import { Reorder } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -11,6 +12,8 @@ import {
     getInitialSidebarCollapsed,
     type SidebarGroupKey,
 } from '../../preferences/layoutPreferences';
+import { useArchitect } from '../../contexts/ArchitectContext';
+import { ArchitectNode } from './ArchitectNode';
 
 import {
     Home,
@@ -152,6 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     const [hoveredItem, setHoveredItem] = useState<string | null>(null);
     const { t } = useLanguage();
     const { user } = useAuth();
+    const { isArchitectMode } = useArchitect();
     const isPro = user && ((user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro');
 
     useEffect(() => {
@@ -173,6 +177,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     const groupKeys = prefs.groupOrder.filter((g): g is SidebarGroupKey =>
         (DEFAULT_GROUP_ORDER as readonly string[]).includes(g)
     );
+
+    const handleReorderGroups = (newOrder: string[]) => {
+        const p = loadLayoutPreferences();
+        saveLayoutPreferences({ ...p, groupOrder: newOrder as SidebarGroupKey[] });
+    };
+
+    const handleHideGroup = useCallback((groupKey: SidebarGroupKey) => {
+        const p = loadLayoutPreferences();
+        // For simplicity, we'll just remove it from groupOrder for now since that's what we map over
+        const newOrder = p.groupOrder.filter(g => g !== groupKey);
+        saveLayoutPreferences({ ...p, groupOrder: newOrder });
+    }, []);
 
     const expandedWidth = 280;
     const collapsedWidth = 76;
@@ -214,39 +230,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
             </div>
 
             {/* Brand + collapse */}
-            <div className="sidebar-neural-brand">
-                {!collapsed ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                        <div className="sidebar-neural-mark">
+            <ArchitectNode id="sb-brand" label="Command Identity">
+                <div className="sidebar-neural-brand">
+                    {!collapsed ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                            <div className="sidebar-neural-mark">
+                                N
+                            </div>
+                            <div className="sidebar-neural-title-stack">
+                                <span className="sidebar-neural-title">Nalyse</span>
+                                <span className="sidebar-neural-tag">Neural Command Rail</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="sidebar-neural-mark" style={{ margin: '0 auto' }}>
                             N
                         </div>
-                        <div className="sidebar-neural-title-stack">
-                            <span className="sidebar-neural-title">Nalyse</span>
-                            <span className="sidebar-neural-tag">Neural Command Rail</span>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="sidebar-neural-mark" style={{ margin: '0 auto' }}>
-                        N
-                    </div>
-                )}
-                <button
-                    type="button"
-                    onClick={() => persistCollapsed(!collapsed)}
-                    className="desktop-only btn btn-icon btn-ghost btn-sm"
-                    title={collapsed ? 'Expand rail' : 'Collapse rail'}
-                    style={{
-                        borderRadius: 10,
-                        width: 34,
-                        height: 34,
-                        flexShrink: 0,
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        background: 'rgba(0,0,0,0.2)',
-                    }}
-                >
-                    {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-                </button>
-            </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => persistCollapsed(!collapsed)}
+                        className="desktop-only btn btn-icon btn-ghost btn-sm"
+                        title={collapsed ? 'Expand rail' : 'Collapse rail'}
+                        style={{
+                            borderRadius: 10,
+                            width: 34,
+                            height: 34,
+                            flexShrink: 0,
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            background: 'rgba(0,0,0,0.2)',
+                        }}
+                    >
+                        {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+                    </button>
+                </div>
+            </ArchitectNode>
 
             <nav
                 className="custom-scrollbar sidebar-neural-nav-scroll"
@@ -275,32 +293,52 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     onClick={() => onViewChange('landing')}
                 />
 
-                {groupKeys.map((groupKey) => {
-                    const themeIdx = GROUP_THEME_INDEX[groupKey];
-                    const theme = SECTOR_THEMES[themeIdx] ?? SECTOR_THEMES[0];
-                    const itemIds = orderedGroupItemIds(groupKey, prefs);
-                    if (itemIds.length === 0) return null;
-                    return (
-                        <div key={groupKey} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <SectorHeader title={GROUP_TITLES[groupKey]} theme={theme} collapsed={collapsed} />
-                            {itemIds.map((itemId) => (
-                                <NavItem
-                                    key={itemId}
-                                    id={itemId}
-                                    label={sidebarNavLabel(itemId, t)}
-                                    icon={NAV_ICONS[itemId] ?? <Activity size={18} strokeWidth={2} />}
-                                    isActive={currentView === itemId}
-                                    collapsed={collapsed}
-                                    hovered={hoveredItem === itemId}
-                                    sectorAccent={theme.accent}
-                                    sectorGlow={theme.glow}
-                                    onHover={setHoveredItem}
-                                    onClick={() => onViewChange(itemId)}
-                                />
-                            ))}
-                        </div>
-                    );
-                })}
+                <Reorder.Group
+                    axis="y"
+                    values={groupKeys}
+                    onReorder={handleReorderGroups}
+                    style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}
+                >
+                    {groupKeys.map((groupKey) => {
+                        const themeIdx = GROUP_THEME_INDEX[groupKey];
+                        const theme = SECTOR_THEMES[themeIdx] ?? SECTOR_THEMES[0];
+                        const itemIds = orderedGroupItemIds(groupKey, prefs);
+                        if (itemIds.length === 0) return null;
+                        return (
+                            <Reorder.Item
+                                key={groupKey}
+                                value={groupKey}
+                                dragListener={isArchitectMode}
+                                style={{ position: 'relative' }}
+                            >
+                                <ArchitectNode
+                                    id={`sb-sector-${groupKey}`}
+                                    label={`${GROUP_TITLES[groupKey]} Sector`}
+                                    onRemove={() => handleHideGroup(groupKey)}
+                                >
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        <SectorHeader title={GROUP_TITLES[groupKey]} theme={theme} collapsed={collapsed} />
+                                        {itemIds.map((itemId) => (
+                                            <NavItem
+                                                key={itemId}
+                                                id={itemId}
+                                                label={sidebarNavLabel(itemId, t)}
+                                                icon={NAV_ICONS[itemId] ?? <Activity size={18} strokeWidth={2} />}
+                                                isActive={currentView === itemId}
+                                                collapsed={collapsed}
+                                                hovered={hoveredItem === itemId}
+                                                sectorAccent={theme.accent}
+                                                sectorGlow={theme.glow}
+                                                onHover={setHoveredItem}
+                                                onClick={() => onViewChange(itemId)}
+                                            />
+                                        ))}
+                                    </div>
+                                </ArchitectNode>
+                            </Reorder.Item>
+                        );
+                    })}
+                </Reorder.Group>
 
                 <div style={{ flex: 1, minHeight: 8 }} />
 
@@ -356,57 +394,59 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
             )}
 
             {!isPro && (
-                <div style={{ padding: '10px 12px 14px', position: 'relative', zIndex: 2 }}>
-                    <div
-                        className="sidebar-upgrade-holo"
-                        style={{ cursor: 'pointer', padding: collapsed ? 12 : 16 }}
-                        onClick={() => onViewChange({ id: 'settings', data: { initialTab: 'subscription' } })}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                onViewChange({ id: 'settings', data: { initialTab: 'subscription' } });
-                            }
-                        }}
-                    >
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                            {!collapsed ? (
-                                <>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                        <Sparkles size={14} className="text-[var(--primary)]" />
-                                        <span style={{
-                                            fontSize: 9, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase',
-                                            color: 'var(--primary)',
-                                        }}>Neural Pro</span>
+                <ArchitectNode id="sb-upgrade" label="Upgrade Core">
+                    <div style={{ padding: '10px 12px 14px', position: 'relative', zIndex: 2 }}>
+                        <div
+                            className="sidebar-upgrade-holo"
+                            style={{ cursor: 'pointer', padding: collapsed ? 12 : 16 }}
+                            onClick={() => onViewChange({ id: 'settings', data: { initialTab: 'subscription' } })}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    onViewChange({ id: 'settings', data: { initialTab: 'subscription' } });
+                                }
+                            }}
+                        >
+                            <div style={{ position: 'relative', zIndex: 1 }}>
+                                {!collapsed ? (
+                                    <>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                            <Sparkles size={14} className="text-[var(--primary)]" />
+                                            <span style={{
+                                                fontSize: 9, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase',
+                                                color: 'var(--primary)',
+                                            }}>Neural Pro</span>
+                                        </div>
+                                        <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4, fontFamily: 'var(--font-heading)' }}>
+                                            Unlock full stack
+                                        </h4>
+                                        <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.45 }}>
+                                            50GB storage & unlimited datasets
+                                        </p>
+                                        <button
+                                            type="button"
+                                            style={{
+                                                width: '100%', marginTop: 12, padding: '8px 12px',
+                                                background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+                                                color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer',
+                                                fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+                                                boxShadow: '0 6px 20px var(--primary-glow)',
+                                            }}
+                                        >
+                                            Upgrade now
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div style={{ display: 'flex', justifyContent: 'center', padding: 4 }}>
+                                        <Sparkles size={20} style={{ color: 'var(--primary)' }} />
                                     </div>
-                                    <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4, fontFamily: 'var(--font-heading)' }}>
-                                        Unlock full stack
-                                    </h4>
-                                    <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.45 }}>
-                                        50GB storage & unlimited datasets
-                                    </p>
-                                    <button
-                                        type="button"
-                                        style={{
-                                            width: '100%', marginTop: 12, padding: '8px 12px',
-                                            background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                                            color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer',
-                                            fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
-                                            boxShadow: '0 6px 20px var(--primary-glow)',
-                                        }}
-                                    >
-                                        Upgrade now
-                                    </button>
-                                </>
-                            ) : (
-                                <div style={{ display: 'flex', justifyContent: 'center', padding: 4 }}>
-                                    <Sparkles size={20} style={{ color: 'var(--primary)' }} />
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
+                </ArchitectNode>
             )}
         </aside>
     );

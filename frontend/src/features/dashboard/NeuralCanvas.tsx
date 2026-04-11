@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useArchitect } from '../../contexts/ArchitectContext';
 
 interface Particle {
     x: number;
@@ -23,10 +24,12 @@ interface Connection {
  * that creates a living, breathing neural-network effect behind the dashboard.
  */
 export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
+    const { isArchitectMode, activeNodeId } = useArchitect();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationRef = useRef<number>(0);
     const particlesRef = useRef<Particle[]>([]);
     const mouseRef = useRef({ x: -1000, y: -1000 });
+    const targetRef = useRef<{ x: number, y: number } | null>(null);
     const timeRef = useRef(0);
 
     const COLORS = [
@@ -38,15 +41,16 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
     ];
 
     const initParticles = useCallback((width: number, height: number) => {
-        const count = Math.min(Math.floor((width * height) / 18000) * intensity, 120);
+        const baseCount = Math.min(Math.floor((width * height) / 18000) * intensity, 120);
+        const count = isArchitectMode ? baseCount * 1.5 : baseCount;
         const particles: Particle[] = [];
 
         for (let i = 0; i < count; i++) {
             particles.push({
                 x: Math.random() * width,
                 y: Math.random() * height,
-                vx: (Math.random() - 0.5) * 0.3,
-                vy: (Math.random() - 0.5) * 0.3,
+                vx: (Math.random() - 0.5) * (isArchitectMode ? 0.6 : 0.3),
+                vy: (Math.random() - 0.5) * (isArchitectMode ? 0.6 : 0.3),
                 radius: Math.random() * 2 + 0.5,
                 color: COLORS[Math.floor(Math.random() * COLORS.length)],
                 alpha: Math.random() * 0.5 + 0.1,
@@ -55,7 +59,30 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
             });
         }
         return particles;
-    }, [intensity]);
+    }, [intensity, isArchitectMode]);
+
+    // Track active node position for magnetism
+    useEffect(() => {
+        if (!isArchitectMode || !activeNodeId) {
+            targetRef.current = null;
+            return;
+        }
+
+        const updateTarget = () => {
+            const el = document.querySelector(`[data-node-id="${activeNodeId}"]`);
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                targetRef.current = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+            }
+        };
+
+        updateTarget();
+        const interval = setInterval(updateTarget, 100);
+        return () => clearInterval(interval);
+    }, [isArchitectMode, activeNodeId]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -83,8 +110,9 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
         };
         canvas.addEventListener('mousemove', handleMouse);
 
-        const CONNECTION_DIST = 150;
+        const CONNECTION_DIST = isArchitectMode ? 200 : 150;
         const MOUSE_DIST = 200;
+        const TARGET_DIST = 400;
 
         const animate = () => {
             const w = canvas.offsetWidth;
@@ -114,14 +142,26 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
                 const mdy = mouseRef.current.y - p.y;
                 const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
                 if (mdist < MOUSE_DIST) {
-                    const force = (MOUSE_DIST - mdist) / MOUSE_DIST * 0.008;
+                    const force = (MOUSE_DIST - mdist) / MOUSE_DIST * (isArchitectMode ? 0.02 : 0.008);
                     p.vx += mdx * force;
                     p.vy += mdy * force;
                 }
 
+                // Target (Active Node) Magnetism
+                if (targetRef.current) {
+                    const tdx = targetRef.current.x - p.x;
+                    const tdy = targetRef.current.y - p.y;
+                    const tdist = Math.sqrt(tdx * tdx + tdy * tdy);
+                    if (tdist < TARGET_DIST) {
+                        const tforce = (TARGET_DIST - tdist) / TARGET_DIST * 0.012;
+                        p.vx += tdx * tforce;
+                        p.vy += tdy * tforce;
+                    }
+                }
+
                 // Damping
-                p.vx *= 0.998;
-                p.vy *= 0.998;
+                p.vx *= isArchitectMode ? 0.99 : 0.998;
+                p.vy *= isArchitectMode ? 0.99 : 0.998;
 
                 // Find connections
                 for (let j = i + 1; j < particles.length; j++) {
@@ -133,7 +173,7 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
                         connections.push({
                             from: i,
                             to: j,
-                            alpha: (1 - dist / CONNECTION_DIST) * 0.15,
+                            alpha: (1 - dist / CONNECTION_DIST) * (isArchitectMode ? 0.25 : 0.15),
                         });
                     }
                 }
@@ -150,7 +190,7 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(q.x, q.y);
                 ctx.strokeStyle = gradient;
-                ctx.lineWidth = 0.5;
+                ctx.lineWidth = isArchitectMode ? 0.8 : 0.5;
                 ctx.stroke();
             }
 
@@ -162,7 +202,7 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
 
                 // Glow
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, radius * 4, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, radius * (isArchitectMode ? 6 : 4), 0, Math.PI * 2);
                 ctx.fillStyle = `${p.color}${alpha * 0.1})`;
                 ctx.fill();
 
@@ -173,11 +213,11 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
                 ctx.fill();
             }
 
-            // Draw flowing data streams (subtle horizontal lines)
-            const streamCount = 3;
+            // Draw flowing data streams
+            const streamCount = isArchitectMode ? 5 : 3;
             for (let s = 0; s < streamCount; s++) {
                 const y = (h / (streamCount + 1)) * (s + 1);
-                const phase = timeRef.current * 0.5 + s * 2;
+                const phase = timeRef.current * (isArchitectMode ? 0.8 : 0.5) + s * 2;
                 const waveY = y + Math.sin(phase) * 20;
 
                 ctx.beginPath();
@@ -190,13 +230,15 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
 
                 const streamGrad = ctx.createLinearGradient(0, waveY, w, waveY);
                 streamGrad.addColorStop(0, 'rgba(59, 130, 246, 0)');
-                streamGrad.addColorStop(0.3, 'rgba(59, 130, 246, 0.03)');
-                streamGrad.addColorStop(0.5, 'rgba(139, 92, 246, 0.05)');
-                streamGrad.addColorStop(0.7, 'rgba(6, 182, 212, 0.03)');
+                if (isArchitectMode) {
+                    streamGrad.addColorStop(0.5, 'rgba(99, 102, 241, 0.15)');
+                } else {
+                    streamGrad.addColorStop(0.5, 'rgba(139, 92, 246, 0.05)');
+                }
                 streamGrad.addColorStop(1, 'rgba(6, 182, 212, 0)');
 
                 ctx.strokeStyle = streamGrad;
-                ctx.lineWidth = 1;
+                ctx.lineWidth = isArchitectMode ? 2 : 1;
                 ctx.stroke();
             }
 
@@ -210,7 +252,7 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
             window.removeEventListener('resize', resize);
             canvas.removeEventListener('mousemove', handleMouse);
         };
-    }, [initParticles]);
+    }, [initParticles, isArchitectMode]);
 
     return (
         <canvas
@@ -223,7 +265,8 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
                 height: '100%',
                 zIndex: 0,
                 pointerEvents: 'none',
-                opacity: 0.6,
+                opacity: isArchitectMode ? 0.8 : 0.6,
+                transition: 'opacity 1s ease',
             }}
         />
     );

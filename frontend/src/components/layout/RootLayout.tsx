@@ -1,5 +1,8 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
+import { ArchitectNode } from './ArchitectNode';
+import { ArchitectPanel } from './ArchitectPanel';
+import { useArchitect } from '../../contexts/ArchitectContext';
 
 interface RootLayoutProps {
     children: React.ReactNode;
@@ -18,6 +21,8 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
     isMobileMenuOpen,
     onCloseMobileMenu
 }) => {
+    const { isArchitectMode } = useArchitect();
+
     return (
         <div className="flex w-full" style={{
             height: 'calc(100vh - 64px)',
@@ -40,10 +45,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
             }} />
 
             {/* Desktop Sidebar */}
-            <div
-                className={isMobileMenuOpen ? 'mobile-sidebar-open' : 'sidebar-mobile-hidden desktop-visible'}
-                style={{ height: '100%', zIndex: 1000, position: 'relative' }}
-            >
+            <div className={isMobileMenuOpen ? 'mobile-sidebar-open' : 'sidebar-mobile-hidden desktop-visible'} style={{ height: '100%', zIndex: 1000 }}>
                 <Sidebar
                     currentView={currentView}
                     onViewChange={(view) => {
@@ -59,7 +61,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
             )}
 
             {/* Main Content */}
-            <main className="flex-col w-full mobile-full-width" style={{
+            <div className="flex-col w-full mobile-full-width" style={{
                 display: 'flex',
                 flexDirection: 'column',
                 flex: 1,
@@ -79,7 +81,8 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
                 >
                     {children}
                 </div>
-            </main>
+            </div>
+            <ArchitectPanel />
         </div>
     );
 };

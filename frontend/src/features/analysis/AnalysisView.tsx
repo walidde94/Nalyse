@@ -170,10 +170,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 import { API_URL } from '../../config';
+import { useArchitect } from '../../contexts/ArchitectContext';
+import { ArchitectNode } from '../../components/layout/ArchitectNode';
+import { DiagnosticOverlay } from '../../components/layout/DiagnosticOverlay';
 
 export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, onUpdate }: AnalysisViewProps) => {
     const { token } = useAuth();
     const { addToast } = useToast();
+    const { layoutState, layoutMode } = useArchitect();
 
     const [activeTab, setActiveTab] = useState<'overview' | 'data' | 'sql' | 'insights' | 'presentation' | 'builder' | 'advanced' | 'graph' | 'map' | 'python' | 'ai' | 'anomaly' | 'forecast'>('overview');
     const [isNLQueryOpen, setIsNLQueryOpen] = useState(false);
@@ -1488,15 +1492,18 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
         <div className="flex h-screen" style={{ background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
 
             {/* Sidebar Navigation */}
+            <ArchitectNode id="an-sidebar" label="Navigation Matrix" isDraggable={false}>
             <div
-                className={`flex-col sidebar-mobile-hidden sidebar-responsive ${activeTab === 'presentation' ? 'hidden' : 'flex'}`}
+                className={`sidebar-compact transition-all duration-300 ${isSidebarCollapsed ? 'w-16' : 'w-72'}`}
                 style={{
-                    width: isSidebarCollapsed ? '80px' : '260px',
-                    borderRight: '1px solid var(--border-default)',
                     background: 'var(--bg-sidebar)',
-                    padding: '24px 0',
-                    transition: 'width 0.3s ease',
-                    position: 'relative'
+                    borderRight: '1px solid var(--border-subtle)',
+                    display: activeTab === 'presentation' ? 'none' : 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    zIndex: 20,
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}
             >
                 {/* Header / Collapse Toggle */}
@@ -1757,11 +1764,13 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     </button>
                 </div>
             </div>
+            </ArchitectNode>
 
             {/* Main Content Area */}
             <div className="flex-col" style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
                 <div className="flex-1" style={{ overflowY: 'auto' }} id="analysis-content">
                     {/* Top Header - Moved Inside for Scrollbar Alignment */}
+                    <ArchitectNode id="an-headers" label="Strategic Meta Headers">
                     {/* ===== Enterprise Global Header (Parity with Kibana) ===== */}
                     <div className={`flex flex-col md:flex-row justify-between items-start md:items-center ${activeTab === 'presentation' ? 'hidden' : 'flex'}`} style={{
                         minHeight: '48px',
@@ -1859,7 +1868,9 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             </button>
                         </div>
                     </div>
+                    </ArchitectNode>
 
+                    <ArchitectNode id="an-search" label="Elastic Command Bar">
                     {/* ===== NEW: Elastic Search Tool Bar ===== */}
                     <div className={activeTab === 'presentation' ? 'hidden' : 'block'} style={{ position: 'sticky', top: '72px', zIndex: 30, background: 'var(--bg-app)', borderBottom: '1px solid var(--border-subtle)' }}>
                         <ElasticSearch
@@ -1905,6 +1916,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             onAddFilter={() => setShowFilterPanel(true)}
                         />
                     </div>
+                    </ArchitectNode>
 
                     <div style={{ width: '100%', padding: 'clamp(16px, 3vw, 24px)' }}>
 
@@ -1915,359 +1927,87 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     <p style={{ color: '#ccc' }}>Generated on {new Date().toLocaleString()}</p>
                                 </div>
 
-                                {/* Smart Business Metrics */}
-                                <div className="flex-responsive gap-4">
-                                    {memoizedMetrics.map((metric, idx) => (
-
-                                        <motion.div
-                                            key={`metric-${idx}`}
-                                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                                            transition={{
-                                                delay: idx * 0.15,
-                                                type: "spring",
-                                                stiffness: 200,
-                                                damping: 20
-                                            }}
-                                            whileHover={{
-                                                scale: 1.02,
-                                                transition: { duration: 0.2 }
-                                            }}
-                                            className="card flex-1 group cursor-pointer"
-                                            style={{
-                                                background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(255,255,255,0.02) 100%)',
-                                                border: '1px solid var(--border-subtle)',
-                                                position: 'relative',
-                                                overflow: 'hidden',
-                                                backdropFilter: 'blur(10px)',
-                                                minHeight: '140px'
-                                            }}
-                                        >
-                                            {/* Animated gradient background */}
-                                            <motion.div
-                                                animate={{
-                                                    opacity: [0.05, 0.15, 0.05],
-                                                    scale: [1, 1.2, 1],
-                                                }}
-                                                transition={{
-                                                    duration: 4,
-                                                    repeat: Infinity,
-                                                    ease: "easeInOut"
-                                                }}
-                                                style={{
-                                                    position: 'absolute',
-                                                    top: '-50%',
-                                                    right: '-50%',
-                                                    width: '200%',
-                                                    height: '200%',
-                                                    background: `radial-gradient(circle, ${metric.color}40 0%, transparent 70%)`,
-                                                    pointerEvents: 'none'
-                                                }}
-                                            />
-
-                                            {/* Top gradient accent */}
-                                            <div style={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, ${metric.color}, ${metric.color}80, transparent)`,
-                                                opacity: 0.8
-                                            }} />
-
-                                            {/* Corner decoration */}
-                                            <div style={{
-                                                position: 'absolute',
-                                                top: '12px',
-                                                right: '12px',
-                                                width: '48px',
-                                                height: '48px',
-                                                borderRadius: '12px',
-                                                background: `${metric.color}10`,
-                                                border: `1px solid ${metric.color}20`,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontSize: '24px',
-                                                transition: 'all 0.3s ease'
-                                            }}
-                                                className="group-hover:scale-110 group-hover:rotate-12"
-                                            >
-                                                {metric.icon}
-                                            </div>
-
-                                            <div style={{ position: 'relative', zIndex: 1 }}>
-                                                {/* Label */}
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <span className="text-xs font-bold uppercase tracking-wider text-secondary" style={{
-                                                        letterSpacing: '0.1em'
-                                                    }}>
-                                                        {metric.label}
-                                                    </span>
-                                                </div>
-
-                                                {/* Value */}
-                                                <motion.div
-                                                    className="text-h1 font-mono mb-3"
-                                                    style={{
-                                                        fontSize: 'clamp(28px, 4vw, 40px)',
-                                                        fontWeight: 700,
-                                                        color: metric.color,
-                                                        textShadow: `0 0 30px ${metric.color}30, 0 2px 4px rgba(0,0,0,0.3)`,
-                                                        lineHeight: 1,
-                                                        letterSpacing: '-0.02em'
-                                                    }}
-                                                    initial={{ opacity: 0, x: -20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: idx * 0.15 + 0.2 }}
-                                                >
-                                                    {metric.value}
-                                                </motion.div>
-
-                                                {/* Trend badge */}
-                                                <div className="flex items-center gap-2">
-                                                    <motion.div
-                                                        initial={{ opacity: 0, scale: 0.8 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        transition={{ delay: idx * 0.15 + 0.3 }}
-                                                        style={{
-                                                            fontSize: '10px',
-                                                            fontWeight: 800,
-                                                            padding: '6px 10px',
-                                                            borderRadius: '8px',
-                                                            background: `${metric.color}15`,
-                                                            color: metric.color,
-                                                            border: `1px solid ${metric.color}30`,
-                                                            textTransform: 'uppercase',
-                                                            letterSpacing: '0.05em',
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px',
-                                                            boxShadow: `0 2px 8px ${metric.color}20`
-                                                        }}
-                                                    >
-                                                        {metric.trend.includes('+') && <span>↗</span>}
-                                                        {metric.trend.includes('-') && <span>↘</span>}
-                                                        <span>{metric.trend}</span>
-                                                    </motion.div>
-                                                </div>
-
-                                                {/* Bottom sparkline decoration */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    bottom: '0',
-                                                    left: '0',
-                                                    right: '0',
-                                                    height: '2px',
-                                                    background: `linear-gradient(90deg, transparent, ${metric.color}40, transparent)`,
-                                                    opacity: 0.5
-                                                }} />
-                                            </div>
-
-                                            {/* Hover glow effect */}
-                                            <div
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                                style={{
-                                                    position: 'absolute',
-                                                    inset: 0,
-                                                    background: `radial-gradient(circle at center, ${metric.color}05, transparent)`,
-                                                    pointerEvents: 'none'
-                                                }}
-                                            />
-                                        </motion.div>
-                                    ))}
-                                </div>
-
-                                {analysis.processingLog?.length > 0 && (
-                                    <NexusAuditTrail
-                                        processingLog={analysis.processingLog}
-                                        showFullAudit={showFullAudit}
-                                        setShowFullAudit={setShowFullAudit}
-                                        onNavigateToData={() => setActiveTab('data')}
-                                    />
-                                )}
-
-                                {/* Warning when filters result in 0 rows */}
-                                {filteredData.length === 0 && activeFiltersList.length > 0 && (
-                                    <div className="card" style={{
-                                        background: 'rgba(239, 68, 68, 0.1)',
-                                        border: '1px solid var(--danger)',
-                                        padding: '16px',
-                                        marginBottom: '24px'
-                                    }}>
-                                        <div className="flex items-start gap-3">
-                                            <AlertCircle color="var(--danger)" />
-                                            <div className="flex-col gap-2">
-                                                <h4 className="text-h3" style={{ color: 'var(--danger)' }}>No Data Matches Your Filters</h4>
-                                                <p className="text-sm">
-                                                    Your current filter combination is too restrictive and returns 0 rows.
-                                                    Try removing some filters or selecting different values.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-
-
-
-                                {/* Filter Panel Toggle & Panel */}
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-h3">Data Exploration</h3>
-                                    <button
-                                        className="btn-secondary"
-                                        onClick={() => setShowFilterPanel(!showFilterPanel)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                                        </svg>
-                                        {showFilterPanel ? 'Hide Filters' : 'Show Filters'}
-                                    </button>
-                                </div>
-
-                                {showFilterPanel && (
-                                    <div className="card">
-                                        <h4 className="text-h3 mb-4">Filter by Dimensions</h4>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-                                            {dimensions.slice(0, 5).map(dim => {
-                                                const uniqueValues = Array.from(new Set(localData.map(r => r[dim]))).slice(0, 20);
-                                                return (
-                                                    <div key={dim} className="flex-col gap-2">
-                                                        <label className="text-sm font-medium">{dim}</label>
-                                                        <select
-                                                            className="input"
-                                                            onChange={(e) => {
-                                                                if (e.target.value) {
-                                                                    addFilter(dim, e.target.value);
-                                                                    e.target.value = '';
-                                                                }
-                                                            }}
-                                                            defaultValue=""
+                                {(() => {
+                                    const sections = [
+                                        {
+                                            id: 'an-metrics',
+                                            label: 'Strategic Analytics Matrix',
+                                            component: (
+                                                <div className="flex-responsive gap-4">
+                                                    {memoizedMetrics.map((metric, idx) => (
+                                                        <motion.div
+                                                            key={`metric-${idx}`}
+                                                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                                                            transition={{ delay: idx * 0.1, type: "spring", stiffness: 200, damping: 20 }}
+                                                            whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                                                            className="card flex-1 group cursor-pointer"
+                                                            style={{ background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid var(--border-subtle)', position: 'relative', overflow: 'hidden', backdropFilter: 'blur(10px)', minHeight: '140px' }}
                                                         >
-                                                            <option value="">Select value...</option>
-                                                            {uniqueValues.map((val: any) => (
-                                                                <option key={val} value={val}>{val}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Date Range Filter */}
-                                        {analysis.summary?.columnTypes && Object.entries(analysis.summary.columnTypes as any).some(([_, type]) => type === 'date') && (
-                                            <div className="mt-6">
-                                                <h4 className="text-h3 mb-4">Filter by Date Range</h4>
-                                                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-                                                    <div className="flex-col gap-2">
-                                                        <label className="text-sm font-medium">Date Column</label>
-                                                        <select
-                                                            className="input w-full"
-                                                            value={dateRange.column || ''}
-                                                            onChange={(e) => setDateRange(prev => ({ ...prev, column: e.target.value }))}
-                                                        >
-                                                            <option value="">Select column...</option>
-                                                            {Object.entries(analysis.summary?.columnTypes || {})
-                                                                .filter(([_, type]) => type === 'date')
-                                                                .map(([col]) => (
-                                                                    <option key={col} value={col}>{col}</option>
-                                                                ))
-                                                            }
-                                                        </select>
-                                                    </div>
-                                                    <div className="flex-col gap-2">
-                                                        <label className="text-sm font-medium">Start Date</label>
-                                                        <input
-                                                            type="date"
-                                                            className="input w-full"
-                                                            value={dateRange.start || ''}
-                                                            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                                                            disabled={!dateRange.column}
-                                                        />
-                                                    </div>
-                                                    <div className="flex-col gap-2">
-                                                        <label className="text-sm font-medium">End Date</label>
-                                                        <input
-                                                            type="date"
-                                                            className="input w-full"
-                                                            value={dateRange.end || ''}
-                                                            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                                                            disabled={!dateRange.column}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-
-                                {analysis.keyFindings && analysis.keyFindings.length > 0 && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="card"
-                                        style={{ border: '1px solid var(--border-highlight)' }}
-                                    >
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(210, 153, 34, 0.1)', color: 'var(--warning)' }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                                            </div>
-                                            <h3 className="text-h3" style={{ color: 'var(--text-primary)' }}>Strategic Findings</h3>
-                                        </div>
-                                        <div className="grid gap-3" style={{ gridTemplateColumns: '1fr' }}>
-                                            <AnimatePresence mode="popLayout">
-                                                {analysis.keyFindings && analysis.keyFindings.slice(0, 5).map((insight: any, i: number) => (
-                                                    <motion.div
-                                                        key={i}
-                                                        initial={{ opacity: 0, x: -10 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        exit={{ opacity: 0, scale: 0.95 }}
-                                                        transition={{ delay: i * 0.1 }}
-                                                        style={{ background: 'var(--bg-surface-hover)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}
-                                                    >
-                                                        <div style={{ marginTop: '3px', color: insight.type === 'anomaly' ? 'var(--danger)' : 'var(--warning)', flexShrink: 0 }}>
-                                                            {insight.type === 'anomaly' ? (
-                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                                                            ) : (
-                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.09 14c.18-.9.27-1.85.27-2.83 0-3.9-3.13-7.11-7-7-3.87 0-7 3.21-7 7.11 0 .98.09 1.93.27 2.83.6 3.01 2.33 5.37 4.73 6.36V22h4v-1.64c2.4-.99 4.13-3.35 4.73-6.36z"></path></svg>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex-col gap-1">
-                                                            <p className="text-sm" style={{ color: 'var(--text-primary)', lineHeight: '1.5' }}>
-                                                                {insight.description.replace(/\*\*/g, '').replace(/^💡\s*/, '')}
-                                                            </p>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-[10px] uppercase tracking-wider opacity-50">{insight.type}</span>
-                                                                <span className="text-[10px] opacity-30">•</span>
-                                                                <span className="text-[10px] font-mono" style={{ color: 'var(--success)' }}>Confidence: {(insight.confidence * 100).toFixed(0)}%</span>
+                                                            <motion.div animate={{ opacity: [0.05, 0.15, 0.05], scale: [1, 1.2, 1] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} style={{ position: 'absolute', top: '-50%', right: '-50%', width: '200%', height: '200%', background: `radial-gradient(circle, ${metric.color}40 0%, transparent 70%)`, pointerEvents: 'none' }} />
+                                                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, ${metric.color}, ${metric.color}80, transparent)`, opacity: 0.8 }} />
+                                                            <div style={{ position: 'absolute', top: '12px', right: '12px', width: '48px', height: '48px', borderRadius: '12px', background: `${metric.color}10`, border: `1px solid ${metric.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }} className="group-hover:scale-110 group-hover:rotate-12">{metric.icon}</div>
+                                                            <div style={{ position: 'relative', zIndex: 1 }}>
+                                                                <div className="flex items-center gap-2 mb-3"><span className="text-xs font-bold uppercase tracking-wider text-secondary" style={{ letterSpacing: '0.1em' }}>{metric.label}</span></div>
+                                                                <motion.div className="text-h1 font-mono mb-3" style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, color: metric.color, textShadow: `0 0 30px ${metric.color}30, 0 2px 4px rgba(0,0,0,0.3)`, lineHeight: 1, letterSpacing: '-0.02em' }}>{metric.value}</motion.div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div style={{ fontSize: '10px', fontWeight: 800, padding: '6px 10px', borderRadius: '8px', background: `${metric.color}15`, color: metric.color, border: `1px solid ${metric.color}30`, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                                        {metric.trend.includes('+') && <span>↗</span>}
+                                                                        {metric.trend.includes('-') && <span>↘</span>}
+                                                                        <span>{metric.trend}</span>
+                                                                    </div>
+                                                                </div>
                                                             </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            )
+                                        },
+                                        {
+                                            id: 'an-findings',
+                                            label: 'Intelligence Pulse',
+                                            component: analysis.keyFindings && analysis.keyFindings.length > 0 ? (
+                                                <div className="card" style={{ border: '1px solid var(--border-highlight)' }}>
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(210, 153, 34, 0.1)', color: 'var(--warning)' }}>
+                                                            <BrainCircuit size={20} />
                                                         </div>
-                                                    </motion.div>
-                                                ))}
-                                            </AnimatePresence>
-                                        </div>
-                                    </motion.div>
-                                )}
+                                                        <h3 className="text-h3" style={{ color: 'var(--text-primary)' }}>Strategic Findings</h3>
+                                                    </div>
+                                                    <div className="grid gap-3" style={{ gridTemplateColumns: '1fr' }}>
+                                                        {analysis.keyFindings.slice(0, 5).map((insight: any, i: number) => (
+                                                            <div key={i} style={{ background: 'var(--bg-surface-hover)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                                                <p className="text-sm" style={{ color: 'var(--text-primary)', lineHeight: '1.5' }}>{insight.description.replace(/\*\*/g, '')}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : null
+                                        },
+                                        {
+                                            id: 'an-charts',
+                                            label: 'Synthesis Grid',
+                                            component: (
+                                                <div className="grid gap-6" style={{ display: layoutMode === 'grid' ? 'grid' : 'flex', flexDirection: 'column', gridTemplateColumns: layoutMode === 'grid' ? 'repeat(auto-fit, minmax(450px, 1fr))' : '1fr', gap: '24px' }}>
+                                                    {analysis.options?.map((opt: any, i: number) => renderChart(opt, i, memoizedChartsData[i]))}
+                                                </div>
+                                            )
+                                        }
+                                    ];
 
-                                <div className="flex justify-between items-end mt-4 mb-2">
-                                    <div className="flex-col gap-1">
-                                        <h3 className="text-h2">Multi-Dimensional Synthesis</h3>
-                                        <p className="text-sm text-secondary">Advanced visual mapping derived from the latest neural synchronization.</p>
-                                    </div>
-                                    <div className="text-xs font-mono opacity-50">
-                                        Layer: {analysis.type || 'Standard Intelligence'}
-                                    </div>
-                                </div>
-                                <motion.div
-                                    layout
-                                    className="grid gap-6"
-                                    style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}
-                                >
-                                    {analysis.options?.map((opt: any, i: number) => renderChart(opt, i, memoizedChartsData[i]))}
-                                </motion.div>
+                                    return sections
+                                        .sort((a, b) => (layoutState[a.id]?.order || 0) - (layoutState[b.id]?.order || 0))
+                                        .map(section => (
+                                            <ArchitectNode 
+                                                key={section.id} 
+                                                id={section.id} 
+                                                label={section.label}
+                                                style={{ flex: layoutState[section.id]?.width === '50%' && layoutMode === 'grid' ? '1 1 calc(50% - 12px)' : '1 1 100%' }}
+                                            >
+                                                {section.component}
+                                            </ArchitectNode>
+                                        ));
+                                })()}
                             </div>
                         )}
 
@@ -3017,6 +2757,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 onClose={() => setIsNLQueryOpen(false)}
             />
 
+            <DiagnosticOverlay />
         </div >
     );
 };

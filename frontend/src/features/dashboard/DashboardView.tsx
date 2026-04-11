@@ -35,13 +35,17 @@ import {
     Layers,
     Target,
     Cpu,
+    PieChart,
 } from 'lucide-react';
 import { calculatePulse } from './pulseEngine';
 import { useAuth } from '../../contexts/AuthContext';
+import { useArchitect } from '../../contexts/ArchitectContext';
 import { NeuralCanvas } from './NeuralCanvas';
 import { AmbientStatusStrip, OrbitalMetric, IntelligenceTimeline, PerformanceGauge, QuickActionsBar, LiveClock } from './CommandHUD';
 import { ProHeroBadge } from './ProBeastMode';
 import { NeuralDropZone } from './NeuralDropZone';
+import { ArchitectNode } from '../../components/layout/ArchitectNode';
+import { DiagnosticOverlay } from '../../components/layout/DiagnosticOverlay';
 
 
 // --- SUB-COMPONENTS for Dashboard ---
@@ -452,6 +456,8 @@ export const DashboardView = ({
     onViewReport
 }: any) => {
     const { refreshProfile, syncSubscription } = useAuth();
+    const { user } = useAuth();
+    const { layoutMode, layoutState } = useArchitect();
     const maxStorageMB = userPlan === 'pro' ? 10240 : userPlan === 'enterprise' ? 1000000 : 100;
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -751,488 +757,188 @@ export const DashboardView = ({
             <NeuralCanvas intensity={0.8} />
             <div className="scanline-overlay" />
 
-            {/* --- AMBIENT STATUS STRIP --- */}
-            <AmbientStatusStrip fileCount={fileCount} storageUsed={totalStorage} />
-
-             {/* --- CINEMATIC HERO SECTION --- */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="command-hero"
-            >
-                {/* Ambient orbs */}
-                <div className="hero-ambient-orb orb-1" />
-                <div className="hero-ambient-orb orb-2" />
-                <div className="hero-ambient-orb orb-3" />
-
-                {/* Animated mesh background */}
-                <div className="hero-mesh-bg" />
-
-                <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '32px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 400px' }}>
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2, duration: 0.6 }}
-                            className="hero-greeting-sup"
-                        >
-                            <span className="sup-line" style={{ width: '40px' }} />
-                            {(userPlan === 'pro' || userPlan === 'enterprise') && <ProHeroBadge />}
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2, duration: 0.8 }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}
-                        >
-                            <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--primary)', opacity: 0.2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <div style={{ width: '5px', height: '5px', borderRadius: '1px', background: 'var(--primary)', animation: 'pulse 2s infinite' }} />
-                            </div>
-                            <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.25em' }}>Synthesis Active</span>
-                        </motion.div>
-
-                         <motion.h1
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3, duration: 0.8 }}
-                            className="hero-greeting"
-                            style={{ fontSize: '48px', letterSpacing: '-0.04em', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '16px', position: 'relative' }}
-                        >
-                            <span style={{ opacity: 0.9 }}>Neural Command</span> <span style={{ color: 'var(--primary)', fontWeight: 200, margin: '0 4px' }}>/</span> <span className="name-highlight" style={{ 
-                                background: 'linear-gradient(135deg, var(--primary, #3b82f6) 0%, #8b5cf6 100%)', 
-                                WebkitBackgroundClip: 'text', 
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                display: 'inline-block',
-                                verticalAlign: 'bottom',
-                                fontWeight: 950
-                            }}>
-                                {firstName || userEmail?.split('@')[0]}
-                            </span>
-                            <motion.div 
-                                animate={{ height: ['10px', '24px', '10px'] }} 
-                                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                                style={{ width: '2px', background: 'var(--primary)', opacity: 0.8, display: 'inline-block', marginLeft: '12px' }} 
-                            />
-                        </motion.h1>
-
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5, duration: 0.6 }}
-                            className="hero-subtitle"
-                            style={{ fontSize: '15px', color: 'var(--text-primary)', opacity: 0.6, maxWidth: '650px', lineHeight: '1.7', fontWeight: 500 }}
-                        >
-                            {metrics.revenueGrowth === '—' || metrics.revenueGrowth === 'Waiting for Data' ? (
-                                <>Core systems in <code style={{ color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace' }}>L0</code> standby. Currently <strong>analyzing {fileCount} neural {fileCount === 1 ? 'topology' : 'topologies'}</strong>. Latency is sub-ms. Intelligence systems are nominal.</>
-                            ) : (
-                                <>Processing <code style={{ color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace' }}>{fileCount}</code> active streams. Intelligence indicates a <strong style={{ color: 'var(--text-primary)' }}>{metrics.revenueGrowth}</strong> optimization trajectory. <span style={{ color: '#10b981' }}>Stability: 99.8%</span> peak performance.</>
-                            )}
-                        </motion.p>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.7, duration: 0.5 }}
-                            className="hero-stats-row"
-                        >
-                            <div className="hero-stat" style={{ background: 'var(--bg-card, rgba(255,255,255,0.02))', border: '1px solid var(--border-subtle, rgba(0,0,0,0.05))' }}>
-                                <span className="hero-stat-label" style={{ color: 'var(--text-secondary, rgba(0,0,0,0.4))' }}>Datasets</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span className="hero-stat-value" style={{ color: 'var(--text-primary, #000)' }}>{fileCount}</span>
-                                    {(userPlan === 'pro' || userPlan === 'enterprise') && (
-                                        <span style={{ fontSize: '12px', fontWeight: 900, color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>∞</span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="hero-stat" style={{ background: 'var(--bg-card, rgba(255,255,255,0.02))', border: '1px solid var(--border-subtle, rgba(0,0,0,0.05))' }}>
-                                <span className="hero-stat-label" style={{ color: 'var(--text-secondary, rgba(0,0,0,0.4))' }}>Storage</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span className="hero-stat-value" style={{ color: 'var(--text-primary, #000)' }}>{totalStorage}<span style={{ fontSize: 12, opacity: 0.5, marginLeft: 2 }}>MB</span></span>
-                                    <div style={{ width: '40px', height: '4px', background: 'var(--border-subtle, rgba(0,0,0,0.05))', borderRadius: '2px', overflow: 'hidden' }}>
-                                        <motion.div 
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${Math.min(100, (totalStorageNum / maxStorageMB) * 100)}%` }}
-                                            style={{ height: '100%', background: '#3b82f6' }} 
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-
-                    {/* Right side: Performance Gauge + Clock */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.6, duration: 0.8 }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}
-                    >
-                        <PerformanceGauge 
-                            value={metrics.systemHealth} 
-                            label="System Health" 
-                            onClick={() => setShowTelemetry(true)}
-                        />
-                        <LiveClock />
-                    </motion.div>
-                </div>
-
-            </motion.div>
-
-            {/* --- QUICK ACTIONS COMMAND PALETTE --- */}
-
-
-            {/* --- ORBITAL METRIC ORBS --- */}
-
-
-
-
-            {/* --- ACTIVE WORKSPACE (DATASET MATRIX) --- */}
-            <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-12 relative"
-                style={{ zIndex: 20 }}
-            >
-                {/* Advanced Workspace Header Card */}
-                <div style={{
-                    padding: '24px 32px',
-                    borderRadius: '24px',
-                    background: 'linear-gradient(145deg, var(--bg-surface) 0%, var(--bg-card) 100%)',
-                    border: '1px solid var(--border-subtle)',
-                    boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '24px',
-                    marginBottom: '32px'
-                }}>
-                    <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-
-                        {/* Title & Badge */}
-                        <div className="flex items-center gap-4">
-                            <div style={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '16px',
-                                background: 'linear-gradient(135deg, var(--primary) 0%, #a855f7 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#fff',
-                                boxShadow: '0 10px 20px -5px rgba(168, 85, 247, 0.5), inset 0 2px 0 rgba(255,255,255,0.3)'
-                            }}>
-                                <CloudUpload size={24} strokeWidth={2.5} />
-                            </div>
-                            <div className="flex flex-col">
-                                <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Active Workspace</h3>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
-                                    <span style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>
-                                        {fileCount} Data Topologies Loaded
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Ultra-Premium Action Bar */}
-                        <div className="flex flex-wrap gap-4 items-center w-full xl:w-auto">
-
-                            {/* Purge Button (Contextual) */}
-                            <AnimatePresence>
-                                {selectedFiles.size > 0 && (
-                                    <motion.button
-                                        initial={{ opacity: 0, scale: 0.9, width: 0 }}
-                                        animate={{ opacity: 1, scale: 1, width: 'auto' }}
-                                        exit={{ opacity: 0, scale: 0.9, width: 0 }}
-                                        onClick={handleBulkDelete}
-                                        style={{
-                                            height: '48px',
-                                            padding: '0 20px',
-                                            borderRadius: '14px',
-                                            background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
-                                            color: '#fff',
-                                            border: 'none',
-                                            fontWeight: 900,
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.1em',
-                                            fontSize: '12px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            boxShadow: '0 10px 20px -5px rgba(239, 68, 68, 0.5)',
-                                            cursor: 'pointer',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        <Trash2 size={16} /> Delete ({selectedFiles.size})
-                                    </motion.button>
-                                )}
-                            </AnimatePresence>
-
-                            {/* Search Glass Input */}
-                            <div className="relative flex-1 xl:w-72 xl:flex-none">
-                                <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                                <input
-                                    type="text"
-                                    placeholder="Search data nodes..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        height: '48px',
-                                        padding: '0 20px 0 44px',
-                                        borderRadius: '14px',
-                                        background: 'color-mix(in srgb, var(--text-primary) 5%, transparent)',
-                                        border: '1px solid var(--border-subtle)',
-                                        color: 'var(--text-primary)',
-                                        fontSize: '14px',
-                                        fontWeight: 600,
-                                        outline: 'none',
-                                        transition: 'all 0.2s',
-                                    }}
-                                    onFocus={(e) => {
-                                        e.target.style.background = 'color-mix(in srgb, var(--primary) 5%, transparent)';
-                                        e.target.style.borderColor = 'var(--primary)';
-                                        e.target.style.boxShadow = '0 0 0 4px var(--primary-glow)';
-                                    }}
-                                    onBlur={(e) => {
-                                        e.target.style.background = 'color-mix(in srgb, var(--text-primary) 5%, transparent)';
-                                        e.target.style.borderColor = 'var(--border-subtle)';
-                                        e.target.style.boxShadow = 'none';
-                                    }}
-                                />
-                            </div>
-
-                            {/* View Toggle Segmented Control */}
-                            <div style={{
-                                display: 'flex',
-                                padding: '4px',
-                                background: 'color-mix(in srgb, var(--text-primary) 5%, transparent)',
-                                borderRadius: '14px',
-                                border: '1px solid var(--border-subtle)',
-                                gap: '4px'
-                            }}>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    style={{
-                                        height: '38px',
-                                        padding: '0 16px',
-                                        borderRadius: '10px',
-                                        border: 'none',
-                                        background: viewMode === 'list' ? 'var(--bg-card)' : 'transparent',
-                                        color: viewMode === 'list' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                                        boxShadow: viewMode === 'list' ? '0 4px 10px rgba(0,0,0,0.1)' : 'none',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        fontWeight: 800,
-                                        fontSize: '12px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    <LayoutList size={16} /> List
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    style={{
-                                        height: '38px',
-                                        padding: '0 16px',
-                                        borderRadius: '10px',
-                                        border: 'none',
-                                        background: viewMode === 'grid' ? 'var(--bg-card)' : 'transparent',
-                                        color: viewMode === 'grid' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                                        boxShadow: viewMode === 'grid' ? '0 4px 10px rgba(0,0,0,0.1)' : 'none',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        fontWeight: 800,
-                                        fontSize: '12px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    <LayoutGrid size={16} /> Grid
-                                </button>
-                            </div>
-
-                            {/* Divider */}
-                            <div style={{ width: '1px', height: '32px', background: 'var(--border-subtle)', margin: '0 8px' }} className="hidden xl:block" />
-
-                            {/* Action Buttons */}
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setShowCreateGroup(true)}
-                                style={{
-                                    height: '48px',
-                                    padding: '0 20px',
-                                    borderRadius: '14px',
-                                    background: 'var(--bg-card)',
-                                    border: '1px solid var(--border-subtle)',
-                                    color: 'var(--text-primary)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    fontWeight: 800,
-                                    fontSize: '13px',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <Folder size={18} style={{ color: 'var(--primary)' }} /> Group
-                            </motion.button>
-
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                id="tour-upload-btn"
-                                onClick={() => document.getElementById('file-input')?.click()}
-                                disabled={isOverLimit}
-                                style={{
-                                    height: '48px',
-                                    padding: '0 24px',
-                                    borderRadius: '14px',
-                                    background: 'linear-gradient(135deg, var(--primary) 0%, #a855f7 100%)',
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    color: '#fff',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    fontWeight: 900,
-                                    fontSize: '13px',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.1em',
-                                    boxShadow: '0 10px 20px -5px rgba(168, 85, 247, 0.4), inset 0 2px 0 rgba(255,255,255,0.2)',
-                                    cursor: isOverLimit ? 'not-allowed' : 'pointer',
-                                    opacity: isOverLimit ? 0.5 : 1
-                                }}
-                            >
-                                <Database size={18} /> Upload Dataset
-                            </motion.button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* File Explorer Content */}
-                <div className="flex-col gap-6">
-                    {/* Groups */}
-                    {groups.map((group: any) => {
-                        const groupFiles = groupedFiles[group.id] || [];
-                        if (groupFiles.length === 0 && searchTerm) return null;
-                        return (
-                            <div key={group.id} className="flex-col gap-3 mb-6">
-                                <div className="flex justify-between items-center px-4 py-2 bg-[var(--bg-card)]/50 rounded-xl border border-[var(--border-subtle)] border-dashed">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-1.5 bg-[var(--primary-subtle)] rounded-lg text-primary">
-                                            <Folder size={14} />
+            {/* --- ARCHITECTURAL STAGE WRAPPER --- */}
+            <div style={{
+                display: 'flex',
+                flexDirection: layoutMode === 'vertical' ? 'column' : 'row',
+                flexWrap: 'wrap',
+                gap: '24px',
+                width: '100%',
+                alignItems: 'flex-start'
+            }}>
+                {/* --- AMBIENT STATUS STRIP --- */}
+                {/* --- DYNAMIC COMMAND MATRIX --- */}
+                {(() => {
+                    // Define core segment definitions
+                    const coreNodes = [
+                        {
+                            id: 'db-status-strip',
+                            label: 'Ambient Telemetry',
+                            isDraggable: false,
+                            component: <AmbientStatusStrip fileCount={fileCount} storageUsed={totalStorage} />
+                        },
+                        {
+                            id: 'db-hero',
+                            label: 'Strategic Command Hub',
+                            component: (
+                                <div style={{ 
+                                    padding: '32px', borderRadius: '24px', 
+                                    background: 'var(--bg-card, rgba(255,255,255,0.03))',
+                                    border: '1px solid var(--border-subtle, rgba(0,0,0,0.05))',
+                                    boxShadow: '0 20px 50px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
+                                    backdropFilter: 'blur(10px)', position: 'relative', overflow: 'hidden', width: '100%'
+                                }}>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, var(--primary), transparent)', opacity: 0.3 }} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <h1 style={{ fontSize: '42px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                                                Neural Command <span style={{ color: 'var(--primary)', fontWeight: 300 }}>/</span> {firstName || userEmail?.split('@')[0]}
+                                            </h1>
+                                            <p style={{ opacity: 0.6 }}>Workspace stability: 99.8%. {fileCount} topologies active.</p>
                                         </div>
-                                        <span className="font-black text-xs uppercase tracking-widest text-[var(--text-primary)]">{group.name}</span>
-                                        <div className="px-2 py-0.5 rounded-full bg-[var(--bg-surface)] text-[10px] font-bold opacity-60">
-                                            {groupFiles.length} Assets
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                            <PerformanceGauge value={metrics.systemHealth} label="Health" />
+                                            <LiveClock />
                                         </div>
                                     </div>
-                                    <button className="btn btn-icon btn-ghost btn-xs text-danger/50 hover:text-danger" onClick={() => confirm('Delete group?') && onDeleteGroup(group.id)}>
-                                        <Trash2 size={12} />
-                                    </button>
                                 </div>
-                                {viewMode === 'list' ? (
-                                    <div className="card overflow-hidden p-0 border border-[var(--border-subtle)] shadow-xl">
-                                        <FileTable
-                                            files={groupFiles}
-                                            groups={groups}
-                                            selectedFiles={selectedFiles}
-                                            onToggleSelection={toggleSelection}
-                                            onToggleAll={() => toggleAll(groupFiles)}
-                                            onFileSelect={onFileSelect}
-                                            onToggleFavorite={onToggleFavorite}
-                                            onDeleteFile={onDeleteFile}
-                                            onUpdateFileGroup={onUpdateFileGroup}
-                                            onViewMeta={setViewingMeta}
-                                        />
-                                    </div>
-                                ) : (
-                                    <FileGrid
-                                        files={groupFiles}
-                                        selectedFiles={selectedFiles}
-                                        onToggleSelection={toggleSelection}
-                                        onFileSelect={onFileSelect}
-                                        onDeleteFile={onDeleteFile}
-                                        onToggleFavorite={onToggleFavorite}
-                                        onViewMeta={setViewingMeta}
-                                    />
-                                )}
-                            </div>
-                        );
-                    })}
-
-                    {/* Ungrouped */}
-                    {(groupedFiles['ungrouped'].length > 0 || groups.length === 0) && (
-                        <div className="flex-col gap-3">
-                            {groups.length > 0 && (
-                                <div className="flex items-center gap-3 px-4 py-2 bg-[var(--bg-card)]/50 rounded-xl border border-[var(--border-subtle)] border-dashed">
-                                    <div className="p-1.5 bg-[var(--bg-surface)] rounded-lg text-tertiary">
-                                        <FileText size={14} />
-                                    </div>
-                                    <span className="font-black text-xs uppercase tracking-widest text-secondary">Uncategorized Intelligence</span>
-                                </div>
-                            )}
-                            {viewMode === 'list' ? (
-                                <div className="card overflow-hidden p-0 border border-[var(--border-subtle)] shadow-xl">
-                                    {groupedFiles['ungrouped'].length === 0 ? (
-                                        <div className="p-20 text-center flex flex-col items-center gap-4">
-                                            <div className="p-4 bg-[var(--bg-surface)] rounded-full text-tertiary opacity-20">
-                                                <CloudUpload size={48} />
+                            )
+                        },
+                        {
+                            id: 'db-workspace',
+                            label: 'Analytical Topology Matrix',
+                            component: (
+                                <section className="relative w-full" style={{ zIndex: 20 }}>
+                                    <div style={{
+                                        padding: '24px 32px', borderRadius: '24px',
+                                        background: 'linear-gradient(145deg, var(--bg-surface) 0%, var(--bg-card) 100%)',
+                                        border: '1px solid var(--border-subtle)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)',
+                                        display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px'
+                                    }}>
+                                        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+                                            <div className="flex items-center gap-4">
+                                                <div style={{
+                                                    width: '48px', height: '48px', borderRadius: '16px',
+                                                    background: 'linear-gradient(135deg, var(--primary) 0%, #a855f7 100%)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
+                                                }}>
+                                                    <CloudUpload size={24} strokeWidth={2.5} />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Active Workspace</h3>
+                                                    <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                                                        {fileCount} Data Topologies Loaded
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-secondary font-bold">No data assets detected in this sector.</p>
-                                                <p className="text-xs text-tertiary mt-1">Upload your first dataset to initiate neural mapping.</p>
+
+                                            <div className="flex flex-wrap gap-4 items-center w-full xl:w-auto">
+                                                <div className="relative flex-1 xl:w-72 xl:flex-none">
+                                                    <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+                                                    <input type="text" placeholder="Search data nodes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', height: '48px', padding: '0 20px 0 44px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none' }} />
+                                                </div>
+                                                <div style={{ display: 'flex', padding: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
+                                                    <button onClick={() => setViewMode('list')} style={{
+                                                        padding: '8px 16px', borderRadius: '10px', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                                                        background: viewMode === 'list' ? 'var(--primary)' : 'transparent',
+                                                        color: viewMode === 'list' ? '#fff' : 'var(--text-secondary)',
+                                                        boxShadow: viewMode === 'list' ? '0 4px 12px var(--primary-alpha)' : 'none'
+                                                    }}>List</button>
+                                                    <button onClick={() => setViewMode('grid')} style={{
+                                                        padding: '8px 16px', borderRadius: '10px', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                                                        background: viewMode === 'grid' ? 'var(--primary)' : 'transparent',
+                                                        color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)',
+                                                        boxShadow: viewMode === 'grid' ? '0 4px 12px var(--primary-alpha)' : 'none'
+                                                    }}>Grid</button>
+                                                </div>
+                                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => document.getElementById('file-input')?.click()} disabled={isOverLimit} style={{
+                                                    background: 'linear-gradient(135deg, var(--primary) 0%, #c026d3 100%)',
+                                                    color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '14px',
+                                                    fontWeight: 900, fontSize: '13px', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em',
+                                                    boxShadow: '0 8px 24px var(--primary-alpha)',
+                                                    opacity: isOverLimit ? 0.5 : 1,
+                                                }}>
+                                                    Upload Dataset
+                                                </motion.button>
                                             </div>
                                         </div>
-                                    ) : (
-                                        <FileTable
-                                            files={groupedFiles['ungrouped']}
-                                            groups={groups}
-                                            selectedFiles={selectedFiles}
-                                            onToggleSelection={toggleSelection}
-                                            onToggleAll={() => toggleAll(groupedFiles['ungrouped'])}
-                                            onFileSelect={onFileSelect}
-                                            onToggleFavorite={onToggleFavorite}
-                                            onDeleteFile={onDeleteFile}
-                                            onUpdateFileGroup={onUpdateFileGroup}
-                                            onViewMeta={setViewingMeta}
-                                        />
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="bg-[var(--bg-card)]/30 p-4 rounded-2xl border border-[var(--border-subtle)]">
-                                    <FileGrid
-                                        files={groupedFiles['ungrouped']}
-                                        selectedFiles={selectedFiles}
-                                        onToggleSelection={toggleSelection}
-                                        onFileSelect={onFileSelect}
-                                        onDeleteFile={onDeleteFile}
-                                        onToggleFavorite={onToggleFavorite}
-                                        onViewMeta={setViewingMeta}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </motion.section>
+                                    </div>
 
-            {/* --- INTELLIGENCE FEED --- */}
-            <div className="command-center-grid">
-                <IntelligenceTimeline files={safeFiles} />
+                                    <div className="flex-col gap-6">
+                                        {groups.map((group: any) => {
+                                            const groupFiles = groupedFiles[group.id] || [];
+                                            if (groupFiles.length === 0 && searchTerm) return null;
+                                            return (
+                                                <div key={group.id} className="flex-col gap-3 mb-6">
+                                                    <div className="flex justify-between items-center px-4 py-2 bg-[var(--bg-card)]/50 rounded-xl border border-[var(--border-subtle)] border-dashed">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-1.5 bg-[var(--primary-subtle)] rounded-lg text-primary"><Folder size={14} /></div>
+                                                            <span className="font-black text-xs uppercase tracking-widest">{group.name}</span>
+                                                        </div>
+                                                        <button className="btn btn-icon btn-ghost btn-xs text-danger/50" onClick={() => onDeleteGroup(group.id)}><Trash2 size={12} /></button>
+                                                    </div>
+                                                    {viewMode === 'list' ? (
+                                                        <div className="card overflow-hidden p-0 border border-[var(--border-subtle)] shadow-xl">
+                                                            <FileTable files={groupFiles} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupFiles)} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onUpdateFileGroup={onUpdateFileGroup} onViewMeta={setViewingMeta} />
+                                                        </div>
+                                                    ) : (
+                                                        <FileGrid files={groupFiles} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onFileSelect={onFileSelect} onDeleteFile={onDeleteFile} onToggleFavorite={onToggleFavorite} onViewMeta={setViewingMeta} />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        {(groupedFiles['ungrouped'].length > 0 || groups.length === 0) && (
+                                            <div className="flex-col gap-3">
+                                                {viewMode === 'list' ? (
+                                                    <div className="card overflow-hidden p-0 border border-[var(--border-subtle)] shadow-xl">
+                                                        <FileTable files={groupedFiles['ungrouped']} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupedFiles['ungrouped'])} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onUpdateFileGroup={onUpdateFileGroup} onViewMeta={setViewingMeta} />
+                                                    </div>
+                                                ) : (
+                                                    <FileGrid files={groupedFiles['ungrouped']} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onFileSelect={onFileSelect} onDeleteFile={onDeleteFile} onToggleFavorite={onToggleFavorite} onViewMeta={setViewingMeta} />
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+                            )
+                        },
+                        {
+                            id: 'db-intelligence',
+                            label: 'Intelligence Stream',
+                            component: <IntelligenceTimeline files={safeFiles} />
+                        }
+                    ];
+
+                    const dynamicNodes = Object.values(layoutState)
+                        .filter(node => node.id.startsWith('ext-') && node.visible)
+                        .map(node => ({
+                            id: node.id,
+                            label: node.label,
+                            component: (
+                                <div style={{ 
+                                    background: 'var(--bg-card)', borderRadius: '24px', padding: '32px',
+                                    border: '1px solid var(--border-subtle)', minHeight: '180px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%'
+                                }}>
+                                    {node.label} Stream Configured
+                                </div>
+                            )
+                        }));
+
+                    const allNodes = [...coreNodes, ...dynamicNodes];
+                    return allNodes
+                        .sort((a, b) => (layoutState[a.id]?.order || 0) - (layoutState[b.id]?.order || 0))
+                        .map(node => (
+                            <ArchitectNode 
+                                key={node.id} id={node.id} label={node.label}
+                                isDraggable={(node as any).isDraggable !== false}
+                                style={{ flex: layoutState[node.id]?.width === '50%' && layoutMode === 'grid' ? '1 1 calc(50% - 12px)' : '1 1 100%' }}
+                            >
+                                {node.component}
+                            </ArchitectNode>
+                        ));
+                })()}
             </div>
-
-            {/* Intelligence Grid Removed */}
 
             {/* Hidden Input, Modals */}
             <input
@@ -1631,6 +1337,7 @@ export const DashboardView = ({
                 </AnimatePresence>,
                 document.body
             )}
+            <DiagnosticOverlay />
         </div>
     );
 };
