@@ -851,7 +851,7 @@ export const DashboardView = ({
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
-                                        <Trash2 size={16} /> Purge ({selectedFiles.size})
+                                        <Trash2 size={16} /> Delete ({selectedFiles.size})
                                     </motion.button>
                                 )}
                             </AnimatePresence>

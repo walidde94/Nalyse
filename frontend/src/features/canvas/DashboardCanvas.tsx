@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Save, FolderOpen, Trash2, Maximize2, Minimize2,
@@ -67,11 +68,54 @@ const PIE_DATA = [
 
 /* ─── Storage ─── */
 const STORAGE_KEY = 'nalyse_canvas_dashboards';
-function loadDashboards(): DashboardLayout[] {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-}
 function persistDashboards(ds: DashboardLayout[]) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(ds));
+}
+
+function toTimeMs(v: unknown): number {
+    if (typeof v === 'number' && !Number.isNaN(v)) return v;
+    if (typeof v === 'string') {
+        const t = Date.parse(v);
+        return Number.isNaN(t) ? 0 : t;
+    }
+    return 0;
+}
+
+/** API may return a raw array or legacy wrappers; DB uses ISO dates for timestamps */
+function normalizeDashboardList(raw: unknown): DashboardLayout[] {
+    let arr: unknown[] = [];
+    if (Array.isArray(raw)) arr = raw;
+    else if (raw && typeof raw === 'object' && Array.isArray((raw as { dashboards?: unknown[] }).dashboards)) {
+        arr = (raw as { dashboards: unknown[] }).dashboards;
+    }
+    return arr
+        .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === 'object' && typeof (x as { id?: string }).id === 'string')
+        .map((x) => ({
+            id: x.id as string,
+            name: String(x.name ?? 'Untitled'),
+            panels: Array.isArray(x.panels) ? (x.panels as PanelConfig[]) : [],
+            gridLayout: Array.isArray(x.gridLayout) ? (x.gridLayout as LayoutItem[]) : [],
+            createdAt: toTimeMs(x.createdAt),
+            updatedAt: toTimeMs(x.updatedAt),
+        }));
+}
+
+/** Keep local-only dashboards (e.g. dash_* from offline saves) when server returns UUID-only list */
+function mergeDashboardLists(server: DashboardLayout[], local: DashboardLayout[]): DashboardLayout[] {
+    const map = new Map<string, DashboardLayout>();
+    for (const d of server) map.set(d.id, d);
+    for (const d of local) {
+        if (!map.has(d.id)) map.set(d.id, d);
+    }
+    return [...map.values()].sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+function loadDashboards(): DashboardLayout[] {
+    try {
+        return normalizeDashboardList(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    } catch {
+        return [];
+    }
 }
 
 /* ─── Panel Templates ─── */
@@ -88,13 +132,14 @@ const PANEL_TEMPLATES: { type: PanelConfig['type']; label: string; icon: React.R
 
 /* ─── Default Panel Configs ─── */
 function defaultConfig(type: PanelConfig['type']): Record<string, any> {
+    const monthKey = 'month';
     switch (type) {
         case 'metric': return { label: 'Total Revenue', value: '$34,500', change: '+12.4%', positive: true };
-        case 'bar': return { dataKey: 'revenue', color: '#6366f1' };
-        case 'line': return { dataKey: 'profit', color: '#10b981' };
+        case 'bar': return { dataKey: 'revenue', xAxisKey: monthKey, color: '#6366f1' };
+        case 'line': return { dataKey: 'revenue', xAxisKey: monthKey, color: '#10b981' };
         case 'pie': return {};
-        case 'scatter': return { dataKey: 'revenue', xAxisKey: 'users', color: '#ec4899' };
-        case 'area': return { dataKey: 'users', color: '#8b5cf6' };
+        case 'scatter': return { dataKey: 'revenue', xAxisKey: 'users', yAxisKey: 'revenue', color: '#ec4899' };
+        case 'area': return { dataKey: 'users', xAxisKey: monthKey, color: '#8b5cf6' };
         case 'table': return {};
         case 'markdown': return { content: '## Notes\n\nAdd your insights here...' };
         default: return {};
@@ -157,7 +202,7 @@ const LinePanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
 const PiePanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
     <ResponsiveContainer width="100%" height="100%">
         <RechartsPie>
-            <Pie data={config.data || PIE_DATA} cx="50%" cy="50%" innerRadius="40%" outerRadius="75%" paddingAngle={3} dataKey={config.yAxisKey || "value"} nameKey={config.xAxisKey || "category"}>
+            <Pie data={config.data || PIE_DATA} cx="50%" cy="50%" innerRadius="40%" outerRadius="75%" paddingAngle={3} dataKey={config.yAxisKey || "value"} nameKey={config.xAxisKey || "name"}>
                 {(config.data || PIE_DATA).map((_: any, i: number) => <Cell key={i} fill={config.color || CHART_COLORS[i % CHART_COLORS.length]} />)}
             </Pie>
             <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px' }} />
@@ -184,17 +229,22 @@ const AreaPanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
     </ResponsiveContainer>
 );
 
-const ScatterPanel: React.FC<{ config: Record<string, any> }> = ({ config }) => (
-    <ResponsiveContainer width="100%" height="100%">
-        <ScatterChart margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-            <XAxis dataKey={config.xAxisKey || "category"} type="category" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
-            <YAxis dataKey={config.yAxisKey || config.dataKey || 'value'} type="number" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px' }} />
-            <Scatter data={config.data || DEMO_DATA} fill={config.color || '#ec4899'} />
-        </ScatterChart>
-    </ResponsiveContainer>
-);
+const ScatterPanel: React.FC<{ config: Record<string, any> }> = ({ config }) => {
+    const data = config.data || DEMO_DATA;
+    const xKey = config.xAxisKey || 'users';
+    const yKey = config.yAxisKey || config.dataKey || 'revenue';
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <ScatterChart margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+                <XAxis dataKey={xKey} type="number" name={xKey} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                <YAxis dataKey={yKey} type="number" name={yKey} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px' }} />
+                <Scatter data={data} fill={config.color || '#ec4899'} />
+            </ScatterChart>
+        </ResponsiveContainer>
+    );
+};
 
 const TablePanel: React.FC = () => (
     <div style={{ overflow: 'auto', height: '100%', fontSize: '11px' }}>
@@ -275,6 +325,11 @@ export const DashboardCanvas: React.FC = () => {
     const [autoRefresh, setAutoRefresh] = useState(0); // seconds, 0 = off
     const [lastRefresh, setLastRefresh] = useState(Date.now());
     const containerRef = useRef<HTMLDivElement>(null);
+    const loadMenuRef = useRef<HTMLDivElement>(null);
+    /** Only replace local panels/grid when switching dashboards — not when the list refreshes from polling */
+    const lastSyncedDashboardIdRef = useRef<string | null>(null);
+    /** When true, skip auto-picking the first saved dashboard (blank canvas / import / New) */
+    const skipAutoSelectDashboardRef = useRef(false);
     const { width: gridWidth, containerRef: gridContainerRef, mounted: gridMounted } = useContainerWidth({ initialWidth: 1200 });
 
     // ─── API Sync ───
@@ -283,7 +338,8 @@ export const DashboardCanvas: React.FC = () => {
 
     const fetchDashboards = useCallback(async (silent = false) => {
         if (!token) {
-            setDashboards(loadDashboards());
+            const local = normalizeDashboardList(loadDashboards());
+            setDashboards(local);
             if (!silent) setIsLoading(false);
             return;
         }
@@ -293,24 +349,30 @@ export const DashboardCanvas: React.FC = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
-                const data = await res.json();
-                setDashboards(data);
-                persistDashboards(data);
-                // Auto-select first dashboard if none active
-                if (data.length > 0 && !activeDashboardIdRef.current) {
-                    setActiveDashboardId(data[0].id);
+                const raw = await res.json();
+                const serverList = normalizeDashboardList(raw);
+                const localList = normalizeDashboardList(loadDashboards());
+                const merged = mergeDashboardLists(serverList, localList);
+                setDashboards(merged);
+                persistDashboards(merged);
+
+                const cur = activeDashboardIdRef.current;
+                if (cur && !merged.some((d) => d.id === cur)) {
+                    lastSyncedDashboardIdRef.current = null;
+                    const next = merged[0]?.id ?? null;
+                    setActiveDashboardId(next);
+                } else if (!cur && merged.length > 0 && !skipAutoSelectDashboardRef.current) {
+                    setActiveDashboardId(merged[0].id);
                 }
             } else {
-                if (!silent) {
-                    const local = loadDashboards();
-                    setDashboards(local);
-                }
-            }
-        } catch (e) {
-            if (!silent) {
-                const local = loadDashboards();
+                const local = normalizeDashboardList(loadDashboards());
                 setDashboards(local);
+                persistDashboards(local);
             }
+        } catch {
+            const local = normalizeDashboardList(loadDashboards());
+            setDashboards(local);
+            persistDashboards(local);
         } finally {
             if (!silent) setIsLoading(false);
         }
@@ -334,21 +396,29 @@ export const DashboardCanvas: React.FC = () => {
     const [gridLayout, setGridLayout] = useState<LayoutItem[]>([]);
 
     useEffect(() => {
-        if (activeDashboard) {
-            setPanels(activeDashboard.panels);
-            setGridLayout(activeDashboard.gridLayout);
+        if (activeDashboardId === null) {
+            lastSyncedDashboardIdRef.current = null;
+            return;
         }
-    }, [activeDashboard]);
+        const d = dashboards.find((x) => x.id === activeDashboardId);
+        if (!d) return;
+        if (lastSyncedDashboardIdRef.current !== activeDashboardId) {
+            lastSyncedDashboardIdRef.current = activeDashboardId;
+            setPanels(d.panels);
+            setGridLayout(d.gridLayout);
+        }
+    }, [activeDashboardId, dashboards]);
 
-    // Auto refresh
+    // Auto refresh — bump key so chart panels remount / re-animate (and any live data hooks re-run)
     useEffect(() => {
         if (autoRefresh <= 0) return;
         const interval = setInterval(() => setLastRefresh(Date.now()), autoRefresh * 1000);
         return () => clearInterval(interval);
     }, [autoRefresh]);
 
-    // Auto-select first dashboard if none is active
+    // Auto-select first dashboard if none is active (not after New / Import blank canvas)
     useEffect(() => {
+        if (skipAutoSelectDashboardRef.current) return;
         if (!activeDashboardId && dashboards.length > 0) {
             setActiveDashboardId(dashboards[0].id);
         }
@@ -368,23 +438,52 @@ export const DashboardCanvas: React.FC = () => {
             else setDashboards(loadDashboards());
         };
         window.addEventListener('sync-dashboard', customSync);
-        
+
         return () => {
             window.removeEventListener('storage', handleStorage);
             window.removeEventListener('sync-dashboard', customSync);
         };
     }, [token, fetchDashboards]);
 
-    // Fullscreen
-    const toggleFullscreen = useCallback(() => {
-        if (!document.fullscreenElement && containerRef.current) {
-            containerRef.current.requestFullscreen();
-            setIsFullscreen(true);
-        } else if (document.fullscreenElement) {
-            document.exitFullscreen();
-            setIsFullscreen(false);
-        }
+    useEffect(() => {
+        const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener('fullscreenchange', onFs);
+        return () => document.removeEventListener('fullscreenchange', onFs);
     }, []);
+
+    useEffect(() => {
+        if (!showLoadMenu) return;
+        let removeListener: (() => void) | undefined;
+        let cancelled = false;
+        const frame = requestAnimationFrame(() => {
+            if (cancelled) return;
+            const close = (e: MouseEvent) => {
+                if (loadMenuRef.current && !loadMenuRef.current.contains(e.target as Node)) {
+                    setShowLoadMenu(false);
+                }
+            };
+            document.addEventListener('mousedown', close);
+            removeListener = () => document.removeEventListener('mousedown', close);
+        });
+        return () => {
+            cancelled = true;
+            cancelAnimationFrame(frame);
+            removeListener?.();
+        };
+    }, [showLoadMenu]);
+
+    // Fullscreen
+    const toggleFullscreen = useCallback(async () => {
+        try {
+            if (!document.fullscreenElement && containerRef.current) {
+                await containerRef.current.requestFullscreen();
+            } else if (document.fullscreenElement) {
+                await document.exitFullscreen();
+            }
+        } catch {
+            addToast('Fullscreen is not available in this browser', 'warning');
+        }
+    }, [addToast]);
 
     // Add Panel
     const addPanel = useCallback((type: PanelConfig['type']) => {
@@ -427,74 +526,143 @@ export const DashboardCanvas: React.FC = () => {
         setGridLayout(prev => prev.map(l => l.i === id ? { ...l, static: !l.static } : l));
     }, []);
 
-    // Save Dashboard
-    const saveDashboard = useCallback(async () => {
-        if (!saveName.trim()) return;
-        setIsSaving(true);
-        const now = Date.now();
-        const existing = dashboards.find(d => d.id === activeDashboardId);
-        
-        let updatedDashboards = [...dashboards];
-        let targetId = activeDashboardId;
-
-        if (existing) {
-            const updated = { ...existing, name: saveName, panels, gridLayout, updatedAt: now };
-            updatedDashboards = dashboards.map(d => d.id === activeDashboardId ? updated : d);
-            
-            if (token) {
-                try {
-                    await fetch(`${API_URL}/api/dashboards/${activeDashboardId}`, {
-                        method: 'PUT',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}` 
-                        },
-                        body: JSON.stringify({ name: saveName, panels, gridLayout })
-                    });
-                } catch (e) {
-                    addToast('Failed to sync with cloud. Saved locally.', 'warning');
-                }
+    const commitDashboardSave = useCallback(
+        async (nameOverride?: string) => {
+            const effectiveName = (nameOverride !== undefined ? nameOverride : saveName).trim();
+            if (!effectiveName) {
+                addToast('Enter a dashboard name to save', 'warning');
+                return;
             }
-        } else {
-            const newId = `dash_${now}`;
-            const newDash: DashboardLayout = {
-                id: newId, name: saveName, panels, gridLayout,
-                createdAt: now, updatedAt: now,
-            };
-            
-            if (token) {
-                try {
-                    const res = await fetch(`${API_URL}/api/dashboards`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}` 
-                        },
-                        body: JSON.stringify({ name: saveName, panels, gridLayout })
-                    });
-                    if (res.ok) {
-                        const saved = await res.json();
-                        newDash.id = saved.id;
-                        targetId = saved.id;
+            setIsSaving(true);
+            try {
+                const now = Date.now();
+                const existing = activeDashboardId ? dashboards.find((d) => d.id === activeDashboardId) : undefined;
+                let toastSuccess = 'Dashboard saved successfully';
+
+                let updatedDashboards = [...dashboards];
+                let targetId = activeDashboardId;
+
+                if (existing) {
+                    const updated = { ...existing, name: effectiveName, panels, gridLayout, updatedAt: now };
+                    updatedDashboards = dashboards.map((d) => (d.id === activeDashboardId ? updated : d));
+
+                    if (token) {
+                        try {
+                            const putRes = await fetch(`${API_URL}/api/dashboards/${activeDashboardId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ name: effectiveName, panels, gridLayout }),
+                            });
+                            if (putRes.status === 404) {
+                                const res = await fetch(`${API_URL}/api/dashboards`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({ name: effectiveName, panels, gridLayout }),
+                                });
+                                if (res.ok) {
+                                    const saved = normalizeDashboardList([await res.json()])[0];
+                                    if (saved) {
+                                        updatedDashboards = dashboards
+                                            .filter((d) => d.id !== activeDashboardId)
+                                            .concat([{ ...updated, id: saved.id, createdAt: saved.createdAt, updatedAt: saved.updatedAt }]);
+                                        targetId = saved.id;
+                                        setActiveDashboardId(saved.id);
+                                        lastSyncedDashboardIdRef.current = null;
+                                        toastSuccess = 'Saved to cloud (re-created; old id was not on server)';
+                                    }
+                                } else {
+                                    addToast('Could not sync to cloud. Saved on this device only.', 'warning');
+                                }
+                            } else if (!putRes.ok) {
+                                addToast('Could not sync to cloud. Saved on this device only.', 'warning');
+                            }
+                        } catch {
+                            addToast('Failed to sync with cloud. Saved locally.', 'warning');
+                        }
                     }
-                } catch (e) {
-                    addToast('Failed to sync with cloud. Saved locally.', 'warning');
+                } else {
+                    const newId = `dash_${now}`;
+                    const newDash: DashboardLayout = {
+                        id: newId,
+                        name: effectiveName,
+                        panels,
+                        gridLayout,
+                        createdAt: now,
+                        updatedAt: now,
+                    };
+
+                    if (token) {
+                        try {
+                            const res = await fetch(`${API_URL}/api/dashboards`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ name: effectiveName, panels, gridLayout }),
+                            });
+                            if (res.ok) {
+                                const saved = normalizeDashboardList([await res.json()])[0];
+                                if (saved) {
+                                    newDash.id = saved.id;
+                                    newDash.createdAt = saved.createdAt;
+                                    newDash.updatedAt = saved.updatedAt;
+                                    targetId = saved.id;
+                                }
+                            } else {
+                                addToast('Could not create on cloud. Saved on this device only.', 'warning');
+                            }
+                        } catch {
+                            addToast('Failed to sync with cloud. Saved locally.', 'warning');
+                        }
+                    }
+                    updatedDashboards = [newDash, ...dashboards];
+                    setActiveDashboardId(targetId || newDash.id);
+                    lastSyncedDashboardIdRef.current = null;
+                }
+
+                setDashboards(updatedDashboards);
+                persistDashboards(updatedDashboards);
+                setShowSaveDialog(false);
+                setSaveName('');
+                addToast(toastSuccess, 'success');
+                skipAutoSelectDashboardRef.current = false;
+            } finally {
+                setIsSaving(false);
+            }
+        },
+        [saveName, panels, gridLayout, dashboards, activeDashboardId, token, addToast]
+    );
+
+    const requestSave = useCallback(
+        (e?: React.MouseEvent) => {
+            if (e?.shiftKey) {
+                setSaveName(activeDashboard?.name || 'Main Dashboard');
+                setShowSaveDialog(true);
+                return;
+            }
+            if (activeDashboardId && dashboards.some((d) => d.id === activeDashboardId)) {
+                const ex = dashboards.find((d) => d.id === activeDashboardId);
+                if (ex?.name?.trim()) {
+                    void commitDashboardSave(ex.name);
+                    return;
                 }
             }
-            updatedDashboards = [newDash, ...dashboards];
-            setActiveDashboardId(targetId || newDash.id);
-        }
-
-        setDashboards(updatedDashboards);
-        persistDashboards(updatedDashboards);
-        setShowSaveDialog(false);
-        setSaveName('');
-        setIsSaving(false);
-        addToast('Dashboard saved successfully', 'success');
-    }, [saveName, panels, gridLayout, dashboards, activeDashboardId, token, addToast]);
+            setSaveName(activeDashboard?.name || 'Main Dashboard');
+            setShowSaveDialog(true);
+        },
+        [activeDashboardId, dashboards, activeDashboard?.name, commitDashboardSave]
+    );
 
     // Load Dashboard
     const loadDashboard = useCallback((id: string) => {
+        skipAutoSelectDashboardRef.current = false;
         setActiveDashboardId(id);
         setShowLoadMenu(false);
     }, []);
@@ -519,6 +687,7 @@ export const DashboardCanvas: React.FC = () => {
         setDashboards(updatedDashboards);
         persistDashboards(updatedDashboards);
         if (activeDashboardId === id) {
+            lastSyncedDashboardIdRef.current = null;
             setActiveDashboardId(null);
             setPanels([]);
             setGridLayout([]);
@@ -528,10 +697,16 @@ export const DashboardCanvas: React.FC = () => {
 
     // New Dashboard
     const newDashboard = useCallback(() => {
+        if (panels.length > 0 && !window.confirm('Start a new canvas? Unsaved layout changes will be cleared.')) {
+            return;
+        }
+        skipAutoSelectDashboardRef.current = true;
+        lastSyncedDashboardIdRef.current = null;
         setActiveDashboardId(null);
         setPanels([]);
         setGridLayout([]);
-    }, []);
+        setShowLoadMenu(false);
+    }, [panels.length]);
 
     // Grid layout change
     const onLayoutChange = useCallback((layout: RGLLayout) => {
@@ -540,29 +715,99 @@ export const DashboardCanvas: React.FC = () => {
 
     // Export JSON
     const exportDashboard = useCallback(() => {
-        const data = { panels, gridLayout, exportedAt: new Date().toISOString() };
+        const name = activeDashboard?.name || 'dashboard';
+        const slug = name.replace(/\s+/g, '-').replace(/[^a-z0-9-_]/gi, '').toLowerCase() || 'export';
+        const data = {
+            version: 1,
+            name,
+            dashboardId: activeDashboardId,
+            panels,
+            gridLayout,
+            exportedAt: new Date().toISOString(),
+        };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = 'nalyse-dashboard.json'; a.click();
+        a.href = url;
+        a.download = `nalyse-${slug}.json`;
+        a.click();
         URL.revokeObjectURL(url);
-    }, [panels, gridLayout]);
+        addToast('Dashboard exported', 'success');
+    }, [panels, gridLayout, activeDashboard?.name, activeDashboardId, addToast]);
+
+    const importFileRef = useRef<HTMLInputElement>(null);
+
+    const openLoadMenu = useCallback(() => {
+        if (dashboards.length === 0) {
+            addToast('No saved dashboards yet. Save this canvas first.', 'info');
+            return;
+        }
+        setShowLoadMenu((v) => !v);
+    }, [dashboards.length, addToast]);
+
+    const triggerImport = useCallback(() => importFileRef.current?.click(), []);
+
+    const importDashboard = useCallback(
+        (file: File) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const raw = JSON.parse(String(reader.result)) as {
+                        panels?: PanelConfig[];
+                        gridLayout?: LayoutItem[];
+                    };
+                    if (!Array.isArray(raw.panels) || !Array.isArray(raw.gridLayout)) {
+                        addToast('Invalid file: need panels and gridLayout arrays', 'error');
+                        return;
+                    }
+                    skipAutoSelectDashboardRef.current = true;
+                    lastSyncedDashboardIdRef.current = null;
+                    setActiveDashboardId(null);
+                    setPanels(raw.panels);
+                    setGridLayout(raw.gridLayout);
+                    setShowLoadMenu(false);
+                    addToast('Layout imported — use Save to store it', 'success');
+                } catch {
+                    addToast('Could not read dashboard JSON', 'error');
+                }
+            };
+            reader.readAsText(file);
+        },
+        [addToast]
+    );
+
+    const importInput = (
+        <input
+            type="file"
+            ref={importFileRef}
+            hidden
+            accept="application/json,.json"
+            onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) importDashboard(f);
+                e.target.value = '';
+            }}
+        />
+    );
 
     /* ─ Empty State ─ */
     if (panels.length === 0 && !showAddPanel) {
         return (
+            <>
             <div ref={containerRef} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {/* Toolbar */}
                 <Toolbar
                     editMode={editMode} setEditMode={setEditMode}
-                    onAdd={() => setShowAddPanel(true)} onSave={() => setShowSaveDialog(true)}
-                    onLoad={() => setShowLoadMenu(!showLoadMenu)} onNew={newDashboard}
+                    onAdd={() => setShowAddPanel(true)}
+                    onSave={requestSave}
+                    onLoad={openLoadMenu} onNew={newDashboard}
                     onFullscreen={toggleFullscreen} isFullscreen={isFullscreen}
-                    onExport={exportDashboard} dashboardName={activeDashboard?.name}
+                    onExport={exportDashboard} onImport={triggerImport}
+                    dashboardName={activeDashboard?.name}
                     autoRefresh={autoRefresh} setAutoRefresh={setAutoRefresh}
                     dashboards={dashboards} showLoadMenu={showLoadMenu}
                     onLoadDashboard={loadDashboard} onDeleteDashboard={deleteDashboard}
-                    setShowLoadMenu={setShowLoadMenu}
+                    loadMenuRef={loadMenuRef}
                 />
 
                 {/* Empty Canvas */}
@@ -638,12 +883,15 @@ export const DashboardCanvas: React.FC = () => {
 
                 {/* Save Dialog Overlay */}
                 <SaveDialog show={showSaveDialog} name={saveName} setName={setSaveName}
-                    onSave={saveDashboard} onClose={() => setShowSaveDialog(false)} />
+                    onSave={() => void commitDashboardSave()} onClose={() => setShowSaveDialog(false)} isSaving={isSaving} />
             </div>
+            {importInput}
+            </>
         );
     }
 
     return (
+        <>
         <div ref={containerRef} style={{
             height: '100%', display: 'flex', flexDirection: 'column',
             background: isFullscreen ? 'var(--bg-main)' : undefined,
@@ -651,14 +899,16 @@ export const DashboardCanvas: React.FC = () => {
             {/* Toolbar */}
             <Toolbar
                 editMode={editMode} setEditMode={setEditMode}
-                onAdd={() => setShowAddPanel(true)} onSave={() => { setSaveName(activeDashboard?.name || ''); setShowSaveDialog(true); }}
-                onLoad={() => setShowLoadMenu(!showLoadMenu)} onNew={newDashboard}
+                onAdd={() => setShowAddPanel(true)}
+                onSave={requestSave}
+                onLoad={openLoadMenu} onNew={newDashboard}
                 onFullscreen={toggleFullscreen} isFullscreen={isFullscreen}
-                onExport={exportDashboard} dashboardName={activeDashboard?.name}
+                onExport={exportDashboard} onImport={triggerImport}
+                dashboardName={activeDashboard?.name}
                 autoRefresh={autoRefresh} setAutoRefresh={setAutoRefresh}
                 dashboards={dashboards} showLoadMenu={showLoadMenu}
                 onLoadDashboard={loadDashboard} onDeleteDashboard={deleteDashboard}
-                setShowLoadMenu={setShowLoadMenu}
+                loadMenuRef={loadMenuRef}
                 panelCount={panels.length}
             />
 
@@ -672,7 +922,7 @@ export const DashboardCanvas: React.FC = () => {
                     rowHeight={60}
                     layouts={{ lg: gridLayout }}
                     onLayoutChange={(layout) => onLayoutChange(layout)}
-                    dragConfig={{ enabled: editMode, handle: '.panel-drag-handle', threshold: 3, bounded: false }}
+                    dragConfig={{ enabled: editMode, handle: '.panel-drag-handle', cancel: 'button', threshold: 3, bounded: false }}
                     resizeConfig={{ enabled: editMode, handles: ['se'] }}
                     margin={[12, 12] as const}
                     containerPadding={[0, 0] as const}
@@ -704,20 +954,23 @@ export const DashboardCanvas: React.FC = () => {
                                 }}>{panel.title}</span>
                                 {editMode && (
                                     <div style={{ display: 'flex', gap: '4px' }}>
-                                        <button onClick={() => toggleLock(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: panel.locked ? 'var(--warning)' : 'var(--text-muted)', opacity: panel.locked ? 1 : 0.4 }}>
+                                        <button type="button" onClick={() => toggleLock(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: panel.locked ? 'var(--warning)' : 'var(--text-muted)', opacity: panel.locked ? 1 : 0.4 }}>
                                             {panel.locked ? <Lock size={12} /> : <Unlock size={12} />}
                                         </button>
-                                        <button onClick={() => duplicatePanel(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-muted)', opacity: 0.4 }}>
+                                        <button type="button" onClick={() => duplicatePanel(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-muted)', opacity: 0.4 }}>
                                             <Copy size={12} />
                                         </button>
-                                        <button onClick={() => removePanel(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--danger)', opacity: 0.6 }}>
+                                        <button type="button" onClick={() => removePanel(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--danger)', opacity: 0.6 }}>
                                             <X size={12} />
                                         </button>
                                     </div>
                                 )}
                             </div>
                             {/* Panel Content */}
-                            <div style={{ flex: 1, padding: panel.type === 'table' || panel.type === 'markdown' ? '0' : '8px', overflow: 'hidden' }}>
+                            <div
+                                style={{ flex: 1, padding: panel.type === 'table' || panel.type === 'markdown' ? '0' : '8px', overflow: 'hidden' }}
+                                key={`${panel.id}-${lastRefresh}`}
+                            >
                                 {renderPanel(panel)}
                             </div>
                         </div>
@@ -792,26 +1045,29 @@ export const DashboardCanvas: React.FC = () => {
 
             {/* Save Dialog */}
             <SaveDialog show={showSaveDialog} name={saveName} setName={setSaveName}
-                onSave={saveDashboard} onClose={() => setShowSaveDialog(false)} />
+                onSave={() => void commitDashboardSave()} onClose={() => setShowSaveDialog(false)} isSaving={isSaving} />
         </div>
+        {importInput}
+        </>
     );
 };
 
 /* ═══ Toolbar ═══ */
 interface ToolbarProps {
     editMode: boolean; setEditMode: (v: boolean) => void;
-    onAdd: () => void; onSave: () => void; onLoad: () => void; onNew: () => void;
-    onFullscreen: () => void; isFullscreen: boolean; onExport: () => void;
+    onAdd: () => void; onSave: (e?: React.MouseEvent) => void; onLoad: () => void; onNew: () => void;
+    onFullscreen: () => void; isFullscreen: boolean; onExport: () => void; onImport: () => void;
     dashboardName?: string; autoRefresh: number; setAutoRefresh: (v: number) => void;
     dashboards: DashboardLayout[]; showLoadMenu: boolean;
     onLoadDashboard: (id: string) => void; onDeleteDashboard: (id: string) => void;
-    setShowLoadMenu: (v: boolean) => void; panelCount?: number;
+    panelCount?: number;
+    loadMenuRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
     editMode, setEditMode, onAdd, onSave, onLoad, onNew, onFullscreen, isFullscreen,
-    onExport, dashboardName, autoRefresh, setAutoRefresh, dashboards, showLoadMenu,
-    onLoadDashboard, onDeleteDashboard, setShowLoadMenu, panelCount = 0,
+    onExport, onImport, dashboardName, autoRefresh, setAutoRefresh, dashboards, showLoadMenu,
+    onLoadDashboard, onDeleteDashboard, panelCount = 0, loadMenuRef,
 }) => (
     <div style={{
         display: 'flex', alignItems: 'center', gap: '8px',
@@ -837,6 +1093,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* Edit Mode Toggle */}
         <button
+            type="button"
             onClick={() => setEditMode(!editMode)}
             style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
@@ -852,7 +1109,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         </button>
 
         {/* Auto Refresh */}
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} onMouseDown={e => e.stopPropagation()}>
             <select
                 value={autoRefresh}
                 onChange={e => setAutoRefresh(Number(e.target.value))}
@@ -874,30 +1131,45 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* Action Buttons */}
         <ToolbarBtn icon={<Plus size={14} />} label="Add" onClick={onAdd} primary />
-        <ToolbarBtn icon={<Save size={14} />} label="Save" onClick={onSave} />
-        <div style={{ position: 'relative' }}>
+        <ToolbarBtn icon={<Save size={14} />} label="Save" title="Save — Shift+click to name or rename" onClick={onSave} />
+        <div ref={loadMenuRef} style={{ position: 'relative' }}>
             <ToolbarBtn icon={<FolderOpen size={14} />} label="Load" onClick={onLoad} />
             {showLoadMenu && dashboards.length > 0 && (
-                <div style={{
-                    position: 'absolute', top: '100%', right: 0, marginTop: '4px',
-                    background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
-                    borderRadius: '12px', padding: '8px', minWidth: '200px', zIndex: 50,
-                    boxShadow: '0 12px 40px -8px rgba(0,0,0,0.4)',
-                }}>
+                <div
+                    style={{
+                        position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+                        background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+                        borderRadius: '12px', padding: '8px', minWidth: '220px', maxHeight: '320px', overflowY: 'auto', zIndex: 50000,
+                        boxShadow: '0 12px 40px -8px rgba(0,0,0,0.4)',
+                    }}
+                    onMouseDown={e => e.stopPropagation()}
+                >
                     {dashboards.map(d => (
                         <div key={d.id} style={{
                             display: 'flex', alignItems: 'center', gap: '8px',
                             padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
                             transition: 'background 0.1s',
                         }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-subtle)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-subtle)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                         >
-                            <div onClick={() => onLoadDashboard(d.id)} style={{ flex: 1 }}>
+                            <button
+                                type="button"
+                                onClick={() => onLoadDashboard(d.id)}
+                                style={{
+                                    flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
+                                    padding: 0, color: 'inherit',
+                                }}
+                            >
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{d.name}</div>
                                 <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{d.panels.length} panels · {new Date(d.updatedAt).toLocaleDateString()}</div>
-                            </div>
-                            <button onClick={() => onDeleteDashboard(d.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--danger)', opacity: 0.5 }}>
+                            </button>
+                            <button
+                                type="button"
+                                title="Delete dashboard"
+                                onClick={(e) => { e.stopPropagation(); onDeleteDashboard(d.id); }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--danger)', opacity: 0.6 }}
+                            >
                                 <Trash2 size={12} />
                             </button>
                         </div>
@@ -905,6 +1177,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 </div>
             )}
         </div>
+        <ToolbarBtn icon={<Upload size={14} />} label="Import" onClick={onImport} />
         <ToolbarBtn icon={<Download size={14} />} label="Export" onClick={onExport} />
         <ToolbarBtn icon={isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />} label={isFullscreen ? 'Exit' : 'Full'} onClick={onFullscreen} />
         <ToolbarBtn icon={<Grid3X3 size={14} />} label="New" onClick={onNew} />
@@ -912,8 +1185,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
 );
 
 /* ═══ Toolbar Button ═══ */
-const ToolbarBtn: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; primary?: boolean }> = ({ icon, label, onClick, primary }) => (
+const ToolbarBtn: React.FC<{
+    icon: React.ReactNode; label: string; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; primary?: boolean; title?: string;
+}> = ({ icon, label, onClick, primary, title }) => (
     <button
+        type="button"
+        title={title}
         onClick={onClick}
         style={{
             display: 'flex', alignItems: 'center', gap: '5px',
@@ -939,57 +1216,65 @@ const ToolbarBtn: React.FC<{ icon: React.ReactNode; label: string; onClick: () =
 /* ═══ Save Dialog ═══ */
 const SaveDialog: React.FC<{
     show: boolean; name: string; setName: (v: string) => void;
-    onSave: () => void; onClose: () => void;
-}> = ({ show, name, setName, onSave, onClose }) => (
-    <AnimatePresence>
-        {show && (
-            <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                style={{
-                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(4px)', zIndex: 1001,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-                onClick={onClose}
-            >
+    onSave: () => void; onClose: () => void; isSaving?: boolean;
+}> = ({ show, name, setName, onSave, onClose, isSaving = false }) =>
+    createPortal(
+        <AnimatePresence>
+            {show && (
                 <motion.div
-                    initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
-                    onClick={e => e.stopPropagation()}
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     style={{
-                        background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
-                        borderRadius: '16px', padding: '24px', width: '400px',
-                        boxShadow: '0 24px 80px -16px rgba(0,0,0,0.5)',
+                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                        backdropFilter: 'blur(4px)', zIndex: 100000,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
+                    onClick={onClose}
                 >
-                    <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px' }}>
-                        <Save size={18} style={{ verticalAlign: '-3px', marginRight: '8px', color: 'var(--primary)' }} />
-                        Save Dashboard
-                    </h3>
-                    <input
-                        autoFocus value={name} onChange={e => setName(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') onSave(); if (e.key === 'Escape') onClose(); }}
-                        placeholder="Dashboard name (e.g. Revenue Overview)"
+                    <motion.div
+                        initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+                        onClick={e => e.stopPropagation()}
                         style={{
-                            width: '100%', background: 'var(--bg-main)', border: '1px solid var(--border-default)',
-                            padding: '10px 14px', borderRadius: '10px', color: 'var(--text-primary)',
-                            fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box',
+                            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+                            borderRadius: '16px', padding: '24px', width: '400px', maxWidth: '92vw',
+                            boxShadow: '0 24px 80px -16px rgba(0,0,0,0.5)',
                         }}
-                    />
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        <button onClick={onClose} style={{
-                            background: 'var(--bg-main)', border: '1px solid var(--border-subtle)',
-                            padding: '8px 16px', borderRadius: '8px', color: 'var(--text-muted)',
-                            fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-                        }}>Cancel</button>
-                        <button onClick={onSave} disabled={!name.trim()} style={{
-                            background: 'var(--primary)', border: 'none',
-                            padding: '8px 20px', borderRadius: '8px', color: '#fff',
-                            fontSize: '12px', fontWeight: 700, cursor: 'pointer',
-                            opacity: name.trim() ? 1 : 0.4,
-                        }}>Save Dashboard</button>
-                    </div>
+                    >
+                        <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px' }}>
+                            <Save size={18} style={{ verticalAlign: '-3px', marginRight: '8px', color: 'var(--primary)' }} />
+                            Save Dashboard
+                        </h3>
+                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '-8px 0 12px' }}>
+                            Tip: a normal click on Save updates the current dashboard. Shift+click Save to pick a new name.
+                        </p>
+                        <input
+                            autoFocus value={name} onChange={e => setName(e.target.value)}
+                            disabled={isSaving}
+                            onKeyDown={e => { if (e.key === 'Enter' && !isSaving) onSave(); if (e.key === 'Escape' && !isSaving) onClose(); }}
+                            placeholder="Dashboard name (e.g. Revenue Overview)"
+                            style={{
+                                width: '100%', background: 'var(--bg-main)', border: '1px solid var(--border-default)',
+                                padding: '10px 14px', borderRadius: '10px', color: 'var(--text-primary)',
+                                fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box',
+                            }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            <button type="button" onClick={onClose} disabled={isSaving} style={{
+                                background: 'var(--bg-main)', border: '1px solid var(--border-subtle)',
+                                padding: '8px 16px', borderRadius: '8px', color: 'var(--text-muted)',
+                                fontSize: '12px', fontWeight: 600, cursor: isSaving ? 'not-allowed' : 'pointer',
+                                opacity: isSaving ? 0.5 : 1,
+                            }}>Cancel</button>
+                            <button type="button" onClick={onSave} disabled={!name.trim() || isSaving} style={{
+                                background: 'var(--primary)', border: 'none',
+                                padding: '8px 20px', borderRadius: '8px', color: '#fff',
+                                fontSize: '12px', fontWeight: 700, cursor: !name.trim() || isSaving ? 'not-allowed' : 'pointer',
+                                opacity: name.trim() && !isSaving ? 1 : 0.4,
+                                display: 'inline-flex', alignItems: 'center', gap: 8,
+                            }}>{isSaving ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : 'Save Dashboard'}</button>
+                        </div>
+                    </motion.div>
                 </motion.div>
-            </motion.div>
-        )}
-    </AnimatePresence>
-);
+            )}
+        </AnimatePresence>,
+        document.body
+    );

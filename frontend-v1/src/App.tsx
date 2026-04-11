@@ -866,8 +866,14 @@ function AppContent() {
         onThemeToggle={handleThemeToggle}
         onGlassToggle={handleGlassToggle}
         onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        onNavigate={(path) => {
-          if (path === 'settings') openTab('settings', 'Settings');
+        onNavigate={(path, options) => {
+          if (path === 'settings') {
+            openTab(
+              'settings',
+              'Settings',
+              options?.settingsTab ? { initialTab: options.settingsTab } : undefined
+            );
+          }
         }}
       />
 
@@ -1054,7 +1060,7 @@ function AppContent() {
                 )}
 
                 {tab.type === 'settings' && (
-                  <SettingsView />
+                  <SettingsView initialTab={tab.data?.initialTab} />
                 )}
 
               </div>

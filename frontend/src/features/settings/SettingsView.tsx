@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../components/ui/Toast';
 import { PricingView } from '../subscription/PricingView';
 import { PremiumGate } from '../../components/subscription/PremiumGate';
 import { ThemeStudio } from './ThemeStudio';
+import { LayoutWorkspaceSettings } from './LayoutWorkspaceSettings';
 
 // Icons
 const Icons = {
@@ -16,6 +18,7 @@ const Icons = {
     Sun: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
     Monitor: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>,
     CreditCard: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>,
+    Layout: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>,
 };
 
 import { API_URL } from '../../config';
@@ -23,8 +26,11 @@ import { API_URL } from '../../config';
 export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
     const { user, token, refreshProfile } = useAuth();
     const { addToast } = useToast();
+    const { t } = useLanguage();
 
-    const [activeTab, setActiveTab] = useState<'profile' | 'api' | 'notifications' | 'subscription'>(initialTab || 'profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'api' | 'notifications' | 'subscription' | 'layout'>(
+        initialTab || 'profile'
+    );
 
     useEffect(() => {
         if (initialTab) setActiveTab(initialTab);
@@ -211,6 +217,7 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
     const TABS = [
         { id: 'profile', label: 'Account', icon: <Icons.User /> },
         { id: 'subscription', label: 'Billing & Plans', icon: <Icons.CreditCard /> },
+        { id: 'layout', label: 'Layout & workspace', icon: <Icons.Layout /> },
         { id: 'api', label: 'API Keys', icon: <Icons.Key /> },
         { id: 'notifications', label: 'Notifications', icon: <Icons.Bell /> }
     ];
@@ -406,6 +413,8 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
                             </div>
                         </div>
                     )}
+
+                    {activeTab === 'layout' && <LayoutWorkspaceSettings t={t} />}
 
                     {/* API Tab */}
                     {activeTab === 'api' && (

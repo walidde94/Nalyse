@@ -999,8 +999,14 @@ function AppContent() {
         theme={theme}
         onThemeToggle={handleThemeToggle}
         onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        onNavigate={(path) => {
-          if (path === 'settings') openTab('settings', 'Settings');
+        onNavigate={(path, options) => {
+          if (path === 'settings') {
+            openTab(
+              'settings',
+              'Settings',
+              options?.settingsTab ? { initialTab: options.settingsTab } : undefined
+            );
+          }
         }}
       />
 

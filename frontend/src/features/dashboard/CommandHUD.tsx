@@ -104,7 +104,7 @@ export const PerformanceGauge = ({ value = 94, label = 'System Health', onClick 
                     strokeDasharray={circumference}
                     initial={{ strokeDashoffset: circumference }}
                     animate={{ strokeDashoffset: progress }}
-                    transition={{ duration: 2, ease: [0.16, 1, 0.3, 1], delay: 1 }}
+                    transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
                     style={{
                         transformOrigin: 'center',
                         transform: 'rotate(-90deg)',
@@ -380,20 +380,25 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
    ────────────────────────────────────────────────────────── */
 
 export const LiveClock = () => {
-    const [time, setTime] = useState(new Date());
+    const [time, setTime] = useState(() => new Date());
 
     useEffect(() => {
-        const interval = setInterval(() => setTime(new Date()), 1000);
-        return () => clearInterval(interval);
+        const tick = () => setTime(new Date());
+        tick();
+        const interval = window.setInterval(tick, 1000);
+        return () => window.clearInterval(interval);
     }, []);
+
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const timeStr = `${pad(time.getHours())}:${pad(time.getMinutes())}:${pad(time.getSeconds())}`;
 
     return (
         <div className="live-clock">
             <div className="clock-time">
-                {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                {timeStr}
             </div>
             <div className="clock-date">
-                {time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                {time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
             </div>
         </div>
     );

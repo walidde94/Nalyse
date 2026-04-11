@@ -1,6 +1,16 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import {
+    loadLayoutPreferences,
+    saveLayoutPreferences,
+    LAYOUT_PREFS_EVENT,
+    DEFAULT_GROUP_ORDER,
+    DEFAULT_ITEMS,
+    GROUP_TITLES,
+    getInitialSidebarCollapsed,
+    type SidebarGroupKey,
+} from '../../preferences/layoutPreferences';
 
 import {
     Home,
@@ -46,59 +56,123 @@ const SECTOR_THEMES = [
     { accent: '#10b981', glow: 'rgba(16, 185, 129, 0.4)', name: 'Service' },
 ] as const;
 
+const GROUP_THEME_INDEX: Record<SidebarGroupKey, number> = {
+    decision: 0,
+    analytics: 1,
+    predictive: 2,
+    bi: 3,
+    selfservice: 4,
+};
+
+const NAV_ICONS: Record<string, React.ReactNode> = {
+    simulation: <FlaskConical size={18} strokeWidth={2} />,
+    dashboard: <LayoutDashboard size={18} strokeWidth={2} />,
+    lens: <Sparkles size={18} strokeWidth={2} />,
+    correlate: <Link2 size={18} strokeWidth={2} />,
+    diff: <GitCompareArrows size={18} strokeWidth={2} />,
+    anomaly: <ShieldAlert size={18} strokeWidth={2} />,
+    financial: <Landmark size={18} strokeWidth={2} />,
+    forecast: <TrendingUp size={18} strokeWidth={2} />,
+    spatial: <Map size={18} strokeWidth={2} />,
+    automl: <BrainCircuit size={18} strokeWidth={2} />,
+    developer: <Code2 size={18} strokeWidth={2} />,
+    webhooks: <Webhook size={18} strokeWidth={2} />,
+    embed: <Boxes size={18} strokeWidth={2} />,
+    canvas: <Layers size={18} strokeWidth={2} />,
+    bi: <BarChart3 size={18} strokeWidth={2} />,
+    projects: <Briefcase size={18} strokeWidth={2} />,
+    democracy: <Sparkles size={18} strokeWidth={2} />,
+    automation: <Activity size={18} strokeWidth={2} />,
+    collaboration: <MessageSquare size={18} strokeWidth={2} />,
+    sources: <Database size={18} strokeWidth={2} />,
+    migration: <ArrowRightLeft size={18} strokeWidth={2} />,
+    organization: <Building2 size={18} strokeWidth={2} />,
+    settings: <Settings size={18} strokeWidth={2} />,
+    docs: <FileCheck size={18} strokeWidth={2} />,
+};
+
+function sidebarNavLabel(id: string, t: (key: string) => string): string {
+    const keyMap: Record<string, string> = {
+        dashboard: 'nav.workspace',
+        correlate: 'nav.correlation',
+        bi: 'nav.bi',
+        settings: 'nav.settings',
+    };
+    const tr = keyMap[id];
+    if (tr) {
+        const v = t(tr);
+        if (v && v !== tr) return v;
+    }
+    const fallbacks: Record<string, string> = {
+        simulation: 'Simulation Engine',
+        lens: 'Smart Lens',
+        diff: 'Version Diff',
+        anomaly: 'Anomaly Detection',
+        financial: 'Financial Risk',
+        forecast: 'Forecasting Engine',
+        spatial: 'Geospatial Intelligence',
+        automl: 'AutoML Intelligence',
+        developer: 'Developer API',
+        webhooks: 'Webhooks & API',
+        embed: 'Embed SDK',
+        canvas: 'Dashboard Canvas',
+        projects: 'Strategic Board',
+        democracy: 'Self-Service Studio',
+        automation: 'Automated Reports',
+        collaboration: 'Collaboration',
+        sources: 'Data Connectors',
+        migration: 'Data Migration',
+        organization: 'Organization & RBAC',
+        docs: 'Work Instructions',
+    };
+    return fallbacks[id] || id;
+}
+
+function orderedGroupItemIds(group: SidebarGroupKey, prefs: ReturnType<typeof loadLayoutPreferences>): string[] {
+    const defaults = [...DEFAULT_ITEMS[group]];
+    const raw = prefs.itemOrder[group];
+    const order = raw?.length ? [...raw] : defaults;
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const id of order) {
+        if (defaults.includes(id) && !seen.has(id)) {
+            seen.add(id);
+            out.push(id);
+        }
+    }
+    for (const id of defaults) {
+        if (!seen.has(id)) out.push(id);
+    }
+    return out.filter((id) => !prefs.hiddenNavIds.includes(id));
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(getInitialSidebarCollapsed);
+    const [prefs, setPrefs] = useState(loadLayoutPreferences);
     const [hoveredItem, setHoveredItem] = useState<string | null>(null);
     const { t } = useLanguage();
     const { user } = useAuth();
     const isPro = user && ((user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro');
 
-    const NAV_GROUPS = [
-        {
-            title: 'Decision Engine',
-            items: [
-                { id: 'simulation', label: 'Simulation Engine', icon: <FlaskConical size={18} strokeWidth={2} /> },
-            ]
-        },
-        {
-            title: 'Analytics Studio',
-            items: [
-                { id: 'dashboard', label: t('nav.workspace'), icon: <LayoutDashboard size={18} strokeWidth={2} /> },
-                { id: 'lens', label: 'Smart Lens', icon: <Sparkles size={18} strokeWidth={2} /> },
-                { id: 'correlate', label: t('nav.correlation'), icon: <Link2 size={18} strokeWidth={2} /> },
-                { id: 'diff', label: 'Version Diff', icon: <GitCompareArrows size={18} strokeWidth={2} /> },
-                { id: 'anomaly', label: 'Anomaly Detection', icon: <ShieldAlert size={18} strokeWidth={2} /> },
-                { id: 'financial', label: 'Financial Risk', icon: <Landmark size={18} strokeWidth={2} /> },
-            ]
-        },
-        {
-            title: 'Predictive Models',
-            items: [
-                { id: 'forecast', label: 'Forecasting Engine', icon: <TrendingUp size={18} strokeWidth={2} /> },
-                { id: 'spatial', label: 'Geospatial Intelligence', icon: <Map size={18} strokeWidth={2} /> },
-                { id: 'automl', label: 'AutoML Intelligence', icon: <BrainCircuit size={18} strokeWidth={2} /> },
-                { id: 'developer', label: 'Developer API', icon: <Code2 size={18} strokeWidth={2} /> },
-                { id: 'webhooks', label: 'Webhooks & API', icon: <Webhook size={18} strokeWidth={2} /> },
-                { id: 'embed', label: 'Embed SDK', icon: <Boxes size={18} strokeWidth={2} /> },
-            ]
-        },
-        {
-            title: 'Business Intelligence',
-            items: [
-                { id: 'canvas', label: 'Dashboard Canvas', icon: <Layers size={18} strokeWidth={2} /> },
-                { id: 'bi', label: t('nav.bi'), icon: <BarChart3 size={18} strokeWidth={2} /> },
-                { id: 'projects', label: 'Strategic Board', icon: <Briefcase size={18} strokeWidth={2} /> },
-            ]
-        },
-        {
-            title: 'Self-Service',
-            items: [
-                { id: 'democracy', label: 'Self-Service Studio', icon: <Sparkles size={18} strokeWidth={2} /> },
-                { id: 'automation', label: 'Automated Reports', icon: <Activity size={18} strokeWidth={2} /> },
-                { id: 'collaboration', label: 'Collaboration', icon: <MessageSquare size={18} strokeWidth={2} /> },
-            ]
-        },
-    ];
+    useEffect(() => {
+        const sync = () => {
+            const p = loadLayoutPreferences();
+            setPrefs(p);
+            setCollapsed(p.sidebarCollapsedDefault);
+        };
+        window.addEventListener(LAYOUT_PREFS_EVENT, sync);
+        return () => window.removeEventListener(LAYOUT_PREFS_EVENT, sync);
+    }, []);
+
+    const persistCollapsed = (next: boolean) => {
+        setCollapsed(next);
+        const p = loadLayoutPreferences();
+        saveLayoutPreferences({ ...p, sidebarCollapsedDefault: next });
+    };
+
+    const groupKeys = prefs.groupOrder.filter((g): g is SidebarGroupKey =>
+        (DEFAULT_GROUP_ORDER as readonly string[]).includes(g)
+    );
 
     const expandedWidth = 280;
     const collapsedWidth = 76;
@@ -158,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 )}
                 <button
                     type="button"
-                    onClick={() => setCollapsed(!collapsed)}
+                    onClick={() => persistCollapsed(!collapsed)}
                     className="desktop-only btn btn-icon btn-ghost btn-sm"
                     title={collapsed ? 'Expand rail' : 'Collapse rail'}
                     style={{
@@ -201,24 +275,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     onClick={() => onViewChange('landing')}
                 />
 
-                {NAV_GROUPS.map((group, gIdx) => {
-                    const theme = SECTOR_THEMES[gIdx] ?? SECTOR_THEMES[0];
+                {groupKeys.map((groupKey) => {
+                    const themeIdx = GROUP_THEME_INDEX[groupKey];
+                    const theme = SECTOR_THEMES[themeIdx] ?? SECTOR_THEMES[0];
+                    const itemIds = orderedGroupItemIds(groupKey, prefs);
+                    if (itemIds.length === 0) return null;
                     return (
-                        <div key={gIdx} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <SectorHeader title={group.title} theme={theme} collapsed={collapsed} />
-                            {group.items.map((item) => (
+                        <div key={groupKey} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <SectorHeader title={GROUP_TITLES[groupKey]} theme={theme} collapsed={collapsed} />
+                            {itemIds.map((itemId) => (
                                 <NavItem
-                                    key={item.id}
-                                    id={item.id}
-                                    label={item.label}
-                                    icon={item.icon}
-                                    isActive={currentView === item.id}
+                                    key={itemId}
+                                    id={itemId}
+                                    label={sidebarNavLabel(itemId, t)}
+                                    icon={NAV_ICONS[itemId] ?? <Activity size={18} strokeWidth={2} />}
+                                    isActive={currentView === itemId}
                                     collapsed={collapsed}
-                                    hovered={hoveredItem === item.id}
+                                    hovered={hoveredItem === itemId}
                                     sectorAccent={theme.accent}
                                     sectorGlow={theme.glow}
                                     onHover={setHoveredItem}
-                                    onClick={() => onViewChange(item.id)}
+                                    onClick={() => onViewChange(itemId)}
                                 />
                             ))}
                         </div>
@@ -238,31 +315,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 )}
                 {collapsed && <div className="sidebar-sector-rung" style={{ background: '#64748b' }} />}
 
-                <NavItem id="sources" label="Data Connectors" icon={<Database size={18} strokeWidth={2} />}
-                    isActive={currentView === 'sources'} collapsed={collapsed}
-                    hovered={hoveredItem === 'sources'} sectorAccent="#38bdf8" sectorGlow="rgba(56, 189, 248, 0.35)"
-                    onHover={setHoveredItem} onClick={() => onViewChange('sources')} />
-
-                <NavItem id="migration" label="Data Migration" icon={<ArrowRightLeft size={18} strokeWidth={2} />}
-                    isActive={currentView === 'migration'} collapsed={collapsed}
-                    hovered={hoveredItem === 'migration'} sectorAccent="#a78bfa" sectorGlow="rgba(167, 139, 250, 0.35)"
-                    onHover={setHoveredItem} onClick={() => onViewChange('migration')} />
-
-                <NavItem id="organization" label="Organization & RBAC" icon={<Building2 size={18} strokeWidth={2} />}
-                    isActive={currentView === 'organization'} collapsed={collapsed}
-                    hovered={hoveredItem === 'organization'} sectorAccent="#f472b6" sectorGlow="rgba(244, 114, 182, 0.35)"
-                    onHover={setHoveredItem} onClick={() => onViewChange('organization')} />
-
-                <NavItem id="settings" label={t('nav.settings')} icon={<Settings size={18} strokeWidth={2} />}
-                    isActive={currentView === 'settings'} collapsed={collapsed}
-                    hovered={hoveredItem === 'settings'} sectorAccent="#94a3b8" sectorGlow="rgba(148, 163, 184, 0.35)"
-                    onHover={setHoveredItem} onClick={() => onViewChange('settings')} />
-
-                <NavItem id="docs" label="Work Instructions" icon={<FileCheck size={18} strokeWidth={2} />}
-                    isActive={false} collapsed={collapsed}
-                    hovered={hoveredItem === 'docs'} sectorAccent="#64748b" sectorGlow="rgba(100, 116, 139, 0.25)"
-                    onHover={setHoveredItem}
-                    onClick={() => window.open('/NALYSE_WORK_INSTRUCTIONS.html', '_blank')} />
+                {prefs.footerOrder
+                    .filter((fid) => !prefs.hiddenNavIds.includes(fid))
+                    .map((fid) => {
+                        const footerAccents: Record<string, { a: string; g: string }> = {
+                            sources: { a: '#38bdf8', g: 'rgba(56, 189, 248, 0.35)' },
+                            migration: { a: '#a78bfa', g: 'rgba(167, 139, 250, 0.35)' },
+                            organization: { a: '#f472b6', g: 'rgba(244, 114, 182, 0.35)' },
+                            settings: { a: '#94a3b8', g: 'rgba(148, 163, 184, 0.35)' },
+                            docs: { a: '#64748b', g: 'rgba(100, 116, 139, 0.25)' },
+                        };
+                        const { a, g } = footerAccents[fid] ?? footerAccents.settings;
+                        return (
+                            <NavItem
+                                key={fid}
+                                id={fid}
+                                label={sidebarNavLabel(fid, t)}
+                                icon={NAV_ICONS[fid] ?? <Activity size={18} strokeWidth={2} />}
+                                isActive={fid === 'docs' ? false : currentView === fid}
+                                collapsed={collapsed}
+                                hovered={hoveredItem === fid}
+                                sectorAccent={a}
+                                sectorGlow={g}
+                                onHover={setHoveredItem}
+                                onClick={() =>
+                                    fid === 'docs'
+                                        ? window.open('/NALYSE_WORK_INSTRUCTIONS.html', '_blank')
+                                        : onViewChange(fid)
+                                }
+                            />
+                        );
+                    })}
             </nav>
 
             {!collapsed && (

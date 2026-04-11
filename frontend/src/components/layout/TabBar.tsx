@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { loadLayoutPreferences, LAYOUT_PREFS_EVENT, getTabBarMetrics, type TabBarDensity } from '../../preferences/layoutPreferences';
 import {
     LayoutDashboard, Settings, ArrowRightLeft, FileText,
     Database, Code2, Map, Users, X, Trash2, Layers, Bell,
@@ -39,7 +40,14 @@ export const TabBar = ({
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number, fileId: string } | null>(null);
     const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
     const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+    const [tabDensity, setTabDensity] = useState<TabBarDensity>(() => loadLayoutPreferences().tabBarDensity);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const sync = () => setTabDensity(loadLayoutPreferences().tabBarDensity);
+        window.addEventListener(LAYOUT_PREFS_EVENT, sync);
+        return () => window.removeEventListener(LAYOUT_PREFS_EVENT, sync);
+    }, []);
 
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
@@ -76,33 +84,37 @@ export const TabBar = ({
         setContextMenu({ x: e.clientX, y: e.clientY, fileId: id });
     };
 
+    const m = getTabBarMetrics(tabDensity);
+    const { barH, tabHActive, tabHIdle, tabFs, tabPadX, tabMinW, tabMaxW, tabGap, iconSize } = m;
+
     const getTabIcon = (tab: TabType) => {
         if (tab.icon) return tab.icon;
+        const s = iconSize;
         const iconMap: Record<string, React.ReactNode> = {
-            'dashboard': <LayoutDashboard size={13} />,
-            'analysis': <BarChart3 size={13} />,
-            'settings': <Settings size={13} />,
-            'migration': <ArrowRightLeft size={13} />,
-            'developer': <Code2 size={13} />,
-            'sources': <Database size={13} />,
-            'logistics': <Map size={13} />,
-            'groups': <Users size={13} />,
-            'agentic': <Bot size={13} />,
-            'democracy': <Sparkles size={13} />,
-            'multi-analysis': <Network size={13} />,
-            'diff': <GitCompareArrows size={13} />,
-            'anomaly': <ShieldAlert size={13} />,
-            'financial': <Landmark size={13} />,
-            'simulation': <FlaskConical size={13} />,
-            'organization': <Building2 size={13} />,
-            'collaboration': <Users size={13} />,
-            'webhooks': <Webhook size={13} />,
-            'embed': <Boxes size={13} />,
-            'canvas': <Layers size={13} />,
-            'lens': <Sparkles size={13} />,
+            'dashboard': <LayoutDashboard size={s} />,
+            'analysis': <BarChart3 size={s} />,
+            'settings': <Settings size={s} />,
+            'migration': <ArrowRightLeft size={s} />,
+            'developer': <Code2 size={s} />,
+            'sources': <Database size={s} />,
+            'logistics': <Map size={s} />,
+            'groups': <Users size={s} />,
+            'agentic': <Bot size={s} />,
+            'democracy': <Sparkles size={s} />,
+            'multi-analysis': <Network size={s} />,
+            'diff': <GitCompareArrows size={s} />,
+            'anomaly': <ShieldAlert size={s} />,
+            'financial': <Landmark size={s} />,
+            'simulation': <FlaskConical size={s} />,
+            'organization': <Building2 size={s} />,
+            'collaboration': <Users size={s} />,
+            'webhooks': <Webhook size={s} />,
+            'embed': <Boxes size={s} />,
+            'canvas': <Layers size={s} />,
+            'lens': <Sparkles size={s} />,
 
         };
-        return iconMap[tab.type] || <FileText size={13} />;
+        return iconMap[tab.type] || <FileText size={s} />;
     };
 
     return (
@@ -110,8 +122,8 @@ export const TabBar = ({
             <div style={{
                 display: 'flex',
                 alignItems: 'flex-end',
-                height: '38px',
-                padding: '0 12px',
+                height: `${barH}px`,
+                padding: tabDensity === 'minimal' || tabDensity === 'compact' ? '0 8px' : tabDensity === 'spacious' ? '0 14px' : '0 12px',
                 gap: '1px',
                 userSelect: 'none',
                 overflowX: 'auto',
@@ -139,15 +151,15 @@ export const TabBar = ({
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '7px',
-                                padding: '0 14px',
-                                height: isActive ? '32px' : '30px',
+                                gap: `${tabGap}px`,
+                                padding: `0 ${tabPadX}px`,
+                                height: isActive ? `${tabHActive}px` : `${tabHIdle}px`,
                                 color: isActive ? 'var(--text-primary)' : isHovered ? 'var(--text-secondary)' : 'var(--text-muted)',
-                                fontSize: '12px',
+                                fontSize: `${tabFs}px`,
                                 fontWeight: isActive ? 700 : 500,
                                 cursor: 'pointer',
-                                maxWidth: '200px',
-                                minWidth: '100px',
+                                maxWidth: `${tabMaxW}px`,
+                                minWidth: `${tabMinW}px`,
                                 transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                                 position: 'relative',
                                 background: isActive ? 'var(--bg-main)' : isHovered ? 'var(--bg-surface)' : 'transparent',

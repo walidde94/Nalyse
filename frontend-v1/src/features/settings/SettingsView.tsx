@@ -146,13 +146,19 @@ const ThemeCard: React.FC<{ id: string; label: string; icon: React.ReactNode; ac
 // ═══════════════════════════════════════════════════════════════
 // MAIN SETTINGS VIEW
 // ═══════════════════════════════════════════════════════════════
-export const SettingsView = () => {
+type SettingsTabId = 'profile' | 'appearance' | 'security' | 'api' | 'notifications' | 'subscription';
+
+export const SettingsView = ({ initialTab: tabInitialTab }: { initialTab?: SettingsTabId }) => {
     const { user, token, refreshProfile, logout } = useAuth();
     const { addToast } = useToast();
     const { closeSettings, settingsInitialTab } = useUIStore();
 
-    const [activeTab, setActiveTab] = useState<'profile' | 'appearance' | 'security' | 'api' | 'notifications' | 'subscription'>(settingsInitialTab as any || 'profile');
-    useEffect(() => { if (settingsInitialTab) setActiveTab(settingsInitialTab as any); }, [settingsInitialTab]);
+    const resolvedFromProps = tabInitialTab || (settingsInitialTab as SettingsTabId) || 'profile';
+    const [activeTab, setActiveTab] = useState<SettingsTabId>(resolvedFromProps);
+    useEffect(() => {
+        const next = tabInitialTab || (settingsInitialTab as SettingsTabId);
+        if (next) setActiveTab(next);
+    }, [tabInitialTab, settingsInitialTab]);
 
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
     const [glassMode, setGlassMode] = useState(localStorage.getItem('glassMode') === 'on');

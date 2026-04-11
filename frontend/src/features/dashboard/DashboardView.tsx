@@ -591,11 +591,9 @@ export const DashboardView = ({
         return () => clearInterval(interval);
     }, [fetchPulse]);
 
-    // Real-time Telemetry Measurements (True Hardware & Network Metrics)
+    // Real-time telemetry for the hero gauge (and the telemetry modal when open)
     useEffect(() => {
         const updateTelemetry = () => {
-            if (!showTelemetry) return;
-
             // 1. Memory Measurement (Chrome/Edge/Opera supported)
             let currentMemory = 1.25;
             const perf = (window.performance as any);
@@ -622,13 +620,13 @@ export const DashboardView = ({
             setTelemetryData(prev => ({ ...prev, throughput: Math.round(ops) }));
         };
 
+        updateTelemetry();
         const interval = setInterval(updateTelemetry, 2000);
         return () => clearInterval(interval);
-    }, [showTelemetry, safeFiles]);
+    }, [safeFiles]);
 
-    // 4. Actual Network Latency (Ping and API Response profiling)
+    // Network latency for live health score (hero gauge)
     useEffect(() => {
-        if (!showTelemetry) return;
         const measureLatency = async () => {
             const t1 = performance.now();
             try {
@@ -643,7 +641,7 @@ export const DashboardView = ({
         measureLatency();
         const interval = setInterval(measureLatency, 5000);
         return () => clearInterval(interval);
-    }, [showTelemetry]);
+    }, []);
 
     // Derived State
     const localMetrics = useMemo(() => calculatePulse(safeFiles), [safeFiles]);
@@ -971,7 +969,7 @@ export const DashboardView = ({
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
-                                        <Trash2 size={16} /> Purge ({selectedFiles.size})
+                                        <Trash2 size={16} /> Delete ({selectedFiles.size})
                                     </motion.button>
                                 )}
                             </AnimatePresence>
