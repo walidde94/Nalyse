@@ -5,9 +5,12 @@ export interface NodeConfig {
     label: string;
     visible: boolean;
     type?: string; 
-    order?: number;
-    width?: string | number;
-    height?: string | number;
+    order?: number;         // Legacy 1D ordering
+    width?: string | number;// Legacy width
+    x?: number;             // Grid X (column)
+    y?: number;             // Grid Y (row)
+    w?: number;             // Grid width span
+    h?: number;             // Grid height span
     customProps?: Record<string, any>;
 }
 
@@ -22,9 +25,14 @@ interface ArchitectContextType {
     removeNode: (id: string) => void;
     restoreNode: (id: string) => void;
     addNode: (config: NodeConfig) => void;
-    layoutMode: 'vertical' | 'grid';
-    setLayoutMode: (mode: 'vertical' | 'grid') => void;
-    // Drag reorder
+    layoutMode: 'vertical' | 'grid' | 'canvas';
+    setLayoutMode: (mode: 'vertical' | 'grid' | 'canvas') => void;
+    
+    // Matrix Handlers
+    moveNode: (id: string, x: number, y: number) => void;
+    resizeNode: (id: string, w: number, h: number) => void;
+    
+    // Legacy Drag reorder
     reorderNode: (fromId: string, toId: string) => void;
     draggedNodeId: string | null;
     setDraggedNodeId: (id: string | null) => void;
@@ -55,9 +63,7 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
-    const [layoutMode, setLayoutMode] = useState<'vertical' | 'grid'>(() => {
-        return (localStorage.getItem('nalyse-layout-mode') as 'vertical' | 'grid') || 'grid';
-    });
+    const [layoutMode, setLayoutMode] = useState<'vertical' | 'grid' | 'canvas'>('canvas');
     const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
     const [dropTargetId, setDropTargetId] = useState<string | null>(null);
     const [lastAction, setLastAction] = useState<string | null>(null);
@@ -190,6 +196,34 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setLastAction('Reordered');
     }, [layoutState, pushHistory]);
 
+    const moveNode = useCallback((id: string, x: number, y: number) => {
+        pushHistory(layoutState);
+        setLayoutState(prev => {
+            const next = { ...prev };
+            const node = next[id];
+            if (!node) return next;
+            
+            // Auto layout shift logic: If placing precisely where another node lives (and not a freeform overlap mode), 
+            // shift the colliding node downwards. For a true completely freeform absolute canvas without constraints, 
+            // we skip explicit collisions and visually layer them via zIndex. We will stick to deterministic coordinate grid here.
+            next[id] = { ...node, id, x, y };
+            return next;
+        });
+        setLastAction('Node moved');
+    }, [layoutState, pushHistory]);
+
+    const resizeNode = useCallback((id: string, w: number, h: number) => {
+        pushHistory(layoutState);
+        setLayoutState(prev => {
+            const next = { ...prev };
+            if (!next[id]) return next;
+            // Ensure minimum sizes (1 column, 1 row minimum)
+            next[id] = { ...next[id], w: Math.max(1, w), h: Math.max(1, h) };
+            return next;
+        });
+        setLastAction('Node resized');
+    }, [layoutState, pushHistory]);
+
     return (
         <ArchitectContext.Provider value={{ 
             isArchitectMode, setArchitectMode: setIsArchitectMode, toggleArchitectMode,
@@ -197,6 +231,7 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             activeNodeId, setActiveNodeId,
             removeNode, restoreNode, addNode,
             layoutMode, setLayoutMode,
+            moveNode, resizeNode,
             reorderNode, draggedNodeId, setDraggedNodeId, dropTargetId, setDropTargetId,
             undo, redo,
             canUndo: historyRef.current.length > 0,

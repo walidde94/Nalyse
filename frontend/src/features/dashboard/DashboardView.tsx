@@ -758,14 +758,30 @@ export const DashboardView = ({
             <div className="scanline-overlay" />
 
             {/* --- ARCHITECTURAL STAGE WRAPPER --- */}
-            <div style={{
-                display: 'flex',
-                flexDirection: layoutMode === 'vertical' ? 'column' : 'row',
-                flexWrap: 'wrap',
-                gap: '24px',
-                width: '100%',
-                alignItems: 'flex-start'
-            }}>
+            {(() => {
+                const CELL_SIZE = 120;
+                const GAP = 24;
+                const isCanvas = layoutMode === 'canvas';
+                // Find maximum height required for all visible configured nodes in canvas mode
+                const maxH = isCanvas ? Math.max(
+                    10,
+                    ...Object.values(layoutState)
+                        .filter(n => n.visible !== false)
+                        .map(n => ((n.y ?? 0) + (n.h ?? 3)))
+                ) : 0;
+                const canvasHeight = maxH * (CELL_SIZE + GAP);
+
+                return (
+                    <div style={{
+                        position: isCanvas ? 'relative' : 'static',
+                        minHeight: isCanvas ? `${canvasHeight}px` : 'auto',
+                        display: isCanvas ? 'block' : 'flex',
+                        flexDirection: layoutMode === 'vertical' ? 'column' : 'row',
+                        flexWrap: 'wrap',
+                        gap: isCanvas ? 0 : '24px',
+                        width: '100%',
+                        alignItems: 'flex-start'
+                    }}>
                 {/* --- AMBIENT STATUS STRIP --- */}
                 {/* --- DYNAMIC COMMAND MATRIX --- */}
                 {(() => {
@@ -938,7 +954,9 @@ export const DashboardView = ({
                             </ArchitectNode>
                         ));
                 })()}
-            </div>
+                    </div>
+                );
+            })()}
 
             {/* Hidden Input, Modals */}
             <input

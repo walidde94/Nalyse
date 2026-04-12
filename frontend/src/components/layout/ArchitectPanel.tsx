@@ -67,9 +67,9 @@ export const ArchitectPanel: React.FC = () => {
             >
                 {/* Left: Global controls */}
                 <div className="acb-group">
-                    <button onClick={() => setLayoutMode(layoutMode === 'vertical' ? 'grid' : 'vertical')} className="acb-btn" title="Toggle layout">
-                        {layoutMode === 'grid' ? <Grid size={15} /> : <Layout size={15} />}
-                        <span className="acb-btn-label">{layoutMode === 'grid' ? 'Grid' : 'Stack'}</span>
+                    <button onClick={() => setLayoutMode(layoutMode === 'canvas' ? 'grid' : layoutMode === 'grid' ? 'vertical' : 'canvas')} className="acb-btn" title="Toggle layout">
+                        {layoutMode === 'canvas' ? <Maximize2 size={15} /> : layoutMode === 'grid' ? <Grid size={15} /> : <Layout size={15} />}
+                        <span className="acb-btn-label">{layoutMode === 'canvas' ? 'Canvas' : layoutMode === 'grid' ? 'Grid' : 'Stack'}</span>
                     </button>
                     <div className="acb-divider" />
                     <button onClick={undo} disabled={!canUndo} className="acb-btn" title="Undo (⌘Z)">

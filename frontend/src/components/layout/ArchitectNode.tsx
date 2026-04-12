@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { GripVertical, Settings2, X, Eye, EyeOff, ChevronUp, ChevronDown, Columns, Maximize2 } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { GripVertical, Eye, EyeOff, Maximize2 } from 'lucide-react';
 import { useArchitect } from '../../contexts/ArchitectContext';
 
 interface ArchitectNodeProps {
@@ -18,9 +18,9 @@ export const ArchitectNode: React.FC<ArchitectNodeProps> = ({
 }) => {
     const { 
         isArchitectMode, layoutState, setActiveNodeId, activeNodeId, 
-        removeNode, updateNodeProperty, 
-        draggedNodeId, setDraggedNodeId, dropTargetId, setDropTargetId, reorderNode
+        removeNode, moveNode, resizeNode, layoutMode
     } = useArchitect();
+    
     const nodeRef = useRef<HTMLDivElement>(null);
 
     const config = layoutState[id];
@@ -28,13 +28,45 @@ export const ArchitectNode: React.FC<ArchitectNodeProps> = ({
     const isShellNode = id.startsWith('shell-');
     const isVisible = config?.visible !== false || isShellNode;
     const isActive = activeNodeId === id;
-    const width = config?.width || '100%';
-    const isDragging = draggedNodeId === id;
-    const isDropTarget = dropTargetId === id && draggedNodeId !== id;
+    
+    // Matrix configuration
+    const CELL_SIZE = 120; // 120px grid cells
+    const GAP = 24;
+
+    // Fallback to legacy layout if not in canvas mode
+    const isCanvas = layoutMode === 'canvas';
+    const legacyWidth = config?.width || '100%';
+
+    // Read spatial coordinates (default to flat stream if unset)
+    const [x, setX] = useState(config?.x ?? 0);
+    const [y, setY] = useState(config?.y ?? (config?.order ?? 0) * 3);
+    const [w, setW] = useState(config?.w ?? 4); // Default span 4 columns
+    const [h, setH] = useState(config?.h ?? 3); // Default span 3 rows
+
+    useEffect(() => {
+        if (config?.x !== undefined) setX(config.x);
+        if (config?.y !== undefined) setY(config.y);
+        if (config?.w !== undefined) setW(config.w);
+        if (config?.h !== undefined) setH(config.h);
+    }, [config]);
 
     // Visibility logic
     if (!isVisible && !isArchitectMode) return null;
-    if (!isArchitectMode) return <>{children}</>;
+    if (!isArchitectMode) return (
+        <div style={isCanvas ? {
+            position: 'absolute',
+            left: x * (CELL_SIZE + GAP),
+            top: y * (CELL_SIZE + GAP),
+            width: w * (CELL_SIZE + GAP) - GAP,
+            height: h * (CELL_SIZE + GAP) - GAP,
+            transition: 'all 0.3s ease'
+        } : {
+            width: legacyWidth,
+            flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
+        }}>
+            {children}
+        </div>
+    );
 
     const handleRemove = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -42,165 +74,188 @@ export const ArchitectNode: React.FC<ArchitectNodeProps> = ({
         else removeNode(id);
     };
 
-    // --- DRAG & DROP ---
-    const handleDragStart = (e: React.DragEvent) => {
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', id);
-        setDraggedNodeId(id);
-        // Use a timeout so the dragging style applies after the ghost image is created
-        requestAnimationFrame(() => {
-            if (nodeRef.current) nodeRef.current.style.opacity = '0.3';
-        });
-    };
-
-    const handleDragEnd = () => {
-        setDraggedNodeId(null);
-        setDropTargetId(null);
-        if (nodeRef.current) nodeRef.current.style.opacity = '1';
-    };
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        if (draggedNodeId && draggedNodeId !== id) {
-            setDropTargetId(id);
-        }
-    };
-
-    const handleDragLeave = () => {
-        if (dropTargetId === id) setDropTargetId(null);
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        const fromId = e.dataTransfer.getData('text/plain');
-        if (fromId && fromId !== id) {
-            reorderNode(fromId, id);
-        }
-        setDraggedNodeId(null);
-        setDropTargetId(null);
-    };
-
-    // Width cycling
-    const widths = ['100%', '50%', '33%'];
-    const cycleWidth = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        const currentIdx = widths.indexOf(String(width));
-        const nextIdx = (currentIdx + 1) % widths.length;
-        updateNodeProperty(id, 'width', widths[nextIdx]);
-    };
+    // Canvas Matrix logic
+    const calcPos = (val: number) => val * (CELL_SIZE + GAP);
+    const calcDim = (span: number) => span * (CELL_SIZE + GAP) - GAP;
 
     return (
-        <div 
+        <motion.div 
             ref={nodeRef}
-            className={`architect-node-v2 ${isActive ? 'an2-active' : ''} ${isDropTarget ? 'an2-drop-target' : ''} ${isDragging ? 'an2-dragging' : ''} ${!isVisible ? 'an2-hidden' : ''} ${className || ''}`}
+            className={`architect-node-canvas ${isActive ? 'anc-active' : ''} ${!isVisible ? 'anc-hidden' : ''} ${className || ''}`}
             data-node-id={id}
             onClick={(e) => { e.stopPropagation(); setActiveNodeId(isActive ? null : id); }}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            
+            // Framer Motion Properties for Dragging & Snapping
+            drag={isDraggable && isCanvas}
+            dragMomentum={false}
+            onDrag={(e, info) => {
+                // Update local visual state to snap cleanly on drag
+                if (!nodeRef.current || !isCanvas) return;
+                const rect = nodeRef.current.getBoundingClientRect();
+                const parentRect = nodeRef.current.parentElement?.getBoundingClientRect();
+                if (!parentRect) return;
+
+                const localX = rect.left - parentRect.left;
+                const localY = rect.top - parentRect.top;
+
+                const snapX = Math.round(localX / (CELL_SIZE + GAP));
+                const snapY = Math.round(localY / (CELL_SIZE + GAP));
+                
+                // Show drop ghost (could be drawn via parent, but local state works)
+            }}
+            onDragEnd={(e, info) => {
+                if (!isCanvas) return;
+                const snapX = Math.max(0, Math.round((calcPos(x) + info.offset.x) / (CELL_SIZE + GAP)));
+                const snapY = Math.max(0, Math.round((calcPos(y) + info.offset.y) / (CELL_SIZE + GAP)));
+                setX(snapX);
+                setY(snapY);
+                moveNode(id, snapX, snapY);
+            }}
+
+            // Positioning
+            initial={false}
+            animate={{
+                x: isCanvas ? calcPos(x) : 0,
+                y: isCanvas ? calcPos(y) : 0,
+                width: isCanvas ? calcDim(w) : 'auto',
+                height: isCanvas ? calcDim(h) : 'auto'
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            
             style={{ 
-                position: 'relative',
+                position: isCanvas ? 'absolute' : 'relative',
+                zIndex: isActive ? 100 : 1,
+                // Legacy support
+                ...(!isCanvas && {
+                    width: legacyWidth,
+                    flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
+                }),
                 ...style,
-                width,
-                flex: width === '100%' ? '0 0 100%' : (width === '50%' ? '1 1 calc(50% - 12px)' : (width === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
             }}
         >
-            {/* Drop indicator line */}
-            <AnimatePresence>
-                {isDropTarget && (
-                    <motion.div 
-                        initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} exit={{ scaleX: 0 }}
-                        style={{ 
-                            position: 'absolute', top: -4, left: 0, right: 0, height: 3,
-                            background: 'var(--primary)', borderRadius: 2, zIndex: 200,
-                            boxShadow: '0 0 12px var(--primary)',
-                            transformOrigin: 'left center'
-                        }} 
-                    />
-                )}
-            </AnimatePresence>
-
             {/* Selection border */}
-            <div className="an2-border" />
+            <div className="anc-border" />
 
-            {/* Floating toolbar — appears on hover/active */}
-            <div className="an2-toolbar">
+            {/* Floating toolbar */}
+            <div className="anc-toolbar drag-handle">
                 {/* Drag handle */}
                 {isDraggable && (
-                    <div 
-                        className="an2-drag-handle"
-                        draggable
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        title="Drag to reorder"
-                    >
+                    <div className="anc-drag-handle" title="Drag to move on grid">
                         <GripVertical size={14} />
                     </div>
                 )}
-
-                {/* Label */}
-                <span className="an2-label">{label}</span>
-
-                {/* Quick actions */}
-                <div className="an2-actions">
-                    <button onClick={cycleWidth} title={`Width: ${width}`} className="an2-btn">
-                        <Columns size={13} />
-                        <span className="an2-btn-text">{width}</span>
-                    </button>
-                    <button onClick={handleRemove} title={isVisible ? "Hide section" : "Show section"} className="an2-btn an2-btn-danger">
+                <span className="anc-label">{label}</span>
+                <div className="anc-actions">
+                    <button onClick={handleRemove} title={isVisible ? "Hide section" : "Show section"} className="anc-btn anc-btn-danger">
                         {isVisible ? <EyeOff size={13} /> : <Eye size={13} />}
                     </button>
                 </div>
             </div>
 
-            {/* Content */}
+            {/* Freeform Resize Handles (Only when active and in canvas mode) */}
+            {isCanvas && isActive && (
+                <>
+                    {/* Right Handle (Width) */}
+                    <div className="anc-resize-handle anc-resize-e"
+                        onPointerDown={(e) => {
+                            e.stopPropagation();
+                            const startX = e.clientX;
+                            const startW = w;
+                            const onMove = (me: PointerEvent) => {
+                                const diffItems = Math.round((me.clientX - startX) / (CELL_SIZE + GAP));
+                                setW(Math.max(1, startW + diffItems));
+                            };
+                            const onUp = () => {
+                                resizeNode(id, Math.max(1, w), h);
+                                window.removeEventListener('pointermove', onMove);
+                                window.removeEventListener('pointerup', onUp);
+                            };
+                            window.addEventListener('pointermove', onMove);
+                            window.addEventListener('pointerup', onUp);
+                        }}
+                    />
+                    {/* Bottom Handle (Height) */}
+                    <div className="anc-resize-handle anc-resize-s"
+                        onPointerDown={(e) => {
+                            e.stopPropagation();
+                            const startY = e.clientY;
+                            const startH = h;
+                            const onMove = (me: PointerEvent) => {
+                                const diffItems = Math.round((me.clientY - startY) / (CELL_SIZE + GAP));
+                                setH(Math.max(1, startH + diffItems));
+                            };
+                            const onUp = () => {
+                                resizeNode(id, w, Math.max(1, h));
+                                window.removeEventListener('pointermove', onMove);
+                                window.removeEventListener('pointerup', onUp);
+                            };
+                            window.addEventListener('pointermove', onMove);
+                            window.addEventListener('pointerup', onUp);
+                        }}
+                    />
+                    {/* Bottom-Right Handle (Both) */}
+                    <div className="anc-resize-handle anc-resize-se"
+                        onPointerDown={(e) => {
+                            e.stopPropagation();
+                            const startX = e.clientX;
+                            const startY = e.clientY;
+                            const startW = w;
+                            const startH = h;
+                            const onMove = (me: PointerEvent) => {
+                                const diffX = Math.round((me.clientX - startX) / (CELL_SIZE + GAP));
+                                const diffY = Math.round((me.clientY - startY) / (CELL_SIZE + GAP));
+                                setW(Math.max(1, startW + diffX));
+                                setH(Math.max(1, startH + diffY));
+                            };
+                            const onUp = () => {
+                                resizeNode(id, w, h);
+                                window.removeEventListener('pointermove', onMove);
+                                window.removeEventListener('pointerup', onUp);
+                            };
+                            window.addEventListener('pointermove', onMove);
+                            window.addEventListener('pointerup', onUp);
+                        }}
+                    >
+                        <Maximize2 size={10} style={{ transform: 'rotate(90deg)', opacity: 0.5 }} />
+                    </div>
+                </>
+            )}
+
+            {/* Content Container */}
             <div style={{ 
                 opacity: isVisible ? 1 : 0.25,
                 filter: isVisible ? 'none' : 'grayscale(1)',
                 transition: 'opacity 0.3s, filter 0.3s',
                 pointerEvents: 'auto',
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden'
             }}>
                 {children}
             </div>
 
             <style>{`
-                .architect-node-v2 {
-                    position: relative;
-                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                .architect-node-canvas {
+                    transition: box-shadow 0.2s ease;
                     border-radius: 16px;
                 }
-                .architect-node-v2:hover { z-index: 10; }
-                .architect-node-v2:hover .an2-toolbar { opacity: 1; transform: translateY(0); pointer-events: auto; }
-                .architect-node-v2:hover .an2-border { opacity: 1; }
-                
-                /* Selection border — subtle dashed on hover, solid on active */
-                .an2-border {
-                    position: absolute; inset: -2px; border-radius: 18px; pointer-events: none; z-index: 50;
+                .architect-node-canvas:hover { z-index: 50 !important; }
+                .architect-node-canvas:hover .anc-toolbar { opacity: 1; transform: translateY(0); pointer-events: auto; }
+                .architect-node-canvas:hover .anc-border { opacity: 1; }
+
+                .anc-border {
+                    position: absolute; inset: -2px; border-radius: 18px; pointer-events: none; z-index: 5;
                     border: 2px dashed rgba(99, 102, 241, 0.25);
                     opacity: 0; transition: all 0.25s ease;
                 }
-                .an2-active .an2-border {
+                .anc-active .anc-border {
                     opacity: 1;
                     border: 2px solid var(--primary);
                     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
                 }
-                .an2-drop-target .an2-border {
-                    opacity: 1;
-                    border: 2px dashed var(--primary);
-                    background: rgba(99, 102, 241, 0.04);
-                }
-                .an2-dragging { opacity: 0.3 !important; }
-                .an2-hidden .an2-border {
-                    border-color: rgba(239, 68, 68, 0.3);
-                }
-                .an2-active.an2-hidden .an2-border {
-                    border-color: #ef4444;
-                    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
-                }
+                .anc-hidden .anc-border { border-color: rgba(239, 68, 68, 0.3); }
 
-                /* Floating toolbar */
-                .an2-toolbar {
+                .anc-toolbar {
                     position: absolute;
                     top: 8px; left: 8px; right: 8px;
                     display: flex; align-items: center; gap: 8px;
@@ -216,43 +271,59 @@ export const ArchitectNode: React.FC<ArchitectNodeProps> = ({
                     pointer-events: none;
                     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
                 }
-                .an2-active .an2-toolbar {
-                    opacity: 1; transform: translateY(0); pointer-events: auto;
-                }
+                .anc-active .anc-toolbar { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-                /* Drag handle */
-                .an2-drag-handle {
+                .anc-drag-handle {
                     display: flex; align-items: center; justify-content: center;
                     width: 28px; height: 28px; border-radius: 8px;
                     color: rgba(255,255,255,0.4); cursor: grab;
-                    transition: all 0.15s;
-                    flex-shrink: 0;
+                    transition: all 0.15s; flex-shrink: 0;
                 }
-                .an2-drag-handle:hover { background: rgba(255,255,255,0.1); color: white; }
-                .an2-drag-handle:active { cursor: grabbing; }
+                .anc-drag-handle:hover { background: rgba(255,255,255,0.1); color: white; }
+                .anc-drag-handle:active { cursor: grabbing; }
 
-                /* Label */
-                .an2-label {
+                .anc-label {
                     font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
-                    color: rgba(255,255,255,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-                    flex: 1; min-width: 0;
-                    user-select: none;
+                    color: rgba(255,255,255,0.5); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none;
                 }
-                .an2-active .an2-label { color: var(--primary); }
+                .anc-active .anc-label { color: var(--primary); }
 
-                /* Action buttons */
-                .an2-actions { display: flex; gap: 4px; flex-shrink: 0; }
-                .an2-btn {
+                .anc-actions { display: flex; gap: 4px; flex-shrink: 0; }
+                .anc-btn {
                     display: flex; align-items: center; gap: 4px;
-                    padding: 4px 8px; border-radius: 8px;
-                    border: none; background: rgba(255,255,255,0.06);
-                    color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 700;
-                    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+                    padding: 4px 8px; border-radius: 8px; border: none; background: rgba(255,255,255,0.06);
+                    color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.15s;
                 }
-                .an2-btn:hover { background: rgba(255,255,255,0.12); color: white; }
-                .an2-btn-text { font-family: var(--font-mono, monospace); }
-                .an2-btn-danger:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+                .anc-btn:hover { background: rgba(255,255,255,0.12); color: white; }
+                .anc-btn-danger:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+                /* Resize handles */
+                .anc-resize-handle {
+                    position: absolute;
+                    background: var(--primary);
+                    border-radius: 4px;
+                    z-index: 105;
+                    opacity: 0;
+                    transition: opacity 0.2s;
+                }
+                .anc-active:hover .anc-resize-handle { opacity: 1; }
+                
+                .anc-resize-e {
+                    top: 20%; bottom: 20%; right: -6px; width: 4px;
+                    cursor: ew-resize;
+                }
+                .anc-resize-s {
+                    left: 20%; right: 20%; bottom: -6px; height: 4px;
+                    cursor: ns-resize;
+                }
+                .anc-resize-se {
+                    bottom: -10px; right: -10px; width: 20px; height: 20px;
+                    border-radius: 50%;
+                    cursor: nwse-resize;
+                    display: flex; align-items: center; justify-content: center;
+                    color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.5);
+                }
             `}</style>
-        </div>
+        </motion.div>
     );
 };
