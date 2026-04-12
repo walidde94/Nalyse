@@ -957,8 +957,8 @@ export const DashboardView = ({
                                 cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
                                 rowHeight={80}
                                 margin={[24, 24]}
-                                onDragStop={(layout) => isArchitectMode && updateLayoutSequence(layout)}
-                                onResizeStop={(layout) => isArchitectMode && updateLayoutSequence(layout)}
+                                onDragStop={(layout) => isArchitectMode && updateLayoutSequence(layout.map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h })))}
+                                onResizeStop={(layout) => isArchitectMode && updateLayoutSequence(layout.map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h })))}
                                 draggableHandle=".react-grid-drag-handle"
                                 isDraggable={isArchitectMode}
                                 isResizable={isArchitectMode}

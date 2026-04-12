@@ -923,8 +923,11 @@ export const DashboardCanvas: React.FC = () => {
                     rowHeight={60}
                     layouts={{ lg: gridLayout }}
                     onLayoutChange={(layout) => onLayoutChange(layout)}
-                    dragConfig={{ enabled: editMode, handle: '.panel-drag-handle', cancel: 'button', threshold: 3, bounded: false }}
-                    resizeConfig={{ enabled: editMode, handles: ['se'] }}
+                    isDraggable={editMode}
+                    draggableHandle=".panel-drag-handle"
+                    draggableCancel="button"
+                    isResizable={editMode}
+                    resizeHandles={['se']}
                     margin={[12, 12] as const}
                     containerPadding={[0, 0] as const}
                 >
