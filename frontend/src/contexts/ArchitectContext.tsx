@@ -31,6 +31,7 @@ interface ArchitectContextType {
     // Matrix Handlers
     moveNode: (id: string, x: number, y: number) => void;
     resizeNode: (id: string, w: number, h: number) => void;
+    updateLayoutSequence: (layouts: { i: string; x: number; y: number; w: number; h: number }[]) => void;
     
     // Legacy Drag reorder
     reorderNode: (fromId: string, toId: string) => void;
@@ -224,6 +225,20 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setLastAction('Node resized');
     }, [layoutState, pushHistory]);
 
+    const updateLayoutSequence = useCallback((layouts: { i: string; x: number; y: number; w: number; h: number }[]) => {
+        pushHistory(layoutState);
+        setLayoutState(prev => {
+            const next = { ...prev };
+            layouts.forEach(l => {
+                if (next[l.i]) {
+                    next[l.i] = { ...next[l.i], x: l.x, y: l.y, w: l.w, h: l.h };
+                }
+            });
+            return next;
+        });
+        setLastAction('Layout updated');
+    }, [layoutState, pushHistory]);
+
     return (
         <ArchitectContext.Provider value={{ 
             isArchitectMode, setArchitectMode: setIsArchitectMode, toggleArchitectMode,
@@ -231,7 +246,7 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             activeNodeId, setActiveNodeId,
             removeNode, restoreNode, addNode,
             layoutMode, setLayoutMode,
-            moveNode, resizeNode,
+            moveNode, resizeNode, updateLayoutSequence,
             reorderNode, draggedNodeId, setDraggedNodeId, dropTargetId, setDropTargetId,
             undo, redo,
             canUndo: historyRef.current.length > 0,

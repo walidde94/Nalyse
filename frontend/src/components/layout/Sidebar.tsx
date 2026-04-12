@@ -34,6 +34,7 @@ import {
     Sparkles,
     GitCompareArrows,
     ChevronRight,
+    ChevronDown,
     Activity,
     ShieldAlert,
     Landmark,
@@ -50,13 +51,13 @@ interface SidebarProps {
     onViewChange: (view: any) => void;
 }
 
-/** Chromatic identity per sector — “neural lanes” through the command rail */
+/** Color identity per group — subtle, not overpowering */
 const SECTOR_THEMES = [
-    { accent: '#6366f1', glow: 'rgba(99, 102, 241, 0.45)', name: 'Engine' },
-    { accent: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.45)', name: 'Studio' },
-    { accent: '#06b6d4', glow: 'rgba(6, 182, 212, 0.4)', name: 'Predict' },
-    { accent: '#f59e0b', glow: 'rgba(245, 158, 11, 0.35)', name: 'Intel' },
-    { accent: '#10b981', glow: 'rgba(16, 185, 129, 0.4)', name: 'Service' },
+    { accent: '#6366f1', glow: 'rgba(99, 102, 241, 0.3)', name: 'Engine' },
+    { accent: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.3)', name: 'Studio' },
+    { accent: '#06b6d4', glow: 'rgba(6, 182, 212, 0.3)', name: 'Predict' },
+    { accent: '#f59e0b', glow: 'rgba(245, 158, 11, 0.25)', name: 'Intel' },
+    { accent: '#10b981', glow: 'rgba(16, 185, 129, 0.3)', name: 'Service' },
 ] as const;
 
 const GROUP_THEME_INDEX: Record<SidebarGroupKey, number> = {
@@ -68,30 +69,30 @@ const GROUP_THEME_INDEX: Record<SidebarGroupKey, number> = {
 };
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
-    simulation: <FlaskConical size={18} strokeWidth={2} />,
-    dashboard: <LayoutDashboard size={18} strokeWidth={2} />,
-    lens: <Sparkles size={18} strokeWidth={2} />,
-    correlate: <Link2 size={18} strokeWidth={2} />,
-    diff: <GitCompareArrows size={18} strokeWidth={2} />,
-    anomaly: <ShieldAlert size={18} strokeWidth={2} />,
-    financial: <Landmark size={18} strokeWidth={2} />,
-    forecast: <TrendingUp size={18} strokeWidth={2} />,
-    spatial: <Map size={18} strokeWidth={2} />,
-    automl: <BrainCircuit size={18} strokeWidth={2} />,
-    developer: <Code2 size={18} strokeWidth={2} />,
-    webhooks: <Webhook size={18} strokeWidth={2} />,
-    embed: <Boxes size={18} strokeWidth={2} />,
-    canvas: <Layers size={18} strokeWidth={2} />,
-    bi: <BarChart3 size={18} strokeWidth={2} />,
-    projects: <Briefcase size={18} strokeWidth={2} />,
-    democracy: <Sparkles size={18} strokeWidth={2} />,
-    automation: <Activity size={18} strokeWidth={2} />,
-    collaboration: <MessageSquare size={18} strokeWidth={2} />,
-    sources: <Database size={18} strokeWidth={2} />,
-    migration: <ArrowRightLeft size={18} strokeWidth={2} />,
-    organization: <Building2 size={18} strokeWidth={2} />,
-    settings: <Settings size={18} strokeWidth={2} />,
-    docs: <FileCheck size={18} strokeWidth={2} />,
+    simulation: <FlaskConical size={16} strokeWidth={2} />,
+    dashboard: <LayoutDashboard size={16} strokeWidth={2} />,
+    lens: <Sparkles size={16} strokeWidth={2} />,
+    correlate: <Link2 size={16} strokeWidth={2} />,
+    diff: <GitCompareArrows size={16} strokeWidth={2} />,
+    anomaly: <ShieldAlert size={16} strokeWidth={2} />,
+    financial: <Landmark size={16} strokeWidth={2} />,
+    forecast: <TrendingUp size={16} strokeWidth={2} />,
+    spatial: <Map size={16} strokeWidth={2} />,
+    automl: <BrainCircuit size={16} strokeWidth={2} />,
+    developer: <Code2 size={16} strokeWidth={2} />,
+    webhooks: <Webhook size={16} strokeWidth={2} />,
+    embed: <Boxes size={16} strokeWidth={2} />,
+    canvas: <Layers size={16} strokeWidth={2} />,
+    bi: <BarChart3 size={16} strokeWidth={2} />,
+    projects: <Briefcase size={16} strokeWidth={2} />,
+    democracy: <Sparkles size={16} strokeWidth={2} />,
+    automation: <Activity size={16} strokeWidth={2} />,
+    collaboration: <MessageSquare size={16} strokeWidth={2} />,
+    sources: <Database size={16} strokeWidth={2} />,
+    migration: <ArrowRightLeft size={16} strokeWidth={2} />,
+    organization: <Building2 size={16} strokeWidth={2} />,
+    settings: <Settings size={16} strokeWidth={2} />,
+    docs: <FileCheck size={16} strokeWidth={2} />,
 };
 
 function sidebarNavLabel(id: string, t: (key: string) => string): string {
@@ -153,6 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     const [collapsed, setCollapsed] = useState(getInitialSidebarCollapsed);
     const [prefs, setPrefs] = useState(loadLayoutPreferences);
     const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
     const { t } = useLanguage();
     const { user } = useAuth();
     const { isArchitectMode } = useArchitect();
@@ -174,6 +176,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
         saveLayoutPreferences({ ...p, sidebarCollapsedDefault: next });
     };
 
+    const toggleGroupCollapse = (groupKey: string) => {
+        setCollapsedGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(groupKey)) {
+                next.delete(groupKey);
+            } else {
+                next.add(groupKey);
+            }
+            return next;
+        });
+    };
+
     const groupKeys = prefs.groupOrder.filter((g): g is SidebarGroupKey =>
         (DEFAULT_GROUP_ORDER as readonly string[]).includes(g)
     );
@@ -190,8 +204,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
         saveLayoutPreferences({ ...p, groupOrder: newOrder });
     }, []);
 
-    const expandedWidth = 280;
-    const collapsedWidth = 76;
+    const expandedWidth = 240;
+    const collapsedWidth = 64;
 
     return (
         <aside
@@ -199,111 +213,133 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
             style={{
                 width: collapsed ? collapsedWidth : expandedWidth,
                 height: '100%',
-                transition: 'width 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+                transition: 'width 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
                 display: 'flex',
                 flexDirection: 'column',
                 zIndex: 20,
                 position: 'relative',
-                backdropFilter: 'blur(10px) saturate(1.1)',
-                WebkitBackdropFilter: 'blur(10px) saturate(1.1)',
                 overflowX: 'visible',
                 overflowY: 'hidden',
             }}
         >
-            {isPro && (
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-                    <div style={{
-                        position: 'absolute', top: 0, left: 0, width: '100%', height: '280px',
-                        background: 'linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%)',
-                    }} />
-                    <div style={{
-                        position: 'absolute', bottom: 0, left: 0, width: '100%', height: '220px',
-                        background: 'linear-gradient(0deg, rgba(217,70,239,0.06) 0%, transparent 100%)',
-                    }} />
-                </div>
-            )}
-
-            {/* Animated vertical “signal spine” */}
-            <div className="sidebar-neural-spine" aria-hidden>
-                <div className="sidebar-neural-spine__core" />
-                <div className="sidebar-neural-spine__packet" />
-            </div>
-
             {/* Brand + collapse */}
             <ArchitectNode id="sb-brand" label="Command Identity">
-                <div className="sidebar-neural-brand">
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : 'space-between',
+                    padding: collapsed ? '12px 8px' : '12px 14px',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    minHeight: '48px',
+                }}>
                     {!collapsed ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                            <div className="sidebar-neural-mark">
-                                N
-                            </div>
-                            <div className="sidebar-neural-title-stack">
-                                <span className="sidebar-neural-title">Nalyse</span>
-                                <span className="sidebar-neural-tag">Neural Command Rail</span>
-                            </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                            <div style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 8,
+                                background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#fff',
+                                fontWeight: 900,
+                                fontSize: 13,
+                                fontFamily: 'var(--font-heading)',
+                                flexShrink: 0,
+                            }}>N</div>
+                            <span style={{
+                                fontSize: 14,
+                                fontWeight: 800,
+                                color: 'var(--text-primary)',
+                                fontFamily: 'var(--font-heading)',
+                                letterSpacing: '-0.02em',
+                            }}>Nalyse</span>
                         </div>
                     ) : (
-                        <div className="sidebar-neural-mark" style={{ margin: '0 auto' }}>
-                            N
-                        </div>
+                        <div style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 8,
+                            background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff',
+                            fontWeight: 900,
+                            fontSize: 13,
+                            fontFamily: 'var(--font-heading)',
+                        }}>N</div>
                     )}
                     <button
                         type="button"
                         onClick={() => persistCollapsed(!collapsed)}
-                        className="desktop-only btn btn-icon btn-ghost btn-sm"
-                        title={collapsed ? 'Expand rail' : 'Collapse rail'}
+                        className="desktop-only"
+                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         style={{
-                            borderRadius: 10,
-                            width: 34,
-                            height: 34,
+                            width: 26,
+                            height: 26,
+                            borderRadius: 6,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid var(--border-subtle)',
+                            background: 'transparent',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
                             flexShrink: 0,
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            background: 'rgba(0,0,0,0.2)',
                         }}
                     >
-                        {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+                        {collapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
                     </button>
                 </div>
             </ArchitectNode>
 
             <nav
-                className="custom-scrollbar sidebar-neural-nav-scroll"
+                className="custom-scrollbar"
                 style={{
-                    padding: '8px 10px 12px',
+                    padding: '6px 8px 10px',
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 4,
+                    gap: 1,
                     overflowY: 'auto',
                     overflowX: 'hidden',
                     position: 'relative',
                     zIndex: 2,
                 }}
             >
+                {/* Home */}
                 <NavItem
                     id="landing"
                     label={t('nav.home')}
-                    icon={<Home size={18} strokeWidth={2} />}
+                    icon={<Home size={16} strokeWidth={2} />}
                     isActive={currentView === 'landing'}
                     collapsed={collapsed}
                     hovered={hoveredItem === 'landing'}
                     sectorAccent="#94a3b8"
-                    sectorGlow="rgba(148, 163, 184, 0.35)"
+                    sectorGlow="rgba(148, 163, 184, 0.25)"
                     onHover={setHoveredItem}
                     onClick={() => onViewChange('landing')}
                 />
 
+                {/* Navigation Groups */}
                 <Reorder.Group
                     axis="y"
                     values={groupKeys}
                     onReorder={handleReorderGroups}
-                    style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}
+                    style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
                 >
                     {groupKeys.map((groupKey) => {
                         const themeIdx = GROUP_THEME_INDEX[groupKey];
                         const theme = SECTOR_THEMES[themeIdx] ?? SECTOR_THEMES[0];
                         const itemIds = orderedGroupItemIds(groupKey, prefs);
                         if (itemIds.length === 0) return null;
+                        const isGroupCollapsed = collapsedGroups.has(groupKey);
+                        // Auto-expand if current view is inside this group
+                        const hasActiveItem = itemIds.includes(currentView);
+
                         return (
                             <Reorder.Item
                                 key={groupKey}
@@ -316,14 +352,70 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                                     label={`${GROUP_TITLES[groupKey]} Sector`}
                                     onRemove={() => handleHideGroup(groupKey)}
                                 >
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                        <SectorHeader title={GROUP_TITLES[groupKey]} theme={theme} collapsed={collapsed} />
-                                        {itemIds.map((itemId) => (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        {/* Group Header — clickable to toggle */}
+                                        {!collapsed ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleGroupCollapse(groupKey)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 6,
+                                                    padding: '10px 10px 4px',
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    width: '100%',
+                                                    textAlign: 'left',
+                                                }}
+                                            >
+                                                <span style={{
+                                                    width: 4,
+                                                    height: 4,
+                                                    borderRadius: '50%',
+                                                    background: theme.accent,
+                                                    opacity: 0.6,
+                                                    flexShrink: 0,
+                                                }} />
+                                                <span style={{
+                                                    fontSize: 10,
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.08em',
+                                                    color: 'var(--text-muted)',
+                                                    flex: 1,
+                                                }}>
+                                                    {GROUP_TITLES[groupKey]}
+                                                </span>
+                                                <span style={{
+                                                    color: 'var(--text-muted)',
+                                                    opacity: 0.5,
+                                                    transition: 'transform 0.2s ease',
+                                                    transform: isGroupCollapsed && !hasActiveItem ? 'rotate(-90deg)' : 'rotate(0deg)',
+                                                    display: 'flex',
+                                                }}>
+                                                    <ChevronDown size={12} />
+                                                </span>
+                                            </button>
+                                        ) : (
+                                            <div style={{
+                                                margin: '6px auto 4px',
+                                                width: 16,
+                                                height: 2,
+                                                borderRadius: 1,
+                                                background: theme.accent,
+                                                opacity: 0.25,
+                                            }} />
+                                        )}
+
+                                        {/* Items — show if not collapsed, or if has active item */}
+                                        {(!isGroupCollapsed || hasActiveItem || collapsed) && itemIds.map((itemId) => (
                                             <NavItem
                                                 key={itemId}
                                                 id={itemId}
                                                 label={sidebarNavLabel(itemId, t)}
-                                                icon={NAV_ICONS[itemId] ?? <Activity size={18} strokeWidth={2} />}
+                                                icon={NAV_ICONS[itemId] ?? <Activity size={16} strokeWidth={2} />}
                                                 isActive={currentView === itemId}
                                                 collapsed={collapsed}
                                                 hovered={hoveredItem === itemId}
@@ -342,26 +434,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
 
                 <div style={{ flex: 1, minHeight: 8 }} />
 
-                <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, var(--border-subtle), transparent)', margin: '8px 8px', opacity: 0.5 }} />
+                {/* Footer separator */}
+                <div style={{
+                    height: 1,
+                    background: 'var(--border-subtle)',
+                    margin: '4px 8px',
+                    opacity: 0.5,
+                }} />
 
-                {!collapsed && (
-                    <div className="sidebar-sector-header" style={{ paddingTop: 4 }}>
-                        <span className="sidebar-sector-node" style={{ color: '#64748b' }} />
-                        <span className="sidebar-sector-line" style={{ background: 'linear-gradient(90deg, #64748b, transparent)' }} />
-                        <span className="sidebar-sector-title" style={{ color: 'var(--text-muted)' }}>Data & Settings</span>
-                    </div>
-                )}
-                {collapsed && <div className="sidebar-sector-rung" style={{ background: '#64748b' }} />}
-
+                {/* Footer nav items */}
                 {prefs.footerOrder
                     .filter((fid) => !prefs.hiddenNavIds.includes(fid))
                     .map((fid) => {
                         const footerAccents: Record<string, { a: string; g: string }> = {
-                            sources: { a: '#38bdf8', g: 'rgba(56, 189, 248, 0.35)' },
-                            migration: { a: '#a78bfa', g: 'rgba(167, 139, 250, 0.35)' },
-                            organization: { a: '#f472b6', g: 'rgba(244, 114, 182, 0.35)' },
-                            settings: { a: '#94a3b8', g: 'rgba(148, 163, 184, 0.35)' },
-                            docs: { a: '#64748b', g: 'rgba(100, 116, 139, 0.25)' },
+                            sources: { a: '#38bdf8', g: 'rgba(56, 189, 248, 0.25)' },
+                            migration: { a: '#a78bfa', g: 'rgba(167, 139, 250, 0.25)' },
+                            organization: { a: '#f472b6', g: 'rgba(244, 114, 182, 0.25)' },
+                            settings: { a: '#94a3b8', g: 'rgba(148, 163, 184, 0.25)' },
+                            docs: { a: '#64748b', g: 'rgba(100, 116, 139, 0.2)' },
                         };
                         const { a, g } = footerAccents[fid] ?? footerAccents.settings;
                         return (
@@ -369,7 +459,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                                 key={fid}
                                 id={fid}
                                 label={sidebarNavLabel(fid, t)}
-                                icon={NAV_ICONS[fid] ?? <Activity size={18} strokeWidth={2} />}
+                                icon={NAV_ICONS[fid] ?? <Activity size={16} strokeWidth={2} />}
                                 isActive={fid === 'docs' ? false : currentView === fid}
                                 collapsed={collapsed}
                                 hovered={hoveredItem === fid}
@@ -386,19 +476,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     })}
             </nav>
 
-            {!collapsed && (
-                <div className="sidebar-presence-strip">
-                    <span className="sidebar-presence-dot" />
-                    <span>Live mesh · Synced</span>
-                </div>
-            )}
-
+            {/* Upgrade CTA (non-pro users only) */}
             {!isPro && (
                 <ArchitectNode id="sb-upgrade" label="Upgrade Core">
-                    <div style={{ padding: '10px 12px 14px', position: 'relative', zIndex: 2 }}>
+                    <div style={{ padding: '8px', position: 'relative', zIndex: 2 }}>
                         <div
-                            className="sidebar-upgrade-holo"
-                            style={{ cursor: 'pointer', padding: collapsed ? 12 : 16 }}
+                            style={{
+                                cursor: 'pointer',
+                                padding: collapsed ? 10 : 14,
+                                borderRadius: 10,
+                                background: 'linear-gradient(135deg, var(--primary-subtle), rgba(139, 92, 246, 0.08))',
+                                border: '1px solid var(--border-subtle)',
+                                transition: 'all 0.2s ease',
+                            }}
                             onClick={() => onViewChange({ id: 'settings', data: { initialTab: 'subscription' } })}
                             role="button"
                             tabIndex={0}
@@ -409,41 +499,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                                 }
                             }}
                         >
-                            <div style={{ position: 'relative', zIndex: 1 }}>
-                                {!collapsed ? (
-                                    <>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                            <Sparkles size={14} className="text-[var(--primary)]" />
-                                            <span style={{
-                                                fontSize: 9, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase',
-                                                color: 'var(--primary)',
-                                            }}>Neural Pro</span>
-                                        </div>
-                                        <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4, fontFamily: 'var(--font-heading)' }}>
-                                            Unlock full stack
-                                        </h4>
-                                        <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.45 }}>
-                                            50GB storage & unlimited datasets
-                                        </p>
-                                        <button
-                                            type="button"
-                                            style={{
-                                                width: '100%', marginTop: 12, padding: '8px 12px',
-                                                background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                                                color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer',
-                                                fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
-                                                boxShadow: '0 6px 20px var(--primary-glow)',
-                                            }}
-                                        >
-                                            Upgrade now
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div style={{ display: 'flex', justifyContent: 'center', padding: 4 }}>
-                                        <Sparkles size={20} style={{ color: 'var(--primary)' }} />
+                            {!collapsed ? (
+                                <>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                        <Sparkles size={12} style={{ color: 'var(--primary)' }} />
+                                        <span style={{
+                                            fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
+                                            color: 'var(--primary)',
+                                        }}>Upgrade to Pro</span>
                                     </div>
-                                )}
-                            </div>
+                                    <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4, margin: 0 }}>
+                                        50GB storage & unlimited datasets
+                                    </p>
+                                </>
+                            ) : (
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </ArchitectNode>
@@ -452,6 +525,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     );
 };
 
+/* ─── Group Header component ─── */
 function SectorHeader({
     title,
     theme,
@@ -476,6 +550,7 @@ function SectorHeader({
     );
 }
 
+/* ─── NavItem ─── */
 interface NavItemProps {
     id: string;
     label: string;
@@ -502,87 +577,81 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
     onClick,
 }) {
     return (
-        <div className="sidebar-nav-rail-wrap" style={{ position: 'relative' }}>
-            <div
-                className="sidebar-nav-rail-item__glow"
-                style={{ ['--item-glow' as string]: sectorGlow } as React.CSSProperties}
-            />
+        <div style={{ position: 'relative' }}>
             <button
                 type="button"
                 onClick={onClick}
                 onMouseEnter={() => onHover(id)}
                 onMouseLeave={() => onHover(null)}
-                className={`sidebar-nav-rail-item ${isActive ? 'sidebar-nav-rail-item--active' : ''}`}
                 title={collapsed ? label : undefined}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: collapsed ? 'center' : 'flex-start',
-                    padding: collapsed ? '11px 10px' : '10px 12px',
-                    gap: 12,
+                    padding: collapsed ? '8px' : '7px 10px',
+                    gap: 10,
                     width: '100%',
                     border: 'none',
                     cursor: 'pointer',
-                    borderRadius: 12,
+                    borderRadius: 8,
                     position: 'relative',
                     fontFamily: 'var(--font-main)',
-                    fontSize: 13,
+                    fontSize: 12.5,
                     fontWeight: isActive ? 600 : 500,
                     background: isActive
-                        ? `linear-gradient(105deg, ${sectorAccent}18 0%, rgba(0,0,0,0.15) 55%, transparent 100%)`
+                        ? `${sectorAccent}12`
                         : hovered
-                            ? 'rgba(255,255,255,0.04)'
+                            ? 'var(--bg-surface-hover)'
                             : 'transparent',
                     color: isActive ? sectorAccent : hovered ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    boxShadow: isActive
-                        ? `inset 0 0 0 1px ${sectorAccent}35, 0 4px 24px -8px ${sectorGlow}`
-                        : 'none',
+                    transition: 'all 0.15s ease',
+                    outline: 'none',
                 }}
             >
-                <span
-                    className="sidebar-nav-rail-item__pip"
-                    style={{
+                {/* Active indicator bar */}
+                {isActive && (
+                    <span style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: '20%',
+                        bottom: '20%',
+                        width: 3,
+                        borderRadius: '0 3px 3px 0',
                         background: sectorAccent,
-                        boxShadow: `0 0 12px ${sectorGlow}`,
-                    }}
-                    aria-hidden
-                />
+                        boxShadow: `0 0 8px ${sectorGlow}`,
+                    }} />
+                )}
 
-                <span
-                    className="sidebar-nav-rail-item__icon-wrap"
-                    style={{
-                        width: collapsed ? undefined : 34,
-                        height: collapsed ? undefined : 34,
-                        background: isActive ? `${sectorAccent}22` : 'transparent',
-                        boxShadow: isActive ? `0 0 20px -4px ${sectorGlow}` : 'none',
-                    }}
-                >
+                <span style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: collapsed ? undefined : 28,
+                    height: collapsed ? undefined : 28,
+                    borderRadius: 6,
+                    background: isActive ? `${sectorAccent}18` : 'transparent',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                }}>
                     {icon}
                 </span>
 
                 {!collapsed && (
-                    <>
-                        <span
-                            className="sidebar-label"
-                            style={{
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                flex: 1,
-                                textAlign: 'left',
-                            }}
-                        >
-                            {label}
-                        </span>
-                        {!isActive && (
-                            <span className="sidebar-nav-rail-item__chevron" aria-hidden>
-                                <ChevronRight size={14} />
-                            </span>
-                        )}
-                    </>
+                    <span
+                        style={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            flex: 1,
+                            textAlign: 'left',
+                        }}
+                    >
+                        {label}
+                    </span>
                 )}
             </button>
 
+            {/* Tooltip for collapsed state */}
             {collapsed && (
                 <div
                     className={`sidebar-nav-rail-tooltip${hovered ? ' sidebar-nav-rail-tooltip--open' : ''}`}

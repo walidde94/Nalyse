@@ -46,6 +46,10 @@ import { ProHeroBadge } from './ProBeastMode';
 import { NeuralDropZone } from './NeuralDropZone';
 import { ArchitectNode } from '../../components/layout/ArchitectNode';
 import { DiagnosticOverlay } from '../../components/layout/DiagnosticOverlay';
+import { Responsive as ResponsiveGrid, WidthProvider } from 'react-grid-layout/legacy';
+import 'react-grid-layout/css/styles.css';
+
+const ResponsiveGridLayout = WidthProvider(ResponsiveGrid);
 
 
 // --- SUB-COMPONENTS for Dashboard ---
@@ -457,7 +461,7 @@ export const DashboardView = ({
 }: any) => {
     const { refreshProfile, syncSubscription } = useAuth();
     const { user } = useAuth();
-    const { layoutMode, layoutState } = useArchitect();
+    const { isArchitectMode, layoutMode, layoutState, updateLayoutSequence } = useArchitect();
     const maxStorageMB = userPlan === 'pro' ? 10240 : userPlan === 'enterprise' ? 1000000 : 100;
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -656,10 +660,10 @@ export const DashboardView = ({
     const metrics = useMemo(() => {
         // Calculate a live health score based on telemetry
         // CPU range: 0-100 (weighted 40%), Latency range: 0-200 (weighted 30%), Memory range: 1.0-4.0 (weighted 30%)
-        const cpuScore = Math.max(0, 100 - telemetryData.cpu);
-        const latencyScore = Math.max(0, 100 - (telemetryData.latency / 2));
-        const memoryScore = Math.max(0, 100 - ((telemetryData.memory - 1) * 33));
-        const liveHealth = Math.round((cpuScore * 0.4) + (latencyScore * 0.3) + (memoryScore * 0.3));
+        const cpuScore = Math.min(100, Math.max(0, 100 - (telemetryData?.cpu || 0)));
+        const latencyScore = Math.min(100, Math.max(0, 100 - ((telemetryData?.latency || 42) / 2)));
+        const memoryScore = Math.min(100, Math.max(0, 100 - (((telemetryData?.memory || 1.25) - 1) * 33)));
+        const liveHealth = Math.min(100, Math.round((cpuScore * 0.4) + (latencyScore * 0.3) + (memoryScore * 0.3)));
 
         if (!pulseData) return { ...localMetrics, systemHealth: liveHealth };
         return {
@@ -759,22 +763,10 @@ export const DashboardView = ({
 
             {/* --- ARCHITECTURAL STAGE WRAPPER --- */}
             {(() => {
-                const CELL_SIZE = 120;
-                const GAP = 24;
                 const isCanvas = layoutMode === 'canvas';
-                // Find maximum height required for all visible configured nodes in canvas mode
-                const maxH = isCanvas ? Math.max(
-                    10,
-                    ...Object.values(layoutState)
-                        .filter(n => n.visible !== false)
-                        .map(n => ((n.y ?? 0) + (n.h ?? 3)))
-                ) : 0;
-                const canvasHeight = maxH * (CELL_SIZE + GAP);
 
                 return (
                     <div style={{
-                        position: isCanvas ? 'relative' : 'static',
-                        minHeight: isCanvas ? `${canvasHeight}px` : 'auto',
                         display: isCanvas ? 'block' : 'flex',
                         flexDirection: layoutMode === 'vertical' ? 'column' : 'row',
                         flexWrap: 'wrap',
@@ -942,6 +934,48 @@ export const DashboardView = ({
                         }));
 
                     const allNodes = [...coreNodes, ...dynamicNodes];
+                    
+                    if (isCanvas) {
+                        const currentLayout = allNodes.map((node, idx) => {
+                            const conf = layoutState[node.id];
+                            return {
+                                i: node.id,
+                                x: Number(conf?.x) || 0,
+                                y: Number(conf?.y) || (idx * 4),
+                                w: Number(conf?.w) || 12,
+                                h: Number(conf?.h) || 4,
+                                minW: 3,
+                                minH: 2
+                            };
+                        });
+
+                        return (
+                            <ResponsiveGridLayout
+                                className="layout w-full"
+                                layouts={{ lg: currentLayout, md: currentLayout, sm: currentLayout, xs: currentLayout, xxs: currentLayout }}
+                                breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                                cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+                                rowHeight={80}
+                                margin={[24, 24]}
+                                onDragStop={(layout) => isArchitectMode && updateLayoutSequence(layout)}
+                                onResizeStop={(layout) => isArchitectMode && updateLayoutSequence(layout)}
+                                draggableHandle=".react-grid-drag-handle"
+                                isDraggable={isArchitectMode}
+                                isResizable={isArchitectMode}
+                                useCSSTransforms={true}
+                            >
+                                {allNodes.map((node) => (
+                                    <div key={node.id}>
+                                        <ArchitectNode id={node.id} label={node.label} isDraggable={(node as any).isDraggable !== false}>
+                                            {node.component}
+                                        </ArchitectNode>
+                                    </div>
+                                ))}
+                            </ResponsiveGridLayout>
+                        );
+                    }
+
+                    // Fallback flex mapping
                     return allNodes
                         .sort((a, b) => (layoutState[a.id]?.order || 0) - (layoutState[b.id]?.order || 0))
                         .map(node => (

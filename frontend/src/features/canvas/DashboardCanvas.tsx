@@ -12,7 +12,8 @@ import {
 import { API_URL } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/Toast';
-import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
+import { Responsive as ResponsiveGridLayout } from 'react-grid-layout/legacy';
+import { useContainerWidth } from 'react-grid-layout';
 import type { LayoutItem, Layout as RGLLayout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';

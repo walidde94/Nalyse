@@ -1,72 +1,54 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { GripVertical, Eye, EyeOff, Maximize2 } from 'lucide-react';
+import React, { forwardRef, useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useArchitect } from '../../contexts/ArchitectContext';
 
-interface ArchitectNodeProps {
-    children: React.ReactNode;
+interface ArchitectNodeProps extends React.HTMLAttributes<HTMLDivElement> {
+    children?: React.ReactNode;
     id: string;
     label: string;
-    className?: string;
-    style?: React.CSSProperties;
     isDraggable?: boolean;
     onRemove?: () => void;
 }
 
-export const ArchitectNode: React.FC<ArchitectNodeProps> = ({ 
-    children, id, label: defaultLabel, className, style, isDraggable = true, onRemove
-}) => {
+export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({ 
+    children, id, label: defaultLabel, className, style, isDraggable = true, onRemove, ...rest
+}, ref) => {
     const { 
         isArchitectMode, layoutState, setActiveNodeId, activeNodeId, 
-        removeNode, moveNode, resizeNode, layoutMode
+        removeNode, layoutMode
     } = useArchitect();
     
-    const nodeRef = useRef<HTMLDivElement>(null);
-
     const config = layoutState[id];
     const label = config?.label || defaultLabel;
     const isShellNode = id.startsWith('shell-');
     const isVisible = config?.visible !== false || isShellNode;
     const isActive = activeNodeId === id;
     
-    // Matrix configuration
-    const CELL_SIZE = 120; // 120px grid cells
-    const GAP = 24;
-
     // Fallback to legacy layout if not in canvas mode
     const isCanvas = layoutMode === 'canvas';
     const legacyWidth = config?.width || '100%';
 
-    // Read spatial coordinates (default to flat stream if unset)
-    const [x, setX] = useState(config?.x ?? 0);
-    const [y, setY] = useState(config?.y ?? (config?.order ?? 0) * 3);
-    const [w, setW] = useState(config?.w ?? 4); // Default span 4 columns
-    const [h, setH] = useState(config?.h ?? 3); // Default span 3 rows
-
-    useEffect(() => {
-        if (config?.x !== undefined) setX(config.x);
-        if (config?.y !== undefined) setY(config.y);
-        if (config?.w !== undefined) setW(config.w);
-        if (config?.h !== undefined) setH(config.h);
-    }, [config]);
-
     // Visibility logic
     if (!isVisible && !isArchitectMode) return null;
-    if (!isArchitectMode) return (
-        <div style={isCanvas ? {
-            position: 'absolute',
-            left: x * (CELL_SIZE + GAP),
-            top: y * (CELL_SIZE + GAP),
-            width: w * (CELL_SIZE + GAP) - GAP,
-            height: h * (CELL_SIZE + GAP) - GAP,
-            transition: 'all 0.3s ease'
-        } : {
-            width: legacyWidth,
-            flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
-        }}>
-            {children}
-        </div>
-    );
+    
+    if (!isArchitectMode) {
+        return (
+            <div 
+                ref={ref} 
+                className={className}
+                style={{
+                    ...(isCanvas && style ? style : {
+                        width: legacyWidth,
+                        flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
+                        ...style
+                    })
+                }}
+                {...rest}
+            >
+                {children}
+            </div>
+        );
+    }
 
     const handleRemove = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -74,152 +56,50 @@ export const ArchitectNode: React.FC<ArchitectNodeProps> = ({
         else removeNode(id);
     };
 
-    // Canvas Matrix logic
-    const calcPos = (val: number) => val * (CELL_SIZE + GAP);
-    const calcDim = (span: number) => span * (CELL_SIZE + GAP) - GAP;
-
     return (
-        <motion.div 
-            ref={nodeRef}
+        <div 
+            ref={ref}
             className={`architect-node-canvas ${isActive ? 'anc-active' : ''} ${!isVisible ? 'anc-hidden' : ''} ${className || ''}`}
             data-node-id={id}
             onClick={(e) => { e.stopPropagation(); setActiveNodeId(isActive ? null : id); }}
-            
-            // Framer Motion Properties for Dragging & Snapping
-            drag={isDraggable && isCanvas}
-            dragMomentum={false}
-            onDrag={(e, info) => {
-                // Update local visual state to snap cleanly on drag
-                if (!nodeRef.current || !isCanvas) return;
-                const rect = nodeRef.current.getBoundingClientRect();
-                const parentRect = nodeRef.current.parentElement?.getBoundingClientRect();
-                if (!parentRect) return;
-
-                const localX = rect.left - parentRect.left;
-                const localY = rect.top - parentRect.top;
-
-                const snapX = Math.round(localX / (CELL_SIZE + GAP));
-                const snapY = Math.round(localY / (CELL_SIZE + GAP));
-                
-                // Show drop ghost (could be drawn via parent, but local state works)
-            }}
-            onDragEnd={(e, info) => {
-                if (!isCanvas) return;
-                const snapX = Math.max(0, Math.round((calcPos(x) + info.offset.x) / (CELL_SIZE + GAP)));
-                const snapY = Math.max(0, Math.round((calcPos(y) + info.offset.y) / (CELL_SIZE + GAP)));
-                setX(snapX);
-                setY(snapY);
-                moveNode(id, snapX, snapY);
-            }}
-
-            // Positioning
-            initial={false}
-            animate={{
-                x: isCanvas ? calcPos(x) : 0,
-                y: isCanvas ? calcPos(y) : 0,
-                width: isCanvas ? calcDim(w) : 'auto',
-                height: isCanvas ? calcDim(h) : 'auto'
-            }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            
-            style={{ 
-                position: isCanvas ? 'absolute' : 'relative',
+            style={{
                 zIndex: isActive ? 100 : 1,
                 // Legacy support
                 ...(!isCanvas && {
+                    position: 'relative',
                     width: legacyWidth,
                     flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
                 }),
                 ...style,
             }}
+            {...rest}
         >
             {/* Selection border */}
             <div className="anc-border" />
 
             {/* Floating toolbar */}
-            <div className="anc-toolbar drag-handle">
-                {/* Drag handle */}
+            <div className="anc-toolbar">
+                {/* Drag handle specifically configured for react-grid-layout */}
                 {isDraggable && (
-                    <div className="anc-drag-handle" title="Drag to move on grid">
-                        <GripVertical size={14} />
+                    <div className="anc-drag-handle react-grid-drag-handle" title="Drag to move on grid" style={{ cursor: 'grab' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
+                            <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
+                        </svg>
                     </div>
                 )}
                 <span className="anc-label">{label}</span>
                 <div className="anc-actions">
-                    <button onClick={handleRemove} title={isVisible ? "Hide section" : "Show section"} className="anc-btn anc-btn-danger">
+                    <button 
+                        onMouseDown={(e) => e.stopPropagation()} // Prevent grid dragging when clicking
+                        onClick={handleRemove} 
+                        title={isVisible ? "Hide section" : "Show section"} 
+                        className="anc-btn anc-btn-danger"
+                    >
                         {isVisible ? <EyeOff size={13} /> : <Eye size={13} />}
                     </button>
                 </div>
             </div>
-
-            {/* Freeform Resize Handles (Only when active and in canvas mode) */}
-            {isCanvas && isActive && (
-                <>
-                    {/* Right Handle (Width) */}
-                    <div className="anc-resize-handle anc-resize-e"
-                        onPointerDown={(e) => {
-                            e.stopPropagation();
-                            const startX = e.clientX;
-                            const startW = w;
-                            const onMove = (me: PointerEvent) => {
-                                const diffItems = Math.round((me.clientX - startX) / (CELL_SIZE + GAP));
-                                setW(Math.max(1, startW + diffItems));
-                            };
-                            const onUp = () => {
-                                resizeNode(id, Math.max(1, w), h);
-                                window.removeEventListener('pointermove', onMove);
-                                window.removeEventListener('pointerup', onUp);
-                            };
-                            window.addEventListener('pointermove', onMove);
-                            window.addEventListener('pointerup', onUp);
-                        }}
-                    />
-                    {/* Bottom Handle (Height) */}
-                    <div className="anc-resize-handle anc-resize-s"
-                        onPointerDown={(e) => {
-                            e.stopPropagation();
-                            const startY = e.clientY;
-                            const startH = h;
-                            const onMove = (me: PointerEvent) => {
-                                const diffItems = Math.round((me.clientY - startY) / (CELL_SIZE + GAP));
-                                setH(Math.max(1, startH + diffItems));
-                            };
-                            const onUp = () => {
-                                resizeNode(id, w, Math.max(1, h));
-                                window.removeEventListener('pointermove', onMove);
-                                window.removeEventListener('pointerup', onUp);
-                            };
-                            window.addEventListener('pointermove', onMove);
-                            window.addEventListener('pointerup', onUp);
-                        }}
-                    />
-                    {/* Bottom-Right Handle (Both) */}
-                    <div className="anc-resize-handle anc-resize-se"
-                        onPointerDown={(e) => {
-                            e.stopPropagation();
-                            const startX = e.clientX;
-                            const startY = e.clientY;
-                            const startW = w;
-                            const startH = h;
-                            const onMove = (me: PointerEvent) => {
-                                const diffX = Math.round((me.clientX - startX) / (CELL_SIZE + GAP));
-                                const diffY = Math.round((me.clientY - startY) / (CELL_SIZE + GAP));
-                                setW(Math.max(1, startW + diffX));
-                                setH(Math.max(1, startH + diffY));
-                            };
-                            const onUp = () => {
-                                resizeNode(id, w, h);
-                                window.removeEventListener('pointermove', onMove);
-                                window.removeEventListener('pointerup', onUp);
-                            };
-                            window.addEventListener('pointermove', onMove);
-                            window.addEventListener('pointerup', onUp);
-                        }}
-                    >
-                        <Maximize2 size={10} style={{ transform: 'rotate(90deg)', opacity: 0.5 }} />
-                    </div>
-                </>
-            )}
 
             {/* Content Container */}
             <div style={{ 
@@ -230,7 +110,9 @@ export const ArchitectNode: React.FC<ArchitectNodeProps> = ({
                 width: '100%',
                 height: '100%',
                 overflow: 'hidden'
-            }}>
+            }}
+            onMouseDown={(e) => e.stopPropagation()} /* Prevent internal clicks from triggering grid dragging */
+            >
                 {children}
             </div>
 
@@ -296,34 +178,26 @@ export const ArchitectNode: React.FC<ArchitectNodeProps> = ({
                 }
                 .anc-btn:hover { background: rgba(255,255,255,0.12); color: white; }
                 .anc-btn-danger:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-
-                /* Resize handles */
-                .anc-resize-handle {
-                    position: absolute;
-                    background: var(--primary);
-                    border-radius: 4px;
-                    z-index: 105;
-                    opacity: 0;
-                    transition: opacity 0.2s;
-                }
-                .anc-active:hover .anc-resize-handle { opacity: 1; }
                 
-                .anc-resize-e {
-                    top: 20%; bottom: 20%; right: -6px; width: 4px;
-                    cursor: ew-resize;
-                }
-                .anc-resize-s {
-                    left: 20%; right: 20%; bottom: -6px; height: 4px;
-                    cursor: ns-resize;
-                }
-                .anc-resize-se {
-                    bottom: -10px; right: -10px; width: 20px; height: 20px;
+                /* Override react grid layout resize handle appearance */
+                .react-resizable-handle {
+                    position: absolute;
+                    width: 20px;
+                    height: 20px;
+                    bottom: -5px;
+                    right: -5px;
+                    cursor: se-resize;
+                    z-index: 110;
+                    opacity: 0;
+                    background: var(--primary);
                     border-radius: 50%;
-                    cursor: nwse-resize;
-                    display: flex; align-items: center; justify-content: center;
-                    color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.5);
+                    pointer-events: auto;
+                    transition: opacity 0.2s ease, transform 0.2s ease;
                 }
+                .anc-active .react-resizable-handle { opacity: 1; }
+                .react-resizable-handle:hover { transform: scale(1.2); }
             `}</style>
-        </motion.div>
+        </div>
     );
-};
+});
+ArchitectNode.displayName = 'ArchitectNode';

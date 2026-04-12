@@ -40,14 +40,7 @@ export const TabBar = ({
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number, fileId: string } | null>(null);
     const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
     const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-    const [tabDensity, setTabDensity] = useState<TabBarDensity>(() => loadLayoutPreferences().tabBarDensity);
     const menuRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const sync = () => setTabDensity(loadLayoutPreferences().tabBarDensity);
-        window.addEventListener(LAYOUT_PREFS_EVENT, sync);
-        return () => window.removeEventListener(LAYOUT_PREFS_EVENT, sync);
-    }, []);
 
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
@@ -84,8 +77,7 @@ export const TabBar = ({
         setContextMenu({ x: e.clientX, y: e.clientY, fileId: id });
     };
 
-    const m = getTabBarMetrics(tabDensity);
-    const { barH, tabHActive, tabHIdle, tabFs, tabPadX, tabMinW, tabMaxW, tabGap, iconSize } = m;
+    const iconSize = 12;
 
     const getTabIcon = (tab: TabType) => {
         if (tab.icon) return tab.icon;
@@ -112,18 +104,20 @@ export const TabBar = ({
             'embed': <Boxes size={s} />,
             'canvas': <Layers size={s} />,
             'lens': <Sparkles size={s} />,
-
         };
         return iconMap[tab.type] || <FileText size={s} />;
     };
+
+    // Don't show tab bar if only 1 tab
+    if (tabs.length <= 1) return null;
 
     return (
         <>
             <div style={{
                 display: 'flex',
                 alignItems: 'flex-end',
-                height: `${barH}px`,
-                padding: tabDensity === 'minimal' || tabDensity === 'compact' ? '0 8px' : tabDensity === 'spacious' ? '0 14px' : '0 12px',
+                height: '32px',
+                padding: '0 8px',
                 gap: '1px',
                 userSelect: 'none',
                 overflowX: 'auto',
@@ -151,48 +145,48 @@ export const TabBar = ({
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: `${tabGap}px`,
-                                padding: `0 ${tabPadX}px`,
-                                height: isActive ? `${tabHActive}px` : `${tabHIdle}px`,
+                                gap: '5px',
+                                padding: '0 10px',
+                                height: isActive ? '28px' : '26px',
                                 color: isActive ? 'var(--text-primary)' : isHovered ? 'var(--text-secondary)' : 'var(--text-muted)',
-                                fontSize: `${tabFs}px`,
-                                fontWeight: isActive ? 700 : 500,
+                                fontSize: '11.5px',
+                                fontWeight: isActive ? 600 : 500,
                                 cursor: 'pointer',
-                                maxWidth: `${tabMaxW}px`,
-                                minWidth: `${tabMinW}px`,
-                                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                                maxWidth: '180px',
+                                minWidth: '80px',
+                                transition: 'all 0.15s ease',
                                 position: 'relative',
                                 background: isActive ? 'var(--bg-main)' : isHovered ? 'var(--bg-surface)' : 'transparent',
-                                borderRadius: '8px 8px 0 0',
-                                borderTop: isActive ? '1px solid var(--border-default)' : '1px solid transparent',
-                                borderLeft: isActive ? '1px solid var(--border-default)' : '1px solid transparent',
-                                borderRight: isActive ? '1px solid var(--border-default)' : '1px solid transparent',
+                                borderRadius: '6px 6px 0 0',
+                                borderTop: isActive ? '1px solid var(--border-subtle)' : '1px solid transparent',
+                                borderLeft: isActive ? '1px solid var(--border-subtle)' : '1px solid transparent',
+                                borderRight: isActive ? '1px solid var(--border-subtle)' : '1px solid transparent',
                                 borderBottom: isActive ? '1px solid var(--bg-main)' : '1px solid transparent',
                                 marginBottom: isActive ? '-1px' : '0',
                                 opacity: draggedIdx === idx ? 0.4 : 1,
                                 flexShrink: 0,
                             }}
                         >
-                            {/* Active bottom glow */}
+                            {/* Active top accent */}
                             {isActive && (
                                 <div style={{
                                     position: 'absolute',
                                     top: '0',
-                                    left: '20%',
-                                    right: '20%',
-                                    height: '2px',
+                                    left: '25%',
+                                    right: '25%',
+                                    height: '1.5px',
                                     background: 'var(--primary)',
-                                    borderRadius: '0 0 4px 4px',
-                                    boxShadow: '0 2px 8px var(--primary-glow)',
+                                    borderRadius: '0 0 3px 3px',
                                 }} />
                             )}
 
                             <span style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                opacity: isActive ? 1 : 0.6,
+                                opacity: isActive ? 0.9 : 0.5,
                                 color: isActive ? 'var(--primary)' : 'inherit',
-                                transition: 'all 0.2s',
+                                transition: 'all 0.15s',
+                                flexShrink: 0,
                             }}>
                                 {getTabIcon(tab)}
                             </span>
@@ -217,16 +211,17 @@ export const TabBar = ({
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        padding: '2px',
-                                        width: '18px',
-                                        height: '18px',
-                                        borderRadius: '4px',
-                                        opacity: isActive || isHovered ? 0.7 : 0,
+                                        padding: '1px',
+                                        width: '16px',
+                                        height: '16px',
+                                        borderRadius: '3px',
+                                        opacity: isActive || isHovered ? 0.5 : 0,
                                         background: 'transparent',
                                         border: 'none',
                                         color: 'inherit',
                                         cursor: 'pointer',
-                                        transition: 'all 0.15s',
+                                        transition: 'all 0.1s',
+                                        flexShrink: 0,
                                     }}
                                     onMouseEnter={(e) => {
                                         (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
@@ -234,10 +229,10 @@ export const TabBar = ({
                                     }}
                                     onMouseLeave={(e) => {
                                         (e.target as HTMLElement).style.background = 'transparent';
-                                        (e.target as HTMLElement).style.opacity = isActive ? '0.7' : '0';
+                                        (e.target as HTMLElement).style.opacity = isActive ? '0.5' : '0';
                                     }}
                                 >
-                                    <X size={10} />
+                                    <X size={9} />
                                 </button>
                             )}
                         </div>
@@ -254,27 +249,27 @@ export const TabBar = ({
                         top: contextMenu.y + 5,
                         left: contextMenu.x + 5,
                         zIndex: 2000,
-                        padding: '6px',
-                        minWidth: '220px',
+                        padding: '4px',
+                        minWidth: '200px',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '1px',
                         background: 'var(--bg-elevated)',
                         backdropFilter: 'blur(24px) saturate(150%)',
                         border: '1px solid var(--border-default)',
-                        boxShadow: '0 20px 48px -12px rgba(0,0,0,0.5)',
-                        borderRadius: '14px',
+                        boxShadow: '0 16px 40px -12px rgba(0,0,0,0.4)',
+                        borderRadius: '10px',
                         overflow: 'hidden',
-                        animation: 'fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                        animation: 'fadeIn 0.12s ease',
                     }}
                 >
-                    <MenuButton onClick={() => { onClose(contextMenu.fileId); setContextMenu(null); }} icon={<X size={14} />}>Close Tab</MenuButton>
-                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 10px', opacity: 0.3 }} />
-                    <MenuButton onClick={() => { onCloseOthers(contextMenu.fileId); setContextMenu(null); }} icon={<Files size={14} />}>Close Others</MenuButton>
-                    <MenuButton onClick={() => { onCloseRight(contextMenu.fileId); setContextMenu(null); }} icon={<ArrowRightFromLine size={14} />}>Close to the Right</MenuButton>
-                    <MenuButton onClick={() => { onCloseLeft(contextMenu.fileId); setContextMenu(null); }} icon={<ArrowLeftFromLine size={14} />}>Close to the Left</MenuButton>
-                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 10px', opacity: 0.3 }} />
-                    <MenuButton isDanger onClick={() => { onCloseAll(); setContextMenu(null); }} icon={<Trash2 size={14} />}>Close All Tabs</MenuButton>
+                    <MenuButton onClick={() => { onClose(contextMenu.fileId); setContextMenu(null); }} icon={<X size={13} />}>Close Tab</MenuButton>
+                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '2px 8px', opacity: 0.3 }} />
+                    <MenuButton onClick={() => { onCloseOthers(contextMenu.fileId); setContextMenu(null); }} icon={<Files size={13} />}>Close Others</MenuButton>
+                    <MenuButton onClick={() => { onCloseRight(contextMenu.fileId); setContextMenu(null); }} icon={<ArrowRightFromLine size={13} />}>Close to the Right</MenuButton>
+                    <MenuButton onClick={() => { onCloseLeft(contextMenu.fileId); setContextMenu(null); }} icon={<ArrowLeftFromLine size={13} />}>Close to the Left</MenuButton>
+                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '2px 8px', opacity: 0.3 }} />
+                    <MenuButton isDanger onClick={() => { onCloseAll(); setContextMenu(null); }} icon={<Trash2 size={13} />}>Close All Tabs</MenuButton>
                 </div>
             )}
         </>
@@ -287,25 +282,25 @@ const MenuButton = ({ children, onClick, icon, isDanger }: any) => (
         className="btn-menu-item"
         style={{
             textAlign: 'left',
-            padding: '9px 12px',
-            fontSize: '12.5px',
-            borderRadius: '8px',
+            padding: '7px 10px',
+            fontSize: '12px',
+            borderRadius: '6px',
             width: '100%',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: '8px',
             background: 'transparent',
             border: 'none',
             color: isDanger ? 'var(--danger)' : 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'all 0.15s ease',
             fontWeight: 600,
             fontFamily: 'var(--font-main)',
             outline: 'none'
         }}
     >
         <span style={{
-            opacity: 0.8,
+            opacity: 0.7,
             display: 'flex',
             alignItems: 'center',
             color: isDanger ? 'var(--danger)' : 'var(--primary)'
@@ -318,10 +313,8 @@ const MenuButton = ({ children, onClick, icon, isDanger }: any) => (
             .btn-menu-item:hover {
                 background: var(--bg-surface-hover) !important;
                 color: var(--text-primary) !important;
-                transform: translateX(2px);
             }
             .btn-menu-item:active {
-                transform: translateX(1px);
                 opacity: 0.7;
             }
         `}</style>

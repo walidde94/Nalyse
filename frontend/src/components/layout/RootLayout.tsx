@@ -25,25 +25,12 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
 
     return (
         <div className="flex w-full" style={{
-            height: 'calc(100vh - 64px)',
+            height: 'calc(100vh - 52px)',
             background: 'var(--bg-main)',
             color: 'var(--text-primary)',
             overflow: 'hidden',
             position: 'relative',
         }}>
-            {/* Subtle mesh gradient background */}
-            <div style={{
-                position: 'absolute',
-                inset: 0,
-                pointerEvents: 'none',
-                zIndex: 0,
-                opacity: 0.25,
-                background:
-                    'radial-gradient(ellipse at 0% 20%, var(--primary-subtle) 0px, transparent 50%),' +
-                    'radial-gradient(ellipse at 100% 80%, var(--accent-glow) 0px, transparent 50%)',
-                filter: 'blur(100px)',
-            }} />
-
             {/* Desktop Sidebar */}
             <div className={isMobileMenuOpen ? 'mobile-sidebar-open' : 'sidebar-mobile-hidden desktop-visible'} style={{ height: '100%', zIndex: 1000 }}>
                 <Sidebar
