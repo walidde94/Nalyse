@@ -1011,7 +1011,7 @@ export const DashboardView = ({
                                 useCSSTransforms={true}
                             >
                                 {allNodes.map((node) => (
-                                    <div key={node.id}>
+                                    <div key={node.id} style={{ overflow: 'auto', height: '100%' }}>
                                         <ArchitectNode id={node.id} label={node.label} isDraggable={(node as any).isDraggable !== false}>
                                             {node.component}
                                         </ArchitectNode>
