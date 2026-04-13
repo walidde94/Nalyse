@@ -33,6 +33,9 @@ interface ArchitectContextType {
     resizeNode: (id: string, w: number, h: number) => void;
     updateLayoutSequence: (layouts: { i: string; x: number; y: number; w: number; h: number }[]) => void;
     
+    // Reset
+    resetLayout: () => void;
+    
     // Legacy Drag reorder
     reorderNode: (fromId: string, toId: string) => void;
     draggedNodeId: string | null;
@@ -59,8 +62,12 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     const [layoutState, setLayoutState] = useState<Record<string, NodeConfig>>(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        return saved ? JSON.parse(saved) : {};
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : {};
+        } catch {
+            return {};
+        }
     });
 
     const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
@@ -69,36 +76,51 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const [dropTargetId, setDropTargetId] = useState<string | null>(null);
     const [lastAction, setLastAction] = useState<string | null>(null);
 
-    // --- UNDO/REDO ---
-    const historyRef = useRef<Record<string, NodeConfig>[]>([]);
-    const futureRef = useRef<Record<string, NodeConfig>[]>([]);
+    // --- UNDO/REDO (reactive state for canUndo/canRedo) ---
+    const [undoStack, setUndoStack] = useState<Record<string, NodeConfig>[]>([]);
+    const [redoStack, setRedoStack] = useState<Record<string, NodeConfig>[]>([]);
     const skipHistoryRef = useRef(false);
 
-    const pushHistory = useCallback((prev: Record<string, NodeConfig>) => {
+    const canUndo = undoStack.length > 0;
+    const canRedo = redoStack.length > 0;
+
+    const pushHistory = useCallback((snapshot: Record<string, NodeConfig>) => {
         if (skipHistoryRef.current) { skipHistoryRef.current = false; return; }
-        historyRef.current = [...historyRef.current.slice(-MAX_HISTORY), prev];
-        futureRef.current = []; // clear redo on new action
+        setUndoStack(prev => [...prev.slice(-MAX_HISTORY), snapshot]);
+        setRedoStack([]); // clear redo on new action
     }, []);
 
     const undo = useCallback(() => {
-        if (historyRef.current.length === 0) return;
-        const prev = historyRef.current[historyRef.current.length - 1];
-        historyRef.current = historyRef.current.slice(0, -1);
-        futureRef.current = [...futureRef.current, layoutState];
-        skipHistoryRef.current = true;
-        setLayoutState(prev);
-        setLastAction('Undo');
-    }, [layoutState]);
+        setUndoStack(prevUndo => {
+            if (prevUndo.length === 0) return prevUndo;
+            const snapshot = prevUndo[prevUndo.length - 1];
+            const remaining = prevUndo.slice(0, -1);
+            // Push current state to redo before restoring
+            setLayoutState(current => {
+                setRedoStack(prevRedo => [...prevRedo, current]);
+                return snapshot;
+            });
+            skipHistoryRef.current = true;
+            setLastAction('Undo');
+            return remaining;
+        });
+    }, []);
 
     const redo = useCallback(() => {
-        if (futureRef.current.length === 0) return;
-        const next = futureRef.current[futureRef.current.length - 1];
-        futureRef.current = futureRef.current.slice(0, -1);
-        historyRef.current = [...historyRef.current, layoutState];
-        skipHistoryRef.current = true;
-        setLayoutState(next);
-        setLastAction('Redo');
-    }, [layoutState]);
+        setRedoStack(prevRedo => {
+            if (prevRedo.length === 0) return prevRedo;
+            const snapshot = prevRedo[prevRedo.length - 1];
+            const remaining = prevRedo.slice(0, -1);
+            // Push current state to undo before restoring
+            setLayoutState(current => {
+                setUndoStack(prevUndo => [...prevUndo, current]);
+                return snapshot;
+            });
+            skipHistoryRef.current = true;
+            setLastAction('Redo');
+            return remaining;
+        });
+    }, []);
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -111,7 +133,16 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 e.preventDefault(); redo();
             }
             if (e.key === 'Escape') {
-                setActiveNodeId(null);
+                // If a node is selected, deselect it first; otherwise exit architect mode
+                setActiveNodeId(prev => {
+                    if (prev !== null) return null;
+                    // No node selected — exit architect mode
+                    setIsArchitectMode(false);
+                    setDraggedNodeId(null);
+                    setDropTargetId(null);
+                    setLastAction('Exited editor');
+                    return null;
+                });
             }
         };
         window.addEventListener('keydown', handler);
@@ -130,7 +161,7 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return () => clearTimeout(t);
     }, [lastAction]);
 
-    const toggleArchitectMode = () => {
+    const toggleArchitectMode = useCallback(() => {
         setIsArchitectMode(prev => {
             const next = !prev;
             if (!next) {
@@ -140,94 +171,90 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             }
             return next;
         });
-    };
+    }, []);
 
-    const updateNodeProperty = (id: string, property: keyof NodeConfig, value: any) => {
-        pushHistory(layoutState);
-        setLayoutState(prev => ({
-            ...prev,
-            [id]: { ...prev[id], id, [property]: value }
-        }));
-        setLastAction(`Updated ${property}`);
-    };
-
-    const removeNode = (id: string) => {
-        pushHistory(layoutState);
+    const updateNodeProperty = useCallback((id: string, property: keyof NodeConfig, value: any) => {
         setLayoutState(prev => {
+            pushHistory(prev);
+            return {
+                ...prev,
+                [id]: { ...prev[id], id, [property]: value }
+            };
+        });
+        setLastAction(`Updated ${property}`);
+    }, [pushHistory]);
+
+    const removeNode = useCallback((id: string) => {
+        setLayoutState(prev => {
+            pushHistory(prev);
             const next = { ...prev };
             if (next[id]) { next[id] = { ...next[id], visible: false }; }
             else { next[id] = { id, label: '', visible: false }; }
             return next;
         });
-        if (activeNodeId === id) setActiveNodeId(null);
+        setActiveNodeId(prev => prev === id ? null : prev);
         setLastAction('Section hidden');
-    };
+    }, [pushHistory]);
 
-    const restoreNode = (id: string) => {
-        pushHistory(layoutState);
-        setLayoutState(prev => ({
-            ...prev,
-            [id]: { ...prev[id], visible: true }
-        }));
+    const restoreNode = useCallback((id: string) => {
+        setLayoutState(prev => {
+            pushHistory(prev);
+            return {
+                ...prev,
+                [id]: { ...prev[id], visible: true }
+            };
+        });
         setLastAction('Section restored');
-    };
+    }, [pushHistory]);
 
-    const addNode = (config: NodeConfig) => {
-        pushHistory(layoutState);
-        setLayoutState(prev => ({
-            ...prev,
-            [config.id]: { ...config, visible: true }
-        }));
+    const addNode = useCallback((config: NodeConfig) => {
+        setLayoutState(prev => {
+            pushHistory(prev);
+            return {
+                ...prev,
+                [config.id]: { ...config, visible: true }
+            };
+        });
         setActiveNodeId(config.id);
         setLastAction('Section added');
-    };
+    }, [pushHistory]);
 
     const reorderNode = useCallback((fromId: string, toId: string) => {
         if (fromId === toId) return;
-        pushHistory(layoutState);
         setLayoutState(prev => {
+            pushHistory(prev);
             const next = { ...prev };
             const fromOrder = next[fromId]?.order ?? 0;
             const toOrder = next[toId]?.order ?? 0;
-            // Swap orders
             next[fromId] = { ...next[fromId], id: fromId, order: toOrder };
             next[toId] = { ...next[toId], id: toId, order: fromOrder };
             return next;
         });
         setLastAction('Reordered');
-    }, [layoutState, pushHistory]);
+    }, [pushHistory]);
 
     const moveNode = useCallback((id: string, x: number, y: number) => {
-        pushHistory(layoutState);
         setLayoutState(prev => {
-            const next = { ...prev };
-            const node = next[id];
-            if (!node) return next;
-            
-            // Auto layout shift logic: If placing precisely where another node lives (and not a freeform overlap mode), 
-            // shift the colliding node downwards. For a true completely freeform absolute canvas without constraints, 
-            // we skip explicit collisions and visually layer them via zIndex. We will stick to deterministic coordinate grid here.
-            next[id] = { ...node, id, x, y };
-            return next;
+            pushHistory(prev);
+            const node = prev[id];
+            if (!node) return prev;
+            return { ...prev, [id]: { ...node, id, x, y } };
         });
         setLastAction('Node moved');
-    }, [layoutState, pushHistory]);
+    }, [pushHistory]);
 
     const resizeNode = useCallback((id: string, w: number, h: number) => {
-        pushHistory(layoutState);
         setLayoutState(prev => {
-            const next = { ...prev };
-            if (!next[id]) return next;
-            // Ensure minimum sizes (1 column, 1 row minimum)
-            next[id] = { ...next[id], w: Math.max(1, w), h: Math.max(1, h) };
-            return next;
+            pushHistory(prev);
+            if (!prev[id]) return prev;
+            return { ...prev, [id]: { ...prev[id], w: Math.max(1, w), h: Math.max(1, h) } };
         });
         setLastAction('Node resized');
-    }, [layoutState, pushHistory]);
+    }, [pushHistory]);
 
     const updateLayoutSequence = useCallback((layouts: { i: string; x: number; y: number; w: number; h: number }[]) => {
-        pushHistory(layoutState);
         setLayoutState(prev => {
+            pushHistory(prev);
             const next = { ...prev };
             layouts.forEach(l => {
                 if (next[l.i]) {
@@ -237,7 +264,18 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             return next;
         });
         setLastAction('Layout updated');
-    }, [layoutState, pushHistory]);
+    }, [pushHistory]);
+
+    const resetLayout = useCallback(() => {
+        setLayoutState(prev => {
+            pushHistory(prev);
+            return {};
+        });
+        setActiveNodeId(null);
+        setUndoStack([]);
+        setRedoStack([]);
+        setLastAction('Layout reset to default');
+    }, [pushHistory]);
 
     return (
         <ArchitectContext.Provider value={{ 
@@ -247,10 +285,11 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             removeNode, restoreNode, addNode,
             layoutMode, setLayoutMode,
             moveNode, resizeNode, updateLayoutSequence,
+            resetLayout,
             reorderNode, draggedNodeId, setDraggedNodeId, dropTargetId, setDropTargetId,
             undo, redo,
-            canUndo: historyRef.current.length > 0,
-            canRedo: futureRef.current.length > 0,
+            canUndo,
+            canRedo,
             lastAction
         }}>
             {children}

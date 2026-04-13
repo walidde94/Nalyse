@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-    X, Layout, Grid, Undo2, Redo2, Eye, EyeOff, Type, Columns, 
-    Sparkles, Plus, Activity, PieChart, ShieldAlert, Trash2, RotateCcw,
-    Layers, Maximize2, Command, ChevronUp, ChevronDown
+    X, Layout, Grid, Undo2, Redo2, Eye, EyeOff, 
+    Sparkles, Plus, Activity, PieChart, ShieldAlert, RotateCcw,
+    Maximize2, Command, ChevronUp, ChevronDown, AlertTriangle, Check
 } from 'lucide-react';
 import { useArchitect } from '../../contexts/ArchitectContext';
 
@@ -11,12 +12,13 @@ export const ArchitectPanel: React.FC = () => {
     const { 
         isArchitectMode, activeNodeId, setActiveNodeId, layoutState, 
         updateNodeProperty, removeNode, restoreNode, addNode,
-        layoutMode, setLayoutMode, toggleArchitectMode,
+        layoutMode, setLayoutMode, toggleArchitectMode, resetLayout,
         undo, redo, canUndo, canRedo, lastAction
     } = useArchitect();
 
     const [showLibrary, setShowLibrary] = useState(false);
     const [showHidden, setShowHidden] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
     const activeNode = activeNodeId 
         ? layoutState[activeNodeId] || { id: activeNodeId, label: 'Unconfigured', visible: true, order: 0 } 
@@ -24,6 +26,7 @@ export const ArchitectPanel: React.FC = () => {
 
     const hiddenNodes = Object.values(layoutState).filter(n => !n.visible && n.label);
     const widths = ['100%', '50%', '33%'];
+    const isCanvasMode = layoutMode === 'canvas';
 
     const sectorLibrary = [
         { id: 'lib-anomaly', name: 'Anomaly Matrix', icon: ShieldAlert },
@@ -31,9 +34,15 @@ export const ArchitectPanel: React.FC = () => {
         { id: 'lib-stats', name: 'Aggregate Stats', icon: PieChart },
     ];
 
+    const layoutModes = [
+        { mode: 'canvas' as const, icon: <Maximize2 size={14} />, label: 'Canvas' },
+        { mode: 'grid' as const, icon: <Grid size={14} />, label: 'Grid' },
+        { mode: 'vertical' as const, icon: <Layout size={14} />, label: 'Stack' },
+    ];
+
     if (!isArchitectMode) return null;
 
-    return (
+    return createPortal(
         <>
             {/* ── ACTION STATUS TOAST ── */}
             <AnimatePresence>
@@ -42,16 +51,9 @@ export const ArchitectPanel: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        style={{
-                            position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
-                            background: 'rgba(15, 15, 25, 0.95)', backdropFilter: 'blur(16px)',
-                            padding: '8px 20px', borderRadius: '12px', zIndex: 10002,
-                            color: 'var(--primary)', fontSize: '12px', fontWeight: 800,
-                            border: '1px solid rgba(99, 102, 241, 0.2)',
-                            boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
-                            letterSpacing: '0.05em', pointerEvents: 'none'
-                        }}
+                        className="acb-toast"
                     >
+                        <Check size={12} style={{ opacity: 0.6 }} />
                         {lastAction}
                     </motion.div>
                 )}
@@ -65,12 +67,22 @@ export const ArchitectPanel: React.FC = () => {
                 transition={{ type: 'spring', damping: 30, stiffness: 300 }}
                 className="arch-command-bar"
             >
-                {/* Left: Global controls */}
+                {/* Left: Layout mode + Undo/Redo */}
                 <div className="acb-group">
-                    <button onClick={() => setLayoutMode(layoutMode === 'canvas' ? 'grid' : layoutMode === 'grid' ? 'vertical' : 'canvas')} className="acb-btn" title="Toggle layout">
-                        {layoutMode === 'canvas' ? <Maximize2 size={15} /> : layoutMode === 'grid' ? <Grid size={15} /> : <Layout size={15} />}
-                        <span className="acb-btn-label">{layoutMode === 'canvas' ? 'Canvas' : layoutMode === 'grid' ? 'Grid' : 'Stack'}</span>
-                    </button>
+                    {/* Layout mode switcher — pill group */}
+                    <div className="acb-mode-switch">
+                        {layoutModes.map(m => (
+                            <button
+                                key={m.mode}
+                                onClick={() => setLayoutMode(m.mode)}
+                                className={`acb-mode-btn ${layoutMode === m.mode ? 'active' : ''}`}
+                                title={`${m.label} layout`}
+                            >
+                                {m.icon}
+                                <span className="acb-mode-label">{m.label}</span>
+                            </button>
+                        ))}
+                    </div>
                     <div className="acb-divider" />
                     <button onClick={undo} disabled={!canUndo} className="acb-btn" title="Undo (⌘Z)">
                         <Undo2 size={15} />
@@ -92,28 +104,36 @@ export const ArchitectPanel: React.FC = () => {
                                 <span className="acb-inspector-label">{activeNode.label || activeNode.id}</span>
                                 <div className="acb-divider" />
 
-                                {/* Width selector */}
-                                <div className="acb-width-group">
-                                    {widths.map(w => (
-                                        <button 
-                                            key={w} 
-                                            onClick={() => updateNodeProperty(activeNode.id, 'width', w)}
-                                            className={`acb-width-btn ${(activeNode.width || '100%') === w ? 'active' : ''}`}
-                                        >
-                                            {w}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="acb-divider" />
+                                {/* Width selector — only useful for grid/stack modes */}
+                                {!isCanvasMode && (
+                                    <>
+                                        <div className="acb-width-group">
+                                            {widths.map(w => (
+                                                <button 
+                                                    key={w} 
+                                                    onClick={() => updateNodeProperty(activeNode.id, 'width', w)}
+                                                    className={`acb-width-btn ${(activeNode.width || '100%') === w ? 'active' : ''}`}
+                                                >
+                                                    {w}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="acb-divider" />
+                                    </>
+                                )}
 
-                                {/* Order controls */}
-                                <button onClick={() => updateNodeProperty(activeNode.id, 'order', (activeNode.order || 0) - 1)} className="acb-btn" title="Move up">
-                                    <ChevronUp size={15} />
-                                </button>
-                                <button onClick={() => updateNodeProperty(activeNode.id, 'order', (activeNode.order || 0) + 1)} className="acb-btn" title="Move down">
-                                    <ChevronDown size={15} />
-                                </button>
-                                <div className="acb-divider" />
+                                {/* Order controls — only for non-canvas */}
+                                {!isCanvasMode && (
+                                    <>
+                                        <button onClick={() => updateNodeProperty(activeNode.id, 'order', (activeNode.order || 0) - 1)} className="acb-btn" title="Move up">
+                                            <ChevronUp size={15} />
+                                        </button>
+                                        <button onClick={() => updateNodeProperty(activeNode.id, 'order', (activeNode.order || 0) + 1)} className="acb-btn" title="Move down">
+                                            <ChevronDown size={15} />
+                                        </button>
+                                        <div className="acb-divider" />
+                                    </>
+                                )}
 
                                 {/* Visibility */}
                                 <button 
@@ -136,28 +156,36 @@ export const ArchitectPanel: React.FC = () => {
                                 className="acb-status"
                             >
                                 <Command size={13} style={{ opacity: 0.4 }} />
-                                <span>Click any section to edit • Drag to reorder</span>
+                                <span>{isCanvasMode ? 'Drag to reposition • Resize from corner' : 'Click any section to edit'}</span>
+                                <span className="acb-hint">Esc to exit</span>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
 
-                {/* Right: Library & hidden nodes */}
+                {/* Right: Library, hidden nodes, reset, exit */}
                 <div className="acb-group">
                     {hiddenNodes.length > 0 && (
                         <>
-                            <button onClick={() => setShowHidden(!showHidden)} className="acb-btn acb-btn-warning" title="Hidden sections">
+                            <button onClick={() => { setShowHidden(!showHidden); setShowLibrary(false); setShowResetConfirm(false); }} className="acb-btn acb-btn-warning" title="Hidden sections">
                                 <EyeOff size={15} />
                                 <span className="acb-badge">{hiddenNodes.length}</span>
                             </button>
                             <div className="acb-divider" />
                         </>
                     )}
-                    <button onClick={() => setShowLibrary(!showLibrary)} className="acb-btn" title="Add section">
+                    <button onClick={() => { setShowLibrary(!showLibrary); setShowHidden(false); setShowResetConfirm(false); }} className="acb-btn" title="Add section">
                         <Plus size={15} />
                     </button>
+                    <button 
+                        onClick={() => { setShowResetConfirm(!showResetConfirm); setShowLibrary(false); setShowHidden(false); }} 
+                        className="acb-btn acb-btn-danger-subtle" 
+                        title="Reset layout to defaults"
+                    >
+                        <RotateCcw size={14} />
+                    </button>
                     <div className="acb-divider" />
-                    <button onClick={toggleArchitectMode} className="acb-btn acb-btn-done" title="Exit editor">
+                    <button onClick={toggleArchitectMode} className="acb-btn acb-btn-done" title="Exit editor (Esc)">
                         <Sparkles size={14} />
                         <span className="acb-btn-label">Done</span>
                     </button>
@@ -223,6 +251,46 @@ export const ArchitectPanel: React.FC = () => {
                 )}
             </AnimatePresence>
 
+            {/* ── RESET CONFIRM POPUP ── */}
+            <AnimatePresence>
+                {showResetConfirm && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        className="acb-popup"
+                        style={{ bottom: 80 }}
+                    >
+                        <div className="acb-popup-header" style={{ borderBottom: '1px solid rgba(239, 68, 68, 0.15)' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <AlertTriangle size={14} style={{ color: '#f87171' }} />
+                                Reset Layout
+                            </span>
+                        </div>
+                        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.6 }}>
+                                This will restore all dashboard sections to their original positions and sizes. Custom arrangements will be lost.
+                            </p>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button 
+                                    onClick={() => setShowResetConfirm(false)} 
+                                    className="acb-popup-action acb-popup-action--cancel"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={() => { resetLayout(); setShowResetConfirm(false); }}
+                                    className="acb-popup-action acb-popup-action--danger"
+                                >
+                                    <RotateCcw size={13} />
+                                    Reset to Default
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <style>{`
                 .arch-command-bar {
                     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
@@ -240,6 +308,17 @@ export const ArchitectPanel: React.FC = () => {
                 .acb-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.08); margin: 0 4px; flex-shrink: 0; }
                 .acb-center { display: flex; align-items: center; padding: 0 4px; }
 
+                .acb-toast {
+                    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+                    background: rgba(15, 15, 25, 0.95); backdrop-filter: blur(16px);
+                    padding: 8px 20px; border-radius: 12px; z-index: 10002;
+                    color: var(--primary); font-size: 12px; font-weight: 800;
+                    border: 1px solid rgba(99, 102, 241, 0.2);
+                    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+                    letter-spacing: 0.05em; pointer-events: none;
+                    display: flex; align-items: center; gap: 8px;
+                }
+
                 .acb-btn {
                     display: flex; align-items: center; gap: 6px;
                     padding: 8px 10px; border-radius: 10px;
@@ -253,6 +332,8 @@ export const ArchitectPanel: React.FC = () => {
                 .acb-btn-label { font-size: 11px; }
                 .acb-btn-warning { color: #f59e0b; }
                 .acb-btn-warning:hover { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
+                .acb-btn-danger-subtle { color: rgba(248, 113, 113, 0.6); }
+                .acb-btn-danger-subtle:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; }
                 .acb-btn-done { 
                     background: var(--primary); color: white; 
                     box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3); 
@@ -268,6 +349,26 @@ export const ArchitectPanel: React.FC = () => {
                     font-size: 9px; font-weight: 900; padding: 1px 5px;
                     border-radius: 6px; min-width: 16px; text-align: center;
                 }
+
+                /* Layout mode switcher */
+                .acb-mode-switch {
+                    display: flex; gap: 2px; padding: 2px;
+                    background: rgba(255,255,255,0.04); border-radius: 8px;
+                }
+                .acb-mode-btn {
+                    display: flex; align-items: center; gap: 4px;
+                    padding: 5px 8px; border-radius: 6px; border: none;
+                    background: transparent; color: rgba(255,255,255,0.35);
+                    font-size: 10px; font-weight: 700; cursor: pointer;
+                    transition: all 0.15s;
+                }
+                .acb-mode-btn:hover { color: rgba(255,255,255,0.7); }
+                .acb-mode-btn.active {
+                    background: rgba(255,255,255,0.1); color: white;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                }
+                .acb-mode-label { }
+                @media (max-width: 768px) { .acb-mode-label { display: none; } }
 
                 /* Inspector */
                 .acb-inspector { display: flex; align-items: center; gap: 6px; }
@@ -292,11 +393,17 @@ export const ArchitectPanel: React.FC = () => {
                     display: flex; align-items: center; gap: 8px; padding: 0 12px;
                     color: rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; white-space: nowrap;
                 }
+                .acb-hint {
+                    font-size: 9px; font-weight: 800; text-transform: uppercase;
+                    letter-spacing: 0.1em; padding: 2px 8px; border-radius: 4px;
+                    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.25);
+                    border: 1px solid rgba(255,255,255,0.04);
+                }
 
                 /* Popups */
                 .acb-popup {
                     position: fixed; right: 16px;
-                    width: 260px; background: rgba(12, 12, 22, 0.97);
+                    width: 280px; background: rgba(12, 12, 22, 0.97);
                     backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08);
                     border-radius: 16px; z-index: 10002; overflow: hidden;
                     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
@@ -314,7 +421,29 @@ export const ArchitectPanel: React.FC = () => {
                     cursor: pointer; transition: all 0.15s; text-align: left;
                 }
                 .acb-popup-item:hover { background: rgba(255,255,255,0.05); color: white; }
+
+                /* Reset confirm actions */
+                .acb-popup-action {
+                    flex: 1; padding: 10px 16px; border-radius: 10px; border: none;
+                    font-size: 12px; font-weight: 700; cursor: pointer;
+                    transition: all 0.15s; display: flex; align-items: center;
+                    justify-content: center; gap: 6px;
+                }
+                .acb-popup-action--cancel {
+                    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6);
+                }
+                .acb-popup-action--cancel:hover {
+                    background: rgba(255,255,255,0.1); color: white;
+                }
+                .acb-popup-action--danger {
+                    background: rgba(239, 68, 68, 0.15); color: #f87171;
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                }
+                .acb-popup-action--danger:hover {
+                    background: rgba(239, 68, 68, 0.25); color: #fca5a5;
+                }
             `}</style>
-        </>
+        </>,
+        document.body
     );
 };
