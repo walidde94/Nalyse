@@ -88,7 +88,11 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
-    const [layoutMode, setLayoutMode] = useState<'vertical' | 'grid' | 'canvas'>('canvas');
+    const [layoutMode, setLayoutMode] = useState<'vertical' | 'grid' | 'canvas'>(() => {
+        const saved = localStorage.getItem(keys.viewMode);
+        if (saved === 'vertical' || saved === 'grid' || saved === 'canvas') return saved;
+        return 'canvas';
+    });
     const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
     const [dropTargetId, setDropTargetId] = useState<string | null>(null);
     const [lastAction, setLastAction] = useState<string | null>(null);
@@ -105,6 +109,11 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             setLayoutState(saved ? JSON.parse(saved) : {});
         } catch {
             setLayoutState({});
+        }
+        // Restore layout mode preference
+        const savedMode = localStorage.getItem(k.viewMode);
+        if (savedMode === 'vertical' || savedMode === 'grid' || savedMode === 'canvas') {
+            setLayoutMode(savedMode);
         }
         setActiveNodeId(null);
         setUndoStack([]);
