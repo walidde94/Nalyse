@@ -122,7 +122,7 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         });
     }, []);
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts (architect mode only)
     useEffect(() => {
         if (!isArchitectMode) return;
         const handler = (e: KeyboardEvent) => {
@@ -148,6 +148,19 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
     }, [isArchitectMode, undo, redo]);
+
+    // Global emergency reset shortcut (works even outside architect mode)
+    // Ctrl/Cmd + Shift + Backspace = reset layout
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Backspace') {
+                e.preventDefault();
+                resetLayout();
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [resetLayout]);
 
     // Persistence
     useEffect(() => { localStorage.setItem('nalyse-architect-mode', String(isArchitectMode)); }, [isArchitectMode]);

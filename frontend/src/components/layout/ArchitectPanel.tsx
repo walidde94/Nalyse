@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     X, Layout, Grid, Undo2, Redo2, Eye, EyeOff, 
@@ -18,6 +18,31 @@ export const ArchitectPanel: React.FC = () => {
     const [showLibrary, setShowLibrary] = useState(false);
     const [showHidden, setShowHidden] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const [contentOffset, setContentOffset] = useState(0);
+
+    // Measure the content area to center the bar properly
+    useEffect(() => {
+        if (!isArchitectMode) return;
+        const measure = () => {
+            const el = wrapperRef.current?.parentElement;
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                setContentOffset(rect.left);
+            }
+        };
+        measure();
+        window.addEventListener('resize', measure);
+        // Re-measure when sidebar might toggle
+        const observer = new ResizeObserver(measure);
+        if (wrapperRef.current?.parentElement) {
+            observer.observe(wrapperRef.current.parentElement);
+        }
+        return () => {
+            window.removeEventListener('resize', measure);
+            observer.disconnect();
+        };
+    }, [isArchitectMode]);
 
     const activeNode = activeNodeId 
         ? layoutState[activeNodeId] || { id: activeNodeId, label: 'Unconfigured', visible: true, order: 0 } 
@@ -59,7 +84,7 @@ export const ArchitectPanel: React.FC = () => {
             </AnimatePresence>
 
             {/* ── BOTTOM COMMAND BAR ── */}
-            <div className="arch-command-wrapper">
+            <div ref={wrapperRef} className="arch-command-wrapper" style={{ left: contentOffset }}>
             <motion.div
                 initial={{ y: 80, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -294,8 +319,8 @@ export const ArchitectPanel: React.FC = () => {
 
             <style>{`
                 .arch-command-wrapper {
-                    position: absolute;
-                    bottom: 0; left: 0; right: 0;
+                    position: fixed;
+                    bottom: 0; right: 0;
                     display: flex;
                     justify-content: center;
                     padding: 16px;
