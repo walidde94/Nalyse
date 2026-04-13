@@ -759,7 +759,7 @@ export const DashboardView = ({
 
             {/* Neural Network Canvas Background */}
             <NeuralCanvas intensity={0.8} />
-            <div className="scanline-overlay" />
+            <div className="scanline-overlay" style={{ pointerEvents: 'none' }} />
 
             {/* --- ARCHITECTURAL STAGE WRAPPER --- */}
             {(() => {
@@ -805,7 +805,11 @@ export const DashboardView = ({
                                             <p style={{ opacity: 0.6 }}>Workspace stability: 99.8%. {fileCount} topologies active.</p>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                                            <PerformanceGauge value={metrics.systemHealth} label="Health" />
+                                            <PerformanceGauge 
+                                                value={metrics.systemHealth} 
+                                                label="Health" 
+                                                onClick={() => setShowTelemetry(true)}
+                                            />
                                             <LiveClock />
                                         </div>
                                     </div>
