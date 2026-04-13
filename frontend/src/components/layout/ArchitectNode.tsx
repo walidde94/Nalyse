@@ -41,7 +41,7 @@ export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({
                 className={className}
                 style={{
                     ...(isShellElement ? style : (
-                        isCanvas && style ? style : {
+                        isCanvas ? { width: '100%', height: 'auto', ...style } : {
                             width: legacyWidth,
                             flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
                             ...style

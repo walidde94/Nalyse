@@ -1493,7 +1493,6 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
         <div className="flex h-screen" style={{ background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
 
             {/* Sidebar Navigation */}
-            <ArchitectNode id="an-sidebar" label="Navigation Matrix" isDraggable={false}>
             <div
                 className={`sidebar-compact transition-all duration-300 ${isSidebarCollapsed ? 'w-16' : 'w-72'}`}
                 style={{
@@ -1502,6 +1501,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     display: activeTab === 'presentation' ? 'none' : 'flex',
                     flexDirection: 'column',
                     height: '100%',
+                    width: isSidebarCollapsed ? '64px' : '288px',
+                    flexShrink: 0,
                     zIndex: 20,
                     position: 'relative',
                     overflow: 'hidden'
@@ -1765,7 +1766,6 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     </button>
                 </div>
             </div>
-            </ArchitectNode>
 
             {/* Main Content Area */}
             <div className="flex-col" style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
@@ -2003,16 +2003,25 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
 
                                     return sections
                                         .sort((a, b) => (layoutState[a.id]?.order || 0) - (layoutState[b.id]?.order || 0))
-                                        .map(section => (
-                                            <ArchitectNode 
-                                                key={section.id} 
-                                                id={section.id} 
-                                                label={section.label}
-                                                style={{ flex: layoutState[section.id]?.width === '50%' && layoutMode === 'grid' ? '1 1 calc(50% - 12px)' : '1 1 100%' }}
-                                            >
-                                                {section.component}
-                                            </ArchitectNode>
-                                        ));
+                                        .map(section => {
+                                            const w = layoutState[section.id]?.width;
+                                            let flexBasis = '1 1 100%';
+                                            if (layoutMode === 'grid') {
+                                                if (w === '50%') flexBasis = '1 1 calc(50% - 12px)';
+                                                else if (w === '33%') flexBasis = '1 1 calc(33.333% - 16px)';
+                                            }
+                                            
+                                            return (
+                                                <ArchitectNode 
+                                                    key={section.id} 
+                                                    id={section.id} 
+                                                    label={section.label}
+                                                    style={{ flex: layoutMode === 'vertical' || layoutMode === 'canvas' ? '0 0 auto' : flexBasis, width: '100%' }}
+                                                >
+                                                    {section.component}
+                                                </ArchitectNode>
+                                            );
+                                        });
                                 })()}
                             </div>
                         )}
@@ -2264,6 +2273,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 </div>
 
                                 {/* Builder Controls styled exactly like Version Diff Selector */}
+                                <ArchitectNode id="vb-controls" label="Visual Configuration Form">
                                 <div style={{ padding: '24px', borderRadius: '18px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
                                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #818cf8, #34d399, #fbbf24)' }} />
 
@@ -2383,8 +2393,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         </div>
                                     </div>
                                 </div>
+                                </ArchitectNode>
 
                                 {/* Preview Area */}
+                                <ArchitectNode id="vb-preview" label="Live Synthesis Preview">
                                 <div className="flex-1 min-h-[650px] flex flex-col gap-6">
                                     <div 
                                         className="flex-1 backdrop-blur-3xl rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col inner-bevel shadow-2xl transition-all duration-500"
@@ -2534,6 +2546,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         )}
                                     </AnimatePresence>
                                 </div>
+                                </ArchitectNode>
                             </div>
                         )}
 
