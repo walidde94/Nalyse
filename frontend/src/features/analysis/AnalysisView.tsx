@@ -1204,11 +1204,12 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
         if (opt.isStatic) {
             return (
                 <div key={index} id={`chart-static`} className="flex-1 w-full h-full flex flex-col min-h-[350px]">
-                    <div className="flex-1 w-full">
+                    <div className="flex-1 w-full relative min-h-[300px]">
                         {currentType === 'worldmap' ? (
                             <WorldMapChart data={displayData} title={opt.title} />
                         ) : (
-                        <ResponsiveContainer width="100%" height="100%">
+                        <div style={{ position: 'absolute', inset: 0 }}>
+                            <ResponsiveContainer width="100%" height="100%">
                             {currentType === 'area' || currentType === 'line' ? (
                                 <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
@@ -1247,7 +1248,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             )}
-                        </ResponsiveContainer>
+                            </ResponsiveContainer>
+                        </div>
                         )}
                     </div>
                 </div>
@@ -1329,11 +1331,12 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     </div>
                 </div>
 
-                <div style={{ flex: 1, width: '100%', minHeight: '300px' }}>
+                <div style={{ flex: 1, width: '100%', minHeight: '300px', position: 'relative' }}>
                     {currentType === 'worldmap' ? (
                         <WorldMapChart data={displayData} title={opt.title} />
                     ) : (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <div style={{ position: 'absolute', inset: 0 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                         {currentType === 'area' || currentType === 'line' ? (
                             <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                 <defs>
@@ -1482,7 +1485,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 {/* Removed per-cell coloring to enforce Elastic-style single-color series */}
                             </BarChart>
                         )}
-                    </ResponsiveContainer>
+                        </ResponsiveContainer>
+                    </div>
                     )}
                 </div>
             </div >
@@ -2696,63 +2700,65 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             </div>
 
                             <div className="card" style={{ flex: 1, padding: '32px', border: '1px solid var(--primary)' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    {currentType === 'area' || currentType === 'line' ? (
-                                        <AreaChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                                            <defs>
-                                                <linearGradient id={`grad-exp-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
-                                                    <stop offset="95%" stopColor={color} stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-                                            <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dy={10} />
-                                            <YAxis stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dx={-10} />
-                                            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.2)' }} />
-                                            {currentType === 'line' ?
-                                                <Area type="monotone" dataKey="value" stroke={color} strokeWidth={4} fill="none" /> :
-                                                <Area type="monotone" dataKey="value" stroke={color} strokeWidth={4} fill={`url(#grad-exp-${index})`} />
-                                            }
-                                        </AreaChart>
-                                    ) : currentType === 'pie' ? (
-                                        <PieChart>
-                                            <Pie
-                                                data={displayData}
-                                                innerRadius={150}
-                                                outerRadius={250}
-                                                dataKey="value"
-                                                paddingAngle={4}
-                                                stroke="none"
-                                                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                                            >
-                                                {displayData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                                            </Pie>
-                                            <Tooltip content={<CustomTooltip />} />
-                                            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '16px' }} />
-                                        </PieChart>
-                                    ) : currentType === 'scatter' ? (
-                                        <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                                            <XAxis dataKey="name" name="X" stroke="var(--text-secondary)" fontSize={14} />
-                                            <YAxis dataKey="value" name="Y" stroke="var(--text-secondary)" fontSize={14} />
-                                            <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip />} />
-                                            <Scatter name="Items" data={displayData} fill={color} r={8} />
-                                        </ScatterChart>
-                                    ) : (
-                                        <BarChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-                                            <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dy={10} />
-                                            <YAxis stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dx={-10} />
-                                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                                            <Bar
-                                                dataKey="value"
-                                                fill={color}
-                                                radius={[8, 8, 0, 0]}
-                                                barSize={80}
-                                            />
-                                        </BarChart>
-                                    )}
-                                </ResponsiveContainer>
+                                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        {currentType === 'area' || currentType === 'line' ? (
+                                            <AreaChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                                <defs>
+                                                    <linearGradient id={`grad-exp-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor={color} stopOpacity={0.4} />
+                                                        <stop offset="95%" stopColor={color} stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                                                <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dy={10} />
+                                                <YAxis stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dx={-10} />
+                                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.2)' }} />
+                                                {currentType === 'line' ?
+                                                    <Area type="monotone" dataKey="value" stroke={color} strokeWidth={4} fill="none" /> :
+                                                    <Area type="monotone" dataKey="value" stroke={color} strokeWidth={4} fill={`url(#grad-exp-${index})`} />
+                                                }
+                                            </AreaChart>
+                                        ) : currentType === 'pie' ? (
+                                            <PieChart>
+                                                <Pie
+                                                    data={displayData}
+                                                    innerRadius={150}
+                                                    outerRadius={250}
+                                                    dataKey="value"
+                                                    paddingAngle={4}
+                                                    stroke="none"
+                                                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                                                >
+                                                    {displayData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                                </Pie>
+                                                <Tooltip content={<CustomTooltip />} />
+                                                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '16px' }} />
+                                            </PieChart>
+                                        ) : currentType === 'scatter' ? (
+                                            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                                <XAxis dataKey="name" name="X" stroke="var(--text-secondary)" fontSize={14} />
+                                                <YAxis dataKey="value" name="Y" stroke="var(--text-secondary)" fontSize={14} />
+                                                <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip />} />
+                                                <Scatter name="Items" data={displayData} fill={color} r={8} />
+                                            </ScatterChart>
+                                        ) : (
+                                            <BarChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                                                <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dy={10} />
+                                                <YAxis stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dx={-10} />
+                                                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                                                <Bar
+                                                    dataKey="value"
+                                                    fill={color}
+                                                    radius={[8, 8, 0, 0]}
+                                                    barSize={80}
+                                                />
+                                            </BarChart>
+                                        )}
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                         </div>
                     );
