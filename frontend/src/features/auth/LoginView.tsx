@@ -249,7 +249,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                                 onBlur={() => setFocusedField(null)}
                                                 onKeyDown={handleKeyDown}
                                                 placeholder="you@company.com"
-                                                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, letterSpacing: '0.01em' }}
+                                                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, letterSpacing: '0.01em', textAlign: 'left', padding: 0, margin: 0 }}
                                             />
                                             {email && email.includes('@') && (
                                                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
@@ -282,7 +282,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                                 onBlur={() => setFocusedField(null)}
                                                 onKeyDown={handleKeyDown}
                                                 placeholder="Enter your password"
-                                                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500 }}
+                                                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
                                             />
                                             <button type="button" onClick={() => setShowPassword(!showPassword)}
                                                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.2)', padding: 4, display: 'flex', transition: 'color 0.2s' }}

@@ -150,7 +150,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                     onBlur={() => setFocusedField(null)}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
-                    style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500 }}
+                    style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
                 />
                 {showToggle && (
                     <button type="button" onClick={onToggle}
