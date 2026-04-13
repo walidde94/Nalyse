@@ -222,9 +222,10 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const updateNodeProperty = useCallback((id: string, property: keyof NodeConfig, value: any) => {
         setLayoutState(prev => {
             pushHistory(prev);
+            const node = prev[id] || { id, visible: true, label: id };
             return {
                 ...prev,
-                [id]: { ...prev[id], id, [property]: value }
+                [id]: { ...node, [property]: value }
             };
         });
         setLastAction(`Updated ${property}`);
@@ -235,7 +236,7 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             pushHistory(prev);
             const next = { ...prev };
             if (next[id]) { next[id] = { ...next[id], visible: false }; }
-            else { next[id] = { id, label: '', visible: false }; }
+            else { next[id] = { id, label: id, visible: false }; }
             return next;
         });
         setActiveNodeId(prev => prev === id ? null : prev);
@@ -245,9 +246,10 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const restoreNode = useCallback((id: string) => {
         setLayoutState(prev => {
             pushHistory(prev);
+            const node = prev[id] || { id, label: id, visible: false };
             return {
                 ...prev,
-                [id]: { ...prev[id], visible: true }
+                [id]: { ...node, visible: true }
             };
         });
         setLastAction('Section restored');
@@ -270,10 +272,13 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setLayoutState(prev => {
             pushHistory(prev);
             const next = { ...prev };
-            const fromOrder = next[fromId]?.order ?? 0;
-            const toOrder = next[toId]?.order ?? 0;
-            next[fromId] = { ...next[fromId], id: fromId, order: toOrder };
-            next[toId] = { ...next[toId], id: toId, order: fromOrder };
+            const fromNode = next[fromId] || { id: fromId, visible: true, label: fromId };
+            const toNode = next[toId] || { id: toId, visible: true, label: toId };
+            
+            const fromOrder = fromNode.order ?? 0;
+            const toOrder = toNode.order ?? 0;
+            next[fromId] = { ...fromNode, order: toOrder };
+            next[toId] = { ...toNode, order: fromOrder };
             return next;
         });
         setLastAction('Reordered');
@@ -282,8 +287,7 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const moveNode = useCallback((id: string, x: number, y: number) => {
         setLayoutState(prev => {
             pushHistory(prev);
-            const node = prev[id];
-            if (!node) return prev;
+            const node = prev[id] || { id, visible: true, label: id };
             return { ...prev, [id]: { ...node, id, x, y } };
         });
         setLastAction('Node moved');
@@ -292,8 +296,8 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const resizeNode = useCallback((id: string, w: number, h: number) => {
         setLayoutState(prev => {
             pushHistory(prev);
-            if (!prev[id]) return prev;
-            return { ...prev, [id]: { ...prev[id], w: Math.max(1, w), h: Math.max(1, h) } };
+            const node = prev[id] || { id, visible: true, label: id };
+            return { ...prev, [id]: { ...node, id, w: Math.max(1, w), h: Math.max(1, h) } };
         });
         setLastAction('Node resized');
     }, [pushHistory]);
@@ -303,9 +307,8 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             pushHistory(prev);
             const next = { ...prev };
             layouts.forEach(l => {
-                if (next[l.i]) {
-                    next[l.i] = { ...next[l.i], x: l.x, y: l.y, w: l.w, h: l.h };
-                }
+                const node = next[l.i] || { id: l.i, visible: true, label: l.i };
+                next[l.i] = { ...node, x: l.x, y: l.y, w: l.w, h: l.h };
             });
             return next;
         });
