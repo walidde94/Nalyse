@@ -7,6 +7,7 @@ interface Command {
     icon: React.ReactNode;
     action: () => void;
     category?: string;
+    keywords?: string[];
 }
 
 export const CommandPalette = ({ isOpen, onClose, commands }: { isOpen: boolean; onClose: () => void; commands: Command[] }) => {
@@ -23,7 +24,10 @@ export const CommandPalette = ({ isOpen, onClose, commands }: { isOpen: boolean;
     const filteredCommands = commands.filter(c => {
         const terms = search.toLowerCase().split(' ').filter(Boolean);
         if (terms.length === 0) return true;
-        const target = `${c.label.toLowerCase()} ${c.category?.toLowerCase() || ''}`;
+        
+        const metadata = c.keywords ? c.keywords.join(' ') : '';
+        const target = `${c.label} ${c.category || ''} ${metadata}`.toLowerCase();
+        
         return terms.every(term => target.includes(term));
     });
 

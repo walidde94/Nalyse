@@ -954,28 +954,28 @@ function AppContent() {
   // --- Command Palette ---
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const staticCommands = [
-    { id: 'dash', label: 'Go to Dashboard', icon: <LayoutDashboard size={18} />, action: () => openTab('dashboard', 'Dashboard'), category: 'Navigation' },
-    { id: 'settings', label: 'Open Settings', icon: <Settings size={18} />, action: () => openTab('settings', 'Settings'), category: 'Navigation' },
-    { id: 'upload', label: 'Upload New File', icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', 'Dashboard'); document.getElementById('file-input')?.click(); }, category: 'Actions' },
-    { id: 'theme', label: `Switch to ${theme === 'dark' ? 'Light' : theme === 'light' ? 'Custom' : 'Dark'} Mode`, icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance' },
-    { id: 'logout', label: 'Logout', icon: <LogOut size={18} />, action: logout, category: 'Account' },
+    { id: 'dash', label: 'Go to Dashboard', icon: <LayoutDashboard size={18} />, action: () => openTab('dashboard', 'Dashboard'), category: 'Navigation', keywords: ['home', 'main', 'start', 'index'] },
+    { id: 'settings', label: 'Open Settings', icon: <Settings size={18} />, action: () => openTab('settings', 'Settings'), category: 'Navigation', keywords: ['preferences', 'config', 'options', 'account', 'profile'] },
+    { id: 'upload', label: 'Upload New File', icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', 'Dashboard'); document.getElementById('file-input')?.click(); }, category: 'Actions', keywords: ['import', 'add', 'dataset', 'csv', 'data'] },
+    { id: 'theme', label: `Switch to ${theme === 'dark' ? 'Light' : theme === 'light' ? 'Custom' : 'Dark'} Mode`, icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance', keywords: ['color', 'style', 'dark', 'light', 'ui', 'theme'] },
+    { id: 'logout', label: 'Logout', icon: <LogOut size={18} />, action: logout, category: 'Account', keywords: ['sign out', 'exit', 'leave'] },
     
     // Core Engines
-    { id: 'simulation', label: 'Open Simulation Engine', icon: <Cpu size={18} />, action: () => openTab('simulation', 'Simulation Engine'), category: 'Engines' },
-    { id: 'forecast', label: 'Open Forecasting Engine', icon: <Activity size={18} />, action: () => openTab('forecast', 'Forecasting Engine'), category: 'Engines' },
-    { id: 'automl', label: 'Open AutoML Intelligence', icon: <Cpu size={18} />, action: () => openTab('automl', 'AutoML Intelligence'), category: 'Engines' },
-    { id: 'spatial', label: 'Open Geospatial Intelligence', icon: <Target size={18} />, action: () => openTab('spatial', 'Geospatial Intelligence'), category: 'Engines' },
+    { id: 'simulation', label: 'Open Simulation Engine', icon: <Cpu size={18} />, action: () => openTab('simulation', 'Simulation Engine'), category: 'Engines', keywords: ['run', 'execute', 'model', 'test', 'scenario', 'monte carlo'] },
+    { id: 'forecast', label: 'Open Forecasting Engine', icon: <Activity size={18} />, action: () => openTab('forecast', 'Forecasting Engine'), category: 'Engines', keywords: ['predict', 'future', 'trend', 'time series'] },
+    { id: 'automl', label: 'Open AutoML Intelligence', icon: <Cpu size={18} />, action: () => openTab('automl', 'AutoML Intelligence'), category: 'Engines', keywords: ['ai', 'machine learning', 'predictive', 'train', 'neural network'] },
+    { id: 'spatial', label: 'Open Geospatial Intelligence', icon: <Target size={18} />, action: () => openTab('spatial', 'Geospatial Intelligence'), category: 'Engines', keywords: ['map', 'location', 'geography', 'coordinates', 'earth'] },
     
     // Analytics
-    { id: 'analysis', label: 'Open Analysis', icon: <BarChart3 size={18} />, action: () => openTab('bi', 'Analysis'), category: 'Analytics' },
-    { id: 'lens', label: 'Open Smart Lens', icon: <Target size={18} />, action: () => openTab('lens', 'Smart Lens'), category: 'Analytics' },
-    { id: 'correlate', label: 'Open Correlation', icon: <Network size={18} />, action: () => openTab('correlate', 'Correlation'), category: 'Analytics' },
-    { id: 'diff', label: 'Open Version Diff', icon: <Workflow size={18} />, action: () => openTab('diff', 'Version Diff'), category: 'Analytics' },
-    { id: 'anomaly', label: 'Open Anomaly Detection', icon: <ShieldAlert size={18} />, action: () => openTab('anomaly', 'Anomaly Detection'), category: 'Analytics' },
-    { id: 'financial', label: 'Open Financial Risk', icon: <Activity size={18} />, action: () => openTab('financial', 'Financial Risk'), category: 'Analytics' },
+    { id: 'analysis', label: 'Open Analysis', icon: <BarChart3 size={18} />, action: () => openTab('bi', 'Analysis'), category: 'Analytics', keywords: ['chart', 'graph', 'plot', 'visualize', 'data', 'bi'] },
+    { id: 'lens', label: 'Open Smart Lens', icon: <Target size={18} />, action: () => openTab('lens', 'Smart Lens'), category: 'Analytics', keywords: ['focus', 'zoom', 'detail', 'inspect', 'discover'] },
+    { id: 'correlate', label: 'Open Correlation', icon: <Network size={18} />, action: () => openTab('correlate', 'Correlation'), category: 'Analytics', keywords: ['relationship', 'connection', 'matrix', 'dependency'] },
+    { id: 'diff', label: 'Open Version Diff', icon: <Workflow size={18} />, action: () => openTab('diff', 'Version Diff'), category: 'Analytics', keywords: ['compare', 'changes', 'history', 'delta'] },
+    { id: 'anomaly', label: 'Open Anomaly Detection', icon: <ShieldAlert size={18} />, action: () => openTab('anomaly', 'Anomaly Detection'), category: 'Analytics', keywords: ['outlier', 'fraud', 'spike', 'warning', 'deviation'] },
+    { id: 'financial', label: 'Open Financial Risk', icon: <Activity size={18} />, action: () => openTab('financial', 'Financial Risk'), category: 'Analytics', keywords: ['money', 'revenue', 'loss', 'exposure', 'finance'] },
     
     // Developer
-    { id: 'developer', label: 'Open Developer API', icon: <Code size={18} />, action: () => openTab('developer', 'Developer API'), category: 'Developer' },
+    { id: 'developer', label: 'Open Developer API', icon: <Code size={18} />, action: () => openTab('developer', 'Developer API'), category: 'Developer', keywords: ['code', 'endpoint', 'json', 'rest', 'programmatic', 'dev'] },
   ];
 
   const fileCommands = files.map(f => ({
@@ -983,7 +983,8 @@ function AppContent() {
     label: `${f.originalName || f.filename}`,
     icon: <FileText size={18} />,
     action: () => openTab('bi', 'Analysis'),
-    category: 'Datasets'
+    category: 'Datasets',
+    keywords: ['file', 'data', 'dataset', 'source', 'upload', 'csv']
   }));
 
   const commands = [...staticCommands, ...fileCommands];
