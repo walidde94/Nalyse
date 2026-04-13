@@ -23,7 +23,8 @@ import {
   ShieldAlert,
   Cpu,
   BarChart3,
-  Network
+  Network,
+  FileText
 } from 'lucide-react';
 import { OnboardingTour } from './components/ui/OnboardingTour';
 import { ProcessingOverlay } from './components/ui/ProcessingOverlay';
@@ -952,7 +953,7 @@ function AppContent() {
 
   // --- Command Palette ---
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const commands = [
+  const staticCommands = [
     { id: 'dash', label: 'Go to Dashboard', icon: <LayoutDashboard size={18} />, action: () => openTab('dashboard', 'Dashboard'), category: 'Navigation' },
     { id: 'settings', label: 'Open Settings', icon: <Settings size={18} />, action: () => openTab('settings', 'Settings'), category: 'Navigation' },
     { id: 'upload', label: 'Upload New File', icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', 'Dashboard'); document.getElementById('file-input')?.click(); }, category: 'Actions' },
@@ -976,6 +977,16 @@ function AppContent() {
     // Developer
     { id: 'developer', label: 'Open Developer API', icon: <Code size={18} />, action: () => openTab('developer', 'Developer API'), category: 'Developer' },
   ];
+
+  const fileCommands = files.map(f => ({
+    id: `file-${f.id}`,
+    label: `${f.originalName || f.filename}`,
+    icon: <FileText size={18} />,
+    action: () => openTab('bi', 'Analysis'),
+    category: 'Datasets'
+  }));
+
+  const commands = [...staticCommands, ...fileCommands];
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
