@@ -73,6 +73,42 @@ const PasswordStrength = ({ password }: { password: string }) => {
     );
 };
 
+const InputField = ({ icon: Icon, label, name, type = 'text', placeholder, value, onChange, inputRef, showToggle, toggleValue, onToggle, focusedField, setFocusedField, handleKeyDown, setError }: any) => (
+    <div>
+        <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>
+            {label}
+        </label>
+        <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '0 16px', height: 50, borderRadius: 14,
+            background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${focusedField === name ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.06)'}`,
+            boxShadow: focusedField === name ? '0 0 0 3px rgba(16,185,129,0.08), 0 0 20px -8px rgba(16,185,129,0.15)' : 'none',
+            transition: 'all 0.3s',
+        }}>
+            <Icon size={16} style={{ color: focusedField === name ? '#10b981' : 'rgba(255,255,255,0.2)', transition: 'color 0.3s', flexShrink: 0 }} />
+            <input
+                ref={inputRef}
+                type={showToggle ? (toggleValue ? 'text' : 'password') : type}
+                value={value}
+                onChange={(e: any) => { onChange(e.target.value); setError(''); }}
+                onFocus={() => setFocusedField(name)}
+                onBlur={() => setFocusedField(null)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
+            />
+            {showToggle && (
+                <button type="button" onClick={onToggle}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.2)', padding: 4, display: 'flex' }}
+                >
+                    {toggleValue ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+            )}
+        </div>
+    </div>
+);
+
 export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onSuccess }) => {
     const { register } = useAuth();
     const [currentStep, setCurrentStep] = useState(0); // 0: account, 1: org, 2: password, 3: processing, 4: success
@@ -127,41 +163,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
     const totalSteps = 3;
     const progress = ((currentStep) / totalSteps) * 100;
 
-    const InputField = ({ icon: Icon, label, name, type = 'text', placeholder, value, onChange, inputRef, showToggle, toggleValue, onToggle }: any) => (
-        <div>
-            <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>
-                {label}
-            </label>
-            <div style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '0 16px', height: 50, borderRadius: 14,
-                background: 'rgba(255,255,255,0.03)',
-                border: `1px solid ${focusedField === name ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.06)'}`,
-                boxShadow: focusedField === name ? '0 0 0 3px rgba(16,185,129,0.08), 0 0 20px -8px rgba(16,185,129,0.15)' : 'none',
-                transition: 'all 0.3s',
-            }}>
-                <Icon size={16} style={{ color: focusedField === name ? '#10b981' : 'rgba(255,255,255,0.2)', transition: 'color 0.3s', flexShrink: 0 }} />
-                <input
-                    ref={inputRef}
-                    type={showToggle ? (toggleValue ? 'text' : 'password') : type}
-                    value={value}
-                    onChange={(e: any) => { onChange(e.target.value); setError(''); }}
-                    onFocus={() => setFocusedField(name)}
-                    onBlur={() => setFocusedField(null)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={placeholder}
-                    style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
-                />
-                {showToggle && (
-                    <button type="button" onClick={onToggle}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.2)', padding: 4, display: 'flex' }}
-                    >
-                        {toggleValue ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                )}
-            </div>
-        </div>
-    );
+    const commonProps = { focusedField, setFocusedField, handleKeyDown, setError };
 
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'fixed', inset: 0, display: 'flex', background: '#050508' }}>
@@ -307,13 +309,13 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 6, fontWeight: 500 }}>Let's start with the basics</p>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                            <InputField icon={Mail} label="Email Address" name="email" type="email" placeholder="you@company.com" value={formData.email} onChange={(v: string) => setFormData({ ...formData, email: v })} inputRef={emailRef} />
+                                            <InputField {...commonProps} icon={Mail} label="Email Address" name="email" type="email" placeholder="you@company.com" value={formData.email} onChange={(v: string) => setFormData({ ...formData, email: v })} inputRef={emailRef} />
                                             <div style={{ display: 'flex', gap: 12 }}>
                                                 <div style={{ flex: 1 }}>
-                                                    <InputField icon={User} label="First Name" name="firstName" placeholder="Jane" value={formData.firstName} onChange={(v: string) => setFormData({ ...formData, firstName: v })} />
+                                                    <InputField {...commonProps} icon={User} label="First Name" name="firstName" placeholder="Jane" value={formData.firstName} onChange={(v: string) => setFormData({ ...formData, firstName: v })} />
                                                 </div>
                                                 <div style={{ flex: 1 }}>
-                                                    <InputField icon={User} label="Last Name" name="lastName" placeholder="Smith" value={formData.lastName} onChange={(v: string) => setFormData({ ...formData, lastName: v })} />
+                                                    <InputField {...commonProps} icon={User} label="Last Name" name="lastName" placeholder="Smith" value={formData.lastName} onChange={(v: string) => setFormData({ ...formData, lastName: v })} />
                                                 </div>
                                             </div>
                                         </div>
@@ -331,7 +333,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                             <h2 style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', margin: 0 }}>Your workspace</h2>
                                             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 6, fontWeight: 500 }}>This will be your team's shared environment</p>
                                         </div>
-                                        <InputField icon={Building2} label="Organization Name" name="org" placeholder="Acme Corporation" value={formData.organizationName} onChange={(v: string) => setFormData({ ...formData, organizationName: v })} inputRef={orgRef} />
+                                        <InputField {...commonProps} icon={Building2} label="Organization Name" name="org" placeholder="Acme Corporation" value={formData.organizationName} onChange={(v: string) => setFormData({ ...formData, organizationName: v })} inputRef={orgRef} />
                                         
                                         {/* Enrolled summary */}
                                         <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -359,12 +361,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                             <div>
-                                                <InputField icon={Lock} label="Password" name="password" placeholder="Min 8 characters" value={formData.password}
+                                                <InputField {...commonProps} icon={Lock} label="Password" name="password" placeholder="Min 8 characters" value={formData.password}
                                                     onChange={(v: string) => setFormData({ ...formData, password: v })} inputRef={passwordRef}
                                                     showToggle toggleValue={showPassword} onToggle={() => setShowPassword(!showPassword)} />
                                                 <PasswordStrength password={formData.password} />
                                             </div>
-                                            <InputField icon={Lock} label="Confirm Password" name="confirmPassword" placeholder="Repeat your password" value={formData.confirmPassword}
+                                            <InputField {...commonProps} icon={Lock} label="Confirm Password" name="confirmPassword" placeholder="Repeat your password" value={formData.confirmPassword}
                                                 onChange={(v: string) => setFormData({ ...formData, confirmPassword: v })}
                                                 showToggle toggleValue={showPassword} onToggle={() => setShowPassword(!showPassword)} />
                                             {formData.password && formData.confirmPassword && formData.password === formData.confirmPassword && (
