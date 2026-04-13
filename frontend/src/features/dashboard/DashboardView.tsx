@@ -944,10 +944,10 @@ export const DashboardView = ({
                             const conf = layoutState[node.id];
                             return {
                                 i: node.id,
-                                x: Number(conf?.x) || 0,
-                                y: Number(conf?.y) || (idx * 4),
-                                w: Number(conf?.w) || 12,
-                                h: Number(conf?.h) || 4,
+                                x: conf?.x !== undefined ? Number(conf.x) : 0,
+                                y: conf?.y !== undefined ? Number(conf.y) : (idx * 4),
+                                w: conf?.w !== undefined ? Number(conf.w) : 12,
+                                h: conf?.h !== undefined ? Number(conf.h) : 4,
                                 minW: 3,
                                 minH: 2
                             };
