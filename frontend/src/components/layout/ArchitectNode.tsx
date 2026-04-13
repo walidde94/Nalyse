@@ -40,13 +40,11 @@ export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({
                 ref={ref} 
                 className={className}
                 style={{
-                    ...(isShellElement ? style : (
-                        isCanvas ? { width: '100%', height: '100%', overflow: 'auto', ...style } : {
-                            width: legacyWidth,
-                            flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
-                            ...style
-                        }
-                    ))
+                    ...(isShellElement ? style : {
+                        width: legacyWidth || '100%',
+                        flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
+                        ...style
+                    })
                 }}
                 {...rest}
             >
@@ -114,7 +112,7 @@ export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({
                 pointerEvents: 'auto',
                 width: '100%',
                 height: isShellElement ? 'auto' : '100%',
-                overflow: isShellElement ? 'visible' : 'hidden'
+                overflow: isShellElement ? 'visible' : 'auto'
             }}
             onMouseDown={(e) => e.stopPropagation()} /* Prevent internal clicks from triggering grid dragging */
             >
