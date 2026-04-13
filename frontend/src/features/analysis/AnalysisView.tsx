@@ -61,6 +61,7 @@ import { PredictiveForecasting } from './components/PredictiveForecasting';
 import { WorldMapChart } from './components/WorldMapChart';
 import { AnomalyDetection } from './components/AnomalyDetection';
 import { NexusAuditTrail } from './components/NexusAuditTrail';
+import { InsightPanel } from '../../components/ui/InsightPanel';
 
 interface ChartOption {
     title: string;
@@ -1926,6 +1927,11 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     <h1 style={{ fontSize: '24px', color: '#fff' }}>Nalyse Intelligence Report</h1>
                                     <p style={{ color: '#ccc' }}>Generated on {new Date().toLocaleString()}</p>
                                 </div>
+
+                                {/* AI Insight Engine — auto-detect patterns in the dataset */}
+                                {filteredData && filteredData.length > 0 && (
+                                    <InsightPanel data={filteredData} context="analysis-overview" compact={true} maxInsights={4} />
+                                )}
 
                                 {(() => {
                                     const sections = [

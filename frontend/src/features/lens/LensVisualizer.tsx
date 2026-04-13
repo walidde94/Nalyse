@@ -14,6 +14,7 @@ import {
     PieChart as RechartsPie, Pie, ScatterChart as RechartsScatter, Scatter,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, Area, AreaChart
 } from 'recharts';
+import { InsightPanel } from '../../components/ui/InsightPanel';
 
 // --- Types ---
 type FieldType = 'number' | 'string' | 'date' | 'geo';
@@ -405,6 +406,11 @@ export const LensVisualizer: React.FC = () => {
                 {/* Main Canvas Area */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px', overflow: 'hidden' }}>
                     
+                    {/* AI Insight Panel for loaded dataset */}
+                    {datasetData.length > 0 && (
+                        <InsightPanel data={datasetData} context="smart-lens" compact={true} maxInsights={3} />
+                    )}
+
                     {/* Configuration Bar (Drop Zones) */}
                     <div style={{ display: 'flex', gap: '16px', background: 'var(--bg-secondary)', padding: '20px', borderRadius: '18px', border: '1px solid var(--border-default)' }}>
                         {zones.map(zone => (

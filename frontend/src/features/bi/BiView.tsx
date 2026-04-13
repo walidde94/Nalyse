@@ -8,6 +8,7 @@ import {
     BarChart3, TrendingUp, Users, PackageSearch, Megaphone, Cpu, 
     Briefcase, ArrowUpRight, ArrowDownRight, Download, Activity, Globe, Zap 
 } from 'lucide-react';
+import { InsightPanel, useInsights } from '../../components/ui/InsightPanel';
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#6366f1', '#14b8a6'];
 
@@ -74,6 +75,9 @@ const getStr = (row: any, keys: string[]): string => {
 };
 
 export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
+
+    // AI Insight Engine — analyze raw data for intelligent recommendations
+    const insightReport = useInsights(data, useCase);
 
     const { kpis, charts, title, accentColor, icon } = useMemo(() => {
         let title = 'Dashboard';
@@ -354,6 +358,11 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
 
             <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative', zIndex: 10 }}>
                 
+                {/* AI Insight Engine Panel */}
+                {data && data.length > 0 && (
+                    <InsightPanel data={data} context={useCase} compact={true} maxInsights={4} />
+                )}
+
                 {/* KPI Overview */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
                     {kpis.map((kpi: any, i: number) => (

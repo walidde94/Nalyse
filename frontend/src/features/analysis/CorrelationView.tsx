@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import alasql from 'alasql';
 
 import { Link2, BarChart3, Sparkles } from 'lucide-react';
+import { InsightPanel } from '../../components/ui/InsightPanel';
 
 import { API_URL } from '../../config';
 
@@ -166,6 +167,11 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
                 <div style={{ padding: '16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', borderRadius: '8px' }}>
                     {error}
                 </div>
+            )}
+
+            {/* AI Insights for join results */}
+            {results.length > 0 && (
+                <InsightPanel data={results} context="correlation" compact={true} maxInsights={3} />
             )}
 
             <div className="card flex-col" style={{ flex: 1, minHeight: '400px', padding: 0, overflow: 'hidden' }}>

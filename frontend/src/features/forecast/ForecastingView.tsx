@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 import { API_URL } from '../../config';
+import { InsightPanel } from '../../components/ui/InsightPanel';
 
 // ─── Theme Colors ──────────────────────────────────────────────
 const HISTORICAL_COLOR = '#818cf8';
@@ -265,6 +266,9 @@ export const ForecastingView = ({ files, token }: Props) => {
             {!loading && forecastData.length > 0 && modelMetrics && (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                     
+                    {/* AI Insight Panel for forecast data */}
+                    <InsightPanel data={forecastData} context="forecasting" compact={true} maxInsights={3} />
+
                     {/* Score Cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                         {[
