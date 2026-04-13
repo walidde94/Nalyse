@@ -31,9 +31,10 @@ export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({
     // Visibility logic
     if (!isVisible && !isArchitectMode) return null;
     
+    const isShellElement = id.startsWith('header-') || id.startsWith('sb-') || id.startsWith('shell-');
+
     if (!isArchitectMode) {
         // Shell nodes (header, sidebar elements) should pass through without forced sizing
-        const isShellElement = id.startsWith('header-') || id.startsWith('sb-') || id.startsWith('shell-');
         return (
             <div 
                 ref={ref} 
@@ -112,8 +113,8 @@ export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({
                 transition: 'opacity 0.3s, filter 0.3s',
                 pointerEvents: 'auto',
                 width: '100%',
-                height: '100%',
-                overflow: 'hidden'
+                height: isShellElement ? 'auto' : '100%',
+                overflow: isShellElement ? 'visible' : 'hidden'
             }}
             onMouseDown={(e) => e.stopPropagation()} /* Prevent internal clicks from triggering grid dragging */
             >

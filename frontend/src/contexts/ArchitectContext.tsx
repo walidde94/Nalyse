@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from './AuthContext';
 
 export interface NodeConfig {
     id: string;
@@ -53,17 +54,33 @@ interface ArchitectContextType {
 
 const ArchitectContext = createContext<ArchitectContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'nalyse-workspace-layout-v4';
+/** Build user-scoped localStorage keys. Falls back to shared keys when no user is logged in. */
+function storageKeys(userId: string | undefined) {
+    const suffix = userId ? `-${userId}` : '';
+    return {
+        layout:   `nalyse-workspace-layout-v4${suffix}`,
+        mode:     `nalyse-architect-mode${suffix}`,
+        viewMode: `nalyse-layout-mode${suffix}`,
+    };
+}
+
 const MAX_HISTORY = 30;
 
 export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user } = useAuth();
+    const userId = user?.id;
+    const keys = storageKeys(userId);
+
+    // Track userId so we can detect user switches
+    const prevUserIdRef = useRef<string | undefined>(userId);
+
     const [isArchitectMode, setIsArchitectMode] = useState(() => {
-        return localStorage.getItem('nalyse-architect-mode') === 'true';
+        return localStorage.getItem(keys.mode) === 'true';
     });
 
     const [layoutState, setLayoutState] = useState<Record<string, NodeConfig>>(() => {
         try {
-            const saved = localStorage.getItem(STORAGE_KEY);
+            const saved = localStorage.getItem(keys.layout);
             return saved ? JSON.parse(saved) : {};
         } catch {
             return {};
@@ -75,6 +92,24 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
     const [dropTargetId, setDropTargetId] = useState<string | null>(null);
     const [lastAction, setLastAction] = useState<string | null>(null);
+
+    // --- Reload layout state when user changes (login/logout/switch) ---
+    useEffect(() => {
+        if (prevUserIdRef.current === userId) return;
+        prevUserIdRef.current = userId;
+
+        const k = storageKeys(userId);
+        setIsArchitectMode(localStorage.getItem(k.mode) === 'true');
+        try {
+            const saved = localStorage.getItem(k.layout);
+            setLayoutState(saved ? JSON.parse(saved) : {});
+        } catch {
+            setLayoutState({});
+        }
+        setActiveNodeId(null);
+        setUndoStack([]);
+        setRedoStack([]);
+    }, [userId]);
 
     // --- UNDO/REDO (reactive state for canUndo/canRedo) ---
     const [undoStack, setUndoStack] = useState<Record<string, NodeConfig>[]>([]);
@@ -149,10 +184,21 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return () => window.removeEventListener('keydown', handler);
     }, [isArchitectMode, undo, redo]);
 
-    // Persistence
-    useEffect(() => { localStorage.setItem('nalyse-architect-mode', String(isArchitectMode)); }, [isArchitectMode]);
-    useEffect(() => { localStorage.setItem('nalyse-layout-mode', layoutMode); }, [layoutMode]);
-    useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(layoutState)); }, [layoutState]);
+    // Persistence — write to user-scoped keys
+    useEffect(() => {
+        const k = storageKeys(userId);
+        localStorage.setItem(k.mode, String(isArchitectMode));
+    }, [isArchitectMode, userId]);
+
+    useEffect(() => {
+        const k = storageKeys(userId);
+        localStorage.setItem(k.viewMode, layoutMode);
+    }, [layoutMode, userId]);
+
+    useEffect(() => {
+        const k = storageKeys(userId);
+        localStorage.setItem(k.layout, JSON.stringify(layoutState));
+    }, [layoutState, userId]);
 
     // Clear action toast
     useEffect(() => {

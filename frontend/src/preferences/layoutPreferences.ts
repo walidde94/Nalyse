@@ -1,7 +1,13 @@
 /** Persisted workspace shell preferences (sidebar order, visibility, tab density). */
 
+/** @deprecated Use `getLayoutPrefsKey(userId)` for per-user scoping. Kept for backward compatibility. */
 export const LAYOUT_PREFS_STORAGE_KEY = 'nalyse-layout-preferences';
 export const LAYOUT_PREFS_EVENT = 'layout-preferences-change';
+
+/** Build a user-scoped localStorage key. Falls back to the shared key when no userId is provided. */
+export function getLayoutPrefsKey(userId?: string): string {
+    return userId ? `nalyse-layout-preferences-${userId}` : LAYOUT_PREFS_STORAGE_KEY;
+}
 
 export const DEFAULT_GROUP_ORDER = ['decision', 'analytics', 'predictive', 'bi', 'selfservice'] as const;
 export type SidebarGroupKey = (typeof DEFAULT_GROUP_ORDER)[number];
@@ -127,9 +133,10 @@ function normalizeHidden(raw: unknown): string[] {
     return raw.filter((x): x is string => typeof x === 'string' && allKnown.has(x) && !PROTECTED_NAV_IDS.has(x));
 }
 
-export function loadLayoutPreferences(): LayoutPreferencesV1 {
+export function loadLayoutPreferences(userId?: string): LayoutPreferencesV1 {
     try {
-        const stored = localStorage.getItem(LAYOUT_PREFS_STORAGE_KEY);
+        const key = getLayoutPrefsKey(userId);
+        const stored = localStorage.getItem(key);
         if (!stored) return { ...DEFAULT_PREFS };
         const parsed = JSON.parse(stored) as Partial<LayoutPreferencesV1>;
         const itemOrder: Partial<Record<SidebarGroupKey, string[]>> = {};
@@ -158,15 +165,16 @@ export function loadLayoutPreferences(): LayoutPreferencesV1 {
     }
 }
 
-export function saveLayoutPreferences(next: LayoutPreferencesV1): void {
+export function saveLayoutPreferences(next: LayoutPreferencesV1, userId?: string): void {
     const compactTabBar = next.tabBarDensity === 'compact' || next.tabBarDensity === 'minimal';
     const payload = { ...next, compactTabBar };
-    localStorage.setItem(LAYOUT_PREFS_STORAGE_KEY, JSON.stringify(payload));
+    const key = getLayoutPrefsKey(userId);
+    localStorage.setItem(key, JSON.stringify(payload));
     window.dispatchEvent(new Event(LAYOUT_PREFS_EVENT));
 }
 
-export function getInitialSidebarCollapsed(): boolean {
-    return loadLayoutPreferences().sidebarCollapsedDefault;
+export function getInitialSidebarCollapsed(userId?: string): boolean {
+    return loadLayoutPreferences(userId).sidebarCollapsedDefault;
 }
 
 export function isNavHidden(prefs: LayoutPreferencesV1, id: string): boolean {

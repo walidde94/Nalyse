@@ -151,29 +151,32 @@ function orderedGroupItemIds(group: SidebarGroupKey, prefs: ReturnType<typeof lo
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
-    const [collapsed, setCollapsed] = useState(getInitialSidebarCollapsed);
-    const [prefs, setPrefs] = useState(loadLayoutPreferences);
-    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
     const { t } = useLanguage();
     const { user } = useAuth();
     const { isArchitectMode } = useArchitect();
+    const userId = user?.id;
     const isPro = user && ((user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro');
+    const [collapsed, setCollapsed] = useState(() => getInitialSidebarCollapsed(userId));
+    const [prefs, setPrefs] = useState(() => loadLayoutPreferences(userId));
+    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         const sync = () => {
-            const p = loadLayoutPreferences();
+            const p = loadLayoutPreferences(userId);
             setPrefs(p);
             setCollapsed(p.sidebarCollapsedDefault);
         };
+        // Reload when user changes
+        sync();
         window.addEventListener(LAYOUT_PREFS_EVENT, sync);
         return () => window.removeEventListener(LAYOUT_PREFS_EVENT, sync);
-    }, []);
+    }, [userId]);
 
     const persistCollapsed = (next: boolean) => {
         setCollapsed(next);
-        const p = loadLayoutPreferences();
-        saveLayoutPreferences({ ...p, sidebarCollapsedDefault: next });
+        const p = loadLayoutPreferences(userId);
+        saveLayoutPreferences({ ...p, sidebarCollapsedDefault: next }, userId);
     };
 
     const toggleGroupCollapse = (groupKey: string) => {
@@ -193,16 +196,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
     );
 
     const handleReorderGroups = (newOrder: string[]) => {
-        const p = loadLayoutPreferences();
-        saveLayoutPreferences({ ...p, groupOrder: newOrder as SidebarGroupKey[] });
+        const p = loadLayoutPreferences(userId);
+        saveLayoutPreferences({ ...p, groupOrder: newOrder as SidebarGroupKey[] }, userId);
     };
 
     const handleHideGroup = useCallback((groupKey: SidebarGroupKey) => {
-        const p = loadLayoutPreferences();
+        const p = loadLayoutPreferences(userId);
         // For simplicity, we'll just remove it from groupOrder for now since that's what we map over
         const newOrder = p.groupOrder.filter(g => g !== groupKey);
-        saveLayoutPreferences({ ...p, groupOrder: newOrder });
-    }, []);
+        saveLayoutPreferences({ ...p, groupOrder: newOrder }, userId);
+    }, [userId]);
 
     const expandedWidth = 240;
     const collapsedWidth = 64;
