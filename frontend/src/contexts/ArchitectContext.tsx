@@ -149,19 +149,6 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return () => window.removeEventListener('keydown', handler);
     }, [isArchitectMode, undo, redo]);
 
-    // Global emergency reset shortcut (works even outside architect mode)
-    // Ctrl/Cmd + Shift + Backspace = reset layout
-    useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Backspace') {
-                e.preventDefault();
-                resetLayout();
-            }
-        };
-        window.addEventListener('keydown', handler);
-        return () => window.removeEventListener('keydown', handler);
-    }, [resetLayout]);
-
     // Persistence
     useEffect(() => { localStorage.setItem('nalyse-architect-mode', String(isArchitectMode)); }, [isArchitectMode]);
     useEffect(() => { localStorage.setItem('nalyse-layout-mode', layoutMode); }, [layoutMode]);
@@ -289,6 +276,19 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setRedoStack([]);
         setLastAction('Layout reset to default');
     }, [pushHistory]);
+
+    // Global emergency reset shortcut (works even outside architect mode)
+    // Ctrl/Cmd + Shift + Backspace = reset layout
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Backspace') {
+                e.preventDefault();
+                resetLayout();
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [resetLayout]);
 
     return (
         <ArchitectContext.Provider value={{ 
