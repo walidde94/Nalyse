@@ -20,10 +20,12 @@ export const CommandPalette = ({ isOpen, onClose, commands }: { isOpen: boolean;
         localStorage.setItem('command_history', JSON.stringify(newHistory));
     };
 
-    const filteredCommands = commands.filter(c =>
-        c.label.toLowerCase().includes(search.toLowerCase()) ||
-        c.category?.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredCommands = commands.filter(c => {
+        const terms = search.toLowerCase().split(' ').filter(Boolean);
+        if (terms.length === 0) return true;
+        const target = `${c.label.toLowerCase()} ${c.category?.toLowerCase() || ''}`;
+        return terms.every(term => target.includes(term));
+    });
 
     useEffect(() => {
         if (!isOpen) return;

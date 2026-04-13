@@ -15,7 +15,15 @@ import {
   Settings,
   CloudUpload,
   Palette,
-  LogOut
+  LogOut,
+  Activity,
+  Target,
+  Workflow,
+  Code,
+  ShieldAlert,
+  Cpu,
+  BarChart3,
+  Network
 } from 'lucide-react';
 import { OnboardingTour } from './components/ui/OnboardingTour';
 import { ProcessingOverlay } from './components/ui/ProcessingOverlay';
@@ -949,8 +957,24 @@ function AppContent() {
     { id: 'settings', label: 'Open Settings', icon: <Settings size={18} />, action: () => openTab('settings', 'Settings'), category: 'Navigation' },
     { id: 'upload', label: 'Upload New File', icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', 'Dashboard'); document.getElementById('file-input')?.click(); }, category: 'Actions' },
     { id: 'theme', label: `Switch to ${theme === 'dark' ? 'Light' : theme === 'light' ? 'Custom' : 'Dark'} Mode`, icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance' },
-    { id: 'simulation', label: 'Open Simulation Engine', icon: <LayoutDashboard size={18} />, action: () => openTab('simulation', 'Simulation Engine'), category: 'Navigation' },
     { id: 'logout', label: 'Logout', icon: <LogOut size={18} />, action: logout, category: 'Account' },
+    
+    // Core Engines
+    { id: 'simulation', label: 'Open Simulation Engine', icon: <Cpu size={18} />, action: () => openTab('simulation', 'Simulation Engine'), category: 'Engines' },
+    { id: 'forecast', label: 'Open Forecasting Engine', icon: <Activity size={18} />, action: () => openTab('forecast', 'Forecasting Engine'), category: 'Engines' },
+    { id: 'automl', label: 'Open AutoML Intelligence', icon: <Cpu size={18} />, action: () => openTab('automl', 'AutoML Intelligence'), category: 'Engines' },
+    { id: 'spatial', label: 'Open Geospatial Intelligence', icon: <Target size={18} />, action: () => openTab('spatial', 'Geospatial Intelligence'), category: 'Engines' },
+    
+    // Analytics
+    { id: 'analysis', label: 'Open Analysis', icon: <BarChart3 size={18} />, action: () => openTab('bi', 'Analysis'), category: 'Analytics' },
+    { id: 'lens', label: 'Open Smart Lens', icon: <Target size={18} />, action: () => openTab('lens', 'Smart Lens'), category: 'Analytics' },
+    { id: 'correlate', label: 'Open Correlation', icon: <Network size={18} />, action: () => openTab('correlate', 'Correlation'), category: 'Analytics' },
+    { id: 'diff', label: 'Open Version Diff', icon: <Workflow size={18} />, action: () => openTab('diff', 'Version Diff'), category: 'Analytics' },
+    { id: 'anomaly', label: 'Open Anomaly Detection', icon: <ShieldAlert size={18} />, action: () => openTab('anomaly', 'Anomaly Detection'), category: 'Analytics' },
+    { id: 'financial', label: 'Open Financial Risk', icon: <Activity size={18} />, action: () => openTab('financial', 'Financial Risk'), category: 'Analytics' },
+    
+    // Developer
+    { id: 'developer', label: 'Open Developer API', icon: <Code size={18} />, action: () => openTab('developer', 'Developer API'), category: 'Developer' },
   ];
 
   useEffect(() => {
