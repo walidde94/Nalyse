@@ -32,16 +32,20 @@ export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({
     if (!isVisible && !isArchitectMode) return null;
     
     if (!isArchitectMode) {
+        // Shell nodes (header, sidebar elements) should pass through without forced sizing
+        const isShellElement = id.startsWith('header-') || id.startsWith('sb-') || id.startsWith('shell-');
         return (
             <div 
                 ref={ref} 
                 className={className}
                 style={{
-                    ...(isCanvas && style ? style : {
-                        width: legacyWidth,
-                        flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
-                        ...style
-                    })
+                    ...(isShellElement ? style : (
+                        isCanvas && style ? style : {
+                            width: legacyWidth,
+                            flex: legacyWidth === '100%' ? '0 0 100%' : (legacyWidth === '50%' ? '1 1 calc(50% - 12px)' : (legacyWidth === '33%' ? '1 1 calc(33.33% - 16px)' : '1 1 auto')),
+                            ...style
+                        }
+                    ))
                 }}
                 {...rest}
             >
