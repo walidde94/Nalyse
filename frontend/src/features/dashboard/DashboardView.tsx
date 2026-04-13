@@ -1024,15 +1024,22 @@ export const DashboardView = ({
                     // Fallback flex mapping
                     return allNodes
                         .sort((a, b) => (layoutState[a.id]?.order || 0) - (layoutState[b.id]?.order || 0))
-                        .map(node => (
+                        .map(node => {
+                            const w = layoutState[node.id]?.width;
+                            let flexBasis = '1 1 100%';
+                            if (layoutMode === 'grid') {
+                                if (w === '50%') flexBasis = '1 1 calc(50% - 12px)';
+                                else if (w === '33%') flexBasis = '1 1 calc(33.333% - 16px)';
+                            }
+                            return (
                             <ArchitectNode 
                                 key={node.id} id={node.id} label={node.label}
                                 isDraggable={(node as any).isDraggable !== false}
-                                style={{ flex: layoutState[node.id]?.width === '50%' && layoutMode === 'grid' ? '1 1 calc(50% - 12px)' : '1 1 100%' }}
+                                style={{ flex: flexBasis }}
                             >
                                 {node.component}
                             </ArchitectNode>
-                        ));
+                        );})
                 })()}
                     </div>
                 );
