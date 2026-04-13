@@ -68,8 +68,8 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
                 >
                     {children}
                 </div>
+                <ArchitectPanel />
             </div>
-            <ArchitectPanel />
         </div>
     );
 };

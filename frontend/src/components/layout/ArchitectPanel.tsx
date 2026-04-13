@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     X, Layout, Grid, Undo2, Redo2, Eye, EyeOff, 
@@ -42,7 +41,7 @@ export const ArchitectPanel: React.FC = () => {
 
     if (!isArchitectMode) return null;
 
-    return createPortal(
+    return (
         <>
             {/* ── ACTION STATUS TOAST ── */}
             <AnimatePresence>
@@ -60,6 +59,7 @@ export const ArchitectPanel: React.FC = () => {
             </AnimatePresence>
 
             {/* ── BOTTOM COMMAND BAR ── */}
+            <div className="arch-command-wrapper">
             <motion.div
                 initial={{ y: 80, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -191,6 +191,7 @@ export const ArchitectPanel: React.FC = () => {
                     </button>
                 </div>
             </motion.div>
+            </div>
 
             {/* ── LIBRARY POPUP ── */}
             <AnimatePresence>
@@ -292,17 +293,25 @@ export const ArchitectPanel: React.FC = () => {
             </AnimatePresence>
 
             <style>{`
+                .arch-command-wrapper {
+                    position: absolute;
+                    bottom: 0; left: 0; right: 0;
+                    display: flex;
+                    justify-content: center;
+                    padding: 16px;
+                    pointer-events: none;
+                    z-index: 10001;
+                }
                 .arch-command-bar {
-                    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+                    pointer-events: auto;
                     display: flex; align-items: center; gap: 4px;
                     padding: 6px;
                     background: rgba(12, 12, 22, 0.95);
                     backdrop-filter: blur(24px) saturate(200%);
                     border: 1px solid rgba(255,255,255,0.08);
                     border-radius: 16px;
-                    z-index: 10001;
                     box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
-                    max-width: calc(100vw - 32px);
+                    max-width: calc(100% - 32px);
                 }
                 .acb-group { display: flex; align-items: center; gap: 2px; }
                 .acb-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.08); margin: 0 4px; flex-shrink: 0; }
@@ -443,7 +452,6 @@ export const ArchitectPanel: React.FC = () => {
                     background: rgba(239, 68, 68, 0.25); color: #fca5a5;
                 }
             `}</style>
-        </>,
-        document.body
+        </>
     );
 };
