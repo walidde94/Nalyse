@@ -948,8 +948,8 @@ export const DashboardView = ({
                                 y: conf?.y !== undefined ? Number(conf.y) : (idx * 4),
                                 w: conf?.w !== undefined ? Number(conf.w) : 12,
                                 h: conf?.h !== undefined ? Number(conf.h) : 4,
-                                minW: 3,
-                                minH: 2
+                                minW: 2,
+                                minH: 1
                             };
                         });
 
@@ -966,6 +966,7 @@ export const DashboardView = ({
                                 draggableHandle=".react-grid-drag-handle"
                                 isDraggable={isArchitectMode}
                                 isResizable={isArchitectMode}
+                                resizeHandles={['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne']}
                                 useCSSTransforms={true}
                             >
                                 {allNodes.map((node) => (
