@@ -457,6 +457,7 @@ export const DashboardView = ({
     onToggleFavorite,
     onUpdateFileGroup,
     onCreateGroup,
+    onDeleteGroup,
     onDeleteMultiple,
     onViewReport,
     onArchiveFile
