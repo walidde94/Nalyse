@@ -26,11 +26,6 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
 
     const isDark = theme === 'dark' || theme === 'midnight';
     const isMidnight = theme === 'midnight';
-
-    // Read dynamic custom theme colors for inline styles
-    const customPrimary = isMidnight ? (getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#f59e0b') : '';
-    const customAccent = isMidnight ? (getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ea580c') : '';
-
     const isPro = (user as any)?.organization?.plan === 'pro' || (user as any)?.plan === 'pro';
 
     return (
@@ -51,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         : 'linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.92) 100%)',
                 backdropFilter: isMidnight ? 'blur(40px) saturate(220%)' : 'blur(32px) saturate(200%)',
                 WebkitBackdropFilter: isMidnight ? 'blur(40px) saturate(220%)' : 'blur(32px) saturate(200%)',
-                borderBottom: `1px solid ${isMidnight ? `${customPrimary}15` : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                borderBottom: `1px solid ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
             }}>
 
                 {/* Left: Logo + Identity */}
@@ -83,8 +78,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     width: '6px',
                                     height: '6px',
                                     borderRadius: '50%',
-                                    background: isMidnight ? customPrimary : '#10b981',
-                                    boxShadow: `0 0 8px ${isMidnight ? customPrimary : 'rgba(16, 185, 129, 0.5)'}`,
+                                    background: isMidnight ? 'var(--primary)' : '#10b981',
+                                    boxShadow: `0 0 8px ${isMidnight ? 'var(--primary-glow)' : 'rgba(16, 185, 129, 0.5)'}`,
                                     flexShrink: 0,
                                 }} title="Connected" />
                             </div>
@@ -105,8 +100,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             gap: '8px',
                             width: '100%',
                             padding: '6px 12px',
-                            background: isMidnight ? `${customPrimary}08` : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                            border: `1px solid ${isMidnight ? `${customPrimary}15` : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                            background: isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                            border: `1px solid ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
                             borderRadius: '10px',
                             cursor: 'pointer',
                             color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(15,23,42,0.35)',
@@ -277,7 +272,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 : theme === 'light' ?
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
                                     :
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="10.5" r="1.5" /><circle cx="8.5" cy="7.5" r="1.5" /><circle cx="6.5" cy="12" r="1.5" /><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12a10 10 0 0 0 10 10Z" /></svg>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="10.5" r="1.5" /><circle cx="8.5" cy="7.5" r="1.5" /><circle cx="6.5" cy="12" r="1.5" /><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12a10 10 0 0 0 10 10Z" /></svg>
                             }
                         </div>
                     </button>
@@ -297,7 +292,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         <Compass size={15} className={isArchitectMode ? 'animate-spin' : ''} style={{ animationDuration: '10s' }} />
                     </button>
 
-                    <div style={{ width: '1px', height: '20px', background: isMidnight ? `${customPrimary}15` : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', margin: '0 2px' }} />
+                    <div style={{ width: '1px', height: '20px', background: isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', margin: '0 2px' }} />
 
                     {/* Profile */}
                     <div style={{ position: 'relative' }}>
@@ -484,17 +479,17 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: ${isMidnight ? `${customPrimary}08` : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'};
-                    border: 1px solid ${isMidnight ? `${customPrimary}12` : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'};
-                    color: ${isMidnight ? `${customPrimary}aa` : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'};
+                    background: ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'};
+                    border: 1px solid ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'};
+                    color: ${isMidnight ? 'var(--primary)' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'};
                     transition: all 0.2s ease;
                     cursor: pointer;
                     position: relative;
                 }
                 .hdr-icon-btn:hover {
-                    background: ${isMidnight ? `${customPrimary}15` : isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'};
-                    border-color: ${isMidnight ? `${customPrimary}30` : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
-                    color: ${isMidnight ? customPrimary : isDark ? '#fff' : '#0f172a'};
+                    background: ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'};
+                    border-color: ${isMidnight ? 'var(--primary-glow)' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+                    color: ${isMidnight ? 'var(--primary)' : isDark ? '#fff' : '#0f172a'};
                     transform: translateY(-1px);
                 }
             `}</style>
