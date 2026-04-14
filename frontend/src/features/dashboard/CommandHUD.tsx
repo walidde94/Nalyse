@@ -220,9 +220,9 @@ export const QuickActionsBar = ({ onUpload, onViewReport, onUpgrade, fileCount }
     fileCount: number;
 }) => {
     const actions = [
-        { label: 'Upload Dataset', icon: Database, color: '#3b82f6', action: onUpload, shortcut: '⌘U' },
-        { label: 'View Report', icon: BarChart3, color: '#8b5cf6', action: onViewReport, shortcut: '⌘R' },
-        { label: 'Upgrade Plan', icon: Sparkles, color: '#f59e0b', action: onUpgrade, shortcut: '⌘P' },
+        { label: 'Upload Dataset', icon: Database, color: 'var(--primary)', action: onUpload, shortcut: '⌘U' },
+        { label: 'View Report', icon: BarChart3, color: 'var(--accent)', action: onViewReport, shortcut: '⌘R' },
+        { label: 'Upgrade Plan', icon: Sparkles, color: 'var(--warning)', action: onUpgrade, shortcut: '⌘P' },
     ];
 
     return (
@@ -244,7 +244,7 @@ export const QuickActionsBar = ({ onUpload, onViewReport, onUpgrade, fileCount }
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1 + i * 0.08, duration: 0.4 }}
                 >
-                    <div className="qa-icon-wrap">
+                    <div className="qa-icon-wrap" style={{ color: act.color }}>
                         <act.icon size={18} />
                     </div>
                     <span className="qa-label">{act.label}</span>
@@ -279,14 +279,14 @@ const getEventIcon = (type: string) => {
     }
 };
 
-const getEventColor = (type: string) => {
+const getEventTokens = (type: string) => {
     switch (type) {
-        case 'upload': return '#3b82f6';
-        case 'analysis': return '#8b5cf6';
-        case 'anomaly': return '#ef4444';
-        case 'insight': return '#10b981';
-        case 'system': return '#06b6d4';
-        default: return '#64748b';
+        case 'upload': return { base: 'var(--primary)', glow: 'var(--primary-glow)', subtle: 'var(--primary-subtle)' };
+        case 'analysis': return { base: 'var(--accent)', glow: 'var(--accent-glow, rgba(139, 92, 246, 0.35))', subtle: 'rgba(139, 92, 246, 0.1)' };
+        case 'anomaly': return { base: 'var(--danger)', glow: 'var(--danger-glow)', subtle: 'rgba(239, 68, 68, 0.1)' };
+        case 'insight': return { base: 'var(--success)', glow: 'var(--success-glow)', subtle: 'rgba(16, 185, 129, 0.1)' };
+        case 'system': return { base: 'var(--secondary-accent)', glow: 'var(--secondary-glow)', subtle: 'rgba(6, 182, 212, 0.1)' };
+        default: return { base: 'var(--text-muted)', glow: 'rgba(100, 116, 139, 0.3)', subtle: 'rgba(100, 116, 139, 0.1)' };
     }
 };
 
@@ -339,35 +339,38 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
             </div>
 
             <div className="timeline-body">
-                {events.map((event, i) => (
-                    <motion.div
-                        key={event.id}
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1.4 + i * 0.08 }}
-                        className="timeline-event"
-                    >
-                        <div className="event-line">
-                            <div className="event-dot" style={{ background: getEventColor(event.type), boxShadow: `0 0 12px ${getEventColor(event.type)}40` }} />
-                            {i < events.length - 1 && <div className="event-connector" />}
-                        </div>
-                        <div className="event-content">
-                            <div className="event-meta">
-                                <div className="event-icon" style={{ color: getEventColor(event.type), background: `${getEventColor(event.type)}15` }}>
-                                    {getEventIcon(event.type)}
-                                </div>
-                                <span className="event-time">{event.time}</span>
-                                {event.status && (
-                                    <span className="event-status" style={{ color: getEventColor(event.type), borderColor: `${getEventColor(event.type)}30` }}>
-                                        {event.status}
-                                    </span>
-                                )}
+                {events.map((event, i) => {
+                    const tokens = getEventTokens(event.type);
+                    return (
+                        <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 1.4 + i * 0.08 }}
+                            className="timeline-event"
+                        >
+                            <div className="event-line">
+                                <div className="event-dot" style={{ background: tokens.base, boxShadow: `0 0 12px ${tokens.glow}` }} />
+                                {i < events.length - 1 && <div className="event-connector" />}
                             </div>
-                            <div className="event-title">{event.title}</div>
-                            <div className="event-desc">{event.description}</div>
-                        </div>
-                    </motion.div>
-                ))}
+                            <div className="event-content">
+                                <div className="event-meta">
+                                    <div className="event-icon" style={{ color: tokens.base, background: tokens.subtle }}>
+                                        {getEventIcon(event.type)}
+                                    </div>
+                                    <span className="event-time">{event.time}</span>
+                                    {event.status && (
+                                        <span className="event-status" style={{ color: tokens.base, borderColor: tokens.subtle }}>
+                                            {event.status}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="event-title">{event.title}</div>
+                                <div className="event-desc">{event.description}</div>
+                            </div>
+                        </motion.div>
+                    );
+                })}
             </div>
         </motion.div>
     );
