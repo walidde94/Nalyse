@@ -34,7 +34,10 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
     useEffect(() => {
         if (initialTab) setActiveTab(initialTab);
     }, [initialTab]);
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+    const [theme, setTheme] = useState(() => {
+        const userThemeKey = user?.id ? `theme-${user.id}` : 'theme';
+        return localStorage.getItem(userThemeKey) || 'dark';
+    });
     const [isSaving, setIsSaving] = useState(false);
 
     // Form State
@@ -77,7 +80,8 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
 
     const handleThemeChange = (newTheme: string) => {
         setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
+        const userThemeKey = user?.id ? `theme-${user.id}` : 'theme';
+        localStorage.setItem(userThemeKey, newTheme);
         document.documentElement.setAttribute('data-theme', newTheme);
         window.dispatchEvent(new Event('theme-change'));
     };

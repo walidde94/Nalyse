@@ -114,6 +114,8 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const savedMode = localStorage.getItem(k.viewMode);
         if (savedMode === 'vertical' || savedMode === 'grid' || savedMode === 'canvas') {
             setLayoutMode(savedMode);
+        } else {
+            setLayoutMode('canvas');
         }
         setActiveNodeId(null);
         setUndoStack([]);

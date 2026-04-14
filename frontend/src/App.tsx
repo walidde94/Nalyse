@@ -132,8 +132,20 @@ function AppContent() {
 
   // --- Theme State ---
   const [theme, setTheme] = useState<'dark' | 'light' | 'midnight'>(() => {
+    // Initial read won't have auth state resolved yet, fallback to generic
     return (localStorage.getItem('theme') as 'dark' | 'light' | 'midnight') || 'dark';
   });
+
+  // Reload theme when user changes
+  useEffect(() => {
+    const userThemeKey = user?.id ? `theme-${user.id}` : 'theme';
+    const stored = localStorage.getItem(userThemeKey) as 'dark' | 'light' | 'midnight';
+    if (stored) {
+      setTheme(stored);
+    } else {
+      setTheme('dark'); // default
+    }
+  }, [user?.id]);
 
   // Helper for staged analysis progress
   const runAnalysisWithProgress = async (workerFn: () => Promise<void | { type: string; title: string; data: any }>) => {
@@ -219,7 +231,8 @@ function AppContent() {
   // Listen for external theme changes (from SettingsView)
   useEffect(() => {
     const handleExternalChange = () => {
-      const stored = localStorage.getItem('theme') as 'dark' | 'light' | 'midnight';
+      const userThemeKey = user?.id ? `theme-${user.id}` : 'theme';
+      const stored = localStorage.getItem(userThemeKey) as 'dark' | 'light' | 'midnight';
       if (stored && stored !== theme) {
         setTheme(stored);
       }
@@ -241,7 +254,7 @@ function AppContent() {
       window.removeEventListener('navigate-to-settings', handleNavigateToSettings);
       window.removeEventListener('force-theme-reapply', handleForceReapply);
     };
-  }, [theme]);
+  }, [theme, user?.id]);
 
   // Pro Plan Attribute Injection
   useEffect(() => {
@@ -397,7 +410,8 @@ function AppContent() {
     const currentIdx = cycle.indexOf(theme);
     const newTheme = cycle[(currentIdx + 1) % cycle.length];
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
+    const userThemeKey = user?.id ? `theme-${user.id}` : 'theme';
+    localStorage.setItem(userThemeKey, newTheme);
   };
 
   // --- Tab Management ---
