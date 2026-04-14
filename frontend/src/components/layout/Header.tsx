@@ -17,7 +17,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuToggle, onNavigate }) => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const { isArchitectMode, toggleArchitectMode } = useArchitect();
     const { language, setLanguage, t } = useLanguage();
     const [showProfile, setShowProfile] = useState(false);
@@ -438,7 +438,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 <div style={{ height: '1px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', margin: '6px 0' }} />
 
                                 <button
-                                    onClick={() => { localStorage.clear(); window.location.href = '/'; }}
+                                    onClick={() => { logout(); setShowUserMenu(false); }}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '10px',
                                         padding: '8px 10px', borderRadius: '8px',
