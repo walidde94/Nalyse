@@ -3,48 +3,17 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_URL } from '../../config';
 import {
-    LayoutList,
-    LayoutGrid,
-    Folder,
-    Trash2,
-    FileText,
-    FileSpreadsheet,
-    Star,
-    CloudUpload,
-    BrainCircuit,
-    BarChart3,
-    Zap,
-    ShieldCheck,
-    ShieldAlert,
-    TrendingUp,
-    AlertTriangle,
-    Activity,
-    Clock,
-    Sparkles,
-    ArrowUpRight,
-    ArrowDownRight,
-    Search,
-    ArrowRight,
-    X,
-    Lightbulb,
-    Database,
-    Table,
-    Eye,
-    Loader2,
-    Globe,
-    Layers,
-    Target,
-    Cpu,
-    PieChart,
-    Archive,
-    RotateCcw,
+    Folder, Trash2, FileText, FileSpreadsheet, Star, CloudUpload,
+    BrainCircuit, BarChart3, Zap, ShieldCheck, ShieldAlert, TrendingUp,
+    AlertTriangle, Activity, Clock, Sparkles, ArrowUpRight, ArrowDownRight,
+    Search, ArrowRight, X, Lightbulb, Database, Table, Eye, Loader2,
+    Layers, Target, Cpu, Archive, RotateCcw, HardDrive, CheckCircle2, FileJson,
 } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip, BarChart, Bar, XAxis } from 'recharts';
 import { calculatePulse } from './pulseEngine';
 import { useAuth } from '../../contexts/AuthContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
-import { NeuralCanvas } from './NeuralCanvas';
-import { AmbientStatusStrip, OrbitalMetric, IntelligenceTimeline, PerformanceGauge, QuickActionsBar, LiveClock } from './CommandHUD';
-import { ProHeroBadge } from './ProBeastMode';
+import { AmbientStatusStrip, IntelligenceTimeline, PerformanceGauge, LiveClock } from './CommandHUD';
 import { NeuralDropZone } from './NeuralDropZone';
 import { ArchitectNode } from '../../components/layout/ArchitectNode';
 import { DiagnosticOverlay } from '../../components/layout/DiagnosticOverlay';
@@ -56,103 +25,120 @@ const ResponsiveGridLayout = WidthProvider(ResponsiveGrid);
 
 // --- SUB-COMPONENTS for Dashboard ---
 
-const MetricCard = ({ label, value, trend, trendLabel, color, icon: Icon }: any) => {
-    const isPositive = trend?.includes('+') || trend?.includes('Up') || (!trend?.includes('-') && !trend?.includes('Down'));
-    const colorVar = color === 'success' ? '#10b981' : color === 'danger' ? '#ef4444' : color === 'warning' ? '#f59e0b' : '#3b82f6';
+const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+
+const QuickStatCard = ({ label, value, unit, icon: Icon, color = '#6366f1' }: any) => (
+    <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+            flex: '1 1 160px', padding: '20px', borderRadius: '16px',
+            background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
+            display: 'flex', flexDirection: 'column', gap: '10px',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+        }}
+        whileHover={{ borderColor: `${color}40`, boxShadow: `0 0 20px ${color}10` }}
+    >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)' }}>
+            <Icon size={15} style={{ color }} />
+            <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px', lineHeight: 1 }}>{value}</span>
+            {unit && <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>{unit}</span>}
+        </div>
+    </motion.div>
+);
+
+const TypeBreakdownChart = ({ csvCount, jsonCount, excelCount, otherCount }: any) => {
+    const total = csvCount + jsonCount + excelCount + otherCount;
+    if (total === 0) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No datasets yet</div>;
+    const data = [
+        { name: 'CSV', value: csvCount, color: '#10b981' },
+        { name: 'JSON', value: jsonCount, color: '#6366f1' },
+        { name: 'Excel', value: excelCount, color: '#f59e0b' },
+        { name: 'Other', value: otherCount, color: '#8b5cf6' },
+    ].filter(d => d.value > 0);
 
     return (
-        <div className="card hover-glow p-5 flex flex-col justify-between" style={{ height: '140px', borderLeft: `4px solid ${colorVar}` }}>
-            <div className="flex justify-between items-start">
-                <div>
-                    <span className="text-secondary text-xs font-bold uppercase tracking-wider">{label}</span>
-                    <h3 className="text-h2 font-black mt-2" style={{ fontSize: '28px' }}>{value}</h3>
-                </div>
-                <div className="p-2.5 rounded-lg flex items-center justify-center" style={{ background: `${colorVar}15`, color: colorVar, width: '40px', height: '40px' }}>
-                    <Icon size={20} strokeWidth={2} />
-                </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', height: '100%' }}>
+            <div style={{ width: '120px', height: '120px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie data={data} dataKey="value" innerRadius={35} outerRadius={55} paddingAngle={3} strokeWidth={0}>
+                            {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                        </Pie>
+                    </PieChart>
+                </ResponsiveContainer>
             </div>
-
-            {trend && (
-                <div className="flex items-center gap-2 mt-2">
-                    <span className={`text-xs font-bold flex items-center ${isPositive ? 'text-success' : 'text-danger'}`} style={{ color: isPositive ? 'var(--success)' : 'var(--danger)' }}>
-                        {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />} {trend}
-                    </span>
-                    <span className="text-xs text-secondary opacity-70">{trendLabel}</span>
-                </div>
-            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                {data.map(d => (
+                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '3px', background: d.color }} />
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{d.name}</span>
+                        </div>
+                        <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>{d.value} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>({Math.round((d.value / total) * 100)}%)</span></span>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };
 
-const ExecutiveSummary = ({ metrics, fileCount, anomalyCount, onViewReport, userPlan, onUpgrade }: any) => {
-    const isFree = userPlan === 'free' || !userPlan;
-
+const UploadActivityChart = ({ uploadsByDay }: { uploadsByDay: { day: string; count: number }[] }) => {
+    const hasData = uploadsByDay.some(d => d.count > 0);
+    if (!hasData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No recent uploads</div>;
     return (
-        <div className={`card relative overflow-hidden p-6 mb-8 border border-[var(--primary)]/30 ${!isFree ? 'pro-executive-summary' : ''}`} style={{ background: isFree ? 'linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%)' : undefined }}>
-            {!isFree && (
-                <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
-                    <motion.div
-                        animate={{ opacity: [0.1, 0.3, 0.1], scale: [1, 1.2, 1] }}
-                        transition={{ duration: 4, repeat: Infinity }}
-                        className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[var(--primary)] blur-[80px]"
-                    />
-                </div>
-            )}
-            <div className="absolute -right-12 -top-12 pointer-events-none" style={{ opacity: 0.05 }}>
-                <Sparkles size={200} />
-            </div>
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-                <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-[var(--primary)] to-purple-600 shadow-lg text-white">
-                        <BrainCircuit size={28} />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-lg font-black text-primary">Nexus AI Executive Brief</h3>
-                            <span className="px-2 py-0.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold border border-[var(--primary)]/20">LIVE ANALYSIS</span>
-                        </div>
-                        <p className="text-secondary text-sm leading-relaxed max-w-2xl">
-                            Across your <strong className="text-primary">{fileCount} active datasets</strong>,
-                            {metrics.revenueGrowth === '—' || metrics.revenueGrowth === 'Waiting for Data' ? (
-                                <span> the intelligence engine is currently <strong className="text-primary">mapping your business topology</strong>. </span>
-                            ) : (
-                                <span> current intelligence indicates a <strong className="text-success">{metrics.revenueGrowth} growth trajectory</strong>. </span>
-                            )}
-                            {anomalyCount > 0 ? (
-                                <span> Attention is required for <strong className="text-danger">{anomalyCount} detected {anomalyCount === 1 ? 'anomaly' : 'anomalies'}</strong>. </span>
-                            ) : (
-                                <span> Data stability is optimal. </span>
-                            )}
-                        </p>
-                        <div className="flex gap-3 mt-4">
-                            <button className="btn btn-sm btn-primary flex items-center gap-2" onClick={onViewReport}>
-                                <FileText size={14} /> View Strategic Report
-                            </button>
-                        </div>
-                    </div>
-                </div>
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={uploadsByDay} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} interval={2} />
+                <Tooltip
+                    contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '10px', fontSize: '13px', fontWeight: 600 }}
+                    labelStyle={{ color: 'var(--text-primary)', fontWeight: 700 }}
+                    cursor={{ fill: 'rgba(99,102,241,0.08)' }}
+                />
+                <Bar dataKey="count" name="Uploads" radius={[4, 4, 0, 0]} fill="#6366f1" />
+            </BarChart>
+        </ResponsiveContainer>
+    );
+};
 
-                {isFree && (
-                    <div className="lg:border-l lg:border-[var(--border-subtle)] lg:pl-8 flex flex-col gap-3">
-                        <div className="flex items-center gap-2">
-                            <Sparkles size={14} className="text-amber-400" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Upgrade Required</span>
-                        </div>
-                        <p className="text-[11px] text-[var(--text-secondary)] max-w-[200px] leading-tight font-medium">
-                            Upgrade to Professional for advanced analytics and unlimited dataset storage.
-                        </p>
-                        <button
-                            onClick={onUpgrade}
-                            className="text-xs font-black uppercase tracking-wider hover:text-white transition-colors flex items-center gap-2 group"
-                        >
-                            <span className="shimmer-text">Upgrade Plan</span> <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform text-[var(--primary)]" />
-                        </button>
-                    </div>
-                )}
+const DataHealthChart = ({ processedCount, pendingCount }: { processedCount: number; pendingCount: number }) => {
+    const total = processedCount + pendingCount;
+    if (total === 0) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No datasets</div>;
+    const pct = Math.round((processedCount / total) * 100);
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-secondary)' }}>Analyzed</span>
+                <span style={{ fontSize: '22px', fontWeight: 800, color: '#10b981' }}>{pct}%</span>
+            </div>
+            <div style={{ height: '10px', borderRadius: '99px', background: 'var(--bg-main)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.2 }} style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #10b981, #34d399)' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600 }}>
+                <span style={{ color: '#10b981' }}><CheckCircle2 size={13} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />{processedCount} analyzed</span>
+                <span style={{ color: 'var(--text-tertiary)' }}>{pendingCount} pending</span>
             </div>
         </div>
     );
 };
+
+const DashboardCard = ({ title, icon: Icon, children, style }: any) => (
+    <div style={{
+        padding: '24px', borderRadius: '16px',
+        background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
+        display: 'flex', flexDirection: 'column', gap: '16px',
+        ...style,
+    }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {Icon && <Icon size={16} style={{ color: 'var(--primary)' }} />}
+            <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>{title}</span>
+        </div>
+        <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+    </div>
+);
 
 const RecentActivityItem = ({ file, onClick }: any) => (
     <div
@@ -776,9 +762,7 @@ export const DashboardView = ({
                 isOverLimit={isOverLimit}
             />
 
-            {/* Neural Network Canvas Background */}
-            <NeuralCanvas intensity={0.8} />
-            <div className="scanline-overlay" style={{ pointerEvents: 'none' }} />
+
 
             {/* --- ARCHITECTURAL STAGE WRAPPER --- */}
             {(() => {
@@ -806,79 +790,71 @@ export const DashboardView = ({
                         },
                         {
                             id: 'db-hero',
-                            label: 'Strategic Command Hub',
+                            label: 'Dashboard Overview',
                             component: (
-                                <div style={{ 
-                                    padding: '40px', borderRadius: '24px', 
-                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
-                                    border: '1px solid var(--glass-border, rgba(255,255,255,0.05))',
-                                    boxShadow: '0 20px 50px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)',
-                                    backdropFilter: 'blur(20px)', position: 'relative', overflow: 'hidden', width: '100%'
-                                }}>
-                                    {/* Top edge glowing accent */}
-                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, transparent, var(--primary), transparent)', opacity: 0.5 }} />
-                                    
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-                                        {/* Header Row */}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 16px var(--primary)', animation: 'pulse 2s infinite' }} />
-                                                    <span style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'var(--primary)' }}>System Nominal</span>
-                                                </div>
-                                                <h1 style={{ fontSize: '48px', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', lineHeight: 1.1 }}>
-                                                    <span style={{ color: '#fff' }}>Neural Command</span> <span style={{ opacity: 0.2, fontWeight: 300, color: '#fff' }}>/</span> <span style={{ background: 'linear-gradient(90deg, #fff, rgba(255,255,255,0.5))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{firstName || userEmail?.split('@')[0]}</span>
-                                                </h1>
-                                            </div>
-                                            
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                                                <PerformanceGauge 
-                                                    value={metrics.systemHealth} 
-                                                    label="Health" 
-                                                    onClick={() => setShowTelemetry(true)}
-                                                />
-                                                <LiveClock />
-                                            </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+                                    {/* Compact Header */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                                        <div>
+                                            <h1 style={{ fontSize: '28px', fontWeight: 800, margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+                                                Welcome back, <span style={{ color: 'var(--primary)' }}>{firstName || userEmail?.split('@')[0] || 'User'}</span>
+                                            </h1>
+                                            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '6px 0 0', fontWeight: 500 }}>
+                                                {fileCount} datasets · {totalStorage} MB used{metrics.newestUpload ? ` · Last upload ${metrics.newestUpload}` : ''}
+                                            </p>
                                         </div>
-                                        
-                                        {/* Real Telemetry Strip */}
-                                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                                            {[
-                                                { label: 'Total Arrays', value: fileCount, unit: 'Nodes', icon: <Database size={16} /> },
-                                                { label: 'Network Footprint', value: totalStorage, unit: 'MB', icon: <Layers size={16} /> },
-                                                { label: 'Compute Core', value: telemetryData?.memory?.toFixed(2) || '1.14', unit: 'GB', icon: <Cpu size={16} /> },
-                                                { label: 'Ping Latency', value: telemetryData?.latency || '36', unit: 'ms', icon: <Activity size={16} /> }
-                                            ].map((stat, i) => (
-                                                <div key={i} style={{
-                                                    flex: 1, minWidth: '180px',
-                                                    background: 'rgba(255,255,255,0.02)',
-                                                    border: '1px solid rgba(255,255,255,0.04)',
-                                                    borderRadius: '16px',
-                                                    padding: '20px',
-                                                    transition: 'all 0.3s ease',
-                                                    cursor: 'default'
-                                                }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)'; }}
-                                                >
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)', marginBottom: '12px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                                        {stat.icon}
-                                                        {stat.label}
-                                                    </div>
-                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                                                        <span style={{ fontSize: '32px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px' }}>{stat.value}</span>
-                                                        <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'lowercase' }}>{stat.unit}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                            <PerformanceGauge value={metrics.systemHealth} label="Health" onClick={() => setShowTelemetry(true)} />
+                                            <LiveClock />
                                         </div>
+                                    </div>
+
+                                    {/* Quick Stats Row */}
+                                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                        <QuickStatCard label="Datasets" value={fileCount} icon={Database} color="#6366f1" />
+                                        <QuickStatCard label="Storage" value={totalStorage} unit="MB" icon={HardDrive} color="#3b82f6" />
+                                        <QuickStatCard label="Avg Size" value={metrics.avgFileSizeKB > 0 ? metrics.avgFileSizeKB.toFixed(0) : '—'} unit="KB" icon={Layers} color="#8b5cf6" />
+                                        <QuickStatCard label="Favorites" value={metrics.favoriteCount} icon={Star} color="#f59e0b" />
+                                        <QuickStatCard label="Archived" value={metrics.archivedCount} icon={Archive} color="#64748b" />
                                     </div>
                                 </div>
                             )
                         },
                         {
+                            id: 'db-data-insights',
+                            label: 'Data Insights',
+                            component: (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', width: '100%' }}>
+                                    <DashboardCard title="File Types" icon={BarChart3} style={{ minHeight: '180px' }}>
+                                        <TypeBreakdownChart csvCount={metrics.csvCount} jsonCount={metrics.jsonCount} excelCount={metrics.excelCount} otherCount={metrics.otherCount} />
+                                    </DashboardCard>
+                                    <DashboardCard title="Upload Activity (14 days)" icon={TrendingUp} style={{ minHeight: '180px' }}>
+                                        <UploadActivityChart uploadsByDay={metrics.uploadsByDay} />
+                                    </DashboardCard>
+                                    <DashboardCard title="Data Health" icon={ShieldCheck} style={{ minHeight: '180px' }}>
+                                        <DataHealthChart processedCount={metrics.processedCount} pendingCount={metrics.pendingCount} />
+                                    </DashboardCard>
+                                    <DashboardCard title="Storage Quota" icon={HardDrive} style={{ minHeight: '180px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px', height: '100%' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-secondary)' }}>Used</span>
+                                                <span style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>{totalStorage}<span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500 }}> / {maxStorageMB} MB</span></span>
+                                            </div>
+                                            <div style={{ height: '10px', borderRadius: '99px', background: 'var(--bg-main)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                                                <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (totalStorageNum / maxStorageMB) * 100)}%` }} transition={{ duration: 1.2 }} style={{ height: '100%', borderRadius: '99px', background: totalStorageNum > maxStorageMB * 0.9 ? '#ef4444' : 'linear-gradient(90deg, #6366f1, #8b5cf6)' }} />
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600 }}>
+                                                <span style={{ color: 'var(--text-tertiary)' }}>{Math.round((totalStorageNum / maxStorageMB) * 100)}% utilized</span>
+                                                <span style={{ color: 'var(--text-tertiary)' }}>{(maxStorageMB - totalStorageNum).toFixed(1)} MB free</span>
+                                            </div>
+                                        </div>
+                                    </DashboardCard>
+                                </div>
+                            )
+                        },
+                        {
                             id: 'db-workspace',
-                            label: 'Analytical Topology Matrix',
+                            label: 'Dataset Workspace',
                             component: (
                                 <section className="relative w-full" style={{ zIndex: 20 }}>
                                     <div style={{
@@ -897,63 +873,54 @@ export const DashboardView = ({
                                                     <CloudUpload size={24} strokeWidth={2.5} />
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Active Workspace</h3>
-                                                    <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
-                                                        {fileCount} Data Topologies Loaded
+                                                    <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Active Workspace</h3>
+                                                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>
+                                                        {fileCount} datasets loaded
                                                     </span>
                                                 </div>
                                             </div>
 
                                             <div className="flex flex-wrap gap-4 items-center w-full xl:w-auto">
                                                 <div className="relative flex-1 xl:w-72 xl:flex-none">
-                                                    <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                                                    <input type="text" placeholder="Search data nodes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', height: '48px', padding: '0 20px 0 44px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none' }} />
+                                                    <Search size={15} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+                                                    <input type="text" placeholder="Search datasets..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', height: '42px', padding: '0 16px 0 40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: '13px' }} />
                                                 </div>
                                                 <div style={{ display: 'flex', padding: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
                                                     <button onClick={() => setViewMode('list')} style={{
-                                                        padding: '8px 16px', borderRadius: '10px', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                                                        padding: '7px 14px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: viewMode === 'list' ? 'var(--primary)' : 'transparent',
                                                         color: viewMode === 'list' ? '#fff' : 'var(--text-secondary)',
-                                                        boxShadow: viewMode === 'list' ? '0 4px 12px var(--primary-alpha)' : 'none'
                                                     }}>List</button>
                                                     <button onClick={() => setViewMode('grid')} style={{
-                                                        padding: '8px 16px', borderRadius: '10px', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                                                        padding: '7px 14px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: viewMode === 'grid' ? 'var(--primary)' : 'transparent',
                                                         color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)',
-                                                        boxShadow: viewMode === 'grid' ? '0 4px 12px var(--primary-alpha)' : 'none'
                                                     }}>Grid</button>
                                                 </div>
                                                 <div style={{ display: 'flex', padding: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
                                                     <button onClick={() => setDatasetTab('active')} style={{
-                                                        padding: '8px 20px', borderRadius: '10px', border: 'none', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s',
+                                                        padding: '7px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: datasetTab === 'active' ? 'var(--primary)' : 'transparent',
                                                         color: datasetTab === 'active' ? '#fff' : 'var(--text-secondary)',
-                                                        position: 'relative'
                                                     }}>
-                                                        Active
-                                                        {activeFilesCount > 0 && (
-                                                            <span style={{ marginLeft: '8px', opacity: 0.5, fontSize: '9px' }}>{activeFilesCount}</span>
-                                                        )}
+                                                        Active{activeFilesCount > 0 && <span style={{ marginLeft: '6px', opacity: 0.6 }}>({activeFilesCount})</span>}
                                                     </button>
                                                     <button onClick={() => setDatasetTab('archived')} style={{
-                                                        padding: '8px 20px', borderRadius: '10px', border: 'none', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s',
+                                                        padding: '7px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: datasetTab === 'archived' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                                        color: datasetTab === 'archived' ? '#fff' : 'var(--text-secondary)'
+                                                        color: datasetTab === 'archived' ? '#fff' : 'var(--text-secondary)',
                                                     }}>
-                                                        Archived
-                                                        {archivedFilesCount > 0 && (
-                                                            <span style={{ marginLeft: '8px', opacity: 0.5, fontSize: '9px' }}>{archivedFilesCount}</span>
-                                                        )}
+                                                        Archived{archivedFilesCount > 0 && <span style={{ marginLeft: '6px', opacity: 0.6 }}>({archivedFilesCount})</span>}
                                                     </button>
                                                 </div>
                                                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => document.getElementById('file-input')?.click()} disabled={isOverLimit} style={{
-                                                    background: 'linear-gradient(135deg, var(--primary) 0%, #c026d3 100%)',
-                                                    color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '14px',
-                                                    fontWeight: 900, fontSize: '13px', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em',
-                                                    boxShadow: '0 8px 24px var(--primary-alpha)',
+                                                    background: 'var(--primary)',
+                                                    color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px',
+                                                    fontWeight: 700, fontSize: '13px', cursor: 'pointer',
                                                     opacity: isOverLimit ? 0.5 : 1,
+                                                    display: 'flex', alignItems: 'center', gap: '6px',
                                                 }}>
-                                                    Upload Dataset
+                                                    <CloudUpload size={15} /> Upload
                                                 </motion.button>
                                             </div>
                                         </div>
