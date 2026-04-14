@@ -195,15 +195,15 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 position: 'absolute',
                                 top: 'calc(100% + 10px)',
                                 right: '-40px',
-                                background: isDark ? 'rgba(10, 10, 16, 0.92)' : 'rgba(255, 255, 255, 0.97)',
+                                background: 'var(--bg-elevated)',
                                 backdropFilter: 'blur(40px) saturate(200%)',
                                 WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-                                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                                border: '1px solid var(--border-subtle)',
                                 borderRadius: '16px',
                                 minWidth: '320px',
                                 zIndex: 1000,
                                 padding: '14px',
-                                boxShadow: isDark ? '0 20px 48px -12px rgba(0,0,0,0.7)' : '0 20px 48px -12px rgba(0,0,0,0.12)',
+                                boxShadow: 'var(--shadow-xl)',
                                 animation: 'slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 transformOrigin: 'top right',
                             }}>
@@ -219,8 +219,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     <div style={{
                                         display: 'flex', gap: '10px', padding: '10px', borderRadius: '10px',
-                                        background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-                                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
+                                        background: 'var(--bg-surface)',
+                                        border: '1px solid var(--border-subtle)',
                                     }}>
                                         <div style={{
                                             width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.12)',
@@ -378,21 +378,21 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 position: 'absolute',
                                 top: 'calc(100% + 10px)',
                                 right: 0,
-                                background: isDark ? 'rgba(10, 10, 16, 0.92)' : 'rgba(255, 255, 255, 0.97)',
+                                background: 'var(--bg-elevated)',
                                 backdropFilter: 'blur(40px) saturate(200%)',
                                 WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-                                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                                border: '1px solid var(--border-subtle)',
                                 borderRadius: '16px',
                                 minWidth: '240px',
                                 zIndex: 1000,
                                 padding: '10px',
-                                boxShadow: isDark ? '0 20px 48px -12px rgba(0,0,0,0.7)' : '0 20px 48px -12px rgba(0,0,0,0.12)',
+                                boxShadow: 'var(--shadow-xl)',
                                 animation: 'slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 transformOrigin: 'top right',
                             }}>
                                 <div style={{
                                     padding: '10px 12px',
-                                    background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+                                    background: 'var(--bg-surface)',
                                     borderRadius: '10px',
                                     marginBottom: '8px',
                                 }}>
@@ -402,8 +402,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                     {[
-                                        { title: 'Profile & Security', icon: Fingerprint, color: '#a855f7', settingsTab: 'profile' as const },
-                                        { title: 'Settings', icon: Settings, color: '#3b82f6', settingsTab: 'profile' as const }
+                                        { title: 'Profile & Security', icon: Fingerprint, color: 'var(--accent)', settingsTab: 'profile' as const },
+                                        { title: 'Settings', icon: Settings, color: 'var(--primary)', settingsTab: 'profile' as const }
                                     ].map((item, i) => (
                                         <button
                                             key={i}
@@ -418,7 +418,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                                 textAlign: 'left', fontSize: '12.5px', fontWeight: 600,
                                             }}
                                             onMouseEnter={(e) => {
-                                                e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)';
+                                                e.currentTarget.style.background = 'var(--bg-surface-hover)';
                                             }}
                                             onMouseLeave={(e) => {
                                                 e.currentTarget.style.background = 'transparent';
@@ -430,7 +430,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     ))}
                                 </div>
 
-                                <div style={{ height: '1px', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', margin: '6px 0' }} />
+                                <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '6px 0' }} />
 
                                 <button
                                     onClick={() => { logout(); setShowUserMenu(false); }}
