@@ -102,7 +102,7 @@ export const initializeDatabase = async () => {
                 const dashTable = await queryRunner.getTable('dashboards');
                 const filesTable = await queryRunner.getTable('files');
                 const needsSync = !dashTable || 
-                    (filesTable && !filesTable.findColumnByName('isProcessed'));
+                    (filesTable && (!filesTable.findColumnByName('isProcessed') || !filesTable.findColumnByName('isArchived')));
                 
                 if (needsSync) {
                     console.log('🔄 Schema drift detected, synchronizing...');
