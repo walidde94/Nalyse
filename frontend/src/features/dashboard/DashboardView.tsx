@@ -36,6 +36,8 @@ import {
     Target,
     Cpu,
     PieChart,
+    Archive,
+    RotateCcw,
 } from 'lucide-react';
 import { calculatePulse } from './pulseEngine';
 import { useAuth } from '../../contexts/AuthContext';
@@ -455,9 +457,9 @@ export const DashboardView = ({
     onToggleFavorite,
     onUpdateFileGroup,
     onCreateGroup,
-    onDeleteGroup,
     onDeleteMultiple,
-    onViewReport
+    onViewReport,
+    onArchiveFile
 }: any) => {
     const { refreshProfile, syncSubscription } = useAuth();
     const { user } = useAuth();
@@ -483,8 +485,26 @@ export const DashboardView = ({
     const [previewData, setPreviewData] = useState<any>(null);
     const [loadingPreview, setLoadingPreview] = useState(false);
     const [activeTab, setActiveTab] = useState<'properties' | 'preview'>('properties');
+    const [datasetTab, setDatasetTab] = useState<'active' | 'archived'>('active');
     const { token } = useAuth();
     const safeFiles = Array.isArray(files) ? files : [];
+
+    const filteredFiles = useMemo(() => {
+        let list = safeFiles;
+        if (datasetTab === 'active') {
+            list = list.filter(f => !f.isArchived);
+        } else {
+            list = list.filter(f => f.isArchived);
+        }
+        if (searchTerm) {
+            const low = searchTerm.toLowerCase();
+            list = list.filter(f => (f.originalName || f.filename).toLowerCase().includes(low));
+        }
+        return list;
+    }, [safeFiles, searchTerm, datasetTab]);
+
+    const activeFilesCount = useMemo(() => safeFiles.filter(f => !f.isArchived).length, [safeFiles]);
+    const archivedFilesCount = useMemo(() => safeFiles.filter(f => f.isArchived).length, [safeFiles]);
 
     useEffect(() => {
         if (viewingMeta) {
@@ -679,14 +699,12 @@ export const DashboardView = ({
     const recentFiles = useMemo(() => [...safeFiles].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5), [safeFiles]);
     const starredFiles = useMemo(() => safeFiles.filter((f: any) => f.isFavorite), [safeFiles]);
 
-    const filteredFiles = safeFiles.filter((f: any) => {
-        return (f.originalName || f.filename || '').toLowerCase().includes(searchTerm.toLowerCase());
-    }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
 
     const totalStorage = (safeFiles.reduce((acc: number, f: any) => acc + Number(f.size), 0) / 1024 / 1024).toFixed(2);
-    const fileCount = safeFiles.length;
     const totalStorageNum = Number(totalStorage);
-    const isOverLimit = totalStorageNum >= maxStorageMB;
+    const fileCount = safeFiles.filter(f => !f.isArchived).length;
+    const isOverLimit = (activeFilesCount >= 5 && (userPlan === 'free' || !userPlan)) || totalStorageNum >= maxStorageMB;
 
     const handleCreateGroup = () => {
         if (!newGroupName.trim()) return;
@@ -904,6 +922,29 @@ export const DashboardView = ({
                                                         boxShadow: viewMode === 'grid' ? '0 4px 12px var(--primary-alpha)' : 'none'
                                                     }}>Grid</button>
                                                 </div>
+                                                <div style={{ display: 'flex', padding: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
+                                                    <button onClick={() => setDatasetTab('active')} style={{
+                                                        padding: '8px 20px', borderRadius: '10px', border: 'none', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s',
+                                                        background: datasetTab === 'active' ? 'var(--primary)' : 'transparent',
+                                                        color: datasetTab === 'active' ? '#fff' : 'var(--text-secondary)',
+                                                        position: 'relative'
+                                                    }}>
+                                                        Active
+                                                        {activeFilesCount > 0 && (
+                                                            <span style={{ marginLeft: '8px', opacity: 0.5, fontSize: '9px' }}>{activeFilesCount}</span>
+                                                        )}
+                                                    </button>
+                                                    <button onClick={() => setDatasetTab('archived')} style={{
+                                                        padding: '8px 20px', borderRadius: '10px', border: 'none', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s',
+                                                        background: datasetTab === 'archived' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                                                        color: datasetTab === 'archived' ? '#fff' : 'var(--text-secondary)'
+                                                    }}>
+                                                        Archived
+                                                        {archivedFilesCount > 0 && (
+                                                            <span style={{ marginLeft: '8px', opacity: 0.5, fontSize: '9px' }}>{archivedFilesCount}</span>
+                                                        )}
+                                                    </button>
+                                                </div>
                                                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => document.getElementById('file-input')?.click()} disabled={isOverLimit} style={{
                                                     background: 'linear-gradient(135deg, var(--primary) 0%, #c026d3 100%)',
                                                     color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '14px',
@@ -932,10 +973,10 @@ export const DashboardView = ({
                                                     </div>
                                                     {viewMode === 'list' ? (
                                                         <div className="card overflow-hidden p-0 border border-[var(--border-subtle)] shadow-xl">
-                                                            <FileTable files={groupFiles} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupFiles)} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onUpdateFileGroup={onUpdateFileGroup} onViewMeta={setViewingMeta} />
+                                                            <FileTable files={groupFiles} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupFiles)} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onArchiveFile={onArchiveFile} onUpdateFileGroup={onUpdateFileGroup} onViewMeta={setViewingMeta} />
                                                         </div>
                                                     ) : (
-                                                        <FileGrid files={groupFiles} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onFileSelect={onFileSelect} onDeleteFile={onDeleteFile} onToggleFavorite={onToggleFavorite} onViewMeta={setViewingMeta} />
+                                                        <FileGrid files={groupFiles} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onFileSelect={onFileSelect} onDeleteFile={onDeleteFile} onToggleFavorite={onToggleFavorite} onArchiveFile={onArchiveFile} onViewMeta={setViewingMeta} />
                                                     )}
                                                 </div>
                                             );
@@ -944,10 +985,10 @@ export const DashboardView = ({
                                             <div className="flex-col gap-3">
                                                 {viewMode === 'list' ? (
                                                     <div className="card overflow-hidden p-0 border border-[var(--border-subtle)] shadow-xl">
-                                                        <FileTable files={groupedFiles['ungrouped']} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupedFiles['ungrouped'])} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onUpdateFileGroup={onUpdateFileGroup} onViewMeta={setViewingMeta} />
+                                                        <FileTable files={groupedFiles['ungrouped']} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupedFiles['ungrouped'])} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onArchiveFile={onArchiveFile} onUpdateFileGroup={onUpdateFileGroup} onViewMeta={setViewingMeta} />
                                                     </div>
                                                 ) : (
-                                                    <FileGrid files={groupedFiles['ungrouped']} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onFileSelect={onFileSelect} onDeleteFile={onDeleteFile} onToggleFavorite={onToggleFavorite} onViewMeta={setViewingMeta} />
+                                                    <FileGrid files={groupedFiles['ungrouped']} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onFileSelect={onFileSelect} onDeleteFile={onDeleteFile} onToggleFavorite={onToggleFavorite} onArchiveFile={onArchiveFile} onViewMeta={setViewingMeta} />
                                                 )}
                                             </div>
                                         )}
@@ -1474,7 +1515,7 @@ const TelemetryStat = ({ label, value, sub, icon, color, compact }: any) => (
 
 // --- UTILITY COMPONENTS (Unchanged logic, updated styling) ---
 
-const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDeleteFile, onToggleFavorite, onViewMeta }: any) => {
+const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDeleteFile, onToggleFavorite, onArchiveFile, onViewMeta }: any) => {
     if (files.length === 0) return null;
 
     return (
@@ -1589,6 +1630,20 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                             <motion.button
                                 whileHover={{ scale: 1.08 }}
                                 whileTap={{ scale: 0.92 }}
+                                onClick={(e) => { e.stopPropagation(); onArchiveFile(f.id); }}
+                                style={{
+                                    width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)',
+                                    background: f.isArchived ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.03)', cursor: 'pointer',
+                                    color: f.isArchived ? 'var(--primary)' : 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                }}
+                                title={f.isArchived ? "Restore dataset" : "Archive dataset"}
+                            >
+                                {f.isArchived ? <RotateCcw size={15} /> : <Archive size={15} />}
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.08 }}
+                                whileTap={{ scale: 0.92 }}
                                 onClick={(e) => { e.stopPropagation(); onViewMeta(f); }}
                                 style={{
                                     width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)',
@@ -1608,7 +1663,7 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
     );
 };
 
-const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAll, onFileSelect, onToggleFavorite, onDeleteFile, onUpdateFileGroup, onViewMeta }: any) => {
+const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAll, onFileSelect, onToggleFavorite, onDeleteFile, onArchiveFile, onUpdateFileGroup, onViewMeta }: any) => {
     const allSelected = files.length > 0 && files.every((f: any) => selectedFiles.has(f.id));
     return (
         <div style={{ padding: '0 4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -1807,6 +1862,31 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
 
                                     <td style={{ padding: '16px 24px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', transition: 'all 0.2s' }} className={`group-hover:opacity-100 group-hover:pointer-events-auto ${isSelected ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={(e) => { e.stopPropagation(); onArchiveFile(f.id); }}
+                                                style={{
+                                                    height: '36px',
+                                                    padding: '0 12px',
+                                                    borderRadius: '10px',
+                                                    background: f.isArchived ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.03)',
+                                                    border: '1px solid var(--border-subtle)',
+                                                    color: f.isArchived ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    fontWeight: 700,
+                                                    fontSize: '11px',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.05em',
+                                                    cursor: 'pointer'
+                                                }}
+                                                title={f.isArchived ? "Restore dataset" : "Archive dataset"}
+                                            >
+                                                {f.isArchived ? <RotateCcw size={14} /> : <Archive size={14} />} {f.isArchived ? 'Restore' : 'Archive'}
+                                            </motion.button>
+
                                             <motion.button
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}

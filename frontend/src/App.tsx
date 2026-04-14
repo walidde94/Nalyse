@@ -96,6 +96,7 @@ interface FileData {
   mimeType?: string;
   createdAt: string;
   isFavorite?: boolean;
+  isArchived?: boolean;
   groupId?: string;
   isProcessed?: boolean;
   processedAt?: string | null;
@@ -857,6 +858,23 @@ function AppContent() {
     }
   };
 
+  const onArchiveFile = useCallback(async (id: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/api/files/${id}/archive`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const updatedFile = await res.json();
+        setFiles(prev => prev.map(f => f.id === id ? { ...f, isArchived: updatedFile.isArchived } : f));
+        addToast(updatedFile.isArchived ? 'Dataset archived' : 'Dataset restored', 'success');
+      }
+    } catch (e) {
+      addToast('Critical sync failure in neural archive.', 'error');
+    }
+  }, [token, addToast]);
+
   const handleUpdateFileGroup = async (fileId: string, groupId: string | null) => {
     if (!token) return;
     try {
@@ -1125,6 +1143,7 @@ function AppContent() {
                     onDeleteFile={handleDeleteFile}
                     onDeleteMultiple={handleDeleteMultiple}
                     onToggleFavorite={handleToggleFavorite}
+                    onArchiveFile={onArchiveFile}
                     onUpdateFileGroup={handleUpdateFileGroup}
                     onCreateGroup={handleCreateGroup}
                     onDeleteGroup={handleDeleteGroup}

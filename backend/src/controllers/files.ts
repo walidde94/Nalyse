@@ -151,7 +151,7 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
 
         const enriched = files.entities.map((f, idx) => {
             const raw = files.raw[idx];
-            const hasAnalysis = raw?.has_analysis === true || raw?.has_analysis === 't' || raw?.has_analysis === 1;
+            const hasAnalysis = raw?.has_analysis === true || raw?.has_analysis === 't' || raw?.has_analysis === '1' || raw?.has_analysis === 1;
 
             // If DB says it has analysis but file record doesn't reflect it, fix it (async, non-blocking)
             if (hasAnalysis && !f.isProcessed) {
@@ -169,6 +169,7 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
                 createdAt: f.createdAt,
                 updatedAt: f.updatedAt,
                 isFavorite: f.isFavorite,
+                isArchived: f.isArchived,
                 isProcessed: f.isProcessed || hasAnalysis,
                 processedAt: f.processedAt || raw?.analysis_completed_at || null,
                 groupId: f.groupId,
@@ -195,6 +196,7 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
                 createdAt: f.createdAt,
                 updatedAt: f.updatedAt,
                 isFavorite: f.isFavorite,
+                isArchived: f.isArchived,
                 isProcessed: f.isProcessed,
                 processedAt: f.processedAt,
                 groupId: f.groupId,
@@ -204,6 +206,27 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
             console.error('[getFiles] Fallback also failed:', e2);
             res.status(500).json({ error: 'Database error' });
         }
+    }
+};
+
+// ─── Toggle Archive ──────────────────────────────────────────────────────────
+
+export const toggleArchiveHandler = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const fileRepo = AppDataSource.getRepository(File);
+
+    try {
+        const fileId = req.params.id as string;
+        const file = await fileRepo.findOne({ where: { id: fileId, isDeleted: false } });
+        if (!file || file.ownerId !== userId) return res.status(404).json({ error: 'File not found' });
+
+        file.isArchived = !file.isArchived;
+        await fileRepo.save(file);
+        res.json(file);
+    } catch (error) {
+        res.status(500).json({ error: 'Archive toggle failed' });
     }
 };
 

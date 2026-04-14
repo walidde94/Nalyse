@@ -71,4 +71,7 @@ export class File {
 
     @Column({ type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamp', nullable: true })
     processedAt: Date;
+
+    @Column({ default: false })
+    isArchived: boolean;
 }

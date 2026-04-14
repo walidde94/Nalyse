@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { upload } from '../middleware/upload';
 import { authenticate } from '../middleware/auth';
-import { uploadFile, getFiles, analyzeFileHandler, scrapeUrlHandler, deleteFileHandler, toggleFavoriteHandler, transformFileHandler, updateFileGroupHandler, previewFileHandler } from '../controllers/files';
+import { uploadFile, getFiles, analyzeFileHandler, scrapeUrlHandler, deleteFileHandler, toggleFavoriteHandler, transformFileHandler, updateFileGroupHandler, previewFileHandler, toggleArchiveHandler } from '../controllers/files';
 import { uploadMultipleFilesHandler, analyzeMultipleDatasetsHandler } from '../controllers/multiDataset';
 import { runForecastHandler } from '../controllers/forecast';
 import { runKMeansHandler } from '../controllers/automl';
@@ -21,6 +21,7 @@ router.post('/:id/cluster', authenticate, runKMeansHandler);
 router.post('/:id/transform', authenticate, transformFileHandler);
 router.delete('/:id', authenticate, deleteFileHandler);
 router.patch('/:id/favorite', authenticate, toggleFavoriteHandler);
+router.patch('/:id/archive', authenticate, toggleArchiveHandler);
 router.patch('/:id/group', authenticate, updateFileGroupHandler);
 router.post('/scrape', authenticate, scrapeUrlHandler);
 
