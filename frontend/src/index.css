@@ -2774,7 +2774,7 @@ textarea:focus,
   padding: 48px 40px 40px;
   border-radius: 28px;
   overflow: hidden;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.4) 0%, rgba(8, 12, 28, 0.7) 100%);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
@@ -2960,7 +2960,7 @@ textarea:focus,
   padding: 28px 24px;
   border-radius: 24px;
   overflow: hidden;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.5) 0%, rgba(8, 12, 28, 0.8) 100%);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -3162,7 +3162,7 @@ textarea:focus,
 
 /* --- Intelligence Timeline --- */
 .intel-timeline {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.4) 0%, rgba(8, 12, 28, 0.7) 100%);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 24px;
   backdrop-filter: blur(20px);
@@ -3336,7 +3336,7 @@ textarea:focus,
 
 /* --- Data Health Matrix --- */
 .health-matrix {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.4) 0%, rgba(8, 12, 28, 0.7) 100%);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 24px;
   backdrop-filter: blur(20px);
@@ -3546,7 +3546,7 @@ textarea:focus,
   position: relative;
   border-radius: 24px;
   overflow: hidden;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.3) 0%, rgba(8, 12, 28, 0.5) 100%);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -3615,7 +3615,7 @@ textarea:focus,
   position: relative;
   border-radius: 24px;
   overflow: hidden;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.4) 0%, rgba(8, 12, 28, 0.7) 100%);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -4279,7 +4279,7 @@ textarea:focus,
   padding: 16px 18px;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.04);
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.3) 0%, rgba(8, 12, 28, 0.6) 100%);
+  background: var(--bg-card);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   cursor: pointer;
@@ -4419,7 +4419,7 @@ textarea:focus,
   position: absolute;
   inset: 1px;
   border-radius: 23px;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.5) 0%, rgba(8, 12, 28, 0.8) 100%);
+  background: var(--bg-card);
 }
 
 /* --- Light theme overrides for new components --- */
@@ -4502,7 +4502,7 @@ textarea:focus,
 .ppb-inner {
   position: relative;
   border-radius: 26px;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(8, 12, 28, 0.95) 100%);
+  background: var(--bg-card);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   padding: clamp(24px, 4vw, 36px);
@@ -4780,7 +4780,7 @@ textarea:focus,
 
 /* --- System Throughput Grid --- */
 .throughput-grid {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.4) 0%, rgba(8, 12, 28, 0.7) 100%);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 24px;
   backdrop-filter: blur(20px);
