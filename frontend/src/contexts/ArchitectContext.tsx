@@ -103,15 +103,32 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         prevUserIdRef.current = userId;
 
         const k = storageKeys(userId);
-        setIsArchitectMode(localStorage.getItem(k.mode) === 'true');
+        
+        let savedArchitectMode = localStorage.getItem(k.mode);
+        if (savedArchitectMode === null && userId) {
+            savedArchitectMode = localStorage.getItem('nalyse-architect-mode');
+        }
+        setIsArchitectMode(savedArchitectMode === 'true');
+        
         try {
-            const saved = localStorage.getItem(k.layout);
+            let saved = localStorage.getItem(k.layout);
+            if (saved === null && userId) {
+                saved = localStorage.getItem('nalyse-workspace-layout-v4');
+            }
             setLayoutState(saved ? JSON.parse(saved) : {});
         } catch {
             setLayoutState({});
         }
         // Restore layout mode preference
-        const savedMode = localStorage.getItem(k.viewMode);
+        let savedMode = localStorage.getItem(k.viewMode);
+        // Migration: If missing, inherit from legacy global key
+        if (savedMode === null && userId) {
+            savedMode = localStorage.getItem('nalyse-layout-mode');
+            if (savedMode) {
+                localStorage.setItem(k.viewMode, savedMode);
+            }
+        }
+        
         if (savedMode === 'vertical' || savedMode === 'grid' || savedMode === 'canvas') {
             setLayoutMode(savedMode);
         } else {

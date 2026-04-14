@@ -139,7 +139,16 @@ function AppContent() {
   // Reload theme when user changes
   useEffect(() => {
     const userThemeKey = user?.id ? `theme-${user.id}` : 'theme';
-    const stored = localStorage.getItem(userThemeKey) as 'dark' | 'light' | 'midnight';
+    let stored = localStorage.getItem(userThemeKey) as 'dark' | 'light' | 'midnight';
+    
+    // Migration: If user-scoped key is missing, inherit from legacy global key
+    if (!stored && user?.id) {
+        stored = localStorage.getItem('theme') as 'dark' | 'light' | 'midnight';
+        if (stored) {
+            localStorage.setItem(userThemeKey, stored); // Migrate it permanently
+        }
+    }
+
     if (stored) {
       setTheme(stored);
     } else {
