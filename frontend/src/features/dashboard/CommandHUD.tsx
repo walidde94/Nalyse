@@ -256,8 +256,17 @@ export const QuickActionsBar = ({ onUpload, onViewReport, onUpgrade, fileCount }
 };
 
 /* ──────────────────────────────────────────────────────────
-   INTELLIGENCE TIMELINE — Scrolling activity feed
+   INTELLIGENCE TIMELINE — Scrolling activity feed (Bento Edition)
    ────────────────────────────────────────────────────────── */
+
+const BENTO = {
+    radius: '20px',
+    glass: 'rgba(255,255,255,0.025)',
+    border: 'rgba(255,255,255,0.06)',
+    borderHover: 'rgba(255,255,255,0.12)',
+    shadow: '0 8px 32px -8px rgba(0,0,0,0.3)',
+    blur: 'blur(12px)',
+};
 
 interface TimelineEvent {
     id: string;
@@ -320,53 +329,75 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.2, duration: 0.6 }}
-            className="intel-timeline"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ borderColor: BENTO.borderHover }}
+            transition={{ delay: 1.2, duration: 0.35 }}
+            style={{
+                padding: '24px', borderRadius: BENTO.radius,
+                background: BENTO.glass, border: `1px solid ${BENTO.border}`,
+                backdropFilter: BENTO.blur,
+                boxShadow: BENTO.shadow,
+                display: 'flex', flexDirection: 'column', gap: '20px',
+                transition: 'border-color 0.25s',
+                width: '100%', height: '100%',
+                position: 'relative', overflow: 'hidden'
+            }}
         >
-            <div className="timeline-header">
-                <div className="timeline-title-group">
-                    <div className="timeline-icon-wrap">
-                        <Activity size={16} />
-                    </div>
-                    <h3>Intelligence Feed</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Activity size={15} style={{ color: 'var(--primary)' }} />
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Intelligence Feed</span>
                 </div>
-                <div className="timeline-live-badge">
-                    <div className="live-dot" />
-                    LIVE
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.1)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 8px var(--danger-glow)' }} />
+                    <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.05em' }}>LIVE</span>
                 </div>
             </div>
 
-            <div className="timeline-body">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
+                {/* Visual track line */}
+                <div style={{ position: 'absolute', left: 15, top: 20, bottom: 20, width: 2, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+
                 {events.map((event, i) => {
                     const tokens = getEventTokens(event.type);
                     return (
                         <motion.div
                             key={event.id}
-                            initial={{ opacity: 0, x: 10 }}
+                            initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 1.4 + i * 0.08 }}
-                            className="timeline-event"
+                            style={{ display: 'flex', gap: '16px', position: 'relative', zIndex: 1 }}
                         >
-                            <div className="event-line">
-                                <div className="event-dot" style={{ background: tokens.base, boxShadow: `0 0 12px ${tokens.glow}` }} />
-                                {i < events.length - 1 && <div className="event-connector" />}
+                            <div style={{ width: 32, flexShrink: 0, display: 'flex', justifyContent: 'center', paddingTop: 4 }}>
+                                <div style={{ 
+                                    width: 12, height: 12, borderRadius: '50%', 
+                                    background: tokens.base, boxShadow: `0 0 12px ${tokens.glow}`,
+                                    border: `2px solid var(--bg-card)`
+                                }} />
                             </div>
-                            <div className="event-content">
-                                <div className="event-meta">
-                                    <div className="event-icon" style={{ color: tokens.base, background: tokens.subtle }}>
-                                        {getEventIcon(event.type)}
+                            
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.015)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s', cursor: 'pointer' }}
+                                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                                 onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.015)'}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ width: 24, height: 24, borderRadius: '6px', background: tokens.subtle, color: tokens.base, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {getEventIcon(event.type)}
+                                        </div>
+                                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{event.time}</span>
                                     </div>
-                                    <span className="event-time">{event.time}</span>
                                     {event.status && (
-                                        <span className="event-status" style={{ color: tokens.base, borderColor: tokens.subtle }}>
+                                        <span style={{ fontSize: '9px', fontWeight: 800, color: tokens.base, background: tokens.subtle, padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                                             {event.status}
                                         </span>
                                     )}
                                 </div>
-                                <div className="event-title">{event.title}</div>
-                                <div className="event-desc">{event.description}</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>{event.title}</h4>
+                                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.4 }}>{event.description}</p>
+                                </div>
                             </div>
                         </motion.div>
                     );
