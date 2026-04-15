@@ -39,10 +39,14 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
-                background: 'var(--bento-glass)',
-                backdropFilter: 'var(--bento-blur)',
-                WebkitBackdropFilter: 'var(--bento-blur)',
-                borderBottom: `1px solid var(--bento-border)`,
+                background: isMidnight
+                    ? 'rgba(14, 10, 4, 0.6)'
+                    : isDark
+                        ? 'rgba(3, 7, 17, 0.5)'
+                        : 'rgba(255, 255, 255, 0.6)',
+                backdropFilter: isMidnight ? 'blur(24px) saturate(220%)' : 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: isMidnight ? 'blur(24px) saturate(220%)' : 'blur(20px) saturate(180%)',
+                borderBottom: `1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
             }}>
 
                 {/* Left: Logo + Identity */}
