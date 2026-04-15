@@ -22,12 +22,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
             <div style={{
-                background: 'rgba(8, 8, 14, 0.85)',
-                backdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--bento-glass)',
+                backdropFilter: 'var(--bento-blur)',
+                WebkitBackdropFilter: 'var(--bento-blur)',
+                border: '1px solid var(--bento-border)',
                 padding: '16px',
-                borderRadius: '16px',
-                boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'
+                borderRadius: 'var(--bento-radius)',
+                boxShadow: 'var(--bento-shadow)'
             }}>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
                     {label}
@@ -331,13 +332,13 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     <button 
                         onClick={() => window.print()} 
                         style={{ 
-                            padding: '10px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', 
-                            border: '1px solid var(--border-default)', color: 'var(--text-secondary)', 
+                            padding: '10px 16px', borderRadius: 'var(--bento-radius-sm)', background: 'var(--bento-glass)', 
+                            border: '1px solid var(--bento-border)', color: 'var(--text-secondary)', 
                             fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px',
-                            cursor: 'pointer', transition: 'all 0.2s'
+                            cursor: 'pointer', transition: 'all 0.25s', backdropFilter: 'var(--bento-blur)',
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--bento-glass-hover)'; e.currentTarget.style.borderColor = 'var(--bento-border-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bento-glass)'; e.currentTarget.style.borderColor = 'var(--bento-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                     >
                         <Download size={14} /> Export Report
                     </button>
@@ -367,9 +368,13 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
                     {kpis.map((kpi: any, i: number) => (
                         <motion.div variants={childVariants} key={i} style={{ 
-                            padding: '24px', borderRadius: '20px', background: 'var(--bg-secondary)', 
-                            border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden'
-                        }}>
+                            padding: '24px', borderRadius: 'var(--bento-radius)', background: 'var(--bento-glass)', 
+                            border: '1px solid var(--bento-border)', position: 'relative', overflow: 'hidden',
+                            backdropFilter: 'var(--bento-blur)', transition: 'border-color 0.25s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--bento-border-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--bento-border)'}
+                        >
                             {/* Accent line on top */}
                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
                             
@@ -406,9 +411,13 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '24px' }}>
                     {charts.map((chart: any, i: number) => (
                         <motion.div variants={childVariants} key={i} style={{ 
-                            padding: '24px', borderRadius: '24px', background: 'var(--bg-secondary)', 
-                            border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', height: '420px'
-                        }}>
+                            padding: '24px', borderRadius: 'var(--bento-radius)', background: 'var(--bento-glass)', 
+                            border: '1px solid var(--bento-border)', display: 'flex', flexDirection: 'column', height: '420px',
+                            backdropFilter: 'var(--bento-blur)', transition: 'border-color 0.25s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--bento-border-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--bento-border)'}
+                        >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: chart.color || accentColor, boxShadow: `0 0 12px ${chart.color || accentColor}` }} />
                                 <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{chart.title}</h3>
@@ -461,8 +470,9 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
 
                 {/* Raw Data Log */}
                 <motion.div variants={childVariants} style={{ 
-                    borderRadius: '24px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', 
-                    overflow: 'hidden', display: 'flex', flexDirection: 'column'
+                    borderRadius: 'var(--bento-radius)', background: 'var(--bento-glass)', border: '1px solid var(--bento-border)', 
+                    overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                    backdropFilter: 'var(--bento-blur)', transition: 'border-color 0.25s',
                 }}>
                     <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

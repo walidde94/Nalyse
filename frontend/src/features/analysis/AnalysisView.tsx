@@ -124,11 +124,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
             <div style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-default)',
+                background: 'var(--bento-glass)',
+                border: '1px solid var(--bento-border)',
                 padding: '12px 16px',
-                borderRadius: '12px',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                borderRadius: 'var(--bento-radius-sm)',
+                boxShadow: 'var(--bento-shadow)',
+                backdropFilter: 'var(--bento-blur)',
                 minWidth: '150px',
                 color: 'var(--text-primary)'
             }}>
