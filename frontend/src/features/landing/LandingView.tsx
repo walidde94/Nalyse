@@ -1,838 +1,960 @@
 import { useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, type MotionValue } from 'framer-motion';
 import {
-    ArrowRight, LayoutDashboard, Sparkles, Link2, GitCompareArrows,
-    ShieldAlert, Landmark, TrendingUp, Map, BrainCircuit, Code2,
-    Webhook, Boxes, FlaskConical, Layers, BarChart3, Briefcase,
-    Activity, MessageSquare, Database, ArrowRightLeft, Building2,
-    Zap, ChevronDown
+    ArrowRight, Database, ArrowRightLeft, Building2,
+    Zap, ChevronDown, Upload, Cpu, BarChart3,
+    Lightbulb, TrendingUp, LayoutDashboard, Search,
+    Shield, BrainCircuit, Sparkles
 } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
 
 /* ═══════════════════════════════════════════════════════════════
-   SCROLL-DRIVEN LANDING PAGE — Apple Keynote Style
-   Each section uses framer-motion useScroll + useTransform
-   for GPU-accelerated, scroll-linked animations.
+   NALYSE LANDING PAGE — Apple Keynote-Style
+   
+   Scroll-driven storytelling with sticky sections, parallax,
+   and timeline-driven transitions. GPU-accelerated, 60fps.
+   
+   Structure:
+   1. Hero          — Full viewport, fade/scale on scroll
+   2. Chapter 1     — "Understand" — Analytics Studio
+   3. Chapter 2     — "Predict"    — Forecasting & ML
+   4. Chapter 3     — "Decide"     — BI & Strategic Board
+   5. Process Flow  — Interactive pipeline visualization
+   6. Trust Strip   — Capability metrics
+   7. Deep Dive     — Smart Lens 3-step walkthrough
+   8. Final CTA     — Strong close
    ═══════════════════════════════════════════════════════════════ */
 
-// ── Feature Data (all real Nalyse features) ──────────────────
-const ANALYTICS_FEATURES = [
-    { icon: LayoutDashboard, title: 'Workspace Dashboard', desc: 'Neural command center with real-time data health, ingestion telemetry, and workspace intelligence at a glance.', color: '#8b5cf6' },
-    { icon: Sparkles, title: 'Smart Lens', desc: 'AI-powered visual analysis engine that surfaces hidden patterns and generates intelligent recommendations automatically.', color: '#a78bfa' },
-    { icon: Link2, title: 'Korrelation', desc: 'Discover hidden statistical relationships across any combination of dataset columns with interactive heatmaps.', color: '#6366f1' },
-    { icon: GitCompareArrows, title: 'Version Diff', desc: 'Track structural and value-level changes across dataset versions with precision delta analysis.', color: '#818cf8' },
-    { icon: ShieldAlert, title: 'Anomaly Detection', desc: 'Statistical outlier identification and data drift monitoring powered by Z-score and IQR algorithms.', color: '#f43f5e' },
-    { icon: Landmark, title: 'Financial Risk', desc: 'Risk exposure modeling, VaR calculations, and scenario-based financial stress testing.', color: '#f59e0b' },
+const SPRING = { stiffness: 80, damping: 28, restDelta: 0.001 };
+const FAST_SPRING = { stiffness: 120, damping: 30, restDelta: 0.001 };
+
+// ─── VISUAL: Analytics Heat Grid ─────────────────────────────
+const GRID_INTENSITIES = [
+    0.2, 0.5, 0.9, 0.3, 0.7, 0.4, 0.8, 0.6,
+    0.6, 0.3, 0.7, 0.9, 0.2, 0.8, 0.5, 0.3,
+    0.4, 0.8, 0.2, 0.6, 0.9, 0.3, 0.7, 0.5,
+    0.7, 0.4, 0.6, 0.3, 0.8, 0.9, 0.2, 0.6,
+    0.3, 0.9, 0.5, 0.7, 0.4, 0.6, 0.8, 0.2,
 ];
 
-const PREDICTIVE_FEATURES = [
-    { icon: TrendingUp, title: 'Forecasting Engine', desc: 'Time-series prediction with machine learning models for demand planning and trend analysis.', color: '#06b6d4' },
-    { icon: Map, title: 'Geospatial Intelligence', desc: 'Location-based data visualization on interactive world maps with regional drill-down.', color: '#10b981' },
-    { icon: BrainCircuit, title: 'AutoML Intelligence', desc: 'Automated model selection, hyperparameter tuning, and explainability for every prediction.', color: '#8b5cf6' },
-    { icon: Code2, title: 'Developer API', desc: 'RESTful API with full CRUD operations, token authentication, and rate-limited programmatic access.', color: '#64748b' },
-    { icon: Webhook, title: 'Webhooks & Events', desc: 'Event-driven integrations and real-time data pipelines triggered by analysis completion.', color: '#f472b6' },
-    { icon: Boxes, title: 'Embed SDK', desc: 'White-label analytics components embeddable into any external application via iframe or React SDK.', color: '#fbbf24' },
-];
+const AnalyticsVisual = ({ progress }: { progress: MotionValue<number> }) => {
+    const gridOp = useSpring(useTransform(progress, [0.08, 0.25], [0, 1]), SPRING);
+    const gridScale = useSpring(useTransform(progress, [0.08, 0.3], [0.85, 1]), SPRING);
+    const highlightOp = useSpring(useTransform(progress, [0.45, 0.65], [0, 1]), SPRING);
+    const badgeOp = useSpring(useTransform(progress, [0.6, 0.75], [0, 1]), SPRING);
+    const badgeY = useSpring(useTransform(progress, [0.6, 0.75], [20, 0]), SPRING);
 
-const BI_FEATURES = [
-    { icon: Layers, title: 'Dashboard Canvas', desc: 'Drag-and-drop dashboard builder with Architect Mode for spatial arrangement of any analytics widget.', color: '#f59e0b' },
-    { icon: BarChart3, title: 'BI Visual Architect', desc: 'Executive dashboards for sales, marketing, supply chain, retention, product adoption, and C-suite reporting.', color: '#3b82f6' },
-    { icon: Briefcase, title: 'Strategic Board', desc: 'Pin AI-generated insights, deploy strategic actions, and track priority matrices across your organization.', color: '#eab308' },
-];
-
-const SELFSERVICE_FEATURES = [
-    { icon: Sparkles, title: 'Self-Service Studio', desc: 'Non-technical users explore, filter, and visualize data independently — no SQL or coding required.', color: '#8b5cf6' },
-    { icon: Activity, title: 'Automated Reports', desc: 'Schedule recurring analyses and distribute insights to stakeholders automatically on any cadence.', color: '#10b981' },
-    { icon: MessageSquare, title: 'Collaboration', desc: 'Share analyses, annotate findings, and discuss insights in real-time with your team.', color: '#3b82f6' },
-];
-
-const INFRA_FEATURES = [
-    { icon: Database, title: 'Data Connectors', desc: 'Connect CSV, Excel, JSON, and enterprise data sources with automatic schema inference.' },
-    { icon: ArrowRightLeft, title: 'Data Migration', desc: 'Seamless data migration pipelines with validation, rollback, and audit trails.' },
-    { icon: Building2, title: 'Organization & RBAC', desc: 'Role-based access control, team management, and enterprise-grade security policies.' },
-];
-
-// ── Smooth spring config ─────────────────────────────────────
-const SPRING = { stiffness: 100, damping: 30, restDelta: 0.001 };
-
-// ── Reusable scroll-animated wrapper ─────────────────────────
-const ScrollReveal = ({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) => {
-    const ref = useRef<HTMLDivElement>(null);
-    const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.9', 'start 0.3'] });
-    const opacity = useSpring(useTransform(scrollYProgress, [0, 1], [0, 1]), SPRING);
-    const y = useSpring(useTransform(scrollYProgress, [0, 1], [60, 0]), SPRING);
     return (
-        <motion.div ref={ref} style={{ opacity, y, willChange: 'transform, opacity', ...style }} className={className}>
-            {children}
+        <motion.div className="lp-vis" style={{ opacity: gridOp, scale: gridScale }}>
+            <div className="lp-heatgrid">
+                {GRID_INTENSITIES.map((intensity, i) => (
+                    <div
+                        key={i}
+                        className="lp-heatcell"
+                        style={{ opacity: intensity, animationDelay: `${i * 40}ms` }}
+                    />
+                ))}
+            </div>
+            {/* Highlight overlay — 3 correlated cells glow */}
+            <motion.div className="lp-grid-highlights" style={{ opacity: highlightOp }}>
+                <div className="lp-highlight-dot" style={{ top: '12%', left: '30%' }} />
+                <div className="lp-highlight-dot" style={{ top: '52%', left: '55%' }} />
+                <div className="lp-highlight-dot" style={{ top: '32%', left: '80%' }} />
+                <svg className="lp-highlight-lines" viewBox="0 0 300 200">
+                    <line x1="90" y1="30" x2="165" y2="110" stroke="url(#hlGrad)" strokeWidth="1.5" />
+                    <line x1="165" y1="110" x2="240" y2="70" stroke="url(#hlGrad)" strokeWidth="1.5" />
+                    <defs>
+                        <linearGradient id="hlGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.6" />
+                            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.6" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </motion.div>
+            <motion.div className="lp-vis-badge" style={{ opacity: badgeOp, y: badgeY }}>
+                <Search size={14} /> Pattern Detected
+            </motion.div>
         </motion.div>
     );
 };
+
+// ─── VISUAL: Forecast Trend Chart ────────────────────────────
+const ForecastVisual = ({ progress }: { progress: MotionValue<number> }) => {
+    const axisOp = useSpring(useTransform(progress, [0.05, 0.2], [0, 1]), SPRING);
+    const trendLen = useSpring(useTransform(progress, [0.15, 0.5], [0, 1]), FAST_SPRING);
+    const forecastOp = useSpring(useTransform(progress, [0.5, 0.7], [0, 1]), SPRING);
+    const bandOp = useSpring(useTransform(progress, [0.55, 0.75], [0, 0.15]), SPRING);
+    const dotScale = useSpring(useTransform(progress, [0.65, 0.8], [0, 1]), SPRING);
+
+    return (
+        <motion.div className="lp-vis">
+            <svg viewBox="0 0 400 260" className="lp-chart-svg" fill="none">
+                {/* Axes */}
+                <motion.line x1="45" y1="15" x2="45" y2="235" stroke="var(--text-muted)" strokeWidth="1" style={{ opacity: axisOp }} />
+                <motion.line x1="45" y1="235" x2="385" y2="235" stroke="var(--text-muted)" strokeWidth="1" style={{ opacity: axisOp }} />
+                {/* Grid lines */}
+                {[60, 110, 160, 210].map(y => (
+                    <motion.line key={y} x1="45" y1={y} x2="385" y2={y} stroke="var(--text-muted)" strokeWidth="0.3" style={{ opacity: axisOp }} />
+                ))}
+                {/* Historical trend line */}
+                <motion.path
+                    d="M 55 200 C 85 190, 105 170, 130 175 S 170 140, 200 150 S 240 110, 270 100 S 310 85, 330 70"
+                    stroke="url(#trendGrad)" strokeWidth="2.5" strokeLinecap="round"
+                    style={{ pathLength: trendLen }}
+                />
+                {/* Forecast extension */}
+                <motion.path
+                    d="M 330 70 C 345 60, 360 52, 380 42"
+                    stroke="#06b6d4" strokeWidth="2" strokeDasharray="6 4" strokeLinecap="round"
+                    style={{ opacity: forecastOp }}
+                />
+                {/* Confidence band */}
+                <motion.path
+                    d="M 330 70 C 345 50, 360 38, 380 25 L 380 60 C 360 65, 345 72, 330 70 Z"
+                    fill="#06b6d4" style={{ opacity: bandOp }}
+                />
+                {/* Forecast endpoint dot */}
+                <motion.circle cx="380" cy="42" r="5" fill="#06b6d4" style={{ scale: dotScale, opacity: forecastOp }} />
+                <motion.circle cx="380" cy="42" r="12" fill="none" stroke="#06b6d4" strokeWidth="1" style={{ scale: dotScale, opacity: forecastOp }} />
+                <defs>
+                    <linearGradient id="trendGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#6366f1" />
+                        <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <motion.div className="lp-vis-badge" style={{ opacity: forecastOp, y: useSpring(useTransform(progress, [0.5, 0.7], [16, 0]), SPRING) }}>
+                <TrendingUp size={14} /> Forecast Active
+            </motion.div>
+        </motion.div>
+    );
+};
+
+// ─── VISUAL: Dashboard Bento Preview ─────────────────────────
+const DashboardVisual = ({ progress }: { progress: MotionValue<number> }) => {
+    const card1Op = useSpring(useTransform(progress, [0.1, 0.25], [0, 1]), SPRING);
+    const card1Y = useSpring(useTransform(progress, [0.1, 0.25], [30, 0]), SPRING);
+    const card2Op = useSpring(useTransform(progress, [0.2, 0.35], [0, 1]), SPRING);
+    const card2Y = useSpring(useTransform(progress, [0.2, 0.35], [30, 0]), SPRING);
+    const card3Op = useSpring(useTransform(progress, [0.3, 0.45], [0, 1]), SPRING);
+    const card3Y = useSpring(useTransform(progress, [0.3, 0.45], [30, 0]), SPRING);
+    const card4Op = useSpring(useTransform(progress, [0.4, 0.55], [0, 1]), SPRING);
+    const card4Y = useSpring(useTransform(progress, [0.4, 0.55], [30, 0]), SPRING);
+    const glowOp = useSpring(useTransform(progress, [0.6, 0.8], [0, 1]), SPRING);
+
+    return (
+        <motion.div className="lp-vis lp-dash-vis">
+            <div className="lp-dash-grid">
+                <motion.div className="lp-dash-card lp-dash-wide" style={{ opacity: card1Op, y: card1Y }}>
+                    <div className="lp-dash-label">Revenue Trend</div>
+                    <div className="lp-dash-bars">
+                        {[65, 45, 80, 55, 90, 70, 95].map((h, i) => (
+                            <div key={i} className="lp-dash-bar" style={{ height: `${h}%` }} />
+                        ))}
+                    </div>
+                </motion.div>
+                <motion.div className="lp-dash-card" style={{ opacity: card2Op, y: card2Y }}>
+                    <div className="lp-dash-label">Conversion</div>
+                    <motion.div className="lp-dash-metric" style={{ opacity: glowOp }}>94.2<span>%</span></motion.div>
+                </motion.div>
+                <motion.div className="lp-dash-card" style={{ opacity: card3Op, y: card3Y }}>
+                    <div className="lp-dash-label">Status</div>
+                    <div className="lp-dash-status">
+                        <div className="lp-dash-dot" /><span>All Systems Active</span>
+                    </div>
+                </motion.div>
+                <motion.div className="lp-dash-card lp-dash-wide" style={{ opacity: card4Op, y: card4Y }}>
+                    <div className="lp-dash-label">Forecast Accuracy</div>
+                    <div className="lp-dash-sparkline">
+                        <svg viewBox="0 0 200 50" fill="none">
+                            <path d="M 0 40 C 30 35, 50 20, 80 25 S 120 10, 150 15 S 180 8, 200 5" stroke="#10b981" strokeWidth="2" />
+                        </svg>
+                    </div>
+                </motion.div>
+            </div>
+        </motion.div>
+    );
+};
+
+// ─── VISUAL: Process Pipeline ────────────────────────────────
+const PIPELINE_STEPS = [
+    { icon: Upload, label: 'Connect', color: '#6366f1' },
+    { icon: Cpu, label: 'Process', color: '#8b5cf6' },
+    { icon: Search, label: 'Analyze', color: '#a78bfa' },
+    { icon: TrendingUp, label: 'Predict', color: '#06b6d4' },
+    { icon: Zap, label: 'Execute', color: '#10b981' },
+];
+
+const ProcessVisual = ({ progress }: { progress: MotionValue<number> }) => {
+    return (
+        <div className="lp-pipeline">
+            {PIPELINE_STEPS.map((step, i) => {
+                const start = i * 0.15 + 0.1;
+                const nodeOp = useSpring(useTransform(progress, [start, start + 0.12], [0.2, 1]), SPRING);
+                const nodeScale = useSpring(useTransform(progress, [start, start + 0.12], [0.8, 1]), SPRING);
+                const lineLen = useSpring(useTransform(progress, [start + 0.06, start + 0.18], [0, 1]), FAST_SPRING);
+                const glowOp = useSpring(useTransform(progress, [start + 0.05, start + 0.15], [0, 0.5]), SPRING);
+                const Icon = step.icon;
+                return (
+                    <div key={step.label} className="lp-pipe-step">
+                        <motion.div
+                            className="lp-pipe-node"
+                            style={{ opacity: nodeOp, scale: nodeScale, boxShadow: useTransform(glowOp, v => `0 0 ${v * 40}px ${step.color}`) }}
+                        >
+                            <Icon size={22} style={{ color: step.color }} />
+                        </motion.div>
+                        <motion.span className="lp-pipe-label" style={{ opacity: nodeOp }}>{step.label}</motion.span>
+                        {i < PIPELINE_STEPS.length - 1 && (
+                            <motion.div className="lp-pipe-line" style={{ scaleX: lineLen, background: `linear-gradient(90deg, ${step.color}, ${PIPELINE_STEPS[i + 1].color})` }} />
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+// ─── VISUAL: Deep Dive Steps ─────────────────────────────────
+const DEEP_STEPS = [
+    { num: '01', title: 'Upload your data', desc: 'Drag and drop CSV, Excel, or JSON files. Schema is auto-detected in milliseconds.', icon: Upload, color: '#6366f1' },
+    { num: '02', title: 'AI finds patterns', desc: 'Smart Lens scans every column, detects anomalies, correlations, and statistical patterns automatically.', icon: BrainCircuit, color: '#8b5cf6' },
+    { num: '03', title: 'Get actionable insights', desc: 'Receive clear, prioritized recommendations with confidence scores — ready for strategic decisions.', icon: Lightbulb, color: '#10b981' },
+];
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    // Hero scroll values
+    // ── Hero refs ──
     const heroRef = useRef<HTMLDivElement>(null);
-    const { scrollYProgress: heroProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-    const heroOpacity = useSpring(useTransform(heroProgress, [0, 0.6], [1, 0]), SPRING);
-    const heroScale = useSpring(useTransform(heroProgress, [0, 0.6], [1, 0.92]), SPRING);
-    const heroY = useSpring(useTransform(heroProgress, [0, 0.6], [0, -80]), SPRING);
+    const { scrollYProgress: heroP } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+    const heroOp = useSpring(useTransform(heroP, [0, 0.5], [1, 0]), SPRING);
+    const heroScale = useSpring(useTransform(heroP, [0, 0.5], [1, 0.94]), SPRING);
+    const heroY = useSpring(useTransform(heroP, [0, 0.5], [0, -60]), SPRING);
 
-    // Horizontal scroll for Predictive section
-    const predictiveRef = useRef<HTMLDivElement>(null);
-    const { scrollYProgress: predictiveProgress } = useScroll({ target: predictiveRef, offset: ['start start', 'end end'] });
-    const predictiveX = useSpring(useTransform(predictiveProgress, [0, 1], ['0%', '-65%']), SPRING);
+    // ── Chapter refs ──
+    const ch1Ref = useRef<HTMLDivElement>(null);
+    const { scrollYProgress: ch1P } = useScroll({ target: ch1Ref, offset: ['start start', 'end end'] });
 
-    // Decision Engine cinematic scale
-    const decisionRef = useRef<HTMLDivElement>(null);
-    const { scrollYProgress: decisionProgress } = useScroll({ target: decisionRef, offset: ['start end', 'center center'] });
-    const decisionScale = useSpring(useTransform(decisionProgress, [0, 1], [0.75, 1]), SPRING);
-    const decisionOpacity = useSpring(useTransform(decisionProgress, [0, 0.5], [0, 1]), SPRING);
+    const ch2Ref = useRef<HTMLDivElement>(null);
+    const { scrollYProgress: ch2P } = useScroll({ target: ch2Ref, offset: ['start start', 'end end'] });
+
+    const ch3Ref = useRef<HTMLDivElement>(null);
+    const { scrollYProgress: ch3P } = useScroll({ target: ch3Ref, offset: ['start start', 'end end'] });
+
+    // ── Process ref ──
+    const processRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress: processP } = useScroll({ target: processRef, offset: ['start start', 'end end'] });
+
+    // ── Deep dive ref ──
+    const deepRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress: deepP } = useScroll({ target: deepRef, offset: ['start start', 'end end'] });
+
+    // ── Chapter text animation factory ──
+    const chapterText = (p: MotionValue<number>) => ({
+        tagOp: useSpring(useTransform(p, [0.02, 0.12], [0, 1]), SPRING),
+        titleOp: useSpring(useTransform(p, [0.05, 0.18], [0, 1]), SPRING),
+        titleY: useSpring(useTransform(p, [0.05, 0.18], [50, 0]), SPRING),
+        descOp: useSpring(useTransform(p, [0.1, 0.22], [0, 1]), SPRING),
+        descY: useSpring(useTransform(p, [0.1, 0.22], [30, 0]), SPRING),
+        fadeOut: useSpring(useTransform(p, [0.85, 1], [1, 0]), SPRING),
+    });
+
+    const t1 = chapterText(ch1P);
+    const t2 = chapterText(ch2P);
+    const t3 = chapterText(ch3P);
+
+    // ── Deep dive step animations ──
+    const deepSteps = DEEP_STEPS.map((_, i) => {
+        const start = i * 0.28 + 0.05;
+        return {
+            op: useSpring(useTransform(deepP, [start, start + 0.12, start + 0.25, start + 0.3], [0, 1, 1, i < 2 ? 0 : 1]), SPRING),
+            y: useSpring(useTransform(deepP, [start, start + 0.12], [40, 0]), SPRING),
+            iconScale: useSpring(useTransform(deepP, [start + 0.05, start + 0.15], [0.6, 1]), FAST_SPRING),
+        };
+    });
 
     return (
-        <div ref={containerRef} className="lp-root">
-
+        <div className="lp">
             {/* ═══ AMBIENT BACKGROUND ═══ */}
             <div className="lp-ambient">
                 <div className="lp-orb lp-orb-1" />
                 <div className="lp-orb lp-orb-2" />
-                <div className="lp-orb lp-orb-3" />
                 <div className="lp-grain" />
             </div>
 
-            {/* ═══ SECTION 1: HERO ═══ */}
-            <motion.section
-                ref={heroRef}
-                className="lp-hero"
-                style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-            >
-                <nav className="lp-nav">
-                    <Logo />
-                    <button className="lp-nav-cta" onClick={onGetStarted}>
-                        Get Started
-                    </button>
-                </nav>
-
-                <div className="lp-hero-content">
+            {/* ═══════════════════════════════════════════════════════
+                SECTION 1 — HERO
+                Full viewport, fades and scales down on scroll
+            ═══════════════════════════════════════════════════════ */}
+            <motion.section ref={heroRef} className="lp-hero" style={{ opacity: heroOp, scale: heroScale, y: heroY }}>
+                <div className="lp-hero-inner">
                     <motion.div
-                        className="lp-chip"
-                        initial={{ opacity: 0, y: 20 }}
+                        className="lp-hero-chip"
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.6 }}
+                        transition={{ delay: 0.3, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                     >
-                        <Zap size={14} />
-                        <span>INTELLIGENT DATA ANALYTICS PLATFORM</span>
+                        <Sparkles size={13} /> Intelligent Data Analytics
                     </motion.div>
 
                     <motion.h1
-                        className="lp-hero-title"
-                        initial={{ opacity: 0, y: 40 }}
+                        className="lp-hero-h1"
+                        initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{ delay: 0.5, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
                     >
-                        Turn raw data into<br />
-                        <span className="lp-gradient-text">strategic intelligence.</span>
+                        Turn raw data into
+                        <br />
+                        <span className="lp-glow-text">strategic intelligence.</span>
                     </motion.h1>
 
                     <motion.p
-                        className="lp-hero-sub"
+                        className="lp-hero-p"
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6, duration: 0.8 }}
+                        transition={{ delay: 0.7, duration: 0.8 }}
                     >
-                        From exploratory analysis to predictive forecasting — Nalyse gives your team
-                        the tools to understand, predict, and act on data with confidence.
+                        From exploratory analysis to predictive forecasting — one platform
+                        for your entire data lifecycle.
                     </motion.p>
 
                     <motion.div
-                        className="lp-hero-actions"
+                        className="lp-hero-cta"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8, duration: 0.6 }}
+                        transition={{ delay: 0.9, duration: 0.6 }}
                     >
-                        <button className="lp-btn-primary" onClick={onGetStarted}>
-                            Start Analyzing <ArrowRight size={20} />
-                        </button>
-                        <button className="lp-btn-ghost" onClick={() => {
-                            document.querySelector('.lp-analytics')?.scrollIntoView({ behavior: 'smooth' });
-                        }}>
-                            Explore Features
+                        <button className="lp-btn" onClick={onGetStarted}>
+                            Start Analyzing <ArrowRight size={18} />
                         </button>
                     </motion.div>
 
                     <motion.div
-                        className="lp-scroll-hint"
+                        className="lp-scroll-cue"
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.4 }}
-                        transition={{ delay: 1.5, duration: 1 }}
+                        animate={{ opacity: 0.35 }}
+                        transition={{ delay: 2, duration: 1.5 }}
                     >
-                        <ChevronDown size={20} />
+                        <ChevronDown size={18} />
                     </motion.div>
                 </div>
             </motion.section>
 
-            {/* ═══ SECTION 2: ANALYTICS STUDIO (Sticky + Scrolling Cards) ═══ */}
-            <section className="lp-analytics">
-                <div className="lp-sticky-section">
-                    <div className="lp-sticky-left">
-                        <div className="lp-section-tag" style={{ color: '#8b5cf6' }}>ANALYTICS STUDIO</div>
-                        <h2 className="lp-section-title">
-                            Understand your data<br />at every level.
-                        </h2>
-                        <p className="lp-section-desc">
-                            Six specialized tools for exploratory analysis, pattern recognition,
-                            statistical correlation, and risk assessment — all operating on your
-                            live datasets in real time.
-                        </p>
-                        <div className="lp-section-count">
-                            <span className="lp-count-num">6</span>
-                            <span className="lp-count-label">Analysis Engines</span>
-                        </div>
-                    </div>
-                    <div className="lp-sticky-right">
-                        {ANALYTICS_FEATURES.map((f, i) => (
-                            <ScrollReveal key={f.title} style={{ transitionDelay: `${i * 0.05}s` }}>
-                                <div className="lp-feature-card">
-                                    <div className="lp-feature-icon" style={{ background: `${f.color}15`, color: f.color }}>
-                                        <f.icon size={22} />
-                                    </div>
-                                    <div className="lp-feature-body">
-                                        <h3 className="lp-feature-title">{f.title}</h3>
-                                        <p className="lp-feature-desc">{f.desc}</p>
-                                    </div>
-                                    <div className="lp-feature-glow" style={{ background: f.color }} />
-                                </div>
-                            </ScrollReveal>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ═══ SECTION 3: PREDICTIVE MODELS (Horizontal Scroll) ═══ */}
-            <section ref={predictiveRef} className="lp-predictive">
-                <div className="lp-hz-sticky">
-                    <div className="lp-hz-header">
-                        <ScrollReveal>
-                            <div className="lp-section-tag" style={{ color: '#06b6d4' }}>PREDICTIVE MODELS</div>
-                            <h2 className="lp-section-title">See what's coming next.</h2>
-                            <p className="lp-section-desc" style={{ maxWidth: 500 }}>
-                                Machine learning forecasting, geospatial mapping, and automated model
-                                optimization — purpose-built for forward-looking teams.
-                            </p>
-                        </ScrollReveal>
-                    </div>
-                    <motion.div className="lp-hz-track" style={{ x: predictiveX }}>
-                        {PREDICTIVE_FEATURES.map((f) => (
-                            <div key={f.title} className="lp-hz-card">
-                                <div className="lp-hz-card-icon" style={{ background: `${f.color}18`, color: f.color }}>
-                                    <f.icon size={28} />
-                                </div>
-                                <h3 className="lp-hz-card-title">{f.title}</h3>
-                                <p className="lp-hz-card-desc">{f.desc}</p>
-                                <div className="lp-hz-card-glow" style={{ background: f.color }} />
-                            </div>
-                        ))}
+            {/* ═══════════════════════════════════════════════════════
+                SECTION 2 — CHAPTER: UNDERSTAND
+                Sticky left text + Analytics heat grid visual
+            ═══════════════════════════════════════════════════════ */}
+            <section ref={ch1Ref} className="lp-chapter">
+                <div className="lp-chapter-sticky">
+                    <motion.div className="lp-ch-text" style={{ opacity: t1.fadeOut }}>
+                        <motion.span className="lp-tag" style={{ opacity: t1.tagOp, color: '#8b5cf6' }}>ANALYTICS STUDIO</motion.span>
+                        <motion.h2 className="lp-ch-title" style={{ opacity: t1.titleOp, y: t1.titleY }}>
+                            See what others miss.
+                        </motion.h2>
+                        <motion.p className="lp-ch-desc" style={{ opacity: t1.descOp, y: t1.descY }}>
+                            Six analysis engines work together — real-time SQL,
+                            interactive visualizations, statistical correlation, anomaly
+                            detection, and financial risk modeling — all on your live data.
+                        </motion.p>
                     </motion.div>
+                    <div className="lp-ch-visual">
+                        <AnalyticsVisual progress={ch1P} />
+                    </div>
                 </div>
             </section>
 
-            {/* ═══ SECTION 4: DECISION ENGINE (Cinematic Scale) ═══ */}
-            <section className="lp-decision">
-                <motion.div
-                    ref={decisionRef}
-                    className="lp-decision-card"
-                    style={{ scale: decisionScale, opacity: decisionOpacity }}
-                >
-                    <div className="lp-decision-rings">
-                        <div className="lp-ring lp-ring-1" />
-                        <div className="lp-ring lp-ring-2" />
-                        <div className="lp-ring lp-ring-3" />
+            {/* ═══════════════════════════════════════════════════════
+                SECTION 3 — CHAPTER: PREDICT
+                Sticky left text + Forecast trend chart
+            ═══════════════════════════════════════════════════════ */}
+            <section ref={ch2Ref} className="lp-chapter">
+                <div className="lp-chapter-sticky">
+                    <motion.div className="lp-ch-text" style={{ opacity: t2.fadeOut }}>
+                        <motion.span className="lp-tag" style={{ opacity: t2.tagOp, color: '#06b6d4' }}>PREDICTIVE INTELLIGENCE</motion.span>
+                        <motion.h2 className="lp-ch-title" style={{ opacity: t2.titleOp, y: t2.titleY }}>
+                            Know what happens next.
+                        </motion.h2>
+                        <motion.p className="lp-ch-desc" style={{ opacity: t2.descOp, y: t2.descY }}>
+                            Machine learning forecasting, geospatial mapping,
+                            and AutoML optimization — purpose-built for
+                            teams who need to see around corners.
+                        </motion.p>
+                    </motion.div>
+                    <div className="lp-ch-visual">
+                        <ForecastVisual progress={ch2P} />
                     </div>
-                    <div className="lp-decision-content">
-                        <div className="lp-section-tag" style={{ color: '#6366f1' }}>DECISION ENGINE</div>
-                        <h2 className="lp-decision-title">Simulate before<br />you commit.</h2>
-                        <p className="lp-decision-desc">
-                            Run what-if simulations against your enterprise data. Model outcomes,
-                            stress-test assumptions, and validate strategies before deploying them
-                            to the real world.
+                </div>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════════
+                SECTION 4 — CHAPTER: DECIDE
+                Sticky left text + Dashboard bento preview
+            ═══════════════════════════════════════════════════════ */}
+            <section ref={ch3Ref} className="lp-chapter">
+                <div className="lp-chapter-sticky">
+                    <motion.div className="lp-ch-text" style={{ opacity: t3.fadeOut }}>
+                        <motion.span className="lp-tag" style={{ opacity: t3.tagOp, color: '#f59e0b' }}>BUSINESS INTELLIGENCE</motion.span>
+                        <motion.h2 className="lp-ch-title" style={{ opacity: t3.titleOp, y: t3.titleY }}>
+                            From data to<br />boardroom.
+                        </motion.h2>
+                        <motion.p className="lp-ch-desc" style={{ opacity: t3.descOp, y: t3.descY }}>
+                            Executive dashboards, strategic boards, and a visual
+                            architect that aligns your entire organization around
+                            a single source of truth.
+                        </motion.p>
+                    </motion.div>
+                    <div className="lp-ch-visual">
+                        <DashboardVisual progress={ch3P} />
+                    </div>
+                </div>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════════
+                SECTION 5 — INTERACTIVE PROCESS VISUALIZATION
+                Pipeline flow that illuminates step-by-step on scroll
+            ═══════════════════════════════════════════════════════ */}
+            <section ref={processRef} className="lp-process">
+                <div className="lp-process-sticky">
+                    <motion.div
+                        className="lp-process-header"
+                        style={{
+                            opacity: useSpring(useTransform(processP, [0, 0.12], [0, 1]), SPRING),
+                            y: useSpring(useTransform(processP, [0, 0.12], [40, 0]), SPRING),
+                        }}
+                    >
+                        <span className="lp-tag" style={{ color: '#a78bfa' }}>HOW IT WORKS</span>
+                        <h2 className="lp-ch-title" style={{ textAlign: 'center' }}>Five steps. Zero friction.</h2>
+                        <p className="lp-ch-desc" style={{ textAlign: 'center', maxWidth: 520 }}>
+                            From raw file to strategic insight — every step is
+                            automated, auditable, and fast.
                         </p>
-                        <div className="lp-decision-icon">
-                            <FlaskConical size={40} />
-                        </div>
-                    </div>
-                </motion.div>
-            </section>
-
-            {/* ═══ SECTION 5: BUSINESS INTELLIGENCE (Blur-Resolve Grid) ═══ */}
-            <section className="lp-bi">
-                <ScrollReveal>
-                    <div className="lp-section-tag" style={{ color: '#f59e0b', textAlign: 'center' }}>BUSINESS INTELLIGENCE</div>
-                    <h2 className="lp-section-title" style={{ textAlign: 'center' }}>
-                        From data to boardroom.
-                    </h2>
-                    <p className="lp-section-desc" style={{ textAlign: 'center', maxWidth: 600, margin: '0 auto 60px' }}>
-                        Professional executive dashboards, strategic boards, and visual builders
-                        that align your entire org around a single source of truth.
-                    </p>
-                </ScrollReveal>
-                <div className="lp-bi-grid">
-                    {BI_FEATURES.map((f, i) => (
-                        <ScrollReveal key={f.title} style={{ transitionDelay: `${i * 0.1}s` }}>
-                            <div className="lp-bi-card">
-                                <div className="lp-bi-card-icon" style={{ background: `${f.color}15`, color: f.color }}>
-                                    <f.icon size={28} />
-                                </div>
-                                <h3 className="lp-bi-card-title">{f.title}</h3>
-                                <p className="lp-bi-card-desc">{f.desc}</p>
-                                <div className="lp-bi-card-accent" style={{ background: `linear-gradient(90deg, ${f.color}, transparent)` }} />
-                            </div>
-                        </ScrollReveal>
-                    ))}
+                    </motion.div>
+                    <ProcessVisual progress={processP} />
                 </div>
             </section>
 
-            {/* ═══ SECTION 6: SELF-SERVICE (Timeline) ═══ */}
-            <section className="lp-selfservice">
-                <ScrollReveal>
-                    <div className="lp-section-tag" style={{ color: '#10b981', textAlign: 'center' }}>SELF-SERVICE & COLLABORATION</div>
-                    <h2 className="lp-section-title" style={{ textAlign: 'center' }}>
-                        Analytics for everyone.
-                    </h2>
-                    <p className="lp-section-desc" style={{ textAlign: 'center', maxWidth: 560, margin: '0 auto 80px' }}>
-                        Empower non-technical team members to explore data independently,
-                        schedule reports, and collaborate on findings — no engineering support required.
-                    </p>
-                </ScrollReveal>
-                <div className="lp-timeline">
-                    {SELFSERVICE_FEATURES.map((f, i) => (
-                        <ScrollReveal key={f.title}>
-                            <div className="lp-timeline-item">
-                                <div className="lp-timeline-line">
-                                    <div className="lp-timeline-dot" style={{ background: f.color, boxShadow: `0 0 20px ${f.color}60` }} />
-                                    {i < SELFSERVICE_FEATURES.length - 1 && <div className="lp-timeline-connector" />}
-                                </div>
-                                <div className="lp-timeline-content">
-                                    <div className="lp-timeline-icon" style={{ background: `${f.color}12`, color: f.color }}>
-                                        <f.icon size={20} />
-                                    </div>
-                                    <h3 className="lp-timeline-title">{f.title}</h3>
-                                    <p className="lp-timeline-desc">{f.desc}</p>
-                                </div>
-                            </div>
-                        </ScrollReveal>
-                    ))}
-                </div>
+            {/* ═══════════════════════════════════════════════════════
+                SECTION 6 — TRUST & CAPABILITIES
+                Clean metrics strip with fade-in
+            ═══════════════════════════════════════════════════════ */}
+            <section className="lp-trust">
+                <TrustItem icon={<LayoutDashboard size={22} />} value="25+" label="Analysis Tools" idx={0} />
+                <TrustItem icon={<Cpu size={22} />} value="Real-Time" label="Data Processing" idx={1} />
+                <TrustItem icon={<Shield size={22} />} value="Enterprise" label="RBAC & Encryption" idx={2} />
+                <TrustItem icon={<BrainCircuit size={22} />} value="ML-Powered" label="Forecasting & AutoML" idx={3} />
             </section>
 
-            {/* ═══ SECTION 7: INFRASTRUCTURE & CTA ═══ */}
-            <section className="lp-infra">
-                <ScrollReveal>
-                    <div className="lp-infra-strip">
-                        {INFRA_FEATURES.map((f) => (
-                            <div key={f.title} className="lp-infra-item">
-                                <f.icon size={20} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
-                                <div>
-                                    <h4 className="lp-infra-title">{f.title}</h4>
-                                    <p className="lp-infra-desc">{f.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </ScrollReveal>
-            </section>
-
-            {/* ═══ FOOTER CTA ═══ */}
-            <footer className="lp-footer">
-                <ScrollReveal>
-                    <div className="lp-footer-cta">
-                        <h2 className="lp-footer-title">
-                            Ready to turn data into<br />
-                            <span className="lp-gradient-text">your competitive advantage?</span>
+            {/* ═══════════════════════════════════════════════════════
+                SECTION 7 — DEEP DIVE: SMART LENS
+                3-step walkthrough with scroll-driven step transitions
+            ═══════════════════════════════════════════════════════ */}
+            <section ref={deepRef} className="lp-deep">
+                <div className="lp-deep-sticky">
+                    <motion.div
+                        className="lp-deep-header"
+                        style={{
+                            opacity: useSpring(useTransform(deepP, [0, 0.08], [0, 1]), SPRING),
+                            y: useSpring(useTransform(deepP, [0, 0.08], [30, 0]), SPRING),
+                        }}
+                    >
+                        <span className="lp-tag" style={{ color: '#8b5cf6' }}>DEEP DIVE</span>
+                        <h2 className="lp-ch-title" style={{ textAlign: 'center' }}>
+                            Smart Lens in action.
                         </h2>
-                        <button className="lp-btn-primary lp-btn-lg" onClick={onGetStarted}>
-                            Start Analyzing — Free <ArrowRight size={22} />
-                        </button>
-                        <p className="lp-footer-note">No credit card required. Start in seconds.</p>
+                    </motion.div>
+                    <div className="lp-deep-steps">
+                        {DEEP_STEPS.map((step, i) => {
+                            const s = deepSteps[i];
+                            const Icon = step.icon;
+                            return (
+                                <motion.div key={step.num} className="lp-deep-step" style={{ opacity: s.op, y: s.y }}>
+                                    <motion.div className="lp-deep-icon" style={{ scale: s.iconScale, background: `${step.color}12`, color: step.color }}>
+                                        <Icon size={28} />
+                                    </motion.div>
+                                    <span className="lp-deep-num" style={{ color: step.color }}>{step.num}</span>
+                                    <h3 className="lp-deep-title">{step.title}</h3>
+                                    <p className="lp-deep-desc">{step.desc}</p>
+                                </motion.div>
+                            );
+                        })}
                     </div>
-                </ScrollReveal>
-                <div className="lp-footer-bottom">
-                    <div className="lp-footer-brand">
-                        <Logo />
-                    </div>
-                    <span className="lp-footer-copy">© 2026 Nalyse. All rights reserved.</span>
-                    <div className="lp-footer-links">
-                        <span>Privacy</span>
-                        <span>Security</span>
-                        <span>Contact</span>
+                </div>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════════
+                SECTION 8 — FINAL CTA
+            ═══════════════════════════════════════════════════════ */}
+            <section className="lp-final">
+                <FinalCTA onGetStarted={onGetStarted} />
+            </section>
+
+            {/* ═══ FOOTER ═══ */}
+            <footer className="lp-foot">
+                <div className="lp-foot-inner">
+                    <Logo />
+                    <span className="lp-foot-copy">© 2026 Nalyse. All rights reserved.</span>
+                    <div className="lp-foot-links">
+                        <span>Privacy</span><span>Security</span><span>Contact</span>
                     </div>
                 </div>
             </footer>
 
-            {/* ═══════════════════════════════════════════════════════ */}
-            {/* STYLES                                                */}
-            {/* ═══════════════════════════════════════════════════════ */}
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-                .lp-root {
-                    background: var(--bg-main);
-                    color: var(--text-primary);
-                    font-family: 'Inter', -apple-system, sans-serif;
-                    overflow-x: hidden;
-                    position: relative;
-                }
-
-                /* ── Ambient Background ── */
-                .lp-ambient {
-                    position: fixed; inset: 0; z-index: 0; pointer-events: none;
-                }
-                .lp-orb {
-                    position: absolute; border-radius: 50%;
-                    filter: blur(120px); opacity: 0.08;
-                    animation: lp-float 30s infinite ease-in-out;
-                }
-                .lp-orb-1 { width: 800px; height: 800px; top: -200px; right: -200px; background: #6366f1; }
-                .lp-orb-2 { width: 600px; height: 600px; bottom: 20%; left: -150px; background: #8b5cf6; animation-delay: -10s; }
-                .lp-orb-3 { width: 500px; height: 500px; top: 60%; right: 10%; background: #06b6d4; animation-delay: -20s; }
-                .lp-grain {
-                    position: absolute; inset: 0;
-                    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-                    opacity: 0.025;
-                }
-                @keyframes lp-float {
-                    0%, 100% { transform: translate(0, 0) scale(1); }
-                    33% { transform: translate(40px, -30px) scale(1.03); }
-                    66% { transform: translate(-20px, 40px) scale(0.97); }
-                }
-
-                /* ── Hero ── */
-                .lp-hero {
-                    position: relative; z-index: 10;
-                    min-height: 100vh;
-                    display: flex; flex-direction: column;
-                    max-width: 1200px; margin: 0 auto;
-                    padding: 0 40px;
-                    will-change: transform, opacity;
-                }
-                .lp-nav {
-                    display: flex; align-items: center; justify-content: space-between;
-                    height: 80px; flex-shrink: 0;
-                }
-                .lp-nav-cta {
-                    padding: 10px 28px; border-radius: 10px;
-                    background: var(--bento-glass); border: 1px solid var(--bento-border);
-                    color: var(--text-primary); font-size: 13px; font-weight: 700;
-                    cursor: pointer; transition: all 0.25s;
-                    backdrop-filter: var(--bento-blur);
-                }
-                .lp-nav-cta:hover { background: var(--bento-glass-hover); border-color: var(--bento-border-hover); }
-
-                .lp-hero-content {
-                    flex: 1; display: flex; flex-direction: column;
-                    justify-content: center; align-items: center;
-                    text-align: center; padding-bottom: 80px;
-                }
-                .lp-chip {
-                    display: inline-flex; align-items: center; gap: 10px;
-                    padding: 6px 18px; border-radius: 100px;
-                    background: var(--bento-glass); border: 1px solid var(--bento-border);
-                    font-size: 11px; font-weight: 800; letter-spacing: 0.15em;
-                    color: var(--primary); margin-bottom: 40px;
-                }
-                .lp-hero-title {
-                    font-size: clamp(48px, 8vw, 88px); font-weight: 900;
-                    line-height: 1.0; letter-spacing: -0.04em;
-                    margin: 0 0 32px; color: var(--text-primary);
-                }
-                .lp-gradient-text {
-                    background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa, #06b6d4);
-                    background-size: 200% 200%;
-                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                    animation: lp-shimmer 6s ease infinite;
-                }
-                @keyframes lp-shimmer {
-                    0%, 100% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                }
-                .lp-hero-sub {
-                    font-size: clamp(16px, 2vw, 20px); color: var(--text-secondary);
-                    max-width: 640px; line-height: 1.6; font-weight: 400;
-                    margin: 0 0 48px;
-                }
-                .lp-hero-actions { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-
-                .lp-btn-primary {
-                    display: inline-flex; align-items: center; gap: 10px;
-                    padding: 18px 40px; border-radius: 14px; border: none;
-                    background: var(--text-primary); color: var(--bg-main);
-                    font-size: 16px; font-weight: 800; cursor: pointer;
-                    transition: all 0.3s ease;
-                }
-                .lp-btn-primary:hover { transform: translateY(-3px); box-shadow: 0 16px 40px -8px rgba(0,0,0,0.4); }
-                .lp-btn-lg { padding: 22px 52px; font-size: 18px; }
-                .lp-btn-ghost {
-                    padding: 18px 40px; border-radius: 14px;
-                    background: transparent; border: 1px solid var(--bento-border);
-                    color: var(--text-primary); font-size: 16px; font-weight: 700;
-                    cursor: pointer; transition: all 0.3s;
-                }
-                .lp-btn-ghost:hover { background: var(--bento-glass); border-color: var(--bento-border-hover); transform: translateY(-2px); }
-
-                .lp-scroll-hint {
-                    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
-                    animation: lp-bounce 2.5s infinite ease-in-out;
-                    color: var(--text-secondary);
-                }
-                @keyframes lp-bounce {
-                    0%, 100% { transform: translateX(-50%) translateY(0); }
-                    50% { transform: translateX(-50%) translateY(10px); }
-                }
-
-                /* ── Section Common ── */
-                .lp-section-tag {
-                    font-size: 12px; font-weight: 900; letter-spacing: 0.25em;
-                    text-transform: uppercase; margin-bottom: 16px;
-                }
-                .lp-section-title {
-                    font-size: clamp(36px, 5vw, 56px); font-weight: 900;
-                    letter-spacing: -0.03em; line-height: 1.05;
-                    color: var(--text-primary); margin: 0 0 20px;
-                }
-                .lp-section-desc {
-                    font-size: 17px; color: var(--text-secondary);
-                    line-height: 1.7; font-weight: 400; margin: 0;
-                }
-
-                /* ── Analytics Studio (Sticky Left + Scrolling Right) ── */
-                .lp-analytics {
-                    position: relative; z-index: 10;
-                    padding: 0 40px;
-                    max-width: 1300px; margin: 0 auto;
-                }
-                .lp-sticky-section {
-                    display: flex; gap: 60px;
-                    min-height: 250vh;
-                }
-                .lp-sticky-left {
-                    position: sticky; top: 0; height: 100vh;
-                    width: 40%; display: flex; flex-direction: column;
-                    justify-content: center; flex-shrink: 0;
-                }
-                .lp-section-count {
-                    display: flex; align-items: baseline; gap: 12px; margin-top: 32px;
-                }
-                .lp-count-num {
-                    font-size: 48px; font-weight: 900; color: var(--primary);
-                    font-variant-numeric: tabular-nums;
-                }
-                .lp-count-label {
-                    font-size: 14px; font-weight: 700; color: var(--text-secondary);
-                    text-transform: uppercase; letter-spacing: 0.1em;
-                }
-                .lp-sticky-right {
-                    width: 60%;
-                    padding: 50vh 0 30vh;
-                    display: flex; flex-direction: column; gap: 24px;
-                }
-
-                /* Feature Cards */
-                .lp-feature-card {
-                    display: flex; align-items: flex-start; gap: 20px;
-                    padding: 28px; border-radius: var(--bento-radius);
-                    background: var(--bento-glass); border: 1px solid var(--bento-border);
-                    backdrop-filter: var(--bento-blur);
-                    transition: border-color 0.3s, transform 0.3s;
-                    position: relative; overflow: hidden;
-                }
-                .lp-feature-card:hover {
-                    border-color: var(--bento-border-hover);
-                    transform: translateX(8px);
-                }
-                .lp-feature-icon {
-                    width: 48px; height: 48px; border-radius: 14px;
-                    display: flex; align-items: center; justify-content: center;
-                    flex-shrink: 0;
-                }
-                .lp-feature-body { flex: 1; }
-                .lp-feature-title {
-                    font-size: 16px; font-weight: 800; margin: 0 0 6px;
-                    color: var(--text-primary);
-                }
-                .lp-feature-desc {
-                    font-size: 14px; color: var(--text-secondary);
-                    line-height: 1.6; margin: 0; font-weight: 400;
-                }
-                .lp-feature-glow {
-                    position: absolute; top: -50%; right: -30%;
-                    width: 200px; height: 200px; border-radius: 50%;
-                    filter: blur(80px); opacity: 0.04; pointer-events: none;
-                }
-
-                /* ── Predictive Models (Horizontal Scroll) ── */
-                .lp-predictive {
-                    position: relative; z-index: 10;
-                    height: 350vh;
-                }
-                .lp-hz-sticky {
-                    position: sticky; top: 0; height: 100vh;
-                    overflow: hidden;
-                    display: flex; flex-direction: column;
-                    justify-content: center;
-                    padding: 0 40px;
-                }
-                .lp-hz-header {
-                    max-width: 1200px; margin: 0 auto 48px;
-                    width: 100%;
-                }
-                .lp-hz-track {
-                    display: flex; gap: 24px;
-                    padding: 0 calc(50vw - 600px);
-                    will-change: transform;
-                }
-                .lp-hz-card {
-                    flex-shrink: 0; width: 340px;
-                    padding: 36px; border-radius: var(--bento-radius);
-                    background: var(--bento-glass); border: 1px solid var(--bento-border);
-                    backdrop-filter: var(--bento-blur);
-                    position: relative; overflow: hidden;
-                    transition: border-color 0.3s, transform 0.3s;
-                }
-                .lp-hz-card:hover {
-                    border-color: var(--bento-border-hover);
-                    transform: translateY(-4px);
-                }
-                .lp-hz-card-icon {
-                    width: 56px; height: 56px; border-radius: 16px;
-                    display: flex; align-items: center; justify-content: center;
-                    margin-bottom: 24px;
-                }
-                .lp-hz-card-title {
-                    font-size: 20px; font-weight: 800; margin: 0 0 10px;
-                    color: var(--text-primary);
-                }
-                .lp-hz-card-desc {
-                    font-size: 14px; color: var(--text-secondary);
-                    line-height: 1.6; margin: 0;
-                }
-                .lp-hz-card-glow {
-                    position: absolute; bottom: -40%; right: -20%;
-                    width: 180px; height: 180px; border-radius: 50%;
-                    filter: blur(70px); opacity: 0.06; pointer-events: none;
-                }
-
-                /* ── Decision Engine (Cinematic) ── */
-                .lp-decision {
-                    position: relative; z-index: 10;
-                    padding: 200px 40px;
-                    display: flex; justify-content: center;
-                }
-                .lp-decision-card {
-                    max-width: 900px; width: 100%;
-                    padding: 80px 60px; border-radius: 32px;
-                    background: var(--bento-glass);
-                    border: 1px solid var(--bento-border);
-                    backdrop-filter: blur(20px);
-                    position: relative; overflow: hidden;
-                    text-align: center;
-                    will-change: transform, opacity;
-                }
-                .lp-decision-rings {
-                    position: absolute; inset: 0;
-                    display: flex; align-items: center; justify-content: center;
-                    pointer-events: none;
-                }
-                .lp-ring {
-                    position: absolute; border: 1px solid var(--primary);
-                    border-radius: 50%; opacity: 0;
-                    animation: lp-ring-pulse 5s infinite linear;
-                }
-                .lp-ring-1 { width: 200px; height: 200px; }
-                .lp-ring-2 { width: 350px; height: 350px; animation-delay: 1.6s; }
-                .lp-ring-3 { width: 500px; height: 500px; animation-delay: 3.3s; }
-                @keyframes lp-ring-pulse {
-                    0% { transform: scale(0.3); opacity: 0.3; }
-                    100% { transform: scale(1.5); opacity: 0; }
-                }
-                .lp-decision-content { position: relative; z-index: 2; }
-                .lp-decision-title {
-                    font-size: clamp(36px, 5vw, 52px); font-weight: 900;
-                    letter-spacing: -0.03em; line-height: 1.05;
-                    color: var(--text-primary); margin: 0 0 24px;
-                }
-                .lp-decision-desc {
-                    font-size: 17px; color: var(--text-secondary);
-                    line-height: 1.7; max-width: 520px; margin: 0 auto 40px;
-                }
-                .lp-decision-icon {
-                    width: 80px; height: 80px; border-radius: 24px;
-                    background: var(--primary-subtle); color: var(--primary);
-                    display: inline-flex; align-items: center; justify-content: center;
-                    box-shadow: 0 0 40px var(--primary-glow);
-                }
-
-                /* ── Business Intelligence (Grid) ── */
-                .lp-bi {
-                    position: relative; z-index: 10;
-                    padding: 160px 40px;
-                    max-width: 1200px; margin: 0 auto;
-                }
-                .lp-bi-grid {
-                    display: grid; grid-template-columns: repeat(3, 1fr);
-                    gap: 24px;
-                }
-                .lp-bi-card {
-                    padding: 36px; border-radius: var(--bento-radius);
-                    background: var(--bento-glass); border: 1px solid var(--bento-border);
-                    backdrop-filter: var(--bento-blur);
-                    position: relative; overflow: hidden;
-                    transition: border-color 0.3s, transform 0.3s;
-                }
-                .lp-bi-card:hover { border-color: var(--bento-border-hover); transform: translateY(-4px); }
-                .lp-bi-card-icon {
-                    width: 56px; height: 56px; border-radius: 16px;
-                    display: flex; align-items: center; justify-content: center;
-                    margin-bottom: 24px;
-                }
-                .lp-bi-card-title {
-                    font-size: 20px; font-weight: 800; margin: 0 0 10px;
-                    color: var(--text-primary);
-                }
-                .lp-bi-card-desc {
-                    font-size: 14px; color: var(--text-secondary);
-                    line-height: 1.6; margin: 0;
-                }
-                .lp-bi-card-accent {
-                    position: absolute; bottom: 0; left: 0; right: 0;
-                    height: 3px; opacity: 0.6;
-                }
-
-                /* ── Self-Service Timeline ── */
-                .lp-selfservice {
-                    position: relative; z-index: 10;
-                    padding: 120px 40px 160px;
-                    max-width: 800px; margin: 0 auto;
-                }
-                .lp-timeline { display: flex; flex-direction: column; gap: 0; }
-                .lp-timeline-item {
-                    display: flex; gap: 32px;
-                    padding-bottom: 48px;
-                }
-                .lp-timeline-line {
-                    display: flex; flex-direction: column; align-items: center;
-                    flex-shrink: 0; width: 20px;
-                }
-                .lp-timeline-dot {
-                    width: 14px; height: 14px; border-radius: 50%;
-                    flex-shrink: 0;
-                }
-                .lp-timeline-connector {
-                    width: 2px; flex: 1; min-height: 60px;
-                    background: linear-gradient(to bottom, var(--bento-border-hover), transparent);
-                    margin-top: 8px;
-                }
-                .lp-timeline-content { flex: 1; padding-top: -2px; }
-                .lp-timeline-icon {
-                    width: 40px; height: 40px; border-radius: 12px;
-                    display: inline-flex; align-items: center; justify-content: center;
-                    margin-bottom: 12px;
-                }
-                .lp-timeline-title {
-                    font-size: 18px; font-weight: 800; margin: 0 0 8px;
-                    color: var(--text-primary);
-                }
-                .lp-timeline-desc {
-                    font-size: 14px; color: var(--text-secondary);
-                    line-height: 1.6; margin: 0;
-                }
-
-                /* ── Infrastructure Strip ── */
-                .lp-infra {
-                    position: relative; z-index: 10;
-                    padding: 0 40px 120px;
-                    max-width: 1200px; margin: 0 auto;
-                }
-                .lp-infra-strip {
-                    display: grid; grid-template-columns: repeat(3, 1fr);
-                    gap: 24px; padding: 40px; border-radius: var(--bento-radius);
-                    background: var(--bento-glass); border: 1px solid var(--bento-border);
-                    backdrop-filter: var(--bento-blur);
-                }
-                .lp-infra-item {
-                    display: flex; gap: 16px; align-items: flex-start;
-                }
-                .lp-infra-title {
-                    font-size: 14px; font-weight: 800; margin: 0 0 4px;
-                    color: var(--text-primary);
-                }
-                .lp-infra-desc {
-                    font-size: 13px; color: var(--text-secondary);
-                    line-height: 1.5; margin: 0;
-                }
-
-                /* ── Footer ── */
-                .lp-footer {
-                    position: relative; z-index: 10;
-                    padding: 120px 40px 60px;
-                    max-width: 1200px; margin: 0 auto;
-                }
-                .lp-footer-cta {
-                    text-align: center; margin-bottom: 120px;
-                }
-                .lp-footer-title {
-                    font-size: clamp(36px, 5vw, 56px); font-weight: 900;
-                    letter-spacing: -0.03em; line-height: 1.1;
-                    color: var(--text-primary); margin: 0 0 40px;
-                }
-                .lp-footer-note {
-                    margin-top: 20px; font-size: 14px; color: var(--text-secondary);
-                    font-weight: 500;
-                }
-                .lp-footer-bottom {
-                    display: flex; align-items: center; justify-content: space-between;
-                    padding-top: 40px; border-top: 1px solid var(--bento-border);
-                }
-                .lp-footer-brand { display: flex; align-items: center; }
-                .lp-footer-copy {
-                    font-size: 12px; font-weight: 600; color: var(--text-secondary);
-                }
-                .lp-footer-links {
-                    display: flex; gap: 32px;
-                    font-size: 12px; font-weight: 600; color: var(--text-secondary);
-                }
-                .lp-footer-links span { cursor: pointer; transition: color 0.2s; }
-                .lp-footer-links span:hover { color: var(--text-primary); }
-
-                /* ── Responsive ── */
-                @media (max-width: 1024px) {
-                    .lp-sticky-section { flex-direction: column; min-height: auto; }
-                    .lp-sticky-left {
-                        position: relative; width: 100%; height: auto;
-                        padding: 80px 0 40px;
-                    }
-                    .lp-sticky-right { width: 100%; padding: 0 0 80px; }
-                    .lp-bi-grid { grid-template-columns: 1fr; }
-                    .lp-infra-strip { grid-template-columns: 1fr; }
-                    .lp-predictive { height: auto; }
-                    .lp-hz-sticky { position: relative; height: auto; overflow-x: auto; padding: 80px 40px; }
-                    .lp-hz-track { transform: none !important; padding: 0; }
-                    .lp-hz-card { min-width: 300px; }
-                }
-                @media (max-width: 768px) {
-                    .lp-hero { padding: 0 20px; }
-                    .lp-analytics, .lp-bi, .lp-selfservice, .lp-infra, .lp-footer { padding-left: 20px; padding-right: 20px; }
-                    .lp-hero-actions { flex-direction: column; align-items: stretch; }
-                    .lp-btn-primary, .lp-btn-ghost { justify-content: center; }
-                    .lp-decision { padding: 100px 20px; }
-                    .lp-decision-card { padding: 48px 28px; }
-                    .lp-footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
-                }
-            `}</style>
+            {/* ═══════════════════════════════════════════════════════
+                STYLES
+            ═══════════════════════════════════════════════════════ */}
+            <style>{STYLES}</style>
         </div>
     );
 };
 
+// ─── Trust Item (scroll-reveal) ──────────────────────────────
+const TrustItem = ({ icon, value, label, idx }: { icon: React.ReactNode; value: string; label: string; idx: number }) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.92', 'start 0.6'] });
+    const op = useSpring(useTransform(scrollYProgress, [0, 1], [0, 1]), SPRING);
+    const y = useSpring(useTransform(scrollYProgress, [0, 1], [40, 0]), SPRING);
+    return (
+        <motion.div ref={ref} className="lp-trust-item" style={{ opacity: op, y, transitionDelay: `${idx * 80}ms` }}>
+            <div className="lp-trust-icon">{icon}</div>
+            <div className="lp-trust-val">{value}</div>
+            <div className="lp-trust-label">{label}</div>
+        </motion.div>
+    );
+};
+
+// ─── Final CTA (scroll-reveal + glow) ────────────────────────
+const FinalCTA = ({ onGetStarted }: { onGetStarted: () => void }) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.85', 'start 0.4'] });
+    const op = useSpring(useTransform(scrollYProgress, [0, 1], [0, 1]), SPRING);
+    const scale = useSpring(useTransform(scrollYProgress, [0, 1], [0.92, 1]), SPRING);
+    return (
+        <motion.div ref={ref} className="lp-final-inner" style={{ opacity: op, scale }}>
+            <h2 className="lp-final-h2">
+                Ready to see the
+                <br />
+                <span className="lp-glow-text">difference?</span>
+            </h2>
+            <button className="lp-btn lp-btn-final" onClick={onGetStarted}>
+                Start Analyzing — Free <ArrowRight size={20} />
+            </button>
+            <p className="lp-final-note">No credit card required.</p>
+        </motion.div>
+    );
+};
+
 export default LandingView;
+
+// ═══════════════════════════════════════════════════════════════
+// STYLESHEET
+// ═══════════════════════════════════════════════════════════════
+const STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Root ── */
+.lp {
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Ambient ── */
+.lp-ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.lp-orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(140px); opacity: 0.06;
+    animation: lp-drift 35s infinite ease-in-out;
+}
+.lp-orb-1 { width: 700px; height: 700px; top: -150px; right: -150px; background: #6366f1; }
+.lp-orb-2 { width: 500px; height: 500px; bottom: 30%; left: -120px; background: #8b5cf6; animation-delay: -12s; }
+.lp-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+}
+@keyframes lp-drift {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(30px, -20px) scale(1.04); }
+}
+
+/* ── Hero ── */
+.lp-hero {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    will-change: transform, opacity;
+}
+.lp-hero-inner {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    padding: 40px;
+    max-width: 960px; margin: 0 auto;
+}
+.lp-hero-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 18px; border-radius: 100px;
+    background: var(--bento-glass);
+    border: 1px solid var(--bento-border);
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.18em; color: var(--primary);
+    margin-bottom: 36px;
+}
+.lp-hero-h1 {
+    font-size: clamp(48px, 9vw, 88px);
+    font-weight: 800; line-height: 1.02;
+    letter-spacing: -0.045em;
+    margin: 0 0 28px;
+}
+.lp-glow-text {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 30%, #a78bfa 60%, #06b6d4 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: lp-shimmer 8s ease infinite;
+}
+@keyframes lp-shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+.lp-hero-p {
+    font-size: clamp(16px, 2vw, 20px);
+    color: var(--text-secondary); line-height: 1.65;
+    max-width: 560px; margin: 0 0 44px;
+    font-weight: 400;
+}
+.lp-hero-cta { margin-bottom: 0; }
+.lp-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 17px 40px; border-radius: 14px;
+    background: var(--text-primary); color: var(--bg-main);
+    font-size: 15px; font-weight: 800; border: none;
+    cursor: pointer; transition: all 0.3s ease;
+    letter-spacing: -0.01em;
+}
+.lp-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 48px -12px rgba(99, 102, 241, 0.35); }
+.lp-btn-final { padding: 20px 52px; font-size: 17px; }
+.lp-scroll-cue {
+    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    color: var(--text-secondary);
+    animation: lp-bob 2.5s infinite ease-in-out;
+}
+@keyframes lp-bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ── Shared Section ── */
+.lp-tag {
+    font-size: 11px; font-weight: 900;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    display: block; margin-bottom: 14px;
+}
+.lp-ch-title {
+    font-size: clamp(36px, 5.5vw, 60px);
+    font-weight: 800; letter-spacing: -0.035em;
+    line-height: 1.06; margin: 0 0 20px;
+    color: var(--text-primary);
+}
+.lp-ch-desc {
+    font-size: 17px; color: var(--text-secondary);
+    line-height: 1.7; font-weight: 400; margin: 0;
+    max-width: 440px;
+}
+
+/* ── Chapters (Sticky Scroll) ── */
+.lp-chapter {
+    position: relative; z-index: 10;
+    height: 280vh;
+}
+.lp-chapter-sticky {
+    position: sticky; top: 0;
+    height: 100vh;
+    display: flex; align-items: center; gap: 60px;
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 48px;
+}
+.lp-ch-text {
+    flex: 0 0 42%; will-change: transform, opacity;
+}
+.lp-ch-visual {
+    flex: 1; display: flex;
+    align-items: center; justify-content: center;
+}
+
+/* ── Analytics Visual ── */
+.lp-vis {
+    position: relative; width: 100%;
+    max-width: 400px; will-change: transform, opacity;
+}
+.lp-heatgrid {
+    display: grid; grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+}
+.lp-heatcell {
+    aspect-ratio: 1; border-radius: 6px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    animation: lp-cell-in 0.6s ease both;
+}
+@keyframes lp-cell-in {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); }
+}
+.lp-grid-highlights {
+    position: absolute; inset: 0; pointer-events: none;
+}
+.lp-highlight-dot {
+    position: absolute; width: 12px; height: 12px;
+    border-radius: 50%; background: #06b6d4;
+    box-shadow: 0 0 16px #06b6d4, 0 0 30px rgba(6, 182, 212, 0.3);
+    transform: translate(-50%, -50%);
+}
+.lp-highlight-lines {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.lp-vis-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 16px; padding: 8px 16px;
+    background: var(--bento-glass); border: 1px solid var(--bento-border);
+    border-radius: 10px; font-size: 12px; font-weight: 700;
+    color: var(--text-primary); backdrop-filter: var(--bento-blur);
+}
+
+/* ── Forecast Visual ── */
+.lp-chart-svg {
+    width: 100%; max-width: 420px;
+}
+.lp-chart-svg path, .lp-chart-svg line { vector-effect: non-scaling-stroke; }
+
+/* ── Dashboard Visual ── */
+.lp-dash-vis { max-width: 440px; }
+.lp-dash-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.lp-dash-card {
+    padding: 20px; border-radius: 16px;
+    background: var(--bento-glass); border: 1px solid var(--bento-border);
+    backdrop-filter: var(--bento-blur);
+    will-change: transform, opacity;
+}
+.lp-dash-wide { grid-column: span 2; }
+.lp-dash-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.08em; margin-bottom: 12px;
+}
+.lp-dash-bars {
+    display: flex; gap: 6px; align-items: flex-end; height: 60px;
+}
+.lp-dash-bar {
+    flex: 1; border-radius: 4px;
+    background: linear-gradient(to top, #6366f1, #8b5cf6);
+    opacity: 0.7;
+}
+.lp-dash-metric {
+    font-size: 36px; font-weight: 900;
+    color: var(--text-primary); letter-spacing: -0.03em;
+}
+.lp-dash-metric span { font-size: 20px; color: var(--text-secondary); }
+.lp-dash-status {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 600; color: var(--text-secondary);
+}
+.lp-dash-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #10b981; box-shadow: 0 0 8px #10b981;
+}
+.lp-dash-sparkline { height: 40px; }
+.lp-dash-sparkline svg { width: 100%; height: 100%; }
+
+/* ── Process Pipeline ── */
+.lp-process {
+    position: relative; z-index: 10; height: 250vh;
+}
+.lp-process-sticky {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 0 40px;
+}
+.lp-process-header {
+    text-align: center; margin-bottom: 64px;
+    will-change: transform, opacity;
+}
+.lp-pipeline {
+    display: flex; align-items: flex-start; gap: 0;
+    position: relative; max-width: 900px; width: 100%;
+    justify-content: center;
+}
+.lp-pipe-step {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 14px;
+    position: relative; flex: 1;
+}
+.lp-pipe-node {
+    width: 64px; height: 64px; border-radius: 20px;
+    background: var(--bento-glass); border: 1px solid var(--bento-border);
+    backdrop-filter: var(--bento-blur);
+    display: flex; align-items: center; justify-content: center;
+    will-change: transform, opacity, box-shadow;
+    position: relative; z-index: 2;
+}
+.lp-pipe-label {
+    font-size: 12px; font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+}
+.lp-pipe-line {
+    position: absolute; top: 32px;
+    left: calc(50% + 36px); right: calc(-50% + 36px);
+    height: 2px; transform-origin: left;
+    will-change: transform; z-index: 1;
+    border-radius: 1px;
+}
+
+/* ── Trust Strip ── */
+.lp-trust {
+    position: relative; z-index: 10;
+    display: flex; justify-content: center;
+    gap: 48px; padding: 120px 40px;
+    max-width: 1100px; margin: 0 auto;
+    flex-wrap: wrap;
+}
+.lp-trust-item {
+    text-align: center; will-change: transform, opacity;
+    min-width: 160px;
+}
+.lp-trust-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--bento-glass); border: 1px solid var(--bento-border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; color: var(--text-secondary);
+}
+.lp-trust-val {
+    font-size: 28px; font-weight: 900;
+    letter-spacing: -0.02em; color: var(--text-primary);
+    margin-bottom: 4px;
+}
+.lp-trust-label {
+    font-size: 13px; font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* ── Deep Dive ── */
+.lp-deep {
+    position: relative; z-index: 10; height: 320vh;
+}
+.lp-deep-sticky {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 0 40px;
+}
+.lp-deep-header {
+    text-align: center; margin-bottom: 56px;
+    will-change: transform, opacity;
+}
+.lp-deep-steps {
+    display: flex; gap: 32px;
+    max-width: 960px; width: 100%;
+}
+.lp-deep-step {
+    flex: 1; text-align: center;
+    will-change: transform, opacity;
+}
+.lp-deep-icon {
+    width: 64px; height: 64px; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    will-change: transform;
+}
+.lp-deep-num {
+    font-size: 13px; font-weight: 900;
+    letter-spacing: 0.1em; display: block;
+    margin-bottom: 8px;
+}
+.lp-deep-title {
+    font-size: 18px; font-weight: 800;
+    margin: 0 0 8px; color: var(--text-primary);
+}
+.lp-deep-desc {
+    font-size: 14px; color: var(--text-secondary);
+    line-height: 1.65; margin: 0;
+}
+
+/* ── Final CTA ── */
+.lp-final {
+    position: relative; z-index: 10;
+    padding: 120px 40px 160px;
+}
+.lp-final-inner {
+    text-align: center;
+    max-width: 700px; margin: 0 auto;
+    will-change: transform, opacity;
+}
+.lp-final-h2 {
+    font-size: clamp(40px, 6vw, 64px);
+    font-weight: 800; letter-spacing: -0.035em;
+    line-height: 1.06; margin: 0 0 40px;
+    color: var(--text-primary);
+}
+.lp-final-note {
+    margin-top: 18px; font-size: 14px;
+    color: var(--text-secondary); font-weight: 500;
+}
+
+/* ── Footer ── */
+.lp-foot {
+    position: relative; z-index: 10;
+    padding: 0 40px 48px;
+    max-width: 1200px; margin: 0 auto;
+}
+.lp-foot-inner {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding-top: 32px;
+    border-top: 1px solid var(--bento-border);
+}
+.lp-foot-copy {
+    font-size: 12px; font-weight: 600;
+    color: var(--text-secondary);
+}
+.lp-foot-links {
+    display: flex; gap: 28px;
+    font-size: 12px; font-weight: 600;
+    color: var(--text-secondary);
+}
+.lp-foot-links span { cursor: pointer; transition: color 0.2s; }
+.lp-foot-links span:hover { color: var(--text-primary); }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .lp-chapter-sticky {
+        flex-direction: column; gap: 40px;
+        padding: 60px 32px; justify-content: center;
+    }
+    .lp-ch-text { flex: none; text-align: center; }
+    .lp-ch-desc { max-width: 100%; margin: 0 auto; }
+    .lp-chapter { height: 220vh; }
+    .lp-deep-steps { flex-direction: column; align-items: center; gap: 40px; }
+    .lp-deep-step { max-width: 400px; }
+    .lp-deep { height: 400vh; }
+    .lp-pipeline { flex-wrap: wrap; gap: 24px; }
+    .lp-pipe-line { display: none; }
+}
+@media (max-width: 768px) {
+    .lp-hero-inner { padding: 24px; }
+    .lp-chapter-sticky { padding: 40px 20px; }
+    .lp-process-sticky { padding: 40px 20px; }
+    .lp-trust { gap: 32px; padding: 80px 20px; }
+    .lp-final { padding: 80px 20px 100px; }
+    .lp-foot { padding: 0 20px 32px; }
+    .lp-foot-inner { flex-direction: column; gap: 16px; text-align: center; }
+    .lp-btn { width: 100%; justify-content: center; }
+}
+`;
