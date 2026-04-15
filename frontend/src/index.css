@@ -5399,3 +5399,25 @@ input:-webkit-autofill:focus {
   -webkit-text-fill-color: white !important;
   transition: background-color 5000s ease-in-out 0s;
 }
+/* Bento Grid Responsive Rules */
+@media (max-width: 1200px) {
+    .bento-grid-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .bento-card-span-2 {
+        grid-column: span 2 !important;
+    }
+    .bento-card-span-1 {
+        grid-column: span 1 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .bento-grid-container {
+        grid-template-columns: 1fr !important;
+    }
+    .bento-card-span-2, .bento-card-span-1 {
+        grid-column: span 1 !important;
+    }
+}
+

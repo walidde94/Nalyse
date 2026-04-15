@@ -8,8 +8,9 @@ import {
     AlertTriangle, Activity, Clock, Sparkles, ArrowUpRight, ArrowDownRight,
     Search, ArrowRight, X, Lightbulb, Database, Table, Eye, Loader2,
     Layers, Target, Cpu, Archive, RotateCcw, HardDrive, CheckCircle2, FileJson,
+    FilePlus, Gauge, Info, ArrowUp, ArrowDown, Wifi,
 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip, BarChart, Bar, XAxis } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip, BarChart, Bar, XAxis, LineChart, Line } from 'recharts';
 import { calculatePulse } from './pulseEngine';
 import { useAuth } from '../../contexts/AuthContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
@@ -23,62 +24,185 @@ import 'react-grid-layout/css/styles.css';
 const ResponsiveGridLayout = WidthProvider(ResponsiveGrid);
 
 
-// --- SUB-COMPONENTS for Dashboard ---
+// ═══════════════════════════════════════════════════════════════════
+// NEXT-LEVEL BENTO DASHBOARD COMPONENTS
+// ═══════════════════════════════════════════════════════════════════
 
-const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+const BENTO = {
+    radius: '20px',
+    glass: 'rgba(255,255,255,0.025)',
+    border: 'rgba(255,255,255,0.06)',
+    borderHover: 'rgba(255,255,255,0.12)',
+    shadow: '0 8px 32px -8px rgba(0,0,0,0.3)',
+    blur: 'blur(12px)',
+};
 
-const QuickStatCard = ({ label, value, unit, icon: Icon, color = '#6366f1' }: any) => (
-    <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        style={{
-            flex: '1 1 160px', padding: '20px', borderRadius: '16px',
-            background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
-            display: 'flex', flexDirection: 'column', gap: '10px',
-            transition: 'border-color 0.2s, box-shadow 0.2s',
-        }}
-        whileHover={{ borderColor: `${color}40`, boxShadow: `0 0 20px ${color}10` }}
-    >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)' }}>
-            <Icon size={15} style={{ color }} />
-            <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
+// --- Animated SVG Radial Gauge ---
+const RadialGauge = ({ value = 0, size = 120, label, color = '#6366f1' }: any) => {
+    const r = (size - 12) / 2;
+    const circ = 2 * Math.PI * r;
+    const pct = Math.min(100, Math.max(0, value));
+    const offset = circ - (circ * pct) / 100;
+    const gradId = `gauge-${label}`;
+    return (
+        <div style={{ position: 'relative', width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+                <defs>
+                    <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor={color} />
+                        <stop offset="100%" stopColor={`${color}80`} />
+                    </linearGradient>
+                </defs>
+                <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={6} />
+                <motion.circle
+                    cx={size/2} cy={size/2} r={r} fill="none"
+                    stroke={`url(#${gradId})`} strokeWidth={6}
+                    strokeLinecap="round" strokeDasharray={circ}
+                    initial={{ strokeDashoffset: circ }}
+                    animate={{ strokeDashoffset: offset }}
+                    transition={{ duration: 1.5, ease: 'easeOut' }}
+                />
+            </svg>
+            <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{pct}</span>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+            </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-            <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px', lineHeight: 1 }}>{value}</span>
-            {unit && <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>{unit}</span>}
-        </div>
-    </motion.div>
-);
+    );
+};
 
-const TypeBreakdownChart = ({ csvCount, jsonCount, excelCount, otherCount }: any) => {
+// --- Bento Stat Tile with inline sparkline ---
+const BentoStat = ({ label, value, unit, icon: Icon, color = '#6366f1', sparkData, delta }: any) => {
+    const isUp = delta && delta > 0;
+    const isDown = delta && delta < 0;
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -2, borderColor: BENTO.borderHover }}
+            transition={{ duration: 0.3 }}
+            style={{
+                padding: '20px', borderRadius: BENTO.radius,
+                background: BENTO.glass, border: `1px solid ${BENTO.border}`,
+                backdropFilter: BENTO.blur,
+                display: 'flex', flexDirection: 'column', gap: '12px',
+                position: 'relative', overflow: 'hidden',
+                transition: 'border-color 0.25s, transform 0.25s',
+                cursor: 'default', flex: '1 1 0',
+            }}
+        >
+            {/* accent glow */}
+            <div style={{ position: 'absolute', top: -30, right: -30, width: 80, height: 80, borderRadius: '50%', background: `${color}08`, pointerEvents: 'none' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '8px', background: `${color}12`, border: `1px solid ${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon size={14} style={{ color }} />
+                    </div>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+                </div>
+                {delta !== undefined && delta !== 0 && (
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: isUp ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        {isUp ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
+                        {Math.abs(delta)}
+                    </span>
+                )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    <span style={{ fontSize: '30px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px', lineHeight: 1 }}>{value}</span>
+                    {unit && <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>{unit}</span>}
+                </div>
+                {sparkData && sparkData.length > 0 && (
+                    <div style={{ width: '72px', height: '28px', opacity: 0.6 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={sparkData} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+                                <defs>
+                                    <linearGradient id={`spark-${label}`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+                                        <stop offset="100%" stopColor={color} stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} fill={`url(#spark-${label})`} dot={false} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+};
+
+// --- AI-generated Contextual Summary ---
+const ContextualSummary = ({ metrics, fileCount, totalStorage }: any) => {
+    const lines = useMemo(() => {
+        const l: string[] = [];
+        if (fileCount === 0) {
+            l.push('Upload your first dataset to start analyzing.');
+            return l;
+        }
+        // composition insight
+        const dominant = [{ n: 'CSV', c: metrics.csvCount }, { n: 'JSON', c: metrics.jsonCount }, { n: 'Excel', c: metrics.excelCount }].sort((a, b) => b.c - a.c)[0];
+        if (dominant.c > 0) l.push(`Your workspace is ${dominant.n}-heavy (${dominant.c} of ${fileCount} files).`);
+        // health insight
+        const healthPct = fileCount > 0 ? Math.round((metrics.processedCount / fileCount) * 100) : 0;
+        if (healthPct === 100) l.push('All datasets are fully analyzed — ready for insights.');
+        else if (healthPct > 50) l.push(`${metrics.pendingCount} dataset${metrics.pendingCount > 1 ? 's' : ''} still awaiting analysis.`);
+        else if (fileCount > 0) l.push(`Most datasets need processing — run analysis to unlock insights.`);
+        // recency insight
+        if (metrics.newestUpload) l.push(`Last activity: ${metrics.newestUpload}.`);
+        // storage insight
+        const storNum = Number(totalStorage);
+        if (storNum > 50) l.push(`Storage usage is significant at ${totalStorage} MB.`);
+        return l;
+    }, [metrics, fileCount, totalStorage]);
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {lines.map((line, i) => (
+                <motion.p
+                    key={i}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + i * 0.12 }}
+                    style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.6 }}
+                >
+                    {line}
+                </motion.p>
+            ))}
+        </div>
+    );
+};
+
+// --- File Type Donut with center label ---
+const TypeDonut = ({ csvCount, jsonCount, excelCount, otherCount }: any) => {
     const total = csvCount + jsonCount + excelCount + otherCount;
-    if (total === 0) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No datasets yet</div>;
     const data = [
         { name: 'CSV', value: csvCount, color: '#10b981' },
         { name: 'JSON', value: jsonCount, color: '#6366f1' },
         { name: 'Excel', value: excelCount, color: '#f59e0b' },
         { name: 'Other', value: otherCount, color: '#8b5cf6' },
     ].filter(d => d.value > 0);
-
+    if (total === 0) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No files</div>;
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', height: '100%' }}>
-            <div style={{ width: '120px', height: '120px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', height: '100%' }}>
+            <div style={{ width: 100, height: 100, position: 'relative' }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                        <Pie data={data} dataKey="value" innerRadius={35} outerRadius={55} paddingAngle={3} strokeWidth={0}>
+                        <Pie data={data} dataKey="value" innerRadius={30} outerRadius={46} paddingAngle={4} strokeWidth={0}>
                             {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                         </Pie>
                     </PieChart>
                 </ResponsiveContainer>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>{total}</span>
+                </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
                 {data.map(d => (
-                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '3px', background: d.color }} />
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{d.name}</span>
-                        </div>
-                        <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>{d.value} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>({Math.round((d.value / total) * 100)}%)</span></span>
+                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', flex: 1 }}>{d.name}</span>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{d.value}</span>
                     </div>
                 ))}
             </div>
@@ -86,57 +210,89 @@ const TypeBreakdownChart = ({ csvCount, jsonCount, excelCount, otherCount }: any
     );
 };
 
-const UploadActivityChart = ({ uploadsByDay }: { uploadsByDay: { day: string; count: number }[] }) => {
+// --- Upload Activity mini area chart ---
+const ActivityMini = ({ uploadsByDay }: { uploadsByDay: { day: string; count: number }[] }) => {
     const hasData = uploadsByDay.some(d => d.count > 0);
-    if (!hasData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No recent uploads</div>;
+    if (!hasData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No activity yet</div>;
+    const totalUploads = uploadsByDay.reduce((a, d) => a + d.count, 0);
     return (
-        <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={uploadsByDay} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} interval={2} />
-                <Tooltip
-                    contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '10px', fontSize: '13px', fontWeight: 600 }}
-                    labelStyle={{ color: 'var(--text-primary)', fontWeight: 700 }}
-                    cursor={{ fill: 'rgba(99,102,241,0.08)' }}
-                />
-                <Bar dataKey="count" name="Uploads" radius={[4, 4, 0, 0]} fill="#6366f1" />
-            </BarChart>
-        </ResponsiveContainer>
-    );
-};
-
-const DataHealthChart = ({ processedCount, pendingCount }: { processedCount: number; pendingCount: number }) => {
-    const total = processedCount + pendingCount;
-    if (total === 0) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No datasets</div>;
-    const pct = Math.round((processedCount / total) * 100);
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px', height: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-secondary)' }}>Analyzed</span>
-                <span style={{ fontSize: '22px', fontWeight: 800, color: '#10b981' }}>{pct}%</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalUploads}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)' }}>uploads / 14d</span>
             </div>
-            <div style={{ height: '10px', borderRadius: '99px', background: 'var(--bg-main)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.2 }} style={{ height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #10b981, #34d399)' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600 }}>
-                <span style={{ color: '#10b981' }}><CheckCircle2 size={13} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />{processedCount} analyzed</span>
-                <span style={{ color: 'var(--text-tertiary)' }}>{pendingCount} pending</span>
+            <div style={{ flex: 1, minHeight: 0 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={uploadsByDay} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                        <defs>
+                            <linearGradient id="actGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.3} />
+                                <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '10px', fontSize: '12px' }} labelStyle={{ fontWeight: 700, color: 'var(--text-primary)' }} cursor={false} />
+                        <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} fill="url(#actGrad)" dot={false} />
+                    </AreaChart>
+                </ResponsiveContainer>
             </div>
         </div>
     );
 };
 
-const DashboardCard = ({ title, icon: Icon, children, style }: any) => (
+// --- Live Data Ribbon (scrolling ticker) ---
+const DataRibbon = ({ items }: { items: { label: string; value: string; color: string }[] }) => (
     <div style={{
-        padding: '24px', borderRadius: '16px',
-        background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
-        display: 'flex', flexDirection: 'column', gap: '16px',
-        ...style,
+        overflow: 'hidden', width: '100%', padding: '8px 0',
+        borderTop: `1px solid ${BENTO.border}`, borderBottom: `1px solid ${BENTO.border}`,
+        background: 'rgba(255,255,255,0.01)',
     }}>
+        <motion.div
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+            style={{ display: 'flex', gap: '40px', whiteSpace: 'nowrap', width: 'max-content' }}
+        >
+            {[...items, ...items].map((item, i) => (
+                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 600 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
+                    <span style={{ color: 'var(--text-tertiary)' }}>{item.label}</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{item.value}</span>
+                </span>
+            ))}
+        </motion.div>
+    </div>
+);
+
+// --- Bento Card wrapper with glass effect ---
+const BentoCard = ({ children, span = 1, style, className = '' }: any) => (
+    <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ borderColor: BENTO.borderHover }}
+        transition={{ duration: 0.35 }}
+        className={className}
+        style={{
+            gridColumn: `span ${span}`,
+            padding: '24px', borderRadius: BENTO.radius,
+            background: BENTO.glass, border: `1px solid ${BENTO.border}`,
+            backdropFilter: BENTO.blur,
+            boxShadow: BENTO.shadow,
+            display: 'flex', flexDirection: 'column', gap: '16px',
+            transition: 'border-color 0.25s',
+            position: 'relative', overflow: 'hidden',
+            ...style
+        }}
+    >
+        {children}
+    </motion.div>
+);
+
+const BentoCardHeader = ({ icon: Icon, title, badge }: any) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {Icon && <Icon size={16} style={{ color: 'var(--primary)' }} />}
-            <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>{title}</span>
+            {Icon && <Icon size={15} style={{ color: 'var(--primary)' }} />}
+            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{title}</span>
         </div>
-        <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+        {badge && <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', padding: '3px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>{badge}</span>}
     </div>
 );
 
@@ -792,63 +948,105 @@ export const DashboardView = ({
                             id: 'db-hero',
                             label: 'Dashboard Overview',
                             component: (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
-                                    {/* Compact Header */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                                        <div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
+                                    {/* ── Hero Header ── */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <h1 style={{ fontSize: '28px', fontWeight: 800, margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
                                                 Welcome back, <span style={{ color: 'var(--primary)' }}>{firstName || userEmail?.split('@')[0] || 'User'}</span>
                                             </h1>
-                                            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '6px 0 0', fontWeight: 500 }}>
-                                                {fileCount} datasets · {totalStorage} MB used{metrics.newestUpload ? ` · Last upload ${metrics.newestUpload}` : ''}
-                                            </p>
+                                            <ContextualSummary metrics={metrics} fileCount={fileCount} totalStorage={totalStorage} />
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                            <PerformanceGauge value={metrics.systemHealth} label="Health" onClick={() => setShowTelemetry(true)} />
+                                            <div style={{ cursor: 'pointer' }} onClick={() => setShowTelemetry(true)}>
+                                                <RadialGauge value={metrics.systemHealth} size={72} label="Health" color={metrics.systemHealth > 80 ? '#10b981' : metrics.systemHealth > 50 ? '#f59e0b' : '#ef4444'} />
+                                            </div>
                                             <LiveClock />
                                         </div>
                                     </div>
 
-                                    {/* Quick Stats Row */}
-                                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                        <QuickStatCard label="Datasets" value={fileCount} icon={Database} color="#6366f1" />
-                                        <QuickStatCard label="Storage" value={totalStorage} unit="MB" icon={HardDrive} color="#3b82f6" />
-                                        <QuickStatCard label="Avg Size" value={metrics.avgFileSizeKB > 0 ? metrics.avgFileSizeKB.toFixed(0) : '—'} unit="KB" icon={Layers} color="#8b5cf6" />
-                                        <QuickStatCard label="Favorites" value={metrics.favoriteCount} icon={Star} color="#f59e0b" />
-                                        <QuickStatCard label="Archived" value={metrics.archivedCount} icon={Archive} color="#64748b" />
-                                    </div>
-                                </div>
-                            )
-                        },
-                        {
-                            id: 'db-data-insights',
-                            label: 'Data Insights',
-                            component: (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', width: '100%' }}>
-                                    <DashboardCard title="File Types" icon={BarChart3} style={{ minHeight: '180px' }}>
-                                        <TypeBreakdownChart csvCount={metrics.csvCount} jsonCount={metrics.jsonCount} excelCount={metrics.excelCount} otherCount={metrics.otherCount} />
-                                    </DashboardCard>
-                                    <DashboardCard title="Upload Activity (14 days)" icon={TrendingUp} style={{ minHeight: '180px' }}>
-                                        <UploadActivityChart uploadsByDay={metrics.uploadsByDay} />
-                                    </DashboardCard>
-                                    <DashboardCard title="Data Health" icon={ShieldCheck} style={{ minHeight: '180px' }}>
-                                        <DataHealthChart processedCount={metrics.processedCount} pendingCount={metrics.pendingCount} />
-                                    </DashboardCard>
-                                    <DashboardCard title="Storage Quota" icon={HardDrive} style={{ minHeight: '180px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px', height: '100%' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                                                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-secondary)' }}>Used</span>
-                                                <span style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>{totalStorage}<span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500 }}> / {maxStorageMB} MB</span></span>
-                                            </div>
-                                            <div style={{ height: '10px', borderRadius: '99px', background: 'var(--bg-main)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-                                                <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (totalStorageNum / maxStorageMB) * 100)}%` }} transition={{ duration: 1.2 }} style={{ height: '100%', borderRadius: '99px', background: totalStorageNum > maxStorageMB * 0.9 ? '#ef4444' : 'linear-gradient(90deg, #6366f1, #8b5cf6)' }} />
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600 }}>
-                                                <span style={{ color: 'var(--text-tertiary)' }}>{Math.round((totalStorageNum / maxStorageMB) * 100)}% utilized</span>
-                                                <span style={{ color: 'var(--text-tertiary)' }}>{(maxStorageMB - totalStorageNum).toFixed(1)} MB free</span>
-                                            </div>
+                                    {/* ── Live Data Ribbon ── */}
+                                    <DataRibbon items={[
+                                        { label: 'Datasets', value: String(fileCount), color: '#6366f1' },
+                                        { label: 'Storage', value: `${totalStorage} MB`, color: '#3b82f6' },
+                                        { label: 'Analyzed', value: `${metrics.processedCount}/${fileCount}`, color: '#10b981' },
+                                        { label: 'Favorites', value: String(metrics.favoriteCount), color: '#f59e0b' },
+                                        { label: 'Archived', value: String(metrics.archivedCount), color: '#64748b' },
+                                        { label: 'Health', value: `${metrics.systemHealth}%`, color: metrics.systemHealth > 80 ? '#10b981' : '#f59e0b' },
+                                    ]} />
+
+                                    {/* ── Bento Grid ── */}
+                                    <div className="bento-grid-container" style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(4, 1fr)',
+                                        gridAutoRows: 'auto',
+                                        gap: '14px',
+                                        width: '100%',
+                                    }}>
+                                        {/* Row 1: 4 stat tiles */}
+                                        <div className="bento-card-span-1">
+                                            <BentoStat label="Datasets" value={fileCount} icon={Database} color="#6366f1" sparkData={metrics.uploadsByDay?.map((d: any) => ({ v: d.count }))} />
                                         </div>
-                                    </DashboardCard>
+                                        <div className="bento-card-span-1">
+                                            <BentoStat label="Storage" value={totalStorage} unit="MB" icon={HardDrive} color="#3b82f6" />
+                                        </div>
+                                        <div className="bento-card-span-1">
+                                            <BentoStat label="Avg Size" value={metrics.avgFileSizeKB > 0 ? metrics.avgFileSizeKB.toFixed(0) : '—'} unit="KB" icon={Layers} color="#8b5cf6" />
+                                        </div>
+                                        <div className="bento-card-span-1">
+                                            <BentoStat label="Favorites" value={metrics.favoriteCount} icon={Star} color="#f59e0b" delta={0} />
+                                        </div>
+
+                                        {/* Row 2: File Types (2 cols) + Upload Activity (2 cols) */}
+                                        <div className="bento-card-span-2" style={{ display: 'flex' }}>
+                                            <BentoCard span={1} style={{ flex: 1, minHeight: '200px' }}>
+                                                <BentoCardHeader icon={BarChart3} title="File Types" badge={`${metrics.csvCount + metrics.jsonCount + metrics.excelCount + metrics.otherCount} total`} />
+                                                <div style={{ flex: 1 }}>
+                                                    <TypeDonut csvCount={metrics.csvCount} jsonCount={metrics.jsonCount} excelCount={metrics.excelCount} otherCount={metrics.otherCount} />
+                                                </div>
+                                            </BentoCard>
+                                        </div>
+                                        <div className="bento-card-span-2" style={{ display: 'flex' }}>
+                                            <BentoCard span={1} style={{ flex: 1, minHeight: '200px' }}>
+                                                <BentoCardHeader icon={TrendingUp} title="Upload Activity" badge="14 days" />
+                                                <div style={{ flex: 1, minHeight: 0 }}>
+                                                    <ActivityMini uploadsByDay={metrics.uploadsByDay || []} />
+                                                </div>
+                                            </BentoCard>
+                                        </div>
+
+                                        {/* Row 3: Storage Quota (2 cols) + Data Health gauge (1 col) + Archived (1 col) */}
+                                        <div className="bento-card-span-2" style={{ display: 'flex' }}>
+                                            <BentoCard span={1} style={{ flex: 1 }}>
+                                                <BentoCardHeader icon={HardDrive} title="Storage Quota" />
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                                        <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalStorage}<span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-tertiary)' }}> / {maxStorageMB} MB</span></span>
+                                                        <span style={{ fontSize: '13px', fontWeight: 700, color: totalStorageNum > maxStorageMB * 0.9 ? '#ef4444' : 'var(--text-tertiary)' }}>{Math.round((totalStorageNum / maxStorageMB) * 100)}%</span>
+                                                    </div>
+                                                    <div style={{ height: 8, borderRadius: 99, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (totalStorageNum / maxStorageMB) * 100)}%` }} transition={{ duration: 1.4, ease: 'easeOut' }}
+                                                            style={{ height: '100%', borderRadius: 99, background: totalStorageNum > maxStorageMB * 0.9 ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, #6366f1, #a78bfa)' }} />
+                                                    </div>
+                                                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>{(maxStorageMB - totalStorageNum).toFixed(1)} MB remaining</span>
+                                                </div>
+                                            </BentoCard>
+                                        </div>
+                                        <div className="bento-card-span-1" style={{ display: 'flex' }}>
+                                            <BentoCard span={1} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <RadialGauge value={fileCount > 0 ? Math.round((metrics.processedCount / fileCount) * 100) : 0} size={100} label="Analyzed" color="#10b981" />
+                                            </BentoCard>
+                                        </div>
+                                        <div className="bento-card-span-1" style={{ display: 'flex' }}>
+                                            <BentoCard span={1} style={{ flex: 1 }}>
+                                                <BentoCardHeader icon={Archive} title="Archived" />
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '4px' }}>
+                                                    <span style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{metrics.archivedCount}</span>
+                                                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)' }}>datasets shelved</span>
+                                                </div>
+                                            </BentoCard>
+                                        </div>
+                                    </div>
                                 </div>
                             )
                         },
