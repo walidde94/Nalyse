@@ -21,23 +21,27 @@
 }
 
 .dropzone {
-    border: 2px dashed var(--border-color);
-    border-radius: 12px;
+    border: 2px dashed var(--bento-border);
+    border-radius: var(--bento-radius);
     padding: 3rem 2rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: var(--surface-color);
+    background: var(--bento-glass);
+    backdrop-filter: var(--bento-blur);
+    -webkit-backdrop-filter: var(--bento-blur);
 }
 
 .dropzone:hover {
-    border-color: var(--primary-color);
-    background: var(--surface-hover);
+    border-color: var(--primary);
+    background: var(--bento-glass-hover);
+    box-shadow: 0 0 24px -4px var(--primary-glow);
 }
 
 .dropzone.active {
-    border-color: var(--primary-color);
-    background: var(--primary-bg);
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    box-shadow: 0 0 32px -4px var(--primary-glow), var(--bento-shadow);
 }
 
 .dropzone svg {

@@ -40,13 +40,13 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 top: 0,
                 zIndex: 100,
                 background: isMidnight
-                    ? 'linear-gradient(180deg, rgba(14, 10, 4, 0.97) 0%, rgba(10, 8, 3, 0.92) 100%)'
+                    ? 'rgba(14, 10, 4, 0.6)'
                     : isDark
-                        ? 'linear-gradient(180deg, rgba(5, 5, 10, 0.96) 0%, rgba(5, 5, 10, 0.88) 100%)'
-                        : 'linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.92) 100%)',
-                backdropFilter: isMidnight ? 'blur(40px) saturate(220%)' : 'blur(32px) saturate(200%)',
-                WebkitBackdropFilter: isMidnight ? 'blur(40px) saturate(220%)' : 'blur(32px) saturate(200%)',
-                borderBottom: `1px solid ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                        ? 'rgba(3, 7, 17, 0.5)'
+                        : 'rgba(255, 255, 255, 0.6)',
+                backdropFilter: isMidnight ? 'blur(24px) saturate(220%)' : 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: isMidnight ? 'blur(24px) saturate(220%)' : 'blur(20px) saturate(180%)',
+                borderBottom: `1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
             }}>
 
                 {/* Left: Logo + Identity */}
@@ -99,23 +99,24 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             alignItems: 'center',
                             gap: '8px',
                             width: '100%',
-                            padding: '6px 12px',
-                            background: isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                            border: `1px solid ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                            borderRadius: '10px',
+                            padding: '7px 12px',
+                            background: isMidnight ? 'var(--primary-subtle)' : 'var(--bento-glass)',
+                            border: `1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
+                            borderRadius: 'var(--bento-radius-sm)',
                             cursor: 'pointer',
                             color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(15,23,42,0.35)',
                             fontSize: '12.5px',
                             fontWeight: 500,
-                            transition: 'all 0.2s ease',
+                            transition: 'all 0.25s ease',
+                            boxShadow: 'var(--bento-inset)',
                         }}
                         onMouseEnter={(e) => {
-                            e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
-                            e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                            e.currentTarget.style.background = isDark ? 'var(--bento-glass-hover)' : 'rgba(0,0,0,0.03)';
+                            e.currentTarget.style.borderColor = 'var(--bento-border-hover)';
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
-                            e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+                            e.currentTarget.style.background = isDark ? 'var(--bento-glass)' : 'rgba(0,0,0,0.02)';
+                            e.currentTarget.style.borderColor = isDark ? 'var(--bento-border)' : 'rgba(0,0,0,0.04)';
                         }}
                     >
                         <Search size={14} style={{ opacity: 0.5, flexShrink: 0 }} />
@@ -479,16 +480,16 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'};
-                    border: 1px solid ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'};
+                    background: ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-glass)'};
+                    border: 1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'};
                     color: ${isMidnight ? 'var(--primary)' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'};
-                    transition: all 0.2s ease;
+                    transition: all 0.25s ease;
                     cursor: pointer;
                     position: relative;
                 }
                 .hdr-icon-btn:hover {
-                    background: ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'};
-                    border-color: ${isMidnight ? 'var(--primary-glow)' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+                    background: ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-glass-hover)'};
+                    border-color: ${isMidnight ? 'var(--primary-glow)' : 'var(--bento-border-hover)'};
                     color: ${isMidnight ? 'var(--primary)' : isDark ? '#fff' : '#0f172a'};
                     transform: translateY(-1px);
                 }

@@ -223,6 +223,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 position: 'relative',
                 overflowX: 'visible',
                 overflowY: 'hidden',
+                background: 'var(--bento-glass)',
+                backdropFilter: 'var(--bento-blur)',
+                WebkitBackdropFilter: 'var(--bento-blur)',
+                borderRight: '1px solid var(--bento-border)',
             }}
         >
             {/* Brand + collapse */}
@@ -594,9 +598,9 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
                     padding: collapsed ? '8px' : '7px 10px',
                     gap: 10,
                     width: '100%',
-                    border: 'none',
+                    border: '1px solid transparent',
                     cursor: 'pointer',
-                    borderRadius: 8,
+                    borderRadius: 10,
                     position: 'relative',
                     fontFamily: 'var(--font-main)',
                     fontSize: 12.5,
@@ -604,10 +608,15 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
                     background: isActive
                         ? `${sectorAccent}12`
                         : hovered
-                            ? 'var(--bg-surface-hover)'
+                            ? 'var(--bento-glass-hover)'
+                            : 'transparent',
+                    borderColor: isActive
+                        ? `${sectorAccent}25`
+                        : hovered
+                            ? 'var(--bento-border-hover)'
                             : 'transparent',
                     color: isActive ? sectorAccent : hovered ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    transition: 'all 0.15s ease',
+                    transition: 'all 0.2s ease',
                     outline: 'none',
                 }}
             >

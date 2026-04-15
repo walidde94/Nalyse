@@ -261,12 +261,12 @@ export const QuickActionsBar = ({ onUpload, onViewReport, onUpgrade, fileCount }
    ────────────────────────────────────────────────────────── */
 
 const BENTO = {
-    radius: '20px',
-    glass: 'rgba(255,255,255,0.025)',
-    border: 'rgba(255,255,255,0.06)',
-    borderHover: 'rgba(255,255,255,0.12)',
-    shadow: '0 8px 32px -8px rgba(0,0,0,0.3)',
-    blur: 'blur(12px)',
+    radius: 'var(--bento-radius)',
+    glass: 'var(--bento-glass)',
+    border: 'var(--bento-border)',
+    borderHover: 'var(--bento-border-hover)',
+    shadow: 'var(--bento-shadow)',
+    blur: 'var(--bento-blur)',
 };
 
 interface TimelineEvent {

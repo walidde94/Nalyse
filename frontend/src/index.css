@@ -89,6 +89,61 @@
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
+
+  /* ── Glass OS / Bento Design Tokens ── */
+  --bento-glass: rgba(255, 255, 255, 0.025);
+  --bento-glass-hover: rgba(255, 255, 255, 0.04);
+  --bento-border: rgba(255, 255, 255, 0.06);
+  --bento-border-hover: rgba(255, 255, 255, 0.12);
+  --bento-blur: blur(12px);
+  --bento-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.3);
+  --bento-radius: 20px;
+  --bento-radius-sm: 12px;
+  --bento-inset: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* ===========================================
+   1a-2. GLASS OS UTILITY CLASSES
+   =========================================== */
+
+.bento-card-base {
+  background: var(--bento-glass);
+  border: 1px solid var(--bento-border);
+  border-radius: var(--bento-radius);
+  backdrop-filter: var(--bento-blur);
+  -webkit-backdrop-filter: var(--bento-blur);
+  box-shadow: var(--bento-shadow);
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.bento-card-base:hover {
+  border-color: var(--bento-border-hover);
+}
+
+.bento-glass-panel {
+  background: var(--bento-glass);
+  border: 1px solid var(--bento-border);
+  backdrop-filter: var(--bento-blur);
+  -webkit-backdrop-filter: var(--bento-blur);
+  box-shadow: var(--bento-shadow);
+  transition: border-color 0.25s ease;
+}
+
+.input-glass {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--bento-border);
+  border-radius: var(--bento-radius-sm);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--bento-inset);
+  color: var(--text-primary);
+  transition: all 0.25s ease;
+}
+.input-glass:focus {
+  border-color: var(--primary);
+  box-shadow: var(--bento-inset), 0 0 0 3px var(--primary-subtle), 0 0 20px -4px var(--primary-glow);
+  outline: none;
+}
+.input-glass::placeholder {
+  color: var(--text-muted);
 }
 
 /* ===========================================

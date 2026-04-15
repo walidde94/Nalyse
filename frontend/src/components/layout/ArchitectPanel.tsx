@@ -331,11 +331,12 @@ export const ArchitectPanel: React.FC = () => {
                     pointer-events: auto;
                     display: flex; align-items: center; gap: 4px;
                     padding: 6px;
-                    background: rgba(12, 12, 22, 0.95);
+                    background: var(--bento-glass);
                     backdrop-filter: blur(24px) saturate(200%);
-                    border: 1px solid rgba(255,255,255,0.08);
-                    border-radius: 16px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+                    -webkit-backdrop-filter: blur(24px) saturate(200%);
+                    border: 1px solid var(--bento-border);
+                    border-radius: var(--bento-radius);
+                    box-shadow: var(--bento-shadow), 0 0 0 1px rgba(255,255,255,0.04) inset;
                     max-width: calc(100% - 32px);
                 }
                 .acb-group { display: flex; align-items: center; gap: 2px; }
@@ -437,10 +438,11 @@ export const ArchitectPanel: React.FC = () => {
                 /* Popups */
                 .acb-popup {
                     position: fixed; right: 16px;
-                    width: 280px; background: rgba(12, 12, 22, 0.97);
-                    backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08);
-                    border-radius: 16px; z-index: 10002; overflow: hidden;
-                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                    width: 280px; background: var(--bento-glass);
+                    backdrop-filter: blur(24px) saturate(200%); -webkit-backdrop-filter: blur(24px) saturate(200%);
+                    border: 1px solid var(--bento-border);
+                    border-radius: var(--bento-radius); z-index: 10002; overflow: hidden;
+                    box-shadow: var(--bento-shadow);
                 }
                 .acb-popup-header {
                     display: flex; align-items: center; justify-content: space-between;
