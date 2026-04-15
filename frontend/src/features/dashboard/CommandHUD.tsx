@@ -9,6 +9,7 @@ import {
     ArrowUpRight,
     Sparkles,
     Layers,
+    ChevronDown,
 } from 'lucide-react';
 
 /* ──────────────────────────────────────────────────────────
@@ -300,6 +301,8 @@ const getEventTokens = (type: string) => {
 };
 
 export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
+    const [isExpanded, setIsExpanded] = useState(true);
+
     const events: TimelineEvent[] = useMemo(() => {
         const evts: TimelineEvent[] = [];
 
@@ -338,71 +341,95 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
                 background: BENTO.glass, border: `1px solid ${BENTO.border}`,
                 backdropFilter: BENTO.blur,
                 boxShadow: BENTO.shadow,
-                display: 'flex', flexDirection: 'column', gap: '20px',
+                display: 'flex', flexDirection: 'column',
                 transition: 'border-color 0.25s',
-                width: '100%', height: '100%',
+                width: '100%',
                 position: 'relative', overflow: 'hidden'
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div 
+                onClick={() => setIsExpanded(!isExpanded)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', outline: 'none' }}
+            >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Activity size={15} style={{ color: 'var(--primary)' }} />
                     <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Intelligence Feed</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.1)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 8px var(--danger-glow)' }} />
-                    <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.05em' }}>LIVE</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.1)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 8px var(--danger-glow)' }} />
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.05em' }}>LIVE</span>
+                    </div>
+                    <motion.div
+                        animate={{ rotate: isExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        style={{ color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <ChevronDown size={18} />
+                    </motion.div>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
-                {/* Visual track line */}
-                <div style={{ position: 'absolute', left: 15, top: 20, bottom: 20, width: 2, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+            <AnimatePresence initial={false}>
+                {isExpanded && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        style={{ overflow: 'hidden' }}
+                    >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', paddingTop: '20px' }}>
+                            {/* Visual track line */}
+                            <div style={{ position: 'absolute', left: 15, top: 20, bottom: 0, width: 2, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
 
-                {events.map((event, i) => {
-                    const tokens = getEventTokens(event.type);
-                    return (
-                        <motion.div
-                            key={event.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 1.4 + i * 0.08 }}
-                            style={{ display: 'flex', gap: '16px', position: 'relative', zIndex: 1 }}
-                        >
-                            <div style={{ width: 32, flexShrink: 0, display: 'flex', justifyContent: 'center', paddingTop: 4 }}>
-                                <div style={{ 
-                                    width: 12, height: 12, borderRadius: '50%', 
-                                    background: tokens.base, boxShadow: `0 0 12px ${tokens.glow}`,
-                                    border: `2px solid var(--bg-card)`
-                                }} />
-                            </div>
-                            
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.015)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s', cursor: 'pointer' }}
-                                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                                 onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.015)'}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <div style={{ width: 24, height: 24, borderRadius: '6px', background: tokens.subtle, color: tokens.base, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            {getEventIcon(event.type)}
+                            {events.map((event, i) => {
+                                const tokens = getEventTokens(event.type);
+                                return (
+                                    <motion.div
+                                        key={event.id}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 1.4 + i * 0.08 }}
+                                        style={{ display: 'flex', gap: '16px', position: 'relative', zIndex: 1 }}
+                                    >
+                                        <div style={{ width: 32, flexShrink: 0, display: 'flex', justifyContent: 'center', paddingTop: 4 }}>
+                                            <div style={{ 
+                                                width: 12, height: 12, borderRadius: '50%', 
+                                                background: tokens.base, boxShadow: `0 0 12px ${tokens.glow}`,
+                                                border: `2px solid var(--bg-card)`
+                                            }} />
                                         </div>
-                                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{event.time}</span>
-                                    </div>
-                                    {event.status && (
-                                        <span style={{ fontSize: '9px', fontWeight: 800, color: tokens.base, background: tokens.subtle, padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                                            {event.status}
-                                        </span>
-                                    )}
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>{event.title}</h4>
-                                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.4 }}>{event.description}</p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    );
-                })}
-            </div>
+                                        
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.015)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s', cursor: 'pointer' }}
+                                             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                                             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.015)'}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <div style={{ width: 24, height: 24, borderRadius: '6px', background: tokens.subtle, color: tokens.base, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {getEventIcon(event.type)}
+                                                    </div>
+                                                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{event.time}</span>
+                                                </div>
+                                                {event.status && (
+                                                    <span style={{ fontSize: '9px', fontWeight: 800, color: tokens.base, background: tokens.subtle, padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                                        {event.status}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>{event.title}</h4>
+                                                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.4 }}>{event.description}</p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };
