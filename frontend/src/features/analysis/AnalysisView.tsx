@@ -112,12 +112,12 @@ interface AnalysisViewProps {
 
 // Premium Modern Color Palette
 const COLORS = [
-    '#34d399', // Emerald 400 (Main Brand Color)
-    '#38bdf8', // Sky 400
-    '#818cf8', // Indigo 400
-    '#f472b6', // Pink 400
-    '#fbbf24', // Amber 400
-    '#a78bfa', // Violet 400
+    '#00d4aa', // Emerald (Brand)
+    '#ffb800', // Gold
+    '#a78bfa', // Violet
+    '#ff6b6b', // Coral
+    '#74b9ff', // Sky
+    '#55efc4', // Mint
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {

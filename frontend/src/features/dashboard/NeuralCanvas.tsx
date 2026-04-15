@@ -33,11 +33,11 @@ export const NeuralCanvas = ({ intensity = 1 }: { intensity?: number }) => {
     const timeRef = useRef(0);
 
     const COLORS = [
-        'rgba(59, 130, 246, ',   // blue
-        'rgba(139, 92, 246, ',   // violet
-        'rgba(6, 182, 212, ',    // cyan
-        'rgba(16, 185, 129, ',   // emerald
-        'rgba(99, 102, 241, ',   // indigo
+        'rgba(0, 212, 170, ',    // emerald
+        'rgba(255, 184, 0, ',    // gold
+        'rgba(167, 139, 250, ',  // violet
+        'rgba(85, 239, 196, ',   // mint
+        'rgba(116, 185, 255, ',  // sky
     ];
 
     const initParticles = useCallback((width: number, height: number) => {

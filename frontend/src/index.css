@@ -10,72 +10,74 @@
    =========================================== */
 
 :root {
-  /* --- Dark Theme (Default) --- */
-  --bg-main: #030711;
-  --bg-secondary: #0a1128;
-  --bg-card: rgba(15, 23, 42, 0.6);
-  --bg-surface: #111a2e;
-  --bg-surface-hover: #1c2b47;
-  --bg-sidebar: rgba(8, 15, 35, 0.85);
-  --bg-header: rgba(6, 12, 30, 0.75);
-  --bg-elevated: rgba(20, 30, 55, 0.8);
+  /* --- VOID LUXE — True Black + Electric Emerald --- */
+  --bg-main: #050505;
+  --bg-secondary: #0c0c0c;
+  --bg-card: rgba(12, 12, 12, 0.7);
+  --bg-surface: #111111;
+  --bg-surface-hover: #1a1a1a;
+  --bg-sidebar: rgba(8, 8, 8, 0.65);
+  --bg-header: rgba(5, 5, 5, 0.55);
+  --bg-elevated: rgba(18, 18, 18, 0.85);
 
-  /* Signature Gradient Palette */
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #60a5fa;
-  --primary-glow: rgba(59, 130, 246, 0.4);
-  --primary-subtle: rgba(59, 130, 246, 0.1);
+  /* Primary — Electric Emerald */
+  --primary: #00d4aa;
+  --primary-dark: #00b894;
+  --primary-light: #55efc4;
+  --primary-glow: rgba(0, 212, 170, 0.4);
+  --primary-subtle: rgba(0, 212, 170, 0.08);
 
-  --accent: #8b5cf6;
-  --accent-light: #a78bfa;
-  --accent-glow: rgba(245, 158, 11, 0.35);
+  /* Accent — Warm Gold */
+  --accent: #ffb800;
+  --accent-light: #ffd166;
+  --accent-glow: rgba(255, 184, 0, 0.35);
 
-  --secondary-accent: #06b6d4;
-  --secondary-glow: rgba(6, 182, 212, 0.3);
+  /* Secondary — Soft Violet */
+  --secondary-accent: #a78bfa;
+  --secondary-glow: rgba(167, 139, 250, 0.25);
 
-  /* Functional Colors */
-  --success: #10b981;
-  --success-glow: rgba(16, 185, 129, 0.3);
-  --warning: #f59e0b;
-  --warning-glow: rgba(245, 158, 11, 0.3);
-  --danger: #ef4444;
-  --danger-glow: rgba(239, 68, 68, 0.3);
-  --error: #ef4444;
-  --info: #38bdf8;
+  /* Functional */
+  --success: #00d4aa;
+  --success-glow: rgba(0, 212, 170, 0.3);
+  --warning: #ffb800;
+  --warning-glow: rgba(255, 184, 0, 0.3);
+  --danger: #ff6b6b;
+  --danger-glow: rgba(255, 107, 107, 0.3);
+  --error: #ff6b6b;
+  --info: #74b9ff;
 
-  /* Typography */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-tertiary: #475569;
-  --text-inverse: #020617;
-  --text-disabled: #334155;
+  /* Typography — High-contrast on true black */
+  --text-primary: #f0f0f0;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+  --text-tertiary: #3d3d3d;
+  --text-inverse: #050505;
+  --text-disabled: #2a2a2a;
 
-  /* Borders & Glass */
-  --border-color: rgba(51, 65, 85, 0.6);
-  --border-default: rgba(51, 65, 85, 0.6);
-  --border-subtle: rgba(30, 41, 59, 0.8);
+  /* Borders — Subtle warm tint */
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
   --glass-border: rgba(255, 255, 255, 0.06);
-  --border-glow: rgba(59, 130, 246, 0.2);
+  --border-glow: rgba(0, 212, 170, 0.25);
 
-  /* Spacing & Radius */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-2xl: 32px;
+  /* Radius — Softer, rounder */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.12);
-  --shadow-sm: 0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 12px 28px -6px rgba(0, 0, 0, 0.3), 0 4px 8px -4px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 24px 48px -12px rgba(0, 0, 0, 0.4);
-  --shadow-glow-primary: 0 0 30px -5px var(--primary-glow);
-  --shadow-glow-accent: 0 0 30px -5px var(--accent-glow);
+  /* Shadows — Deep void */
+  --shadow-xs: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 6px -1px rgba(0, 0, 0, 0.5), 0 1px 3px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 20px -4px rgba(0, 0, 0, 0.6), 0 2px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 6px 12px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 28px 56px -12px rgba(0, 0, 0, 0.8);
+  --shadow-glow-primary: 0 0 40px -8px var(--primary-glow);
+  --shadow-glow-accent: 0 0 40px -8px var(--accent-glow);
 
   /* Fonts */
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
@@ -86,20 +88,20 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
-  --duration-slow: 400ms;
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 350ms;
 
   /* ── Glass OS / Bento Design Tokens ── */
-  --bento-glass: rgba(255, 255, 255, 0.025);
-  --bento-glass-hover: rgba(255, 255, 255, 0.04);
-  --bento-border: rgba(255, 255, 255, 0.06);
-  --bento-border-hover: rgba(255, 255, 255, 0.12);
-  --bento-blur: blur(12px);
-  --bento-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.3);
-  --bento-radius: 20px;
-  --bento-radius-sm: 12px;
-  --bento-inset: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --bento-glass: rgba(255, 255, 255, 0.04);
+  --bento-glass-hover: rgba(255, 255, 255, 0.07);
+  --bento-border: rgba(255, 255, 255, 0.08);
+  --bento-border-hover: rgba(0, 212, 170, 0.3);
+  --bento-blur: blur(24px);
+  --bento-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.6);
+  --bento-radius: 22px;
+  --bento-radius-sm: 14px;
+  --bento-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ===========================================
@@ -522,6 +524,11 @@ html {
 body {
   font-family: var(--font-main);
   background-color: var(--bg-main);
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(0, 212, 170, 0.08), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(167, 139, 250, 0.06), transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(255, 184, 0, 0.05), transparent 50%);
+  background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.6;
   overflow-x: hidden;
@@ -5390,8 +5397,10 @@ textarea:focus,
 .sidebar-neural-rail {
   position: relative;
   isolation: isolate;
-  border-right: 1px solid var(--border-subtle);
-  background: var(--bg-sidebar);
+  border-right: 1px solid var(--bento-border);
+  background: var(--bento-glass);
+  backdrop-filter: var(--bento-blur);
+  -webkit-backdrop-filter: var(--bento-blur);
   contain: style;
   transform: translateZ(0);
   backface-visibility: hidden;
