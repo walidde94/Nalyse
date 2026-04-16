@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ArchitectProvider } from './contexts/ArchitectContext';
+import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { io } from 'socket.io-client';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { API_URL } from './config';
@@ -1368,9 +1369,11 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <ArchitectProvider>
-          <AppContent />
-        </ArchitectProvider>
+        <WorkspaceProvider>
+          <ArchitectProvider>
+            <AppContent />
+          </ArchitectProvider>
+        </WorkspaceProvider>
       </LanguageProvider>
     </AuthProvider>
   );

@@ -12,6 +12,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { parse } from 'csv-parse/sync';
+import { executeWorkspaceAction } from '../services/workspaceService';
+import { prisma } from '../config/database';
 
 // ─── Upload ─────────────────────────────────────────────────────────────────
 
@@ -106,8 +108,28 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             return saved;
         });
 
-        // Broadcast
-        try { const { broadcastUpdate } = require('../index'); broadcastUpdate('file', { action: 'upload', fileId: result.id, userId }); } catch (e) { }
+        // Resolve Workspace & Broadcast
+        try {
+            const workspaceIdHeader = req.headers['x-workspace-id'] as string;
+            let targetWorkspaceId = workspaceIdHeader;
+            
+            if (!targetWorkspaceId && organizationId) {
+                const defaultWs = await prisma.workspace.findFirst({ where: { organizationId }});
+                if (defaultWs) targetWorkspaceId = defaultWs.id;
+            }
+
+            if (targetWorkspaceId) {
+                const fileRepo = AppDataSource.getRepository(File);
+                await fileRepo.update(result.id, { workspaceId: targetWorkspaceId });
+
+                await executeWorkspaceAction(targetWorkspaceId, userId, 'FILE_UPLOADED', result.id, {
+                    filename: result.filename, originalName: result.originalName, size: result.size
+                });
+            } else {
+                const { broadcastUpdate } = require('../index'); 
+                broadcastUpdate('file', { action: 'upload', fileId: result.id, userId }); 
+            }
+        } catch (e) { console.error('Workspace broadcast error', e); }
 
         res.json({
             message: 'File uploaded',
@@ -298,6 +320,20 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
 
         // ─── Fresh Analysis ─────────────────────────────────────────
         console.log(`[Analysis] Processing ${file.id} (${file.originalName})`);
+        
+        try {
+            let targetWorkspaceId = file.workspaceId;
+            if (!targetWorkspaceId && file.organizationId) {
+                const defaultWs = await prisma.workspace.findFirst({ where: { organizationId: file.organizationId }});
+                if (defaultWs) targetWorkspaceId = defaultWs.id;
+            }
+            if (targetWorkspaceId) {
+                await executeWorkspaceAction(targetWorkspaceId, userId, 'ANALYSIS_STARTED', file.id, {
+                    filename: file.originalName || file.filename
+                });
+            }
+        } catch (e) { console.error('Workspace broadcast error', e); }
+
         const t0 = Date.now();
         const result = await analyzeFile(file.s3Key || file.filename, file.mimeType);
         const duration = Date.now() - t0;
@@ -355,14 +391,26 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
 
                 // Broadcast
                 try {
-                    const { broadcastUpdate } = require('../index');
-                    broadcastUpdate('file', {
-                        action: 'analysis_complete',
-                        fileId: file.id,
-                        userId,
-                        isProcessed: true
-                    });
-                } catch (e) { }
+                    let targetWorkspaceId = file.workspaceId;
+                    if (!targetWorkspaceId && file.organizationId) {
+                        const defaultWs = await prisma.workspace.findFirst({ where: { organizationId: file.organizationId }});
+                        if (defaultWs) targetWorkspaceId = defaultWs.id;
+                    }
+                    if (targetWorkspaceId) {
+                        await executeWorkspaceAction(targetWorkspaceId, userId, 'ANALYSIS_COMPLETED', file.id, {
+                            filename: file.originalName || file.filename,
+                            processingTimeMs: duration
+                        });
+                    } else {
+                        const { broadcastUpdate } = require('../index');
+                        broadcastUpdate('file', {
+                            action: 'analysis_complete',
+                            fileId: file.id,
+                            userId,
+                            isProcessed: true
+                        });
+                    }
+                } catch (e) { console.error('Workspace broadcast error', e); }
 
                 // Return the exact same payload
                 return res.json({ id: file.id, cached: false, ...payload });
@@ -451,6 +499,19 @@ export const deleteFileHandler = async (req: AuthRequest, res: Response) => {
         if (file.s3Key && fs.existsSync(file.s3Key)) {
             try { fs.unlinkSync(file.s3Key); } catch (e) { }
         }
+
+        try {
+            let targetWorkspaceId = file.workspaceId;
+            if (!targetWorkspaceId && file.organizationId) {
+                const defaultWs = await prisma.workspace.findFirst({ where: { organizationId: file.organizationId }});
+                if (defaultWs) targetWorkspaceId = defaultWs.id;
+            }
+            if (targetWorkspaceId) {
+                await executeWorkspaceAction(targetWorkspaceId, userId, 'FILE_DELETED', file.id, {
+                    filename: file.originalName || file.filename
+                });
+            }
+        } catch (e) { console.error('Workspace broadcast error', e); }
 
         res.json({ message: 'File deleted successfully' });
     } catch (error: any) {

@@ -39,6 +39,9 @@ export class File {
     @Column()
     organizationId: string;
 
+    @Column({ nullable: true })
+    workspaceId: string;
+
     @OneToMany(() => Analysis, analysis => analysis.file)
     analyses: Analysis[];
 

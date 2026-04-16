@@ -4,6 +4,7 @@ import { Search, Bell, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprin
 import { useAuth } from '../../contexts/AuthContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { UserProfile } from '../UserProfile';
 import { ArchitectNode } from './ArchitectNode';
 
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     const { user, logout } = useAuth();
     const { isArchitectMode, toggleArchitectMode } = useArchitect();
     const { language, setLanguage, t } = useLanguage();
+    const { activeWorkspace, activeUsers } = useWorkspace();
     const [showProfile, setShowProfile] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -137,6 +139,30 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
 
                 {/* Right: Actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+
+                    {/* Shared Workspace Status */}
+                    {activeWorkspace && (
+                        <div className="desktop-only" style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.5)',
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                            border: `1px solid ${isDark ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
+                            marginRight: '8px'
+                        }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }}></div>
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                {activeWorkspace.name}
+                            </span>
+                            {Object.keys(activeUsers).length > 0 && (
+                                <div style={{ display: 'flex', marginLeft: '4px' }}>
+                                    <span style={{ fontSize: '9px', opacity: 0.6 }}>· {Object.keys(activeUsers).length} active</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Language Switcher — minimal pills */}
                     <div className="desktop-only" style={{

@@ -22,6 +22,9 @@ export class Analysis {
     @Column()
     createdById: string;
 
+    @Column({ nullable: true })
+    workspaceId: string;
+
     @Column({ type: 'varchar', default: 'pending' })
     status: 'pending' | 'processing' | 'completed' | 'failed';
 
