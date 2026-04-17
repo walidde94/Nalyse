@@ -1,57 +1,47 @@
-const { execSync, spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 
 function run() {
     const databaseUrl = process.env.DATABASE_URL;
-    let directUrl = process.env.DIRECT_URL;
+    const directUrl = process.env.DIRECT_URL;
 
     console.log("[Boot] 🚀 Starting Neural Command Bootloader...");
 
-    if (directUrl && directUrl.includes('pooler.supabase.com')) {
-        console.warn("[Boot] ⚠️ WARNING: Your DIRECT_URL appears to be a POOLED connection (pooler.supabase.com).");
-        console.warn("[Boot] ⚠️ Prisma 'db push' WILL FAIL against a pooler. Please use the 'Session' connection from Supabase.");
-    }
-
-    // Try to fix missing DIRECT_URL if DATABASE_URL is all we have
-    if (!directUrl && databaseUrl) {
-        if (databaseUrl.includes('pooler.supabase.com') || databaseUrl.includes('pgbouncer=true')) {
-            // We can't easily guess the non-pooler hostname for Supabase, so we just warn
-            console.error("[Boot] ❌ ERROR: DATABASE_URL is pooled but DIRECT_URL is missing.");
-        } else {
-            process.env.DIRECT_URL = databaseUrl;
-        }
-    }
-
-    // Optional: Allow skipping sync via env var if the DB is already manually synced
     if (process.env.SKIP_DB_SYNC === 'true') {
-        console.log("[Boot] ⏩ Skipping Database Sync as requested.");
-    } else {
-        try {
-            console.log("[Boot] 📡 Synchronizing Database Schema...");
-            // Use the DIRECT_URL for the push command explicitly
-            execSync('npx prisma db push --accept-data-loss', { 
-                stdio: 'inherit', 
-                env: { ...process.env, DATABASE_URL: process.env.DIRECT_URL || databaseUrl } 
-            });
-            console.log("[Boot] ✅ Schema is in sync.");
-        } catch (error) {
-            console.error("[Boot] ❌ CRITICAL: Database synchronization failed!");
-            
-            // On Supabase, this is almost always a pooler issue
-            if (directUrl && directUrl.includes('pooler.supabase.com')) {
-                console.error("[Boot] 💡 FIX: Change your DIRECT_URL in Render to the 'Session' connection string from Supabase settings.");
-            }
-
-            if (process.env.NODE_ENV === 'production') {
-                console.error("[Boot] 🛑 Shutting down to prevent consistent 500 errors.");
-                process.exit(1); 
-            }
-        }
+        console.log("[Boot] ⏩ Skipping Database Sync.");
+        startApp();
+        return;
     }
 
+    console.log("[Boot] 📡 Synchronizing Database Schema (Background)...");
+    
+    // Run sync in a way that doesn't block the app from starting
+    const sync = exec('npx prisma db push --accept-data-loss', {
+        env: { ...process.env, DATABASE_URL: directUrl || databaseUrl }
+    });
+
+    sync.stdout.on('data', (data) => console.log(`[Prisma] ${data.trim()}`));
+    sync.stderr.on('data', (data) => console.error(`[Prisma Error] ${data.trim()}`));
+
+    sync.on('close', (code) => {
+        if (code === 0) {
+            console.log("[Boot] ✅ Database Synchronization Complete.");
+        } else {
+            console.error(`[Boot] ⚠️ Database Synchronization exited with code ${code}. Check logs above.`);
+        }
+    });
+
+    // Start the app IMMEDIATELY so Render sees it as "Live"
+    setTimeout(() => {
+        startApp();
+    }, 2000);
+}
+
+function startApp() {
     console.log("[Boot] 🛰️ Starting Production Server...");
     const server = spawn('node', ['dist/src/index.js'], { stdio: 'inherit', env: process.env });
 
     server.on('close', (code) => {
+        console.log(`[App] Server exited with code ${code}`);
         process.exit(code);
     });
 }
