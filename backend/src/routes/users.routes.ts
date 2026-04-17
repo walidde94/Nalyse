@@ -25,7 +25,7 @@ router.get('/', authenticate, requirePermission(Permission.MANAGE_USERS), async 
                 lastName: true,
                 role: true,
                 createdAt: true,
-                lastLogin: true
+                lastLoginAt: true
             }
         });
 
