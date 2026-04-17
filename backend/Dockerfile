@@ -22,6 +22,7 @@ RUN apk add --no-cache openssl
 COPY --from=builder /usr/src/app/package*.json ./
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/prisma ./prisma
 # We might need uploads directory
 RUN mkdir -p uploads
 
