@@ -80,6 +80,7 @@ model User {
   auditLogs       AuditLog[]
   agents          Agent[]
   groups          Group[]
+  workspaceMessages WorkspaceMessage[]
 
   @@map("users")
 }
@@ -285,6 +286,7 @@ model Workspace {
   analyses       Analysis[]
   dashboards     Dashboard[]
   auditLogs      AuditLog[]
+  messages       WorkspaceMessage[]
 
   @@map("workspaces")
 }
@@ -300,6 +302,21 @@ model WorkspaceMember {
 
   @@unique([workspaceId, userId])
   @@map("workspace_members")
+}
+
+model WorkspaceMessage {
+  id          String   @id @default(uuid())
+  workspaceId String
+  authorId    String
+  content     String
+  mentions    String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author      User      @relation(fields: [authorId], references: [id])
+
+  @@map("workspace_messages")
 }
 
 model AuditLog {

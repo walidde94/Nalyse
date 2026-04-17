@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { API_URL } from '../../config';
@@ -7,7 +7,8 @@ import {
     FileText, FileSpreadsheet, BarChart3, Eye, Clock, ArrowUpRight,
     Share2, ChevronRight, Activity, Database, Lock, Unlock, X,
     CheckCircle2, AlertTriangle, Layers, Zap, Globe, Upload, Download,
-    UserCheck, Crown, Edit3, FileJson, HardDrive, TrendingUp, Sparkles
+    UserCheck, Crown, Edit3, FileJson, HardDrive, TrendingUp, Sparkles,
+    MessageCircle, AtSign, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -59,7 +60,24 @@ interface ActivityLog {
     user?: { displayName?: string; email: string };
 }
 
-type TabId = 'team' | 'data' | 'analysis' | 'activity';
+interface WorkspaceMessage {
+    id: string;
+    content: string;
+    mentions: string[];
+    createdAt: string;
+    author: { id: string; email: string; displayName?: string; firstName?: string; lastName?: string; avatarUrl?: string };
+}
+
+interface MentionableUser {
+    id: string;
+    email: string;
+    displayName?: string;
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string;
+}
+
+type TabId = 'team' | 'data' | 'analysis' | 'discussion' | 'activity';
 
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
@@ -115,6 +133,7 @@ const ACTION_CONFIG: Record<string, { label: string; icon: any; color: string }>
     MEMBER_ROLE_UPDATED: { label: 'updated a role', icon: Shield, color: '#f59e0b' },
     FILE_SHARED: { label: 'shared a file', icon: Share2, color: '#8b5cf6' },
     FILE_UNSHARED: { label: 'unshared a file', icon: Lock, color: '#64748b' },
+    MESSAGE_SENT: { label: 'sent a message', icon: MessageCircle, color: '#06b6d4' },
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -313,6 +332,362 @@ const ShareFileModal = ({ workspaceId, workspaceName, token, onClose, onShared }
 };
 
 // ═══════════════════════════════════════════════════════════════
+// DISCUSSION TAB WITH @MENTION SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+const DiscussionTab = ({ workspaceId, token, messages, onRefresh, user }: {
+    workspaceId: string; token: string; messages: WorkspaceMessage[]; onRefresh: () => void; user: any;
+}) => {
+    const [inputValue, setInputValue] = useState('');
+    const [sending, setSending] = useState(false);
+    const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+    const [mentionUsers, setMentionUsers] = useState<MentionableUser[]>([]);
+    const [mentionIdx, setMentionIdx] = useState(0);
+    const [cursorPos, setCursorPos] = useState(0);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const mentionDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to bottom when messages change
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    // Fetch mentionable users when @ is typed
+    useEffect(() => {
+        if (mentionQuery === null) { setMentionUsers([]); return; }
+        const controller = new AbortController();
+        const fetchUsers = async () => {
+            try {
+                const res = await fetch(
+                    `${API_URL}/api/workspaces/${workspaceId}/mentionable-users?q=${encodeURIComponent(mentionQuery)}`,
+                    { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal }
+                );
+                if (res.ok) {
+                    const users = await res.json();
+                    setMentionUsers(users);
+                    setMentionIdx(0);
+                }
+            } catch (e: any) {
+                if (e.name !== 'AbortError') console.error(e);
+            }
+        };
+        fetchUsers();
+        return () => controller.abort();
+    }, [mentionQuery, workspaceId, token]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const val = e.target.value;
+        const pos = e.target.selectionStart || 0;
+        setInputValue(val);
+        setCursorPos(pos);
+
+        // Detect if we're in a mention context
+        const textBefore = val.slice(0, pos);
+        const mentionMatch = textBefore.match(/@(\w*)$/);
+        if (mentionMatch) {
+            setMentionQuery(mentionMatch[1]);
+        } else {
+            setMentionQuery(null);
+        }
+    };
+
+    const insertMention = (mentionUser: MentionableUser) => {
+        const name = getUserName(mentionUser);
+        const textBefore = inputValue.slice(0, cursorPos);
+        const textAfter = inputValue.slice(cursorPos);
+        const mentionStart = textBefore.lastIndexOf('@');
+        const mention = `@[${name}](${mentionUser.id}) `;
+        const newValue = textBefore.slice(0, mentionStart) + mention + textAfter;
+        setInputValue(newValue);
+        setMentionQuery(null);
+        setMentionUsers([]);
+        inputRef.current?.focus();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (mentionQuery !== null && mentionUsers.length > 0) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setMentionIdx(prev => Math.min(prev + 1, mentionUsers.length - 1));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setMentionIdx(prev => Math.max(prev - 1, 0));
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault();
+                insertMention(mentionUsers[mentionIdx]);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                setMentionQuery(null);
+            }
+            return;
+        }
+        // Send on Enter (without Shift)
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    };
+
+    const handleSend = async () => {
+        if (!inputValue.trim() || sending) return;
+        setSending(true);
+        try {
+            const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ content: inputValue.trim() })
+            });
+            if (res.ok) {
+                setInputValue('');
+                onRefresh();
+            }
+        } catch (e) { console.error(e); }
+        finally { setSending(false); }
+    };
+
+    // Render message content with highlighted @mentions
+    const renderContent = (content: string) => {
+        const parts = content.split(/(@\[([^\]]+)\]\(([^)]+)\))/g);
+        const result: React.ReactNode[] = [];
+        let i = 0;
+        while (i < parts.length) {
+            if (parts[i] && parts[i].startsWith('@[')) {
+                // This is a mention: fullMatch, name, userId
+                const name = parts[i + 1];
+                result.push(
+                    <span key={i} style={{
+                        background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.15))',
+                        color: '#a78bfa',
+                        fontWeight: 700,
+                        padding: '1px 6px',
+                        borderRadius: 6,
+                        fontSize: 13,
+                        cursor: 'pointer'
+                    }}>@{name}</span>
+                );
+                i += 3;
+            } else {
+                result.push(<span key={i}>{parts[i]}</span>);
+                i += 1;
+            }
+        }
+        return result;
+    };
+
+    const isSelf = (authorId: string) => authorId === user?.id;
+
+    return (
+        <motion.div key="discussion" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+            style={{ display: 'flex', flexDirection: 'column', height: 500 }}
+        >
+            {/* Header */}
+            <div style={{ marginBottom: 16 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <MessageCircle size={18} /> Discussion
+                </h3>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Chat with your team. Use <span style={{ color: '#a78bfa', fontWeight: 700 }}>@</span> to mention members and notify them.
+                </p>
+            </div>
+
+            {/* Messages Area */}
+            <div style={{
+                flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4,
+                padding: '12px 4px', marginBottom: 16,
+                background: 'var(--bg-app)', borderRadius: 16, border: '1px solid var(--border-subtle)'
+            }}>
+                {messages.length === 0 ? (
+                    <div style={{
+                        textAlign: 'center', padding: '60px 20px',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1
+                    }}>
+                        <MessageCircle size={40} style={{ color: 'var(--text-muted)', opacity: 0.2, marginBottom: 16 }} />
+                        <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>No messages yet</p>
+                        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Start a conversation with your team</p>
+                    </div>
+                ) : (
+                    messages.map((msg, idx) => {
+                        const self = isSelf(msg.author.id);
+                        const showAvatar = idx === 0 || messages[idx - 1].author.id !== msg.author.id;
+                        const showTime = idx === 0 || (new Date(msg.createdAt).getTime() - new Date(messages[idx-1].createdAt).getTime()) > 300000;
+                        const hasMentions = msg.mentions?.length > 0;
+                        const mentionsMe = msg.mentions?.includes(user?.id);
+
+                        return (
+                            <React.Fragment key={msg.id}>
+                                {showTime && (
+                                    <div style={{
+                                        textAlign: 'center', fontSize: 10, fontWeight: 700,
+                                        color: 'var(--text-muted)', padding: '8px 0', letterSpacing: '0.08em',
+                                        textTransform: 'uppercase', opacity: 0.6
+                                    }}>
+                                        {timeAgo(msg.createdAt)}
+                                    </div>
+                                )}
+                                <div style={{
+                                    display: 'flex', gap: 10, padding: '4px 12px',
+                                    borderRadius: 12,
+                                    background: mentionsMe
+                                        ? 'rgba(139,92,246,0.06)'
+                                        : 'transparent',
+                                    borderLeft: mentionsMe ? '3px solid #a78bfa' : '3px solid transparent',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    <div style={{ width: 32, flexShrink: 0 }}>
+                                        {showAvatar && <UserAvatar user={msg.author} size={32} />}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        {showAvatar && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                                                <span style={{ fontSize: 13, fontWeight: 800, color: self ? 'var(--primary)' : 'var(--text-primary)' }}>
+                                                    {self ? 'You' : getUserName(msg.author)}
+                                                </span>
+                                                <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>
+                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                                {hasMentions && (
+                                                    <span style={{
+                                                        fontSize: 9, fontWeight: 800, padding: '1px 6px',
+                                                        borderRadius: 6, background: 'rgba(139,92,246,0.12)',
+                                                        color: '#a78bfa', letterSpacing: '0.05em'
+                                                    }}>
+                                                        <AtSign size={8} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 2 }} />
+                                                        {msg.mentions.length}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        <div style={{
+                                            fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.6,
+                                            wordBreak: 'break-word', fontWeight: 500
+                                        }}>
+                                            {renderContent(msg.content)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </React.Fragment>
+                        );
+                    })
+                )}
+                <div ref={messagesEndRef} />
+            </div>
+
+            {/* Compose Area */}
+            <div style={{ position: 'relative' }}>
+                {/* Mention Autocomplete Dropdown */}
+                <AnimatePresence>
+                    {mentionQuery !== null && mentionUsers.length > 0 && (
+                        <motion.div
+                            ref={mentionDropdownRef}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 8 }}
+                            style={{
+                                position: 'absolute', bottom: '100%', left: 0, right: 0,
+                                background: 'var(--bento-card)',
+                                border: '1px solid var(--border-subtle)',
+                                borderRadius: 14, padding: 6, marginBottom: 6,
+                                boxShadow: '0 12px 40px -8px rgba(0,0,0,0.4)',
+                                zIndex: 50, maxHeight: 200, overflowY: 'auto'
+                            }}
+                        >
+                            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', padding: '4px 10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                                Mention a member
+                            </div>
+                            {mentionUsers.map((u, i) => (
+                                <div
+                                    key={u.id}
+                                    onClick={() => insertMention(u)}
+                                    onMouseEnter={() => setMentionIdx(i)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: 10,
+                                        padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
+                                        background: i === mentionIdx ? 'var(--primary-subtle)' : 'transparent',
+                                        transition: 'background 0.15s'
+                                    }}
+                                >
+                                    <UserAvatar user={u} size={28} />
+                                    <div>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+                                            {getUserName(u)}
+                                        </div>
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <div style={{
+                    display: 'flex', alignItems: 'flex-end', gap: 10,
+                    background: 'var(--bento-glass)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 16, padding: '10px 12px',
+                    transition: 'border-color 0.2s',
+                    boxShadow: '0 4px 16px -4px rgba(0,0,0,0.1)'
+                }}>
+                    <div style={{
+                        width: 32, height: 32, borderRadius: 10,
+                        background: 'var(--primary-subtle)', color: 'var(--primary)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0, cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                    title="Type @ to mention"
+                    onClick={() => {
+                        setInputValue(prev => prev + '@');
+                        setMentionQuery('');
+                        inputRef.current?.focus();
+                    }}
+                    >
+                        <AtSign size={16} />
+                    </div>
+                    <textarea
+                        ref={inputRef}
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Type a message... Use @ to mention teammates"
+                        rows={1}
+                        style={{
+                            flex: 1, background: 'none', border: 'none', outline: 'none',
+                            fontSize: 13, color: 'var(--text-primary)', fontWeight: 500,
+                            resize: 'none', lineHeight: 1.5, maxHeight: 120,
+                            fontFamily: 'var(--font-main)',
+                            minHeight: 24
+                        }}
+                        onInput={(e) => {
+                            const t = e.currentTarget;
+                            t.style.height = '24px';
+                            t.style.height = Math.min(t.scrollHeight, 120) + 'px';
+                        }}
+                    />
+                    <button
+                        onClick={handleSend}
+                        disabled={!inputValue.trim() || sending}
+                        style={{
+                            width: 36, height: 36, borderRadius: 12,
+                            background: inputValue.trim()
+                                ? 'linear-gradient(135deg, var(--primary), var(--accent))'
+                                : 'var(--bg-app)',
+                            color: inputValue.trim() ? '#fff' : 'var(--text-muted)',
+                            border: 'none', cursor: inputValue.trim() ? 'pointer' : 'default',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0, transition: 'all 0.3s',
+                            boxShadow: inputValue.trim() ? '0 6px 20px -6px var(--primary-glow)' : 'none',
+                            opacity: sending ? 0.5 : 1
+                        }}
+                    >
+                        <Send size={16} />
+                    </button>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
@@ -325,6 +700,7 @@ export const SharedWorkspacesView = () => {
     const [sharedFiles, setSharedFiles] = useState<SharedFile[]>([]);
     const [sharedAnalyses, setSharedAnalyses] = useState<SharedAnalysis[]>([]);
     const [wsActivity, setWsActivity] = useState<ActivityLog[]>([]);
+    const [messages, setMessages] = useState<WorkspaceMessage[]>([]);
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
@@ -364,14 +740,19 @@ export const SharedWorkspacesView = () => {
     const fetchWorkspaceData = useCallback(async () => {
         if (!token || !selectedWorkspaceId) return;
         try {
-            const [filesRes, analysesRes, activityRes] = await Promise.all([
+            const [filesRes, analysesRes, activityRes, messagesRes] = await Promise.all([
                 fetch(`${API_URL}/api/workspaces/${selectedWorkspaceId}/files`, { headers: { Authorization: `Bearer ${token}` } }),
                 fetch(`${API_URL}/api/workspaces/${selectedWorkspaceId}/analyses`, { headers: { Authorization: `Bearer ${token}` } }),
-                fetch(`${API_URL}/api/workspaces/${selectedWorkspaceId}/activity`, { headers: { Authorization: `Bearer ${token}` } })
+                fetch(`${API_URL}/api/workspaces/${selectedWorkspaceId}/activity`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API_URL}/api/workspaces/${selectedWorkspaceId}/messages`, { headers: { Authorization: `Bearer ${token}` } })
             ]);
             if (filesRes.ok) setSharedFiles(await filesRes.json());
             if (analysesRes.ok) setSharedAnalyses(await analysesRes.json());
             if (activityRes.ok) setWsActivity(await activityRes.json());
+            if (messagesRes.ok) {
+                const data = await messagesRes.json();
+                setMessages(data.messages || []);
+            }
         } catch (e) { console.error('Failed to fetch workspace data:', e); }
     }, [token, selectedWorkspaceId]);
 
@@ -485,6 +866,7 @@ export const SharedWorkspacesView = () => {
         { id: 'team', label: 'Team', icon: Users, count: wsMembers.length },
         { id: 'data', label: 'Shared Data', icon: Database, count: sharedFiles.length },
         { id: 'analysis', label: 'Analysis Hub', icon: BarChart3, count: sharedAnalyses.length },
+        { id: 'discussion', label: 'Discussion', icon: MessageCircle, count: messages.length },
         { id: 'activity', label: 'Activity', icon: Activity, count: wsActivity.length }
     ];
 
@@ -1014,6 +1396,16 @@ export const SharedWorkspacesView = () => {
                                             </div>
                                         )}
                                     </motion.div>
+                                )}
+
+                                {activeTab === 'discussion' && (
+                                    <DiscussionTab
+                                        workspaceId={selectedWorkspaceId}
+                                        token={token!}
+                                        messages={messages}
+                                        onRefresh={fetchWorkspaceData}
+                                        user={user}
+                                    />
                                 )}
 
                                 {activeTab === 'activity' && (

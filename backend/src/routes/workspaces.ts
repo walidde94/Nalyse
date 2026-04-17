@@ -5,6 +5,12 @@ import { executeWorkspaceAction } from '../services/workspaceService';
 
 const router = Router();
 
+// Helper: safely convert BigInt fields to strings for JSON serialization
+const serializeFile = (f: any) => ({
+    ...f,
+    size: f.size != null ? f.size.toString() : '0'
+});
+
 // GET all workspaces for the authenticated user
 router.get('/', authenticate, async (req: any, res: any) => {
     try {
@@ -41,7 +47,7 @@ router.get('/my-unshared-files', authenticate, async (req: any, res: any) => {
             }
         });
 
-        res.json(files);
+        res.json(files.map(serializeFile));
     } catch (error) {
         console.error('Error fetching unshared files:', error);
         res.status(500).json({ error: 'Failed to fetch files' });
@@ -225,7 +231,7 @@ router.get('/:id/files', authenticate, async (req: any, res: any) => {
         });
 
         res.json(files.map(f => ({
-            ...f,
+            ...serializeFile(f),
             hasAnalysis: f.analyses.length > 0,
             latestAnalysisId: f.analyses[0]?.id || null,
             latestAnalysisDate: f.analyses[0]?.completedAt || null
@@ -326,7 +332,7 @@ router.post('/:id/share-file', authenticate, async (req: any, res: any) => {
             filename: file.originalName || file.filename
         });
 
-        res.json(updated);
+        res.json(serializeFile(updated));
     } catch (error) {
         console.error('Error sharing file:', error);
         res.status(500).json({ error: 'Failed to share file' });
@@ -370,6 +376,176 @@ router.post('/:id/unshare-file', authenticate, async (req: any, res: any) => {
     } catch (error) {
         console.error('Error unsharing file:', error);
         res.status(500).json({ error: 'Failed to unshare file' });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// WORKSPACE MESSAGES WITH @MENTIONS
+// ═══════════════════════════════════════════════════════════════
+
+// GET messages for a workspace
+router.get('/:id/messages', authenticate, async (req: any, res: any) => {
+    try {
+        const { id: workspaceId } = req.params;
+        const userId = req.user.userId || req.user.id;
+        const cursor = req.query.cursor as string | undefined;
+        const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+
+        const member = await prisma.workspaceMember.findUnique({
+            where: { workspaceId_userId: { workspaceId, userId } }
+        });
+        if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
+
+        const messages = await prisma.workspaceMessage.findMany({
+            where: { workspaceId },
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+            include: {
+                author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } }
+            }
+        });
+
+        res.json({
+            messages: messages.reverse(),
+            nextCursor: messages.length === limit ? messages[0]?.id : null
+        });
+    } catch (error) {
+        console.error('Error fetching workspace messages:', error);
+        res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+});
+
+// POST a new message (with @mention parsing)
+router.post('/:id/messages', authenticate, async (req: any, res: any) => {
+    try {
+        const { id: workspaceId } = req.params;
+        const { content } = req.body;
+        const userId = req.user.userId || req.user.id;
+
+        if (!content?.trim()) return res.status(400).json({ error: 'Message content is required' });
+
+        const member = await prisma.workspaceMember.findUnique({
+            where: { workspaceId_userId: { workspaceId, userId } }
+        });
+        if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
+
+        // Parse @mentions from the message content
+        const mentionPattern = /@\[([^\]]+)\]\(([^)]+)\)/g;
+        const mentions: string[] = [];
+        let match;
+        while ((match = mentionPattern.exec(content)) !== null) {
+            mentions.push(match[2]); // userId from the mention syntax
+        }
+
+        const message = await prisma.workspaceMessage.create({
+            data: {
+                workspaceId,
+                authorId: userId,
+                content: content.trim(),
+                mentions
+            },
+            include: {
+                author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } }
+            }
+        });
+
+        // Create notifications for mentioned users
+        if (mentions.length > 0) {
+            const author = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, email: true } });
+            const authorName = author?.displayName || author?.email?.split('@')[0] || 'Someone';
+            const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { name: true } });
+
+            await prisma.notification.createMany({
+                data: mentions
+                    .filter(mentionedId => mentionedId !== userId) // Don't notify self
+                    .map(mentionedId => ({
+                        userId: mentionedId,
+                        title: `${authorName} mentioned you`,
+                        message: `You were mentioned in ${workspace?.name || 'a workspace'}: "${content.slice(0, 80)}${content.length > 80 ? '...' : ''}"`,
+                        category: 'mention',
+                        priority: 'high',
+                        source: 'WORKSPACE',
+                        iconType: 'at-sign',
+                        color: '#8b5cf6',
+                        metadata: { workspaceId, messageId: message.id }
+                    }))
+            });
+        }
+
+        // Log to audit
+        await executeWorkspaceAction(workspaceId, userId, 'MESSAGE_SENT', message.id, {
+            preview: content.slice(0, 50),
+            mentionCount: mentions.length
+        });
+
+        res.status(201).json(message);
+    } catch (error) {
+        console.error('Error sending workspace message:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// DELETE a message (author or admin only)
+router.delete('/:id/messages/:messageId', authenticate, async (req: any, res: any) => {
+    try {
+        const { id: workspaceId, messageId } = req.params;
+        const userId = req.user.userId || req.user.id;
+
+        const member = await prisma.workspaceMember.findUnique({
+            where: { workspaceId_userId: { workspaceId, userId } }
+        });
+        if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
+
+        const message = await prisma.workspaceMessage.findUnique({ where: { id: messageId } });
+        if (!message || message.workspaceId !== workspaceId) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        if (message.authorId !== userId && member.role !== 'admin') {
+            return res.status(403).json({ error: 'Only the author or admin can delete messages' });
+        }
+
+        await prisma.workspaceMessage.delete({ where: { id: messageId } });
+        res.status(204).end();
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        res.status(500).json({ error: 'Failed to delete message' });
+    }
+});
+
+// GET workspace members for @mention autocomplete
+router.get('/:id/mentionable-users', authenticate, async (req: any, res: any) => {
+    try {
+        const { id: workspaceId } = req.params;
+        const userId = req.user.userId || req.user.id;
+        const q = (req.query.q as string || '').toLowerCase();
+
+        const member = await prisma.workspaceMember.findUnique({
+            where: { workspaceId_userId: { workspaceId, userId } }
+        });
+        if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
+
+        const members = await prisma.workspaceMember.findMany({
+            where: { workspaceId },
+            include: { user: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } } }
+        });
+
+        let users = members.map(m => m.user);
+
+        if (q) {
+            users = users.filter(u =>
+                (u.displayName || '').toLowerCase().includes(q) ||
+                (u.firstName || '').toLowerCase().includes(q) ||
+                (u.lastName || '').toLowerCase().includes(q) ||
+                u.email.toLowerCase().includes(q)
+            );
+        }
+
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching mentionable users:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
     }
 });
 
