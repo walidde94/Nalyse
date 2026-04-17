@@ -35,7 +35,7 @@ const getOptions = (): any => {
     // Harden production configuration
     const config: any = {
         type: 'postgres',
-        synchronize: !isProd, // NEVER auto-synchronize in production — use migrations instead
+        synchronize: false, // Disabled to prevent conflicts with Prisma
         logging: false,
         entities,
         migrations: [path.join(__dirname, '../migrations/**/*.{ts,js}')],
@@ -95,25 +95,7 @@ export const initializeDatabase = async () => {
         await AppDataSource.initialize();
         console.log('✅ Database connection established.');
 
-        // Lazy-sync schema changes for new deployments
-        if (!isTest) {
-            try {
-                const queryRunner = AppDataSource.createQueryRunner();
-                const dashTable = await queryRunner.getTable('dashboards');
-                const filesTable = await queryRunner.getTable('files');
-                const needsSync = !dashTable || 
-                    (filesTable && (!filesTable.findColumnByName('isProcessed') || !filesTable.findColumnByName('isArchived')));
-                
-                if (needsSync) {
-                    console.log('🔄 Schema drift detected, synchronizing...');
-                    await AppDataSource.synchronize(false);
-                    console.log('✅ Schema synchronized successfully.');
-                }
-                await queryRunner.release();
-            } catch (e) {
-                console.error('⚠️ Schema sync check failed:', e);
-            }
-        }
+        // Legacy auto-sync block removed. Schema should be managed exclusively via Prisma.
     } catch (error: any) {
         console.error('❌ Database connection failed!');
         console.error('Error Message:', error.message);

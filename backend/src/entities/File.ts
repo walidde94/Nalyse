@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { User } from './User';
 import { Organization } from './Organization';
 import { Analysis } from './Analysis';
@@ -6,7 +6,7 @@ import { Group } from './Group';
 
 @Entity('files')
 export class File {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn('uuid')
     id: string;
 
     @Column()
@@ -77,4 +77,19 @@ export class File {
 
     @Column({ default: false })
     isArchived: boolean;
+
+    @BeforeInsert()
+    generateIdAndDates() {
+        if (!this.id) {
+            const { v4: uuidv4 } = require('uuid');
+            this.id = uuidv4();
+        }
+        if (!this.createdAt) this.createdAt = new Date();
+        if (!this.updatedAt) this.updatedAt = new Date();
+    }
+
+    @BeforeUpdate()
+    updateDate() {
+        this.updatedAt = new Date();
+    }
 }

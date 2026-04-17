@@ -121,16 +121,27 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
             setIsConnected(false);
         });
 
+        newSocket.on('initial_presence', (occupants: Presence[]) => {
+            const presenceMap: Record<string, Presence> = {};
+            occupants.forEach(p => {
+                presenceMap[p.userId] = p;
+            });
+            setActiveUsers(presenceMap);
+        });
+
         newSocket.on('workspace:action', (log: AuditLog) => {
-            setActivityFeed(prev => [log, ...prev].slice(0, 50));
-            // Trigger a custom generic DOM event for other parts of the app to re-fetch if needed
+            setActivityFeed(prev => {
+                // Prevent duplicate logs
+                if (prev.some(l => l.id === log.id)) return prev;
+                return [log, ...prev].slice(0, 50);
+            });
             window.dispatchEvent(new CustomEvent('workspace:global_update', { detail: log }));
         });
 
         newSocket.on('workspace:presence', (presence: Presence) => {
             setActiveUsers(prev => {
                 const next = { ...prev };
-                if (presence.action === 'left') {
+                if (presence.action === 'left' || presence.action === 'offline') {
                     delete next[presence.userId];
                 } else {
                     next[presence.userId] = presence;

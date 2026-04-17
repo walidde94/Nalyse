@@ -73,7 +73,7 @@ export const register = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Email is already registered. Please sign in.' });
         }
 
-        res.status(500).json({ error: 'Server error during registration' });
+        res.status(500).json({ error: error instanceof Error ? error.message : "Server error during registration" });
     }
 };
 

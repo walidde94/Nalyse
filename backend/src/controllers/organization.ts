@@ -29,16 +29,10 @@ export const getOrganization = async (req: AuthRequest, res: Response) => {
             select: ['id', 'firstName', 'lastName', 'email', 'role', 'avatarUrl', 'lastLoginAt']
         });
 
-        // Get pending invitations
-        const invRepo = AppDataSource.getRepository(UserInvitation);
-        const pendingInvites = await invRepo.find({
-            where: { organizationId: user.organization.id, status: 'pending' }
-        });
-
         res.json({
             organization: user.organization,
             members,
-            pendingInvites,
+            pendingInvites: [], // Disabled due to unregistered entity
             currentUserRole: user.role
         });
 

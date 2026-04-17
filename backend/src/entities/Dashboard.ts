@@ -1,10 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { User } from './User';
 import { Organization } from './Organization';
 
 @Entity('dashboards')
 export class Dashboard {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn('uuid')
     id: string;
 
     @Column()
@@ -38,4 +38,19 @@ export class Dashboard {
     @ManyToOne(() => Organization, (org) => org.dashboards)
     @JoinColumn({ name: 'organizationId' })
     organization: Organization;
+
+    @BeforeInsert()
+    generateIdAndDates() {
+        if (!this.id) {
+            const { v4: uuidv4 } = require('uuid');
+            this.id = uuidv4();
+        }
+        if (!this.createdAt) this.createdAt = new Date();
+        if (!this.updatedAt) this.updatedAt = new Date();
+    }
+
+    @BeforeUpdate()
+    updateDate() {
+        this.updatedAt = new Date();
+    }
 }

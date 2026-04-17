@@ -43,7 +43,8 @@ import {
     MessageSquare,
     Webhook,
     Boxes,
-    Layers
+    Layers,
+    Users
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -88,6 +89,7 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
     democracy: <Sparkles size={16} strokeWidth={2} />,
     automation: <Activity size={16} strokeWidth={2} />,
     collaboration: <MessageSquare size={16} strokeWidth={2} />,
+    'shared-workspaces': <Users size={16} strokeWidth={2} />,
     sources: <Database size={16} strokeWidth={2} />,
     migration: <ArrowRightLeft size={16} strokeWidth={2} />,
     organization: <Building2 size={16} strokeWidth={2} />,
@@ -124,6 +126,7 @@ function sidebarNavLabel(id: string, t: (key: string) => string): string {
         democracy: 'Self-Service Studio',
         automation: 'Automated Reports',
         collaboration: 'Collaboration',
+        'shared-workspaces': 'Shared Workspaces',
         sources: 'Data Connectors',
         migration: 'Data Migration',
         organization: 'Organization & RBAC',

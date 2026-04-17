@@ -21,7 +21,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     const { user, logout } = useAuth();
     const { isArchitectMode, toggleArchitectMode } = useArchitect();
     const { language, setLanguage, t } = useLanguage();
-    const { activeWorkspace, activeUsers } = useWorkspace();
+    const { activeWorkspace, activeUsers, isConnected } = useWorkspace();
     const [showProfile, setShowProfile] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -141,26 +141,58 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
 
                     {/* Shared Workspace Status */}
+                    {/* Shared Workspace Status */}
                     {activeWorkspace && (
                         <div className="desktop-only" style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px',
-                            background: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.5)',
-                            padding: '4px 8px',
-                            borderRadius: '8px',
-                            border: `1px solid ${isDark ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
-                            marginRight: '8px'
+                            gap: '8px',
+                            background: isMidnight 
+                                ? 'rgba(var(--primary-rgb), 0.08)' 
+                                : isDark 
+                                    ? 'rgba(255,255,255,0.03)' 
+                                    : 'rgba(0,0,0,0.03)',
+                            padding: '4px 12px',
+                            borderRadius: '99px',
+                            border: `1px solid ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                            marginRight: '12px',
+                            transition: 'all 0.3s ease',
+                            cursor: 'default'
                         }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }}></div>
-                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <div className="absolute w-2 h-2 rounded-full animate-ping" style={{ background: isConnected ? '#10b981' : '#ef4444', opacity: 0.4 }} />
+                                <div style={{ 
+                                    width: '6px', 
+                                    height: '6px', 
+                                    borderRadius: '50%', 
+                                    background: isConnected ? '#10b981' : '#ef4444',
+                                    boxShadow: isConnected ? '0 0 10px rgba(16, 185, 129, 0.4)' : 'none'
+                                }} />
+                            </div>
+                            <span style={{ 
+                                fontSize: '11px', 
+                                fontWeight: 700, 
+                                color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(15,23,42,0.8)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                            }}>
                                 {activeWorkspace.name}
+                                {Object.keys(activeUsers).length > 1 && (
+                                    <span style={{ 
+                                        fontSize: '9px', 
+                                        fontWeight: 800,
+                                        padding: '1px 6px',
+                                        background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                                        borderRadius: '4px',
+                                        color: 'var(--primary)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em'
+                                    }}>
+                                        {Object.keys(activeUsers).length} ONLINE
+                                    </span>
+                                )}
                             </span>
-                            {Object.keys(activeUsers).length > 0 && (
-                                <div style={{ display: 'flex', marginLeft: '4px' }}>
-                                    <span style={{ fontSize: '9px', opacity: 0.6 }}>· {Object.keys(activeUsers).length} active</span>
-                                </div>
-                            )}
                         </div>
                     )}
 

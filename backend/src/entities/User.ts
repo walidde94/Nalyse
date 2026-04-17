@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, BeforeInsert } from 'typeorm';
 import { Organization } from './Organization';
 import { File } from './File';
 import { Group } from './Group';
@@ -7,7 +7,7 @@ import { Dashboard } from './Dashboard';
 
 @Entity('users')
 export class User {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn('uuid')
     id: string;
 
     @Column({ unique: true })
@@ -90,4 +90,12 @@ export class User {
 
     @Column({ type: 'varchar', default: 'inactive' })
     subscriptionStatus: 'active' | 'inactive' | 'trialing' | 'past_due';
+
+    @BeforeInsert()
+    generateId() {
+        if (!this.id) {
+            const { v4: uuidv4 } = require('uuid');
+            this.id = uuidv4();
+        }
+    }
 }

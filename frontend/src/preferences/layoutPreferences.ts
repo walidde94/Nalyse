@@ -17,7 +17,7 @@ export const DEFAULT_ITEMS: Record<SidebarGroupKey, readonly string[]> = {
     analytics: ['dashboard', 'lens', 'correlate', 'diff', 'anomaly', 'financial'],
     predictive: ['forecast', 'spatial', 'automl', 'developer', 'webhooks', 'embed'],
     bi: ['canvas', 'bi', 'projects'],
-    selfservice: ['democracy', 'automation', 'collaboration'],
+    selfservice: ['democracy', 'automation', 'collaboration', 'shared-workspaces'],
 };
 
 export const DEFAULT_FOOTER_ORDER = ['sources', 'migration', 'organization', 'settings', 'docs'] as const;

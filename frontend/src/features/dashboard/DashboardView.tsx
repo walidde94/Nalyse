@@ -13,6 +13,7 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip, BarChart, Bar, XAxis, LineChart, Line } from 'recharts';
 import { calculatePulse } from './pulseEngine';
 import { useAuth } from '../../contexts/AuthContext';
+import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
 import { AmbientStatusStrip, IntelligenceTimeline, PerformanceGauge, LiveClock } from './CommandHUD';
 import { NeuralDropZone } from './NeuralDropZone';
@@ -598,6 +599,7 @@ export const DashboardView = ({
     onDeleteFile,
     onToggleFavorite,
     onUpdateFileGroup,
+    onUpdateFileWorkspace,
     onCreateGroup,
     onDeleteGroup,
     onDeleteMultiple,
@@ -630,6 +632,7 @@ export const DashboardView = ({
     const [activeTab, setActiveTab] = useState<'properties' | 'preview'>('properties');
     const [datasetTab, setDatasetTab] = useState<'active' | 'archived'>('active');
     const { token } = useAuth();
+    const { workspaces } = useWorkspace();
     const safeFiles = Array.isArray(files) ? files : [];
 
     const filteredFiles = useMemo(() => {
@@ -1139,7 +1142,7 @@ export const DashboardView = ({
                                                     </div>
                                                     {viewMode === 'list' ? (
                                                         <div className="card overflow-hidden p-0 border border-[var(--border-subtle)] shadow-xl">
-                                                            <FileTable files={groupFiles} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupFiles)} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onArchiveFile={onArchiveFile} onUpdateFileGroup={onUpdateFileGroup} onViewMeta={setViewingMeta} />
+                                                            <FileTable files={groupFiles} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupFiles)} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onArchiveFile={onArchiveFile} onUpdateFileGroup={onUpdateFileGroup} onUpdateFileWorkspace={onUpdateFileWorkspace} onViewMeta={setViewingMeta} />
                                                         </div>
                                                     ) : (
                                                         <FileGrid files={groupFiles} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onFileSelect={onFileSelect} onDeleteFile={onDeleteFile} onToggleFavorite={onToggleFavorite} onArchiveFile={onArchiveFile} onViewMeta={setViewingMeta} />
@@ -1151,7 +1154,7 @@ export const DashboardView = ({
                                             <div className="flex-col gap-3">
                                                 {viewMode === 'list' ? (
                                                     <div className="card overflow-hidden p-0 border border-[var(--border-subtle)] shadow-xl">
-                                                        <FileTable files={groupedFiles['ungrouped']} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupedFiles['ungrouped'])} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onArchiveFile={onArchiveFile} onUpdateFileGroup={onUpdateFileGroup} onViewMeta={setViewingMeta} />
+                                                        <FileTable files={groupedFiles['ungrouped']} groups={groups} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onToggleAll={() => toggleAll(groupedFiles['ungrouped'])} onFileSelect={onFileSelect} onToggleFavorite={onToggleFavorite} onDeleteFile={onDeleteFile} onArchiveFile={onArchiveFile} onUpdateFileGroup={onUpdateFileGroup} onUpdateFileWorkspace={onUpdateFileWorkspace} onViewMeta={setViewingMeta} />
                                                     </div>
                                                 ) : (
                                                     <FileGrid files={groupedFiles['ungrouped']} selectedFiles={selectedFiles} onToggleSelection={toggleSelection} onFileSelect={onFileSelect} onDeleteFile={onDeleteFile} onToggleFavorite={onToggleFavorite} onArchiveFile={onArchiveFile} onViewMeta={setViewingMeta} />
@@ -1829,7 +1832,8 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
     );
 };
 
-const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAll, onFileSelect, onToggleFavorite, onDeleteFile, onArchiveFile, onUpdateFileGroup, onViewMeta }: any) => {
+const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAll, onFileSelect, onToggleFavorite, onDeleteFile, onArchiveFile, onUpdateFileGroup, onUpdateFileWorkspace, onViewMeta }: any) => {
+    const { workspaces } = useWorkspace();
     const allSelected = files.length > 0 && files.every((f: any) => selectedFiles.has(f.id));
     return (
         <div style={{ padding: '0 4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -1851,6 +1855,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                         <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Volume</th>
                         <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Timestamp</th>
                         <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Topology Group</th>
+                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Shared Workspace</th>
                         <th style={{ padding: '0 24px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)', textAlign: 'right' }}>Directives</th>
                     </tr>
                 </thead>
@@ -2021,6 +2026,40 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                 ))}
                                             </select>
                                             <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-tertiary)' }}>
+                                                <ArrowDownRight size={14} />
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td style={{ padding: '16px 16px' }} onClick={e => e.stopPropagation()}>
+                                        <div style={{ position: 'relative' }}>
+                                            <select
+                                                style={{
+                                                    background: 'color-mix(in srgb, var(--primary) 3%, transparent)',
+                                                    border: '1px solid var(--primary-subtle)',
+                                                    borderRadius: '10px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 600,
+                                                    color: 'var(--primary)',
+                                                    padding: '8px 32px 8px 12px',
+                                                    outline: 'none',
+                                                    appearance: 'none',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    width: '100%',
+                                                    maxWidth: '160px'
+                                                }}
+                                                value={f.workspaceId || ''}
+                                                onChange={(e) => onUpdateFileWorkspace?.(f.id, e.target.value || null)}
+                                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--primary-subtle)'; }}
+                                            >
+                                                <option value="">Private</option>
+                                                {workspaces?.map((w: any) => (
+                                                    <option key={w.id} value={w.id}>{w.name}</option>
+                                                ))}
+                                            </select>
+                                            <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--primary)' }}>
                                                 <ArrowDownRight size={14} />
                                             </div>
                                         </div>

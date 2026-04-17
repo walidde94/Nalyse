@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { AppDataSource } from '../config/database';
+import { AppDataSource, prisma } from '../config/database';
 import { User } from '../entities/User';
 import { Organization } from '../entities/Organization';
 
@@ -13,7 +13,7 @@ export class AuthService {
      * Register a new user and create their organization
      */
     async register(email: string, password: string, firstName?: string, lastName?: string, organizationName?: string) {
-        return await AppDataSource.transaction(async (transactionalEntityManager) => {
+        const result = await AppDataSource.transaction(async (transactionalEntityManager) => {
             // Check if user exists
             const existingUser = await transactionalEntityManager.findOne(User, { where: { email } });
             if (existingUser) {
@@ -39,18 +39,22 @@ export class AuthService {
             const slug = this.generateSlug(finalOrgName);
 
             const organization = transactionalEntityManager.create(Organization, {
+                id: crypto.randomUUID(),
                 name: finalOrgName,
                 slug,
                 plan: 'free',
                 storageLimit: 104857600, // 100MB
                 userLimit: 1,
-                fileLimit: 5
+                fileLimit: 5,
+                createdAt: new Date(),
+                updatedAt: new Date()
             });
 
             const savedOrg = await transactionalEntityManager.save(Organization, organization);
 
             // Create user
             const user = transactionalEntityManager.create(User, {
+                id: crypto.randomUUID(),
                 email,
                 passwordHash,
                 firstName: firstName || null,
@@ -58,13 +62,35 @@ export class AuthService {
                 emailVerificationToken,
                 organization: savedOrg,
                 organizationId: savedOrg.id,
-                role: 'user'
+                role: 'user',
+                createdAt: new Date(),
+                updatedAt: new Date()
             });
 
             const savedUser = await transactionalEntityManager.save(User, user);
 
             return { user: savedUser, organization: savedOrg };
         });
+
+        // Create default Workspace via Prisma after transaction commits
+        try {
+            await prisma.workspace.create({
+                data: {
+                    name: 'General Workspace',
+                    organizationId: result.organization.id,
+                    members: {
+                        create: {
+                            userId: result.user.id,
+                            role: 'editor'
+                        }
+                    }
+                }
+            });
+        } catch (err) {
+            console.error('Failed to create default workspace:', err);
+        }
+
+        return result;
     }
 
     /**

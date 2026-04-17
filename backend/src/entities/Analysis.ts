@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { File } from './File';
 import { User } from './User';
 
@@ -6,7 +6,7 @@ const isTest = process.env.NODE_ENV === 'test';
 
 @Entity('analyses')
 export class Analysis {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn('uuid')
     id: string;
 
     @ManyToOne(() => File, file => file.analyses, { onDelete: 'CASCADE' })
@@ -51,4 +51,19 @@ export class Analysis {
 
     @Column({ type: isTest ? 'datetime' : 'timestamp', nullable: true })
     completedAt: Date;
+
+    @BeforeInsert()
+    generateIdAndDates() {
+        if (!this.id) {
+            const { v4: uuidv4 } = require('uuid');
+            this.id = uuidv4();
+        }
+        if (!this.createdAt) this.createdAt = new Date();
+        if (!this.updatedAt) this.updatedAt = new Date();
+    }
+
+    @BeforeUpdate()
+    updateDate() {
+        this.updatedAt = new Date();
+    }
 }

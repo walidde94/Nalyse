@@ -55,8 +55,14 @@ model User {
   avatarUrl      String?
   stripeCustomerId      String?
   subscriptionStatus    String  @default("inactive")
-  lastLogin      DateTime?
+  lastLoginAt    DateTime?
   organizationId String?
+  emailVerified           Boolean   @default(false)
+  emailVerificationToken  String?
+  passwordResetToken      String?
+  passwordResetExpires    DateTime?
+  notificationPreferences Json?     @default("{}")
+  apiKeys                 Json?     @default("[]")
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -72,6 +78,8 @@ model User {
   dashboards      Dashboard[]
   workspaceMembers WorkspaceMember[]
   auditLogs       AuditLog[]
+  agents          Agent[]
+  groups          Group[]
 
   @@map("users")
 }
@@ -84,10 +92,15 @@ model File {
   size           BigInt    @default(0)
   path           String?
   s3Key          String?
+  s3Bucket       String?
+  groupId        String?
+  metadata       Json?
+  checksum       String?
   status         String    @default("ready")
   isFavorite     Boolean   @default(false)
   isDeleted      Boolean   @default(false)
   isProcessed    Boolean   @default(false)
+  isArchived     Boolean   @default(false)
   processedAt    DateTime?
   ownerId        String
   organizationId String?
@@ -100,6 +113,7 @@ model File {
   workspace    Workspace?    @relation(fields: [workspaceId], references: [id])
   analyses     Analysis[]
   schedules    Schedule[]
+  group        Group?        @relation(fields: [groupId], references: [id])
 
   @@map("files")
 }
@@ -112,6 +126,7 @@ model Analysis {
   results         Json?
   insights        Json?
   statistics      Json?
+  errorMessage    String?
   processingTimeMs Int?
   completedAt     DateTime?
   createdAt       DateTime  @default(now())
@@ -300,4 +315,48 @@ model AuditLog {
   user        User      @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User     @relation(fields: [ownerId], references: [id])
+  files       File[]
+
+  @@map("groups")
+}
+
+model Agent {
+  id           String      @id @default(uuid())
+  name         String
+  role         String
+  status       String
+  currentGoal  String?
+  finalReport  String?
+  userId       String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  user         User        @relation(fields: [userId], references: [id])
+  tasks        AgentTask[]
+
+  @@map("agent")
+}
+
+model AgentTask {
+  id           String      @id @default(uuid())
+  description  String
+  status       String      @default("pending")
+  result       String?
+  agentId      String
+  createdAt    DateTime    @default(now())
+
+  agent        Agent       @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("agent_task")
 }

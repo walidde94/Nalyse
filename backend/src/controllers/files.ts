@@ -160,13 +160,25 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        // Single query: get all files + whether they have a completed analysis
-        const files = await AppDataSource.getRepository(File)
+        const userWorkspaces = await prisma.workspaceMember.findMany({ 
+            where: { userId }, 
+            select: { workspaceId: true } 
+        });
+        const workspaceIds = userWorkspaces.map(w => w.workspaceId);
+
+        let query = AppDataSource.getRepository(File)
             .createQueryBuilder('file')
             .leftJoin('analyses', 'a', 'a."fileId" = file.id AND a.status = :status', { status: 'completed' })
             .addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END', 'has_analysis')
-            .addSelect('a."completedAt"', 'analysis_completed_at')
-            .where('file.ownerId = :userId', { userId })
+            .addSelect('a."completedAt"', 'analysis_completed_at');
+
+        if (workspaceIds.length > 0) {
+            query = query.where('(file.ownerId = :userId OR file.workspaceId IN (:...workspaceIds))', { userId, workspaceIds });
+        } else {
+            query = query.where('file.ownerId = :userId', { userId });
+        }
+
+        const files = await query
             .andWhere('file.isDeleted = false')
             .orderBy('file.createdAt', 'DESC')
             .getRawAndEntities();
@@ -252,6 +264,42 @@ export const toggleArchiveHandler = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// ─── Update File Workspace ──────────────────────────────────────────────────
+
+export const updateFileWorkspaceHandler = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { workspaceId } = req.body;
+    const fileRepo = AppDataSource.getRepository(File);
+
+    try {
+        const fileId = req.params.id as string;
+        const file = await fileRepo.findOne({ where: { id: fileId, isDeleted: false } });
+        if (!file || file.ownerId !== userId) return res.status(404).json({ error: 'File not found or unauthorized' });
+
+        if (workspaceId) {
+            // Verify workspace exists and user is admin/editor (or at least member, allowing permissive sharing)
+            const membership = await prisma.workspaceMember.findFirst({
+                where: { userId, workspaceId }
+            });
+            if (!membership) return res.status(403).json({ error: 'You are not a member of this workspace' });
+        }
+
+        file.workspaceId = workspaceId || null;
+        await fileRepo.save(file);
+        
+        // Broadcast
+        if (workspaceId) {
+            await executeWorkspaceAction(workspaceId, userId, 'FILE_SHARED', fileId, { filename: file.filename });
+        }
+
+        res.json(file);
+    } catch (error) {
+        res.status(500).json({ error: 'Workspace assignment failed' });
+    }
+};
+
 // ─── Analyze File ───────────────────────────────────────────────────────────
 // Refactored: Single source of truth for results. No more split storage.
 
@@ -268,7 +316,15 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
 
     try {
         const file = await fileRepo.findOne({ where: { id: fileId as string, isDeleted: false } });
-        if (!file) return res.status(404).json({ error: 'File not found' });
+        
+        let hasAccess = false;
+        if (file && file.ownerId === userId) hasAccess = true;
+        if (file && file.workspaceId && !hasAccess) {
+            const memberCount = await prisma.workspaceMember.count({ where: { userId, workspaceId: file.workspaceId }});
+            if (memberCount > 0) hasAccess = true;
+        }
+
+        if (!file || !hasAccess) return res.status(404).json({ error: 'File not found or unauthorized' });
 
         // ─── Cache Hit ──────────────────────────────────────────────
         if (!forceReprocess) {
@@ -671,7 +727,15 @@ export const previewFileHandler = async (req: AuthRequest, res: Response) => {
 
     try {
         const file = await fileRepo.findOne({ where: { id: fileId as string, isDeleted: false } });
-        if (!file || file.ownerId !== userId) return res.status(404).json({ error: 'File not found' });
+        
+        let hasAccess = false;
+        if (file && file.ownerId === userId) hasAccess = true;
+        if (file && file.workspaceId && !hasAccess) {
+            const memberCount = await prisma.workspaceMember.count({ where: { userId, workspaceId: file.workspaceId }});
+            if (memberCount > 0) hasAccess = true;
+        }
+
+        if (!file || !hasAccess) return res.status(404).json({ error: 'File not found or unauthorized' });
 
         const filePath = file.s3Key || file.filename;
         const uploadsDir = process.env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');

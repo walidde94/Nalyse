@@ -143,6 +143,16 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Lightweight heartbeat for latency measurement
+app.get('/heartbeat', (req, res) => {
+    res.status(204).end();
+});
+
+// Heartbeat for dashboard sync (compatibility)
+app.head('/heartbeat', (req, res) => {
+    res.status(204).end();
+});
+
 // Mock Live Data for Testing Connectors
 app.get('/api/mock-live-data', (req, res) => {
     const isIndustrial = req.query.scale === 'industrial';

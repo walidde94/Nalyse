@@ -61,6 +61,7 @@ const SimulationView = React.lazy(() => import('./features/simulation/Simulation
 const AutomationView = React.lazy(() => import('./features/automation/AutomationView').then(m => ({ default: m.AutomationView })));
 const OrganizationView = React.lazy(() => import('./features/organization/OrganizationView').then(m => ({ default: m.OrganizationView })));
 const CollaborationView = React.lazy(() => import('./features/collaboration/CollaborationView').then(m => ({ default: m.CollaborationView })));
+const SharedWorkspacesView = React.lazy(() => import('./features/workspaces/SharedWorkspacesView').then(m => ({ default: m.SharedWorkspacesView })));
 const WebhookSystemView = React.lazy(() => import('./features/webhooks/WebhookSystemView').then(m => ({ default: m.WebhookSystemView })));
 const DashboardCanvas = React.lazy(() => import('./features/canvas/DashboardCanvas').then(m => ({ default: m.DashboardCanvas })));
 const LensVisualizer = React.lazy(() => import('./features/lens/LensVisualizer').then(m => ({ default: m.LensVisualizer })));
@@ -430,7 +431,7 @@ function AppContent() {
     // Smart Duplicate Prevention
     const existing = tabs.find(t => {
       if (t.type !== type) return false;
-      if (['dashboard', 'settings', 'correlate', 'landing', 'democracy'].includes(type)) return true;
+      if (['dashboard', 'settings', 'correlate', 'landing', 'democracy', 'shared-workspaces'].includes(type)) return true;
       if (type === 'bi' && !data && !t.data) return true; // BI Menu singleton
       if (t.title === title) return true; // Match by title (e.g. filename)
       return false;
@@ -897,6 +898,29 @@ function AppContent() {
     }
   };
 
+  const handleUpdateFileWorkspace = async (fileId: string, workspaceId: string | null) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/api/files/${fileId}/workspace`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ workspaceId: workspaceId || null })
+      });
+      if (res.ok) {
+        await fetchFiles();
+        addToast('File shared to workspace', 'success');
+      } else {
+        const err = await res.json();
+        addToast(err.error || 'Failed to update workspace access', 'error');
+      }
+    } catch (e) {
+      addToast('Failed to connect to API', 'error');
+    }
+  };
+
   const handleCreateGroup = async (name: string, description: string) => {
     if (!token) return;
     try {
@@ -1105,6 +1129,7 @@ function AppContent() {
                   id === 'democracy' ? 'Self-Service Studio' :
                     id === 'canvas' ? 'Dashboard Canvas' :
                         id === 'lens' ? 'Smart Lens' :
+                          id === 'shared-workspaces' ? 'Shared Workspaces' :
                     id.charAt(0).toUpperCase() + id.slice(1);
           openTab(id, title, data);
         }}
@@ -1146,6 +1171,7 @@ function AppContent() {
                     onToggleFavorite={handleToggleFavorite}
                     onArchiveFile={onArchiveFile}
                     onUpdateFileGroup={handleUpdateFileGroup}
+                    onUpdateFileWorkspace={handleUpdateFileWorkspace}
                     onCreateGroup={handleCreateGroup}
                     onDeleteGroup={handleDeleteGroup}
                     dragActive={dragActive}
@@ -1243,6 +1269,10 @@ function AppContent() {
 
                 {tab.type === 'collaboration' && (
                   <CollaborationView token={token || ''} />
+                )}
+
+                {tab.type === 'shared-workspaces' && (
+                  <SharedWorkspacesView />
                 )}
 
                 {tab.type === 'webhooks' && (

@@ -1,11 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, BeforeInsert } from 'typeorm';
 import { User } from './User';
 import { File } from './File';
 import { Dashboard } from './Dashboard';
 
 @Entity('organizations')
 export class Organization {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn('uuid')
     id: string;
 
     @Column({ unique: true })
@@ -61,4 +61,12 @@ export class Organization {
 
     @Column({ default: true })
     isActive: boolean;
+
+    @BeforeInsert()
+    generateId() {
+        if (!this.id) {
+            const { v4: uuidv4 } = require('uuid');
+            this.id = uuidv4();
+        }
+    }
 }
