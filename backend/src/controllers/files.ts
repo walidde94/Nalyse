@@ -271,12 +271,23 @@ export const updateFileWorkspaceHandler = async (req: AuthRequest, res: Response
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { workspaceId } = req.body;
-    const fileRepo = AppDataSource.getRepository(File);
+    const fileId = req.params.id as string;
 
     try {
-        const fileId = req.params.id as string;
-        const file = await fileRepo.findOne({ where: { id: fileId, isDeleted: false } });
-        if (!file || file.ownerId !== userId) return res.status(404).json({ error: 'File not found or unauthorized' });
+        const file = await prisma.file.findFirst({
+            where: { id: fileId, isDeleted: false }
+        });
+
+        if (!file) return res.status(404).json({ error: 'File not found' });
+        
+        // Ensure user owns the file OR is part of the file's current organization
+        if (file.ownerId !== userId) {
+            // Check if user is in the organization
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            if (user?.organizationId !== file.organizationId) {
+                return res.status(404).json({ error: 'File not found or unauthorized' });
+            }
+        }
 
         if (workspaceId) {
             // Verify workspace exists and user is admin/editor (or at least member, allowing permissive sharing)
@@ -286,16 +297,19 @@ export const updateFileWorkspaceHandler = async (req: AuthRequest, res: Response
             if (!membership) return res.status(403).json({ error: 'You are not a member of this workspace' });
         }
 
-        file.workspaceId = workspaceId || null;
-        await fileRepo.save(file);
+        const updatedFile = await prisma.file.update({
+            where: { id: fileId },
+            data: { workspaceId: workspaceId || null }
+        });
         
         // Broadcast
         if (workspaceId) {
-            await executeWorkspaceAction(workspaceId, userId, 'FILE_SHARED', fileId, { filename: file.filename });
+            await executeWorkspaceAction(workspaceId, userId, 'FILE_SHARED', fileId, { filename: updatedFile.filename });
         }
 
-        res.json(file);
+        res.json(updatedFile);
     } catch (error) {
+        console.error('Workspace assignment failed', error);
         res.status(500).json({ error: 'Workspace assignment failed' });
     }
 };
