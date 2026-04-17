@@ -1,41 +1,43 @@
 const { execSync, spawn } = require('child_process');
 
 function run() {
-    let directUrl = process.env.DIRECT_URL;
     let databaseUrl = process.env.DATABASE_URL;
+    let directUrl = process.env.DIRECT_URL;
 
-    console.log("[Boot] Initializing DB sync...");
+    console.log("[Boot] 🚀 Starting Neural Command Bootloader...");
 
+    // If DIRECT_URL is missing, we try to derive it to ensure Migrations/Push work
     if (!directUrl && databaseUrl) {
-        console.log("[Boot] DIRECT_URL is missing. Attempting to derive from DATABASE_URL...");
-        
-        // Supabase / PgBouncer commonly uses port 6543. Migrations MUST use 5432.
         if (databaseUrl.includes('6543') || databaseUrl.includes('pgbouncer=true')) {
             directUrl = databaseUrl.replace(':6543', ':5432').replace('?pgbouncer=true', '').replace('&pgbouncer=true', '');
-            console.log("[Boot] Detected pooled connection. Rewrote DIRECT_URL to bypass PgBouncer.");
+            process.env.DIRECT_URL = directUrl;
+            console.log("[Boot] 🔗 Derived DIRECT_URL for schema synchronization.");
         } else {
-            directUrl = databaseUrl;
+            process.env.DIRECT_URL = databaseUrl;
         }
-        
-        process.env.DIRECT_URL = directUrl;
     }
-
-    // Export so Prisma sees it
-    process.env.PRISMA_HIDE_UPDATE_MESSAGE = '1';
 
     try {
-        console.log("[Boot] Running prisma db push...");
-        // Use stdio inherit to see the exact error output in Render logs if it crashes again
-        execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit', env: process.env });
-        console.log("[Boot] Prisma DB push completed successfully!");
+        console.log("[Boot] 📡 Synchronizing Database Schema...");
+        // Increase memory and timeout for Prisma on limited Render instances
+        execSync('npx prisma db push --accept-data-loss', { 
+            stdio: 'inherit', 
+            env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=1024' } 
+        });
+        console.log("[Boot] ✅ Schema is in sync.");
     } catch (error) {
-        console.error("[Boot] ⚠️ Prisma DB Push Failed ⚠️");
-        console.error("[Boot] Check the error logs above for the exact reason.");
-        console.error(error);
-        // We do NOT exit. We still attempt to start Node! Let the app run so at least parts of it work.
+        console.error("[Boot] ❌ CRITICAL: Database synchronization failed!");
+        console.error("[Boot] This usually means your DIRECT_URL is incorrect or your DB is refusing connections.");
+        
+        // In local dev, we might want to continue, but on Render (production), 
+        // starting a broken app just leads to 500 errors.
+        if (process.env.NODE_ENV === 'production') {
+            console.error("[Boot] 🛑 Shuting down to prevent ghost 500 errors. Check Render logs for the Prisma error above.");
+            process.exit(1); 
+        }
     }
 
-    console.log("[Boot] Starting Node server...");
+    console.log("[Boot] 🛰️ Starting Production Server...");
     const server = spawn('node', ['dist/src/index.js'], { stdio: 'inherit', env: process.env });
 
     server.on('close', (code) => {
