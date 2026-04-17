@@ -66,6 +66,11 @@ interface WorkspaceMessage {
     mentions: string[];
     createdAt: string;
     author: { id: string; email: string; displayName?: string; firstName?: string; lastName?: string; avatarUrl?: string };
+    replyTo?: {
+        id: string;
+        content: string;
+        author: { id: string; email: string; displayName?: string; firstName?: string; lastName?: string; avatarUrl?: string };
+    } | null;
 }
 
 interface MentionableUser {
