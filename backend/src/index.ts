@@ -134,33 +134,6 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Emergency Sync Endpoint
-app.get('/api/emergency-sync', async (req, res) => {
-    const { exec } = require('child_process');
-    const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
-
-    console.log("[Emergency] Starting Schema Sync...");
-    
-    exec(`npx prisma db push --accept-data-loss`, {
-        env: { ...process.env, DATABASE_URL: databaseUrl }
-    }, (error: any, stdout: string, stderr: string) => {
-        if (error) {
-            console.error(`[Emergency] Sync Failed: ${error.message}`);
-            return res.status(500).json({ 
-                status: 'error', 
-                message: error.message, 
-                stderr 
-            });
-        }
-        console.log("[Emergency] Sync Success!");
-        res.json({ 
-            status: 'success', 
-            output: stdout,
-            message: 'Database schema is now synchronized.'
-        });
-    });
-});
-
 // Health check
 app.get('/health', (req, res) => {
     res.json({
