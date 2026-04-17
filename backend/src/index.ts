@@ -143,7 +143,7 @@ app.get('/api/emergency-sync', async (req, res) => {
     
     exec(`npx prisma db push --accept-data-loss`, {
         env: { ...process.env, DATABASE_URL: databaseUrl }
-    }, (error, stdout, stderr) => {
+    }, (error: any, stdout: string, stderr: string) => {
         if (error) {
             console.error(`[Emergency] Sync Failed: ${error.message}`);
             return res.status(500).json({ 
