@@ -26,31 +26,27 @@ export class AuthService {
             // Generate verification token
             const emailVerificationToken = crypto.randomBytes(32).toString('hex');
 
-            // Create organization logic
+            // Create or join organization logic
             let orgName = organizationName || `${firstName || email.split('@')[0]}'s Workspace`;
-            let counter = 1;
-            let finalOrgName = orgName;
+            let savedOrg = await transactionalEntityManager.findOne(Organization, { where: { name: orgName } });
+            let isNewOrg = false;
 
-            while (await transactionalEntityManager.findOne(Organization, { where: { name: finalOrgName } })) {
-                finalOrgName = `${orgName} (${counter})`;
-                counter++;
+            if (!savedOrg) {
+                isNewOrg = true;
+                const slug = this.generateSlug(orgName);
+                const organization = transactionalEntityManager.create(Organization, {
+                    id: crypto.randomUUID(),
+                    name: orgName,
+                    slug,
+                    plan: 'free',
+                    storageLimit: 104857600, // 100MB
+                    userLimit: 10, // Increased default to allow more users to join
+                    fileLimit: 50,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+                savedOrg = await transactionalEntityManager.save(Organization, organization);
             }
-
-            const slug = this.generateSlug(finalOrgName);
-
-            const organization = transactionalEntityManager.create(Organization, {
-                id: crypto.randomUUID(),
-                name: finalOrgName,
-                slug,
-                plan: 'free',
-                storageLimit: 104857600, // 100MB
-                userLimit: 1,
-                fileLimit: 5,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-
-            const savedOrg = await transactionalEntityManager.save(Organization, organization);
 
             // Create user
             const user = transactionalEntityManager.create(User, {
@@ -62,35 +58,53 @@ export class AuthService {
                 emailVerificationToken,
                 organization: savedOrg,
                 organizationId: savedOrg.id,
-                role: 'user',
+                role: isNewOrg ? 'admin' : 'user', // First user is admin
                 createdAt: new Date(),
                 updatedAt: new Date()
             });
 
             const savedUser = await transactionalEntityManager.save(User, user);
 
-            return { user: savedUser, organization: savedOrg };
+            return { user: savedUser, organization: savedOrg, isNewOrg };
         });
 
-        // Create default Workspace via Prisma after transaction commits
+        // Create default Workspace or join existing one via Prisma after transaction commits
         try {
-            await prisma.workspace.create({
-                data: {
-                    name: 'General Workspace',
-                    organizationId: result.organization.id,
-                    members: {
-                        create: {
-                            userId: result.user.id,
-                            role: 'editor'
+            if (result.isNewOrg) {
+                await prisma.workspace.create({
+                    data: {
+                        name: 'General Workspace',
+                        organizationId: result.organization.id,
+                        members: {
+                            create: {
+                                userId: result.user.id,
+                                role: 'admin'
+                            }
                         }
                     }
+                });
+            } else {
+                // Join the first available workspace in the joined organization
+                const firstWs = await prisma.workspace.findFirst({ 
+                    where: { organizationId: result.organization.id },
+                    orderBy: { createdAt: 'asc' }
+                });
+                
+                if (firstWs) {
+                    await prisma.workspaceMember.create({
+                        data: {
+                            workspaceId: firstWs.id,
+                            userId: result.user.id,
+                            role: 'editor' // Standard role for new joiners
+                        }
+                    });
                 }
-            });
+            }
         } catch (err) {
-            console.error('Failed to create default workspace:', err);
+            console.error('Failed to handle workspace assignment:', err);
         }
 
-        return result;
+        return { user: result.user, organization: result.organization };
     }
 
     /**
