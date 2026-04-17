@@ -143,34 +143,6 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Diagnostic endpoint to debug DB connection issues
-app.get('/api/debug-sync', async (req, res) => {
-    const results: any = {
-        timestamp: new Date().toISOString(),
-        env: {
-            NODE_ENV: process.env.NODE_ENV,
-            has_DATABASE_URL: !!process.env.DATABASE_URL,
-            has_DIRECT_URL: !!process.env.DIRECT_URL,
-        }
-    };
-
-    try {
-        const prismaRes = await prisma.$queryRaw`SELECT 1 as result`;
-        results.prisma = { status: 'connected', result: prismaRes };
-    } catch (e: any) {
-        results.prisma = { status: 'error', message: e.message };
-    }
-
-    try {
-        const typeormRes = await AppDataSource.query('SELECT 1 as result');
-        results.typeorm = { status: 'connected', result: typeormRes };
-    } catch (e: any) {
-        results.typeorm = { status: 'error', message: e.message };
-    }
-
-    res.json(results);
-});
-
 // Lightweight heartbeat for latency measurement
 app.get('/heartbeat', (req, res) => {
     res.status(204).end();
@@ -266,9 +238,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     console.error('Error:', err);
     res.status(err.status || 500).json({
         error: err.message || 'Internal server error',
-        dbError: (global as any).DB_CONNECTION_ERROR,
-        path: req.originalUrl,
-        timestamp: new Date().toISOString()
     });
 });
 
