@@ -45,14 +45,9 @@ const getOptions = (): any => {
     if (process.env.DATABASE_URL) {
         let url = process.env.DATABASE_URL;
         
-        // Strip pgbouncer=true for TypeORM as it doesn't support it natively
+        // Strip pgbouncer if present as TypeORM doesn't need it for basic connection
         if (url.includes('pgbouncer=true')) {
             url = url.replace('pgbouncer=true', 'pgbouncer=false');
-        }
-        
-        // Ensure sslmode=require if in production and not present
-        if (isProd && !url.includes('sslmode=')) {
-            url += (url.includes('?') ? '&' : '?') + 'sslmode=no-verify';
         }
         
         config.url = url;
