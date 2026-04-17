@@ -1272,7 +1272,7 @@ function AppContent() {
                 )}
 
                 {tab.type === 'shared-workspaces' && (
-                  <SharedWorkspacesView />
+                  <SharedWorkspacesView onOpenFile={handleAnalyzeFile} />
                 )}
 
                 {tab.type === 'webhooks' && (

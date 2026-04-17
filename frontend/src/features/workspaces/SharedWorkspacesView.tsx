@@ -8,7 +8,7 @@ import {
     Share2, ChevronRight, Activity, Database, Lock, Unlock, X,
     CheckCircle2, AlertTriangle, Layers, Zap, Globe, Upload, Download,
     UserCheck, Crown, Edit3, FileJson, HardDrive, TrendingUp, Sparkles,
-    MessageCircle, AtSign, Send
+    MessageCircle, AtSign, Send, Link, Copy, Check, Reply, File
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -335,18 +335,23 @@ const ShareFileModal = ({ workspaceId, workspaceName, token, onClose, onShared }
 // DISCUSSION TAB WITH @MENTION SYSTEM
 // ═══════════════════════════════════════════════════════════════
 
-const DiscussionTab = ({ workspaceId, token, messages, onRefresh, user }: {
-    workspaceId: string; token: string; messages: WorkspaceMessage[]; onRefresh: () => void; user: any;
+const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, user, onOpenFile }: {
+    workspaceId: string; token: string; messages: WorkspaceMessage[]; sharedFiles: any[]; onRefresh: () => void; user: any; onOpenFile?: (f: any) => void;
 }) => {
     const [inputValue, setInputValue] = useState('');
     const [sending, setSending] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<any | null>(null);
+
     const [mentionQuery, setMentionQuery] = useState<string | null>(null);
     const [mentionUsers, setMentionUsers] = useState<MentionableUser[]>([]);
     const [mentionIdx, setMentionIdx] = useState(0);
+
+    const [fileMentionQuery, setFileMentionQuery] = useState<string | null>(null);
+    const [mentionFileIdx, setMentionFileIdx] = useState(0);
+
     const [cursorPos, setCursorPos] = useState(0);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const mentionDropdownRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
@@ -376,19 +381,33 @@ const DiscussionTab = ({ workspaceId, token, messages, onRefresh, user }: {
         return () => controller.abort();
     }, [mentionQuery, workspaceId, token]);
 
+    const filteredFiles = useMemo(() => {
+        if (fileMentionQuery === null) return [];
+        const q = fileMentionQuery.toLowerCase();
+        return sharedFiles.filter((f: any) => (f.originalName || f.filename).toLowerCase().includes(q)).slice(0, 5);
+    }, [sharedFiles, fileMentionQuery]);
+
+    useEffect(() => { setMentionFileIdx(0); }, [filteredFiles]);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const val = e.target.value;
         const pos = e.target.selectionStart || 0;
         setInputValue(val);
         setCursorPos(pos);
 
-        // Detect if we're in a mention context
         const textBefore = val.slice(0, pos);
-        const mentionMatch = textBefore.match(/@(\w*)$/);
+        const mentionMatch = textBefore.match(/(?:^|\s)@([^\s]*)$/);
+        const fileMentionMatch = textBefore.match(/(?:^|\s)#([^\s]*)$/);
+        
         if (mentionMatch) {
             setMentionQuery(mentionMatch[1]);
+            setFileMentionQuery(null);
+        } else if (fileMentionMatch) {
+            setFileMentionQuery(fileMentionMatch[1]);
+            setMentionQuery(null);
         } else {
             setMentionQuery(null);
+            setFileMentionQuery(null);
         }
     };
 
@@ -398,31 +417,37 @@ const DiscussionTab = ({ workspaceId, token, messages, onRefresh, user }: {
         const textAfter = inputValue.slice(cursorPos);
         const mentionStart = textBefore.lastIndexOf('@');
         const mention = `@[${name}](${mentionUser.id}) `;
-        const newValue = textBefore.slice(0, mentionStart) + mention + textAfter;
-        setInputValue(newValue);
+        setInputValue(textBefore.slice(0, mentionStart) + mention + textAfter);
         setMentionQuery(null);
-        setMentionUsers([]);
+        inputRef.current?.focus();
+    };
+
+    const insertFileMention = (file: any) => {
+        const name = file.originalName || file.filename;
+        const textBefore = inputValue.slice(0, cursorPos);
+        const textAfter = inputValue.slice(cursorPos);
+        const mentionStart = textBefore.lastIndexOf('#');
+        const mention = `#[${name}](${file.id}) `;
+        setInputValue(textBefore.slice(0, mentionStart) + mention + textAfter);
+        setFileMentionQuery(null);
         inputRef.current?.focus();
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (mentionQuery !== null && mentionUsers.length > 0) {
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                setMentionIdx(prev => Math.min(prev + 1, mentionUsers.length - 1));
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                setMentionIdx(prev => Math.max(prev - 1, 0));
-            } else if (e.key === 'Enter' || e.key === 'Tab') {
-                e.preventDefault();
-                insertMention(mentionUsers[mentionIdx]);
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                setMentionQuery(null);
-            }
+            if (e.key === 'ArrowDown') { e.preventDefault(); setMentionIdx(prev => Math.min(prev + 1, mentionUsers.length - 1)); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); setMentionIdx(prev => Math.max(prev - 1, 0)); }
+            else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); insertMention(mentionUsers[mentionIdx]); }
+            else if (e.key === 'Escape') { e.preventDefault(); setMentionQuery(null); }
             return;
         }
-        // Send on Enter (without Shift)
+        if (fileMentionQuery !== null && filteredFiles.length > 0) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); setMentionFileIdx(prev => Math.min(prev + 1, filteredFiles.length - 1)); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); setMentionFileIdx(prev => Math.max(prev - 1, 0)); }
+            else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); insertFileMention(filteredFiles[mentionFileIdx]); }
+            else if (e.key === 'Escape') { e.preventDefault(); setFileMentionQuery(null); }
+            return;
+        }
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSend();
@@ -436,40 +461,53 @@ const DiscussionTab = ({ workspaceId, token, messages, onRefresh, user }: {
             const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ content: inputValue.trim() })
+                body: JSON.stringify({ content: inputValue.trim(), replyToId: replyingTo?.id })
             });
             if (res.ok) {
                 setInputValue('');
+                setReplyingTo(null);
                 onRefresh();
             }
         } catch (e) { console.error(e); }
         finally { setSending(false); }
     };
 
-    // Render message content with highlighted @mentions
+    // Render message content with highlighted @mentions and #files
     const renderContent = (content: string) => {
-        const parts = content.split(/(@\[([^\]]+)\]\(([^)]+)\))/g);
+        const parts = content.split(/([@#])\[([^\]]+)\]\(([^)]+)\)/g);
         const result: React.ReactNode[] = [];
-        let i = 0;
-        while (i < parts.length) {
-            if (parts[i] && parts[i].startsWith('@[')) {
-                // This is a mention: fullMatch, name, userId
-                const name = parts[i + 1];
+        
+        for (let i = 0; i < parts.length; i += 4) {
+            if (parts[i]) result.push(<span key={`text-${i}`}>{parts[i]}</span>);
+            
+            if (i + 1 < parts.length) {
+                const type = parts[i + 1];
+                const name = parts[i + 2];
+                const id = parts[i + 3];
+                const isUser = type === '@';
+                
+                const handleClick = () => {
+                    if (!isUser && onOpenFile) {
+                        const file = sharedFiles.find((f: any) => f.id === id);
+                        if (file) onOpenFile(file);
+                    }
+                };
+
                 result.push(
-                    <span key={i} style={{
-                        background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.15))',
-                        color: '#a78bfa',
-                        fontWeight: 700,
-                        padding: '1px 6px',
-                        borderRadius: 6,
-                        fontSize: 13,
-                        cursor: 'pointer'
-                    }}>@{name}</span>
+                    <span 
+                        key={`mention-${i}`} 
+                        onClick={handleClick}
+                        style={{
+                            background: isUser ? 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.15))' : 'linear-gradient(135deg, rgba(52,211,153,0.15), rgba(16,185,129,0.15))',
+                            color: isUser ? '#a78bfa' : '#34d399',
+                            fontWeight: 700, padding: '2px 8px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', gap: 4, margin: '0 4px', whiteSpace: 'nowrap'
+                        }}
+                    >
+                        {isUser ? <AtSign size={12} /> : <File size={12} />}
+                        {name}
+                    </span>
                 );
-                i += 3;
-            } else {
-                result.push(<span key={i}>{parts[i]}</span>);
-                i += 1;
             }
         }
         return result;
@@ -479,208 +517,307 @@ const DiscussionTab = ({ workspaceId, token, messages, onRefresh, user }: {
 
     return (
         <motion.div key="discussion" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-            style={{ display: 'flex', flexDirection: 'column', height: 500 }}
+            style={{ display: 'flex', flexDirection: 'column', height: 600 }}
         >
-            {/* Header */}
-            <div style={{ marginBottom: 16 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <MessageCircle size={18} /> Discussion
-                </h3>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                    Chat with your team. Use <span style={{ color: '#a78bfa', fontWeight: 700 }}>@</span> to mention members and notify them.
-                </p>
-            </div>
-
-            {/* Messages Area */}
-            <div style={{
-                flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4,
-                padding: '12px 4px', marginBottom: 16,
-                background: 'var(--bg-app)', borderRadius: 16, border: '1px solid var(--border-subtle)'
-            }}>
-                {messages.length === 0 ? (
-                    <div style={{
-                        textAlign: 'center', padding: '60px 20px',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1
-                    }}>
-                        <MessageCircle size={40} style={{ color: 'var(--text-muted)', opacity: 0.2, marginBottom: 16 }} />
-                        <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>No messages yet</p>
-                        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Start a conversation with your team</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '24px', flex: 1 }}>
+                
+                {/* Main Chat Area */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
+                            <MessageCircle size={16} color="#818cf8" /> Workspace Discussion
+                        </h3>
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{messages.length} messages</span>
                     </div>
-                ) : (
-                    messages.map((msg, idx) => {
-                        const self = isSelf(msg.author.id);
-                        const showAvatar = idx === 0 || messages[idx - 1].author.id !== msg.author.id;
-                        const showTime = idx === 0 || (new Date(msg.createdAt).getTime() - new Date(messages[idx-1].createdAt).getTime()) > 300000;
-                        const hasMentions = msg.mentions?.length > 0;
-                        const mentionsMe = msg.mentions?.includes(user?.id);
 
-                        return (
-                            <React.Fragment key={msg.id}>
-                                {showTime && (
-                                    <div style={{
-                                        textAlign: 'center', fontSize: 10, fontWeight: 700,
-                                        color: 'var(--text-muted)', padding: '8px 0', letterSpacing: '0.08em',
-                                        textTransform: 'uppercase', opacity: 0.6
-                                    }}>
-                                        {timeAgo(msg.createdAt)}
-                                    </div>
-                                )}
-                                <div style={{
-                                    display: 'flex', gap: 10, padding: '4px 12px',
-                                    borderRadius: 12,
-                                    background: mentionsMe
-                                        ? 'rgba(139,92,246,0.06)'
-                                        : 'transparent',
-                                    borderLeft: mentionsMe ? '3px solid #a78bfa' : '3px solid transparent',
-                                    transition: 'all 0.2s'
-                                }}>
-                                    <div style={{ width: 32, flexShrink: 0 }}>
-                                        {showAvatar && <UserAvatar user={msg.author} size={32} />}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        {showAvatar && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                                                <span style={{ fontSize: 13, fontWeight: 800, color: self ? 'var(--primary)' : 'var(--text-primary)' }}>
-                                                    {self ? 'You' : getUserName(msg.author)}
-                                                </span>
-                                                <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>
-                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
-                                                {hasMentions && (
-                                                    <span style={{
-                                                        fontSize: 9, fontWeight: 800, padding: '1px 6px',
-                                                        borderRadius: 6, background: 'rgba(139,92,246,0.12)',
-                                                        color: '#a78bfa', letterSpacing: '0.05em'
-                                                    }}>
-                                                        <AtSign size={8} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 2 }} />
-                                                        {msg.mentions.length}
-                                                    </span>
-                                                )}
+                    {/* Messages Area */}
+                    <div style={{
+                        flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px',
+                        padding: '20px 24px',
+                    }}>
+                        {messages.length === 0 ? (
+                            <div style={{
+                                textAlign: 'center', padding: '60px 20px',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1
+                            }}>
+                                <MessageCircle size={40} style={{ color: 'var(--text-muted)', opacity: 0.2, marginBottom: 16 }} />
+                                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>No messages yet</p>
+                                <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Start a conversation with your team</p>
+                            </div>
+                        ) : (
+                            messages.map((msg, idx) => {
+                                const self = isSelf(msg.author.id);
+                                const showAvatar = idx === 0 || messages[idx - 1].author.id !== msg.author.id;
+                                const showTime = idx === 0 || (new Date(msg.createdAt).getTime() - new Date(messages[idx-1].createdAt).getTime()) > 300000;
+                                const hasMentions = msg.mentions?.length > 0;
+                                const mentionsMe = msg.mentions?.includes(user?.id);
+
+                                return (
+                                    <React.Fragment key={msg.id}>
+                                        {showTime && (
+                                            <div style={{
+                                                textAlign: 'center', fontSize: 10, fontWeight: 700,
+                                                color: 'var(--text-muted)', padding: '8px 0', letterSpacing: '0.08em',
+                                                textTransform: 'uppercase', opacity: 0.6
+                                            }}>
+                                                {timeAgo(msg.createdAt)}
                                             </div>
                                         )}
-                                        <div style={{
-                                            fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.6,
-                                            wordBreak: 'break-word', fontWeight: 500
-                                        }}>
-                                            {renderContent(msg.content)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </React.Fragment>
-                        );
-                    })
-                )}
-                <div ref={messagesEndRef} />
-            </div>
+                                        <div 
+                                            className="group"
+                                            style={{
+                                                display: 'flex', gap: 12, padding: mentionsMe ? '8px 12px' : '0',
+                                                borderRadius: 12, position: 'relative',
+                                                background: mentionsMe ? 'rgba(139,92,246,0.06)' : 'transparent',
+                                                borderLeft: mentionsMe ? '3px solid #a78bfa' : '3px solid transparent',
+                                                transition: 'all 0.2s', marginLeft: mentionsMe ? '-15px' : '0'
+                                            }}
+                                        >
+                                            {/* Hover Reply Button */}
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity" style={{
+                                                position: 'absolute', right: -10, top: -5, background: 'var(--bento-glass)',
+                                                border: '1px solid var(--border-subtle)', borderRadius: 10, padding: 4, zIndex: 10,
+                                                boxShadow: '0 8px 24px -4px rgba(0,0,0,0.5)'
+                                            }}>
+                                                <button onClick={() => setReplyingTo(msg)} style={{
+                                                    background: 'none', border: 'none', color: 'var(--text-secondary)',
+                                                    cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center',
+                                                    gap: 4, fontSize: 11, fontWeight: 700, borderRadius: 6
+                                                }}>
+                                                    <Reply size={14} /> Reply
+                                                </button>
+                                            </div>
 
-            {/* Compose Area */}
-            <div style={{ position: 'relative' }}>
-                {/* Mention Autocomplete Dropdown */}
-                <AnimatePresence>
-                    {mentionQuery !== null && mentionUsers.length > 0 && (
-                        <motion.div
-                            ref={mentionDropdownRef}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 8 }}
-                            style={{
-                                position: 'absolute', bottom: '100%', left: 0, right: 0,
-                                background: 'var(--bento-card)',
-                                border: '1px solid var(--border-subtle)',
-                                borderRadius: 14, padding: 6, marginBottom: 6,
-                                boxShadow: '0 12px 40px -8px rgba(0,0,0,0.4)',
-                                zIndex: 50, maxHeight: 200, overflowY: 'auto'
-                            }}
-                        >
-                            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', padding: '4px 10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                                Mention a member
+                                            <div style={{ width: 32, flexShrink: 0, marginTop: showAvatar ? (msg.replyTo ? 28 : 0) : 28 }}>
+                                                {showAvatar && <UserAvatar user={msg.author} size={32} />}
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: 0, paddingTop: showAvatar ? 0 : 28, position: 'relative' }}>
+                                                {/* Reply Context Banner (WhatsApp Style Quote) */}
+                                                {msg.replyTo && (
+                                                    <div style={{
+                                                        display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8,
+                                                        padding: '6px 12px', background: 'rgba(255,255,255,0.03)',
+                                                        borderLeft: '3px solid #a78bfa', borderRadius: '4px 8px 8px 4px',
+                                                        fontSize: 12, cursor: 'pointer'
+                                                    }}>
+                                                        <div style={{ fontWeight: 800, color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <Reply size={12} /> {getUserName(msg.replyTo.author)}
+                                                        </div>
+                                                        <div style={{ color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                            {renderContent(msg.replyTo.content)}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {showAvatar && (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                                        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>
+                                                            {self ? 'You' : getUserName(msg.author)}
+                                                        </span>
+                                                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
+                                                            {timeAgo(msg.createdAt)}
+                                                        </span>
+                                                        {hasMentions && (
+                                                            <span style={{
+                                                                fontSize: 9, fontWeight: 800, padding: '1px 6px',
+                                                                borderRadius: 6, background: 'rgba(139,92,246,0.12)',
+                                                                color: '#a78bfa', letterSpacing: '0.05em'
+                                                            }}>
+                                                                <AtSign size={8} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 2 }} />
+                                                                {msg.mentions.length}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <div style={{
+                                                    fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6,
+                                                    wordBreak: 'break-word', fontWeight: 400
+                                                }}>
+                                                    {renderContent(msg.content)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </React.Fragment>
+                                );
+                            })
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Compose Area */}
+                    <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                        
+                        {/* Reply Indicator Preview */}
+                        {replyingTo && (
+                            <div style={{ 
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)',
+                                padding: '10px 14px', borderRadius: '12px 12px 0 0', position: 'absolute',
+                                left: 24, right: 24, top: -38, zIndex: 0
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>
+                                    <Reply size={14} color="#a78bfa" />
+                                    Replying to <span style={{ color: '#fff' }}>{getUserName(replyingTo.author)}</span>
+                                </div>
+                                <button onClick={() => setReplyingTo(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 2 }}>
+                                    <X size={14} />
+                                </button>
                             </div>
-                            {mentionUsers.map((u, i) => (
-                                <div
-                                    key={u.id}
-                                    onClick={() => insertMention(u)}
-                                    onMouseEnter={() => setMentionIdx(i)}
+                        )}
+
+                        {/* File Mention Dropdown */}
+                        <AnimatePresence>
+                            {fileMentionQuery !== null && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
                                     style={{
-                                        display: 'flex', alignItems: 'center', gap: 10,
-                                        padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
-                                        background: i === mentionIdx ? 'var(--primary-subtle)' : 'transparent',
-                                        transition: 'background 0.15s'
+                                        position: 'absolute', bottom: '100%', left: '24px', right: '24px',
+                                        background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: 14, padding: 6, marginBottom: replyingTo ? 44 : 6,
+                                        boxShadow: '0 12px 40px -8px rgba(0,0,0,0.6)',
+                                        zIndex: 50, maxHeight: 200, overflowY: 'auto'
                                     }}
                                 >
-                                    <UserAvatar user={u} size={28} />
-                                    <div>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
-                                            {getUserName(u)}
-                                        </div>
-                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
+                                    <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.4)', padding: '4px 10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                                        Attach a file
                                     </div>
-                                </div>
-                            ))}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                    {filteredFiles.length === 0 ? (
+                                        <div style={{ padding: '12px 10px', fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                                            No files match your search. Share files in this workspace first!
+                                        </div>
+                                    ) : (
+                                        filteredFiles.map((f: any, i: number) => (
+                                            <div
+                                                key={f.id}
+                                                onClick={() => insertFileMention(f)}
+                                                onMouseEnter={() => setMentionFileIdx(i)}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: 10,
+                                                    padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
+                                                    background: i === mentionFileIdx ? 'rgba(52, 211, 153, 0.15)' : 'transparent',
+                                                    borderLeft: i === mentionFileIdx ? '2px solid #34d399' : '2px solid transparent',
+                                                }}
+                                            >
+                                                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(52,211,153,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399' }}>
+                                                    <File size={14} />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{f.originalName || f.filename}</div>
+                                                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{formatBytes(f.size)}</div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                <div style={{
-                    display: 'flex', alignItems: 'flex-end', gap: 10,
-                    background: 'var(--bento-glass)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 16, padding: '10px 12px',
-                    transition: 'border-color 0.2s',
-                    boxShadow: '0 4px 16px -4px rgba(0,0,0,0.1)'
-                }}>
-                    <div style={{
-                        width: 32, height: 32, borderRadius: 10,
-                        background: 'var(--primary-subtle)', color: 'var(--primary)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0, cursor: 'pointer', transition: 'all 0.2s'
-                    }}
-                    title="Type @ to mention"
-                    onClick={() => {
-                        setInputValue(prev => prev + '@');
-                        setMentionQuery('');
-                        inputRef.current?.focus();
-                    }}
-                    >
-                        <AtSign size={16} />
+                        {/* Mention Autocomplete Dropdown */}
+                        <AnimatePresence>
+                            {mentionQuery !== null && mentionUsers.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                                    style={{
+                                        position: 'absolute', bottom: '100%', left: '24px', right: '24px',
+                                        background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: 14, padding: 6, marginBottom: replyingTo ? 44 : 6,
+                                        boxShadow: '0 12px 40px -8px rgba(0,0,0,0.6)',
+                                        zIndex: 50, maxHeight: 200, overflowY: 'auto'
+                                    }}
+                                >
+                                    <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.4)', padding: '4px 10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                                        Mention a member
+                                    </div>
+                                    {mentionUsers.map((u, i) => (
+                                        <div
+                                            key={u.id}
+                                            onClick={() => insertMention(u)}
+                                            onMouseEnter={() => setMentionIdx(i)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 10,
+                                                padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
+                                                background: i === mentionIdx ? 'rgba(139,92,246,0.15)' : 'transparent',
+                                                borderLeft: i === mentionIdx ? '2px solid #a78bfa' : '2px solid transparent',
+                                            }}
+                                        >
+                                            <UserAvatar user={u} size={28} />
+                                            <div>
+                                                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{getUserName(u)}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '4px 8px', transition: 'border-color 0.2s' }}>
+                                <div style={{
+                                    width: 32, height: 32, borderRadius: 8,
+                                    color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0, cursor: 'pointer', transition: 'color 0.2s'
+                                }}
+                                title="Type @ to mention"
+                                onClick={() => { setInputValue(prev => prev + '@'); setMentionQuery(''); inputRef.current?.focus(); }}
+                                className="hover:text-white"
+                                >
+                                    <AtSign size={16} />
+                                </div>
+                                <textarea
+                                    ref={inputRef} value={inputValue} onChange={handleInputChange} onKeyDown={handleKeyDown}
+                                    placeholder="Type a message... @ for members, # for files" rows={1}
+                                    style={{
+                                        flex: 1, background: 'none', border: 'none', outline: 'none',
+                                        fontSize: 13, color: '#fff', fontWeight: 500, resize: 'none', lineHeight: 1.5, maxHeight: 120, minHeight: 24, padding: '8px 4px', fontFamily: 'var(--font-main)'
+                                    }}
+                                    onInput={(e) => {
+                                        const t = e.currentTarget;
+                                        t.style.height = '24px'; t.style.height = Math.min(t.scrollHeight, 120) + 'px';
+                                    }}
+                                />
+                            </div>
+                            <button
+                                onClick={handleSend} disabled={!inputValue.trim() || sending}
+                                style={{
+                                    height: 42, width: 42, borderRadius: '12px',
+                                    background: inputValue.trim() ? '#818cf8' : 'rgba(255,255,255,0.05)',
+                                    color: '#fff', border: 'none', cursor: inputValue.trim() ? 'pointer' : 'default',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.3s',
+                                    opacity: inputValue.trim() && !sending ? 1 : 0.5,
+                                    boxShadow: inputValue.trim() ? '0 4px 14px rgba(129, 140, 248, 0.4)' : 'none'
+                                }}
+                            >
+                                {sending ? <div className="animate-spin" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%' }} /> : <Send size={16} />}
+                            </button>
+                        </div>
                     </div>
-                    <textarea
-                        ref={inputRef}
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Type a message... Use @ to mention teammates"
-                        rows={1}
-                        style={{
-                            flex: 1, background: 'none', border: 'none', outline: 'none',
-                            fontSize: 13, color: 'var(--text-primary)', fontWeight: 500,
-                            resize: 'none', lineHeight: 1.5, maxHeight: 120,
-                            fontFamily: 'var(--font-main)',
-                            minHeight: 24
-                        }}
-                        onInput={(e) => {
-                            const t = e.currentTarget;
-                            t.style.height = '24px';
-                            t.style.height = Math.min(t.scrollHeight, 120) + 'px';
-                        }}
-                    />
-                    <button
-                        onClick={handleSend}
-                        disabled={!inputValue.trim() || sending}
-                        style={{
-                            width: 36, height: 36, borderRadius: 12,
-                            background: inputValue.trim()
-                                ? 'linear-gradient(135deg, var(--primary), var(--accent))'
-                                : 'var(--bg-app)',
-                            color: inputValue.trim() ? '#fff' : 'var(--text-muted)',
-                            border: 'none', cursor: inputValue.trim() ? 'pointer' : 'default',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexShrink: 0, transition: 'all 0.3s',
-                            boxShadow: inputValue.trim() ? '0 6px 20px -6px var(--primary-glow)' : 'none',
-                            opacity: sending ? 0.5 : 1
-                        }}
-                    >
-                        <Send size={16} />
-                    </button>
+                </div>
+
+                {/* Sidebar Stats Area */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '20px' }}>
+                        <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Thread Stats</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Total Messages</span>
+                                <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{messages.length}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Mentions</span>
+                                <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{messages.filter(m => m.mentions && m.mentions.length > 0).length}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(52, 211, 153, 0.05))', border: '1px solid rgba(129, 140, 248, 0.2)', borderRadius: '16px', padding: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                            <Sparkles size={16} color="#818cf8" />
+                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#818cf8' }}>AI Insights</span>
+                        </div>
+                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
+                            Based on your recent workspace message activity, team engagement is steady. Consider creating dashboards out of the files shared in the Data tab to stimulate further discussion.
+                        </p>
+                    </div>
                 </div>
             </div>
         </motion.div>
@@ -691,7 +828,7 @@ const DiscussionTab = ({ workspaceId, token, messages, onRefresh, user }: {
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
-export const SharedWorkspacesView = () => {
+export const SharedWorkspacesView = ({ onOpenFile }: { onOpenFile?: (file: any) => void }) => {
     const { token, user } = useAuth();
     const { workspaces, refreshWorkspaces, activeUsers, activityFeed } = useWorkspace();
 
@@ -707,6 +844,8 @@ export const SharedWorkspacesView = () => {
     const [activeTab, setActiveTab] = useState<TabId>('team');
     const [showShareModal, setShowShareModal] = useState(false);
     const [memberSearch, setMemberSearch] = useState('');
+    const [shareLink, setShareLink] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
 
     // Set default workspace
     useEffect(() => {
@@ -785,6 +924,21 @@ export const SharedWorkspacesView = () => {
         } catch (e) { console.error(e); }
         finally { setIsUpdating(false); }
     };
+
+    const generateShareLink = () => {
+        // Mock share link behavior for the revolutionary design
+        const link = `${window.location.origin}/join-workspace/${selectedWorkspaceId}`;
+        setShareLink(link);
+    };
+
+    const copyLink = () => {
+        if (shareLink) {
+            navigator.clipboard.writeText(shareLink);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
 
     const handleUpdateRole = async (userId: string, targetRole: string) => {
         if (!selectedWorkspaceId || isUpdating) return;
@@ -887,7 +1041,11 @@ export const SharedWorkspacesView = () => {
             fontFamily: 'var(--font-main)', height: '100%', overflowY: 'auto',
             background: 'var(--bg-app)', position: 'relative', zIndex: 10
         }}>
-            <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 32px 64px' }}>
+            {/* Atmospheric Glow */}
+            <div style={{ position: 'absolute', top: '5%', left: '40%', width: '40vw', height: '40vh', background: 'radial-gradient(ellipse, rgba(52, 211, 153, 0.05), transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '30vw', height: '30vh', background: 'radial-gradient(circle, rgba(129, 140, 248, 0.04), transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
+
+            <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 32px 64px', position: 'relative', zIndex: 1 }}>
                 
                 {/* ─── HEADER ──────────────────────────────────────────── */}
                 <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
@@ -897,34 +1055,63 @@ export const SharedWorkspacesView = () => {
                             color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 14
                         }}>
                             <div style={{
-                                padding: 12, borderRadius: 16,
-                                background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
-                                boxShadow: '0 8px 24px -8px var(--primary-glow)',
+                                width: 44, height: 44, borderRadius: 14,
+                                background: 'linear-gradient(135deg, #34d399, #3b82f6)',
+                                boxShadow: '0 8px 24px -8px rgba(52, 211, 153, 0.5)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center'
                             }}>
                                 <Users size={24} color="#fff" />
                             </div>
-                            Collaboration Hub
+                            Collaborative Workspace
                         </h1>
-                        <p style={{ marginTop: 8, fontSize: 14, color: 'var(--text-secondary)', maxWidth: 500, lineHeight: 1.6 }}>
-                            Share datasets, analyses, and dashboards with your team. Manage access across your organization.
+                        <p style={{ marginTop: 8, fontSize: 14, color: 'var(--text-secondary)', maxWidth: 500, lineHeight: 1.6, marginLeft: 58 }}>
+                            Real-time team collaboration, shared datasets, and threaded discussions.
                         </p>
                     </div>
-                    <button
-                        onClick={handleCreateWorkspace}
-                        disabled={isCreating}
-                        style={{
-                            background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                            color: '#fff', border: 'none', borderRadius: 14,
-                            padding: '12px 24px', fontSize: 13, fontWeight: 800,
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                            boxShadow: '0 8px 24px -8px var(--primary-glow)',
-                            letterSpacing: '0.02em', transition: 'all 0.2s'
-                        }}
-                    >
-                        <Plus size={18} /> New Workspace
-                    </button>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <button
+                            onClick={generateShareLink}
+                            disabled={!activeWorkspace}
+                            style={{
+                                background: 'linear-gradient(135deg, #34d399, #10b981)', color: '#fff', border: 'none',
+                                padding: '12px 24px', borderRadius: 14, fontSize: 13, fontWeight: 800,
+                                display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                                boxShadow: '0 4px 16px rgba(52, 211, 153, 0.3)', opacity: !activeWorkspace ? 0.5 : 1,
+                                transition: 'transform 0.2s'
+                            }}
+                        >
+                            <Link size={18} /> Generate Share Link
+                        </button>
+                        <button
+                            onClick={handleCreateWorkspace}
+                            disabled={isCreating}
+                            style={{
+                                background: 'transparent',
+                                color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', borderRadius: 14,
+                                padding: '12px 24px', fontSize: 13, fontWeight: 800,
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <Plus size={18} /> New Workspace
+                        </button>
+                    </div>
                 </div>
+
+                {/* Share Link Toast */}
+                <AnimatePresence>
+                    {shareLink && (
+                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ background: 'rgba(52, 211, 153, 0.1)', border: '1px solid rgba(52, 211, 153, 0.3)', padding: '16px 20px', borderRadius: 16, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <Globe size={18} color="#34d399" />
+                                <code style={{ fontSize: 13, color: '#34d399', fontFamily: 'var(--font-mono)' }}>{shareLink}</code>
+                            </div>
+                            <button onClick={copyLink} style={{ background: copied ? '#10b981' : 'rgba(255,255,255,0.1)', border: 'none', padding: '8px 16px', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s' }}>
+                                {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* ─── WORKSPACE SELECTOR (Horizontal Pills) ───────────── */}
                 <div style={{
@@ -971,7 +1158,6 @@ export const SharedWorkspacesView = () => {
                         </div>
                     )}
                 </div>
-
                 {/* ─── MAIN CONTENT ────────────────────────────────────── */}
                 {activeWorkspace ? (
                     <div style={{
@@ -980,46 +1166,35 @@ export const SharedWorkspacesView = () => {
                         boxShadow: '0 20px 60px -20px rgba(0,0,0,0.3)',
                         overflow: 'hidden'
                     }}>
-                        {/* Tab Bar */}
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: 0,
-                            borderBottom: '1px solid var(--border-subtle)',
-                            padding: '0 24px', overflowX: 'auto'
-                        }}>
-                            {tabs.map(tab => {
-                                const Icon = tab.icon;
-                                const isActive = activeTab === tab.id;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveTab(tab.id)}
-                                        style={{
-                                            background: 'none', border: 'none',
-                                            padding: '16px 20px',
-                                            fontSize: 13, fontWeight: isActive ? 800 : 600,
-                                            color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
-                                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                                            borderBottom: `2px solid ${isActive ? 'var(--primary)' : 'transparent'}`,
-                                            transition: 'all 0.2s', whiteSpace: 'nowrap',
-                                            marginBottom: -1
-                                        }}
-                                    >
-                                        <Icon size={16} />
-                                        {tab.label}
-                                        {tab.count !== undefined && tab.count > 0 && (
-                                            <span style={{
-                                                fontSize: 10, fontWeight: 800, padding: '2px 7px',
-                                                borderRadius: 10,
-                                                background: isActive ? 'var(--primary-subtle)' : 'var(--bg-app)',
-                                                color: isActive ? 'var(--primary)' : 'var(--text-muted)'
+                        <div style={{ padding: '0 24px' }}>
+                            <div style={{ display: 'flex', gap: 8, marginBottom: 28, overflowX: 'auto', paddingBottom: 4 }}>
+                                {tabs.map(t => {
+                                    const isActive = activeTab === t.id;
+                                    const Icon = t.icon;
+                                    return (
+                                        <button
+                                            key={t.id}
+                                            onClick={() => setActiveTab(t.id)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10,
+                                                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                                                border: `1px solid ${isActive ? 'rgba(255,255,255,0.12)' : 'transparent'}`,
+                                                color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                                                fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            <Icon size={15} /> {t.label}
+                                            <span style={{ 
+                                                background: isActive ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.05)', 
+                                                padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, 
+                                                color: isActive ? '#34d399' : 'rgba(255,255,255,0.4)' 
                                             }}>
-                                                {tab.count}
+                                                {t.count || 0}
                                             </span>
-                                        )}
-                                    </button>
-                                );
-                            })}
-                            <div style={{ flex: 1 }} />
+                                        </button>
+                                    );
+                                })}
+                                <div style={{ flex: 1 }} />
                             <div style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 padding: '6px 14px', borderRadius: 10,
@@ -1032,6 +1207,7 @@ export const SharedWorkspacesView = () => {
                                 {isCurrentUserAdmin ? <Crown size={12} /> : <Eye size={12} />}
                                 {currentUserRole}
                             </div>
+                        </div>
                         </div>
 
                         {/* Tab Content */}
@@ -1403,8 +1579,10 @@ export const SharedWorkspacesView = () => {
                                         workspaceId={selectedWorkspaceId}
                                         token={token!}
                                         messages={messages}
+                                        sharedFiles={sharedFiles}
                                         onRefresh={fetchWorkspaceData}
                                         user={user}
+                                        onOpenFile={onOpenFile}
                                     />
                                 )}
 

@@ -402,7 +402,8 @@ router.get('/:id/messages', authenticate, async (req: any, res: any) => {
             take: limit,
             ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
             include: {
-                author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } }
+                author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } },
+                replyTo: { select: { id: true, content: true, author: { select: { displayName: true, email: true } } } }
             }
         });
 
@@ -420,7 +421,7 @@ router.get('/:id/messages', authenticate, async (req: any, res: any) => {
 router.post('/:id/messages', authenticate, async (req: any, res: any) => {
     try {
         const { id: workspaceId } = req.params;
-        const { content } = req.body;
+        const { content, replyToId } = req.body;
         const userId = req.user.userId || req.user.id;
 
         if (!content?.trim()) return res.status(400).json({ error: 'Message content is required' });
@@ -430,7 +431,7 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
         });
         if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
 
-        // Parse @mentions from the message content
+        // Parse @mentions from the message content (only for user notifications)
         const mentionPattern = /@\[([^\]]+)\]\(([^)]+)\)/g;
         const mentions: string[] = [];
         let match;
@@ -443,10 +444,12 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
                 workspaceId,
                 authorId: userId,
                 content: content.trim(),
+                replyToId: replyToId || null,
                 mentions
             },
             include: {
-                author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } }
+                author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } },
+                replyTo: { select: { id: true, content: true, author: { select: { displayName: true, email: true } } } }
             }
         });
 
@@ -480,7 +483,8 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
         });
 
         res.status(201).json(message);
-    } catch (error) {
+    } catch (error: any) {
+        require('fs').writeFileSync('/Users/admin/Documents/Nalyse/backend/scratch_debug.log', error.stack || error.toString());
         console.error('Error sending workspace message:', error);
         res.status(500).json({ error: 'Failed to send message' });
     }

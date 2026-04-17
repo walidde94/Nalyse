@@ -309,12 +309,16 @@ model WorkspaceMessage {
   workspaceId String
   authorId    String
   content     String
+  replyToId   String?  // Optional reference to the parent message
   mentions    String[] @default([])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   author      User      @relation(fields: [authorId], references: [id])
+  
+  replyTo     WorkspaceMessage?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies     WorkspaceMessage[] @relation("MessageReplies")
 
   @@map("workspace_messages")
 }
