@@ -530,12 +530,22 @@ router.get('/:id/mentionable-users', authenticate, async (req: any, res: any) =>
         });
         if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
 
-        const members = await prisma.workspaceMember.findMany({
-            where: { workspaceId },
-            include: { user: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } } }
+        // NEW GENERIC LOGIC: Fetch the workspace to get its organizationId
+        const workspace = await prisma.workspace.findUnique({
+            where: { id: workspaceId },
+            select: { organizationId: true }
         });
 
-        let users = members.map(m => m.user);
+        if (!workspace) return res.status(404).json({ error: 'Workspace not found' });
+
+        // Fetch ALL users in the same organization
+        let users = await prisma.user.findMany({
+            where: {
+                organizationId: workspace.organizationId,
+                isActive: true
+            },
+            select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true }
+        });
 
         if (q) {
             users = users.filter(u =>
