@@ -307,7 +307,13 @@ export const updateFileWorkspaceHandler = async (req: AuthRequest, res: Response
             await executeWorkspaceAction(workspaceId, userId, 'FILE_SHARED', fileId, { filename: updatedFile.filename });
         }
 
-        res.json(updatedFile);
+        // Serialize BigInt safely for JSON response
+        const safeFile = {
+            ...updatedFile,
+            size: updatedFile.size ? updatedFile.size.toString() : 0
+        };
+
+        res.json(safeFile);
     } catch (error) {
         console.error('Workspace assignment failed', error);
         res.status(500).json({ error: 'Workspace assignment failed' });
