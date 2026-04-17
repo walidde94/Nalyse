@@ -41,15 +41,20 @@ const getOptions = (): any => {
         migrations: [path.join(__dirname, '../migrations/**/*.{ts,js}')],
     };
 
+    // Favor URL if provided.
     if (process.env.DATABASE_URL) {
-        // Favor URL if provided. 
-        // IMPORTANT: Strip Prisma-specific flags (like pgbouncer=true) which can confuse TypeORM's underlying driver.
         let url = process.env.DATABASE_URL;
-        if (url.includes('?')) {
-            const [base, query] = url.split('?');
-            const params = query.split('&').filter(p => !p.includes('pgbouncer') && !p.includes('workaround'));
-            url = params.length > 0 ? `${base}?${params.join('&')}` : base;
+        
+        // Strip pgbouncer=true for TypeORM as it doesn't support it natively
+        if (url.includes('pgbouncer=true')) {
+            url = url.replace('pgbouncer=true', 'pgbouncer=false');
         }
+        
+        // Ensure sslmode=require if in production and not present
+        if (isProd && !url.includes('sslmode=')) {
+            url += (url.includes('?') ? '&' : '?') + 'sslmode=no-verify';
+        }
+        
         config.url = url;
     } else {
         config.host = process.env.DB_HOST || 'localhost';
@@ -59,11 +64,8 @@ const getOptions = (): any => {
         config.database = process.env.DB_NAME || 'nalyse_dev';
     }
 
-    // Enhanced SSL Handling for Neon/Supabase/Render
-    // Supabase and Render require SSL for external connections
-    const useSSL = isProd || process.env.DB_SSL === 'true' || (config.url && (config.url.includes('sslmode=require') || config.url.includes('supabase.co') || config.url.includes('pooler.supabase.com')));
-
-    if (useSSL) {
+    // SSL Handling for Render/Supabase
+    if (isProd || process.env.DB_SSL === 'true') {
         config.ssl = {
             rejectUnauthorized: false
         };
@@ -100,9 +102,10 @@ export const initializeDatabase = async () => {
         console.error('❌ Database connection failed!');
         console.error('Error Message:', error.message);
         console.error('Error Code:', error.code);
-        if (error.code === 'XX000') {
-            console.error('💡 Typical cause: Incorrect credentials or database name for cloud providers like Neon.');
-        }
+        
+        // Store the error globally so we can report it in health checks
+        (global as any).DB_CONNECTION_ERROR = error.message;
+        
         throw error;
     }
 };
