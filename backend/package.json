@@ -7,7 +7,7 @@
     "test": "jest",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "prisma generate && tsc",
-    "start": "npx prisma db push --accept-data-loss && node dist/src/index.js"
+    "start": "export DIRECT_URL=${DIRECT_URL:-$DATABASE_URL}; npx prisma db push --accept-data-loss && node dist/src/index.js"
   },
   "keywords": [],
   "author": "",
