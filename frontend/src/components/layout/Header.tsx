@@ -27,8 +27,9 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     
-    // Toast notification state
+    // Toast and dropdown notification state
     const [toastData, setToastData] = useState<{ title: string; message: string; author: any; type: 'mention' | 'message' } | null>(null);
+    const [notifications, setNotifications] = useState<any[]>([]);
 
     // Listen for real-time messages to show toast and play sound
     useEffect(() => {
@@ -74,19 +75,29 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 bell.classList.add('animate-bell');
             }
 
-            // 3. Show Visual Toast
+            // 3. Show Visual Toast & Add to List
             const preview = msg.content.replace(/[@#]\[([^\]]+)\]\([^)]+\)/g, '$1');
-            setToastData({
-                title: isMention ? 'You were mentioned' : 'New Message',
+            const newNotif = {
+                id: Date.now().toString() + Math.random().toString(),
+                title: isMention ? 'You were mentioned' : `Message from ${msg.author.firstName || 'User'}`,
                 message: preview,
+                timestamp: new Date().toISOString(),
+                type: isMention ? 'mention' : 'message',
+                read: false
+            };
+            
+            setToastData({
+                title: newNotif.title,
+                message: newNotif.message,
                 author: msg.author,
-                type: isMention ? 'mention' : 'message'
+                type: newNotif.type
             });
+
+            setNotifications(prev => [newNotif, ...prev].slice(0, 20));
 
             // Auto dismiss toast
             setTimeout(() => {
                 setToastData(current => {
-                    // Only dismiss if it's the same exact toast (prevent dismissing newer ones)
                     return current?.message === preview ? null : current;
                 });
             }, 6000);
@@ -95,6 +106,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
         window.addEventListener('workspace:new_message', handleNewMessage as EventListener);
         return () => window.removeEventListener('workspace:new_message', handleNewMessage as EventListener);
     }, [user?.id]);
+
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     const isDark = theme === 'dark' || theme === 'midnight';
     const isMidnight = theme === 'midnight';
@@ -307,16 +320,18 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             onClick={() => { setShowNotifications(!showNotifications); setShowUserMenu(false); }}
                         >
                             <Bell size={16} />
-                            <div style={{
-                                position: 'absolute',
-                                top: '6px',
-                                right: '7px',
-                                width: '5px',
-                                height: '5px',
-                                borderRadius: '50%',
-                                background: '#f43f5e',
-                                boxShadow: '0 0 6px #f43f5e',
-                            }} />
+                            {unreadCount > 0 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '6px',
+                                    right: '7px',
+                                    width: '5px',
+                                    height: '5px',
+                                    borderRadius: '50%',
+                                    background: '#f43f5e',
+                                    boxShadow: '0 0 6px #f43f5e',
+                                }} />
+                            )}
                         </button>
 
                         {/* Real-time Toast Popup */}
@@ -380,51 +395,59 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 boxShadow: 'var(--shadow-xl)',
                                 animation: 'slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 transformOrigin: 'top right',
+                                maxHeight: '400px',
+                                overflowY: 'auto'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                                     <h3 style={{ fontSize: '12px', fontWeight: 700, margin: 0, color: isDark ? '#fff' : '#0f172a', letterSpacing: '-0.01em' }}>Notifications</h3>
-                                    <button style={{
-                                        background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.15)', color: '#38bdf8',
-                                        fontSize: '10px', fontWeight: 700, cursor: 'pointer', padding: '3px 8px',
-                                        borderRadius: '6px', transition: 'all 0.2s',
-                                    }}>Mark read</button>
+                                    {unreadCount > 0 && (
+                                        <button 
+                                            onClick={() => setNotifications(prev => prev.map(n => ({...n, read: true})))}
+                                            style={{
+                                            background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.15)', color: '#38bdf8',
+                                            fontSize: '10px', fontWeight: 700, cursor: 'pointer', padding: '3px 8px',
+                                            borderRadius: '6px', transition: 'all 0.2s',
+                                        }}>Mark read</button>
+                                    )}
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    <div style={{
-                                        display: 'flex', gap: '10px', padding: '10px', borderRadius: '10px',
-                                        background: 'var(--bg-surface)',
-                                        border: '1px solid var(--border-subtle)',
-                                    }}>
-                                        <div style={{
-                                            width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.12)',
-                                            color: '#60a5fa', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                        }}>
-                                            <Zap size={14} />
+                                    {notifications.length === 0 ? (
+                                        <div style={{ padding: '20px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, fontWeight: 500 }}>
+                                            You're all caught up!
                                         </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 700, color: isDark ? '#fff' : '#0f172a' }}>Model Updated</span>
-                                            <span style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)', lineHeight: 1.35 }}>Predictive weights recalibrated.</span>
-                                            <span style={{ fontSize: '9px', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)', fontWeight: 600, marginTop: '2px' }}>2 min ago</span>
-                                        </div>
-                                    </div>
-
-                                    <div style={{
-                                        display: 'flex', gap: '10px', padding: '10px', borderRadius: '10px',
-                                        background: 'rgba(244, 63, 94, 0.04)',
-                                    }}>
-                                        <div style={{
-                                            width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.12)',
-                                            color: '#fb7185', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                        }}>
-                                            <Shield size={14} />
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 700, color: isDark ? '#fff' : '#0f172a' }}>Risk Alert</span>
-                                            <span style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)', lineHeight: 1.35 }}>Failure probability exceeds threshold.</span>
-                                            <span style={{ fontSize: '9px', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)', fontWeight: 600, marginTop: '2px' }}>1 hour ago</span>
-                                        </div>
-                                    </div>
+                                    ) : (
+                                        notifications.map(n => (
+                                            <div key={n.id} style={{
+                                                display: 'flex', gap: '10px', padding: '10px', borderRadius: '10px',
+                                                background: n.read ? 'transparent' : 'var(--bg-surface)',
+                                                border: `1px solid ${n.read ? 'transparent' : 'var(--border-subtle)'}`,
+                                                opacity: n.read ? 0.7 : 1,
+                                                transition: 'all 0.2s'
+                                            }}>
+                                                <div style={{
+                                                    width: '30px', height: '30px', borderRadius: '8px', 
+                                                    background: n.type === 'mention' ? 'rgba(139, 92, 246, 0.12)' : 'rgba(59, 130, 246, 0.12)',
+                                                    color: n.type === 'mention' ? '#8b5cf6' : '#60a5fa', 
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                                }}>
+                                                    {n.type === 'mention' ? <AtSign size={14} /> : <MessageCircle size={14} />}
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, width: '100%' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: n.read ? 600 : 700, color: isDark ? '#fff' : '#0f172a' }}>{n.title}</span>
+                                                        {!n.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#38bdf8', marginTop: 4, flexShrink: 0 }} />}
+                                                    </div>
+                                                    <span style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)', lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {n.message}
+                                                    </span>
+                                                    <span style={{ fontSize: '9px', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)', fontWeight: 600, marginTop: '2px' }}>
+                                                        {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         )}
