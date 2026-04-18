@@ -823,3 +823,67 @@ export const previewFileHandler = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to generate preview' });
     }
 };
+
+// ─── System Cleanup ─────────────────────────────────────────────────────────
+
+export const cleanupFilesHandler = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const fileRepo = AppDataSource.getRepository(File);
+    const orgRepo = AppDataSource.getRepository(Organization);
+
+    try {
+        const oneHourAgo = new Date(Date.now() - 3600000);
+
+        const junkFiles = await fileRepo.createQueryBuilder('file')
+            .where('file.ownerId = :userId', { userId })
+            .andWhere('file.isDeleted = false')
+            .andWhere('(file.isArchived = true OR (file.isProcessed = false AND file.groupId IS NULL AND file.createdAt < :oneHourAgo))', { oneHourAgo })
+            .getMany();
+
+        if (junkFiles.length === 0) {
+            return res.json({ message: 'System is already optimized', purgedCount: 0 });
+        }
+
+        const ids = junkFiles.map(f => f.id);
+        const orgMap = junkFiles.reduce((acc, f) => {
+            if (!f.organizationId) return acc;
+            acc[f.organizationId] = (acc[f.organizationId] || 0) + Number(f.size || 0);
+            return acc;
+        }, {} as Record<string, number>);
+
+        await AppDataSource.transaction(async (tx) => {
+            // Update storage used for each organization involved
+            for (const [orgId, size] of Object.entries(orgMap)) {
+                const org = await tx.findOne(Organization, { where: { id: orgId } });
+                if (org) {
+                    org.storageUsed = Math.max(0, Number(org.storageUsed) - size);
+                    await tx.save(Organization, org);
+                }
+            }
+
+            // Hard delete records
+            await tx.delete(File, ids);
+        });
+
+        // Clean up physical files after DB success
+        for (const file of junkFiles) {
+            if (file.s3Key && fs.existsSync(file.s3Key)) {
+                try { fs.unlinkSync(file.s3Key); } catch (e) { }
+            }
+        }
+
+        const totalRecovered = Object.values(orgMap).reduce((a, b) => a + b, 0);
+
+        res.json({
+            message: 'Purge successful',
+            purgedCount: ids.length,
+            purgedIds: ids,
+            storageRecovered: (totalRecovered / (1024 * 1024)).toFixed(2) + ' MB'
+        });
+    } catch (error: any) {
+        console.error('System cleanup failed:', error);
+        res.status(500).json({ error: 'Failed to perform system cleanup: ' + error.message });
+    }
+};
