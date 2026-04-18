@@ -466,32 +466,36 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
             }
         });
 
-        // Create notifications for mentioned users
-        if (mentions.length > 0) {
-            const author = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, email: true } });
-            const authorName = author?.displayName || author?.email?.split('@')[0] || 'Someone';
-            const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { name: true } });
-
-            await prisma.notification.createMany({
-                data: mentions
-                    .filter(mentionedId => mentionedId !== userId) // Don't notify self
-                    .map(mentionedId => ({
-                        userId: mentionedId,
-                        title: `${authorName} mentioned you`,
-                        message: `You were mentioned in ${workspace?.name || 'a workspace'}: "${content.slice(0, 80)}${content.length > 80 ? '...' : ''}"`,
-                        category: 'mention',
-                        priority: 'high',
-                        source: 'WORKSPACE',
-                        iconType: 'at-sign',
-                        color: '#8b5cf6',
-                        metadata: { workspaceId, messageId: message.id }
-                    }))
-            });
-        }
-
-        // Broadcast to real-time socket
+        // 1. Instantly Broadcast to real-time socket
         const { broadcastMessage } = require('../services/workspaceService');
         broadcastMessage(workspaceId, message);
+
+        // 2. Create notifications for mentioned users (wrapped in try/catch to prevent 500 errors if DB is out of sync)
+        if (mentions.length > 0) {
+            try {
+                const author = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, email: true } });
+                const authorName = author?.displayName || author?.email?.split('@')[0] || 'Someone';
+                const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { name: true } });
+
+                await prisma.notification.createMany({
+                    data: mentions
+                        .filter(mentionedId => mentionedId !== userId) // Don't notify self
+                        .map(mentionedId => ({
+                            userId: mentionedId,
+                            title: `${authorName} mentioned you`,
+                            message: `You were mentioned in ${workspace?.name || 'a workspace'}: "${content.slice(0, 80)}${content.length > 80 ? '...' : ''}"`,
+                            category: 'mention',
+                            priority: 'high',
+                            source: 'WORKSPACE',
+                            iconType: 'at-sign',
+                            color: '#8b5cf6',
+                            metadata: { workspaceId, messageId: message.id }
+                        }))
+                });
+            } catch (notifyErr) {
+                console.error('[Non-Fatal Error] Failed to create notifications for mentions:', notifyErr);
+            }
+        }
 
         // Log to audit
         await executeWorkspaceAction(workspaceId, userId, 'MESSAGE_SENT', message.id, {
