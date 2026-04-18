@@ -604,8 +604,9 @@ export const DashboardView = ({
     onDeleteGroup,
     onDeleteMultiple,
     onViewReport,
-    onArchiveFile
+    onArchiveFile,
 }: any) => {
+    const { workspaces, setActiveWorkspace } = useWorkspace();
     const { refreshProfile, syncSubscription } = useAuth();
     const { user } = useAuth();
     const { isArchitectMode, layoutMode, layoutState, updateLayoutSequence } = useArchitect();
@@ -631,23 +632,34 @@ export const DashboardView = ({
     const [loadingPreview, setLoadingPreview] = useState(false);
     const [activeTab, setActiveTab] = useState<'properties' | 'preview'>('properties');
     const [datasetTab, setDatasetTab] = useState<'active' | 'archived'>('active');
+    const [workspaceFilter, setWorkspaceFilter] = useState<string>('all'); // 'all', 'private', or specific workspaceId
     const { token } = useAuth();
-    const { workspaces } = useWorkspace();
     const safeFiles = Array.isArray(files) ? files : [];
 
     const filteredFiles = useMemo(() => {
         let list = safeFiles;
+        
+        // Tab Filter (Active/Archived)
         if (datasetTab === 'active') {
             list = list.filter(f => !f.isArchived);
         } else {
             list = list.filter(f => f.isArchived);
         }
+
+        // Workspace Filter
+        if (workspaceFilter === 'private') {
+            list = list.filter(f => !f.workspaceId);
+        } else if (workspaceFilter !== 'all') {
+            list = list.filter(f => f.workspaceId === workspaceFilter);
+        }
+
+        // Search Filter
         if (searchTerm) {
             const low = searchTerm.toLowerCase();
             list = list.filter(f => (f.originalName || f.filename).toLowerCase().includes(low));
         }
         return list;
-    }, [safeFiles, searchTerm, datasetTab]);
+    }, [safeFiles, searchTerm, datasetTab, workspaceFilter]);
 
     const activeFilesCount = useMemo(() => safeFiles.filter(f => !f.isArchived).length, [safeFiles]);
     const archivedFilesCount = useMemo(() => safeFiles.filter(f => f.isArchived).length, [safeFiles]);
@@ -1074,9 +1086,37 @@ export const DashboardView = ({
                                                     <CloudUpload size={24} strokeWidth={2.5} />
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Active Workspace</h3>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                                                            {workspaceFilter === 'all' ? 'Universal Hub' : workspaceFilter === 'private' ? 'Private Space' : workspaces.find(w => w.id === workspaceFilter)?.name || 'Active Workspace'}
+                                                        </h3>
+                                                        <div style={{ position: 'relative' }}>
+                                                            <select 
+                                                                value={workspaceFilter}
+                                                                onChange={(e) => setWorkspaceFilter(e.target.value)}
+                                                                style={{
+                                                                    opacity: 0, position: 'absolute', inset: 0, cursor: 'pointer', width: '100%'
+                                                                }}
+                                                            >
+                                                                <option value="all">All Assets</option>
+                                                                <option value="private">Private Space</option>
+                                                                <optgroup label="Workspaces">
+                                                                    {workspaces.map(w => (
+                                                                        <option key={w.id} value={w.id}>{w.name}</option>
+                                                                    ))}
+                                                                </optgroup>
+                                                            </select>
+                                                            <div style={{
+                                                                padding: '2px 8px', borderRadius: '6px', background: 'var(--primary-subtle)', 
+                                                                color: 'var(--primary)', fontSize: '10px', fontWeight: 800, border: '1px solid var(--primary-glow)',
+                                                                display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
+                                                            }}>
+                                                                SWITCH <ArrowRight size={10} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                     <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>
-                                                        {fileCount} datasets loaded
+                                                        {filteredFiles.length} {workspaceFilter === 'all' ? 'total' : 'scoped'} datasets loaded
                                                     </span>
                                                 </div>
                                             </div>
@@ -2033,35 +2073,42 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
 
                                     <td style={{ padding: '16px 16px' }} onClick={e => e.stopPropagation()}>
                                         <div style={{ position: 'relative' }}>
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', gap: '6px',
+                                                padding: '8px 12px', borderRadius: '10px',
+                                                background: f.workspaceId ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.03)',
+                                                border: `1px solid ${f.workspaceId ? 'rgba(99,102,241,0.2)' : 'var(--border-subtle)'}`,
+                                                color: f.workspaceId ? 'var(--primary)' : 'var(--text-muted)',
+                                                fontSize: '11px', fontWeight: 700, transition: 'all 0.2s',
+                                                cursor: 'pointer'
+                                            }}>
+                                                {f.workspaceId ? (
+                                                    <>
+                                                        <Globe size={12} />
+                                                        <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {workspaces.find(w => w.id === f.workspaceId)?.name || 'Shared'}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Lock size={12} />
+                                                        <span>Private</span>
+                                                    </>
+                                                )}
+                                                <ArrowDown size={10} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                                            </div>
                                             <select
                                                 style={{
-                                                    background: 'color-mix(in srgb, var(--primary) 3%, transparent)',
-                                                    border: '1px solid var(--primary-subtle)',
-                                                    borderRadius: '10px',
-                                                    fontSize: '12px',
-                                                    fontWeight: 600,
-                                                    color: 'var(--primary)',
-                                                    padding: '8px 32px 8px 12px',
-                                                    outline: 'none',
-                                                    appearance: 'none',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s',
-                                                    width: '100%',
-                                                    maxWidth: '160px'
+                                                    position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%'
                                                 }}
                                                 value={f.workspaceId || ''}
                                                 onChange={(e) => onUpdateFileWorkspace?.(f.id, e.target.value || null)}
-                                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--primary-subtle)'; }}
                                             >
-                                                <option value="">Private</option>
+                                                <option value="">Private (Me Only)</option>
                                                 {workspaces?.map((w: any) => (
                                                     <option key={w.id} value={w.id}>{w.name}</option>
                                                 ))}
                                             </select>
-                                            <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--primary)' }}>
-                                                <ArrowDownRight size={14} />
-                                            </div>
                                         </div>
                                     </td>
 
