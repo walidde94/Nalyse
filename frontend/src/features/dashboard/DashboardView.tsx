@@ -605,6 +605,7 @@ export const DashboardView = ({
     onDeleteMultiple,
     onViewReport,
     onArchiveFile,
+    onRefresh,
 }: any) => {
     const { workspaces, setActiveWorkspace } = useWorkspace();
     const { refreshProfile, syncSubscription } = useAuth();

@@ -1177,7 +1177,7 @@ function AppContent() {
                     dragActive={dragActive}
                     handleDrag={(e: any) => { e.preventDefault(); setDragActive(e.type === 'dragenter' || e.type === 'dragover'); }}
                     handleDrop={(e: any) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files.length > 0) handleUpload(Array.from(e.dataTransfer.files)); }}
-
+                    onRefresh={fetchFiles}
                   />
                 )}
 
