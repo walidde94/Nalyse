@@ -340,8 +340,8 @@ const ShareFileModal = ({ workspaceId, workspaceName, token, onClose, onShared }
 // DISCUSSION TAB WITH @MENTION SYSTEM
 // ═══════════════════════════════════════════════════════════════
 
-const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, user, onOpenFile, onOpenDashboard }: {
-    workspaceId: string; token: string; messages: WorkspaceMessage[]; sharedFiles: any[]; onRefresh: () => void; user: any; onOpenFile?: (f: any) => void; onOpenDashboard?: () => void;
+const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalyses = [], onRefresh, user, onOpenFile, onOpenDashboard }: {
+    workspaceId: string; token: string; messages: WorkspaceMessage[]; sharedFiles: any[]; sharedAnalyses?: any[]; onRefresh: () => void; user: any; onOpenFile?: (f: any) => void; onOpenDashboard?: () => void;
 }) => {
     const [inputValue, setInputValue] = useState('');
     const [sending, setSending] = useState(false);
@@ -543,13 +543,27 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
                     e.preventDefault();
                     e.stopPropagation();
                     if (!isUser) {
-                        const file = sharedFiles.find((f: any) => f.id === id);
+                        // Look in sharedFiles first
+                        let file = sharedFiles.find((f: any) => String(f.id) === String(id));
+                        
+                        // Fallback: Look in sharedAnalyses if file not in sharedFiles
+                        if (!file && sharedAnalyses) {
+                            const analysis = sharedAnalyses.find((a: any) => a.file && String(a.file.id) === String(id));
+                            if (analysis) {
+                                // Construct a file-like object or use the file from the analysis
+                                file = { ...analysis.file, isProcessed: true };
+                            }
+                        }
+
                         if (file) {
                             if (file.isProcessed) {
                                 onOpenFile?.(file);
                             } else {
                                 onOpenDashboard?.();
                             }
+                        } else {
+                            // Last resort: If still not found, just go to dashboard
+                            onOpenDashboard?.();
                         }
                     }
                 };
@@ -1652,6 +1666,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                                         token={token!}
                                         messages={messages}
                                         sharedFiles={sharedFiles}
+                                        sharedAnalyses={sharedAnalyses}
                                         onRefresh={fetchWorkspaceData}
                                         user={user}
                                         onOpenFile={onOpenFile}
