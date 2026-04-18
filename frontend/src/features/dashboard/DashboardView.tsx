@@ -608,8 +608,7 @@ export const DashboardView = ({
     onRefresh,
 }: any) => {
     const { workspaces, setActiveWorkspace } = useWorkspace();
-    const { refreshProfile, syncSubscription } = useAuth();
-    const { user } = useAuth();
+    const { user, token, refreshProfile, syncSubscription } = useAuth();
     const { isArchitectMode, layoutMode, layoutState, updateLayoutSequence } = useArchitect();
     const maxStorageMB = userPlan === 'pro' ? 10240 : userPlan === 'enterprise' ? 1000000 : 100;
     const [searchTerm, setSearchTerm] = useState('');
