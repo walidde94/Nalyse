@@ -592,18 +592,29 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
     const isSelf = (authorId: string) => authorId === user?.id;
 
     return (
-        <motion.div key="discussion" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-            style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 480px)', minHeight: 400 }}
+        <motion.div key="discussion" initial={{ opacity: 0, scale: 0.99 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+            style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
         >
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '24px', flex: 1 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: '20px', flex: 1, minHeight: 0 }}>
                 
                 {/* Main Chat Area */}
-                <div style={{ background: 'var(--bento-glass)', border: '1px solid var(--border-subtle)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
-                            <MessageCircle size={16} color="#818cf8" /> Workspace Discussion
+                <div style={{ 
+                    flex: 1, minHeight: 0,
+                    background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', 
+                    borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <div style={{ 
+                        padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        background: 'var(--bg-surface)'
+                    }}>
+                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                            <MessageCircle size={14} color="var(--primary)" /> Workspace Discussion
                         </h3>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>{messages.length} messages</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700, background: 'var(--bg-app)', padding: '2px 8px', borderRadius: 8 }}>
+                            {messages.length} messages
+                        </span>
                     </div>
 
                     {/* Messages Area */}
@@ -1143,13 +1154,12 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
     return (
         <div style={{
             fontFamily: 'var(--font-main)', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            background: 'var(--bg-app)', position: 'relative', zIndex: 10
+            background: 'var(--bg-main)', position: 'relative', zIndex: 10
         }}>
             {/* Atmospheric Glow */}
-            <div style={{ position: 'absolute', top: '5%', left: '40%', width: '40vw', height: '40vh', background: 'radial-gradient(ellipse, rgba(52, 211, 153, 0.05), transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
-            <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '30vw', height: '30vh', background: 'radial-gradient(circle, rgba(129, 140, 248, 0.04), transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '30vh', background: 'linear-gradient(to bottom, var(--primary-subtle), transparent)', opacity: 0.5, pointerEvents: 'none' }} />
 
-            <div style={{ flex: 1, maxWidth: 1400, margin: '0 auto', padding: '24px 32px', position: 'relative', display: 'flex', flexDirection: 'column', zIndex: 1, width: '100%', overflow: 'hidden' }}>
+            <div style={{ flex: 1, maxWidth: 1440, margin: '0 auto', padding: '24px 32px 32px', position: 'relative', display: 'flex', flexDirection: 'column', zIndex: 1, width: '100%', overflow: 'hidden' }}>
                 
                 {/* ─── HEADER ──────────────────────────────────────────── */}
                 <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
@@ -1265,13 +1275,15 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                 {/* ─── MAIN CONTENT ────────────────────────────────────── */}
                 {activeWorkspace ? (
                     <div style={{
-                        background: 'var(--bento-card)', borderRadius: 24,
+                        flex: 1, minHeight: 0,
+                        background: 'var(--bg-secondary)', borderRadius: 24,
                         border: '1px solid var(--border-subtle)',
-                        boxShadow: '0 20px 60px -20px rgba(0,0,0,0.3)',
+                        boxShadow: 'var(--shadow-lg)',
+                        display: 'flex', flexDirection: 'column',
                         overflow: 'hidden'
                     }}>
-                        <div style={{ padding: '0 24px' }}>
-                            <div style={{ display: 'flex', gap: 8, marginBottom: 28, overflowX: 'auto', paddingBottom: 4 }}>
+                        <div style={{ padding: '0 24px', flexShrink: 0, borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
+                            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '12px 0', alignItems: 'center' }}>
                                 {tabs.map(t => {
                                     const isActive = activeTab === t.id;
                                     const Icon = t.icon;
@@ -1280,18 +1292,18 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                                             key={t.id}
                                             onClick={() => setActiveTab(t.id)}
                                             style={{
-                                                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10,
-                                                background: isActive ? 'var(--primary-subtle)' : 'transparent',
+                                                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 12,
+                                                background: isActive ? 'var(--primary)' : 'transparent',
                                                 border: `1px solid ${isActive ? 'var(--primary)' : 'transparent'}`,
-                                                color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                                                color: isActive ? '#fff' : 'var(--text-secondary)',
                                                 fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
                                             }}
                                         >
-                                            <Icon size={15} /> {t.label}
+                                            <Icon size={14} /> {t.label}
                                             <span style={{ 
-                                                background: isActive ? 'var(--primary-subtle)' : 'var(--bg-app)', 
-                                                padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, 
-                                                color: isActive ? 'var(--primary)' : 'var(--text-muted)' 
+                                                background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--bg-app)', 
+                                                padding: '1px 6px', borderRadius: 8, fontSize: 10, fontWeight: 800, 
+                                                color: isActive ? '#fff' : 'var(--text-muted)' 
                                             }}>
                                                 {t.count || 0}
                                             </span>
@@ -1302,10 +1314,10 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                             <div style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 padding: '6px 14px', borderRadius: 10,
-                                background: isCurrentUserAdmin ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)',
-                                border: `1px solid ${isCurrentUserAdmin ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}`,
+                                background: isCurrentUserAdmin ? 'var(--success-glow)' : 'var(--warning-glow)',
+                                border: `1px solid ${isCurrentUserAdmin ? 'var(--success)' : 'var(--warning)'}`,
                                 fontSize: 11, fontWeight: 800,
-                                color: isCurrentUserAdmin ? '#10b981' : '#f59e0b',
+                                color: isCurrentUserAdmin ? 'var(--success)' : 'var(--warning)',
                                 textTransform: 'uppercase', letterSpacing: '0.08em'
                             }}>
                                 {isCurrentUserAdmin ? <Crown size={12} /> : <Eye size={12} />}
@@ -1315,7 +1327,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                         </div>
 
                         {/* Tab Content */}
-                        <div style={{ padding: '20px 24px', flex: 1, overflowY: 'auto' }}>
+                        <div style={{ padding: 24, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                             <AnimatePresence mode="wait">
                                 {activeTab === 'team' && (
                                     <motion.div key="team" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
