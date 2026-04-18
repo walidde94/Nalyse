@@ -616,6 +616,9 @@ export const DashboardView = ({
     const [showCreateGroup, setShowCreateGroup] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
     const [showTelemetry, setShowTelemetry] = useState(false);
+    const [isCleaningUp, setIsCleaningUp] = useState(false);
+    const [showCleanupModal, setShowCleanupModal] = useState(false);
+    const [cleanupSummary, setCleanupSummary] = useState({ archived: 0, stagnant: 0, total: 0 });
     const [telemetryData, setTelemetryData] = useState({
         latency: 12,
         throughput: 840,
@@ -899,15 +902,43 @@ export const DashboardView = ({
     };
 
     const handleSystemCleanup = () => {
-        // System wide cleanup: Purges all archived files or old failed uploads (older than 1 hr)
-        const junkFiles = safeFiles.filter((f: any) => f.isArchived || (!f.isProcessed && !f.groupId && new Date(f.createdAt).getTime() < Date.now() - 3600000));
-        if (junkFiles.length === 0) {
+        // Prepare summary
+        const archivedCount = safeFiles.filter((f: any) => f.isArchived).length;
+        const stagnantCount = safeFiles.filter((f: any) => !f.isProcessed && !f.groupId && new Date(f.createdAt).getTime() < Date.now() - 3600000).length;
+        
+        if (archivedCount + stagnantCount === 0) {
             alert("System is optimized. No archived or stagnant files found.");
             return;
         }
-        if (confirm(`Clean up ${junkFiles.length} junk/archived files system-wide?`)) {
-            onDeleteMultiple(junkFiles.map((f: any) => f.id));
-            setSelectedFiles(new Set());
+
+        setCleanupSummary({
+            archived: archivedCount,
+            stagnant: stagnantCount,
+            total: archivedCount + stagnantCount
+        });
+        setShowCleanupModal(true);
+    };
+
+    const confirmSystemCleanup = async () => {
+        setIsCleaningUp(true);
+        try {
+            const res = await fetch(`${API_URL}/api/files/cleanup`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setShowCleanupModal(false);
+                onRefresh(); // Trigger a global refresh
+                alert(`Cleanup complete! Successfully purged ${data.purgedCount} items.`);
+            } else {
+                alert("Failed to perform system cleanup. Please try again later.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error during cleanup.");
+        } finally {
+            setIsCleaningUp(false);
         }
     };
 
@@ -1741,10 +1772,96 @@ export const DashboardView = ({
                         </motion.div>
                         );
                     })()}
-                </AnimatePresence>,
-                document.body
-            )}
-            <DiagnosticOverlay />
+            {/* --- SYSTEM CLEANUP MODAL --- */}
+            <AnimatePresence>
+                {showCleanupModal && (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => !isCleaningUp && setShowCleanupModal(false)}
+                            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }} 
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                            style={{
+                                width: '100%', maxWidth: '420px', background: 'var(--bg-app)', borderRadius: '24px',
+                                border: '1px solid var(--border-subtle)', overflow: 'hidden', position: 'relative',
+                                boxShadow: '0 40px 100px -20px rgba(0,0,0,0.6)', padding: '32px'
+                            }}
+                        >
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', textAlign: 'center' }}>
+                                <div style={{ 
+                                    width: 64, height: 64, borderRadius: '20px', background: 'rgba(239,68,68,0.1)', 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' 
+                                }}>
+                                    <HardDrive size={32} />
+                                </div>
+                                <div>
+                                    <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', marginBottom: '8px', letterSpacing: '-0.02em' }}>Robust System Purge</h2>
+                                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                                        Are you sure you want to optimize your environment? The following items will be permanently removed:
+                                    </p>
+                                </div>
+
+                                <div style={{ width: '100%', background: 'var(--bento-glass)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Archive size={14} style={{ color: 'var(--text-tertiary)' }} />
+                                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Archived Files</span>
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{cleanupSummary.archived}</span>
+                                    </div>
+                                    <div style={{ height: '1px', background: 'var(--border-subtle)' }} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Clock size={14} style={{ color: 'var(--text-tertiary)' }} />
+                                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Stagnant Uploads (>1h)</span>
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{cleanupSummary.stagnant}</span>
+                                    </div>
+                                </div>
+
+                                <div style={{ flex: 1, display: 'flex', gap: '12px', width: '100%', marginTop: '8px' }}>
+                                    <button 
+                                        disabled={isCleaningUp}
+                                        onClick={() => setShowCleanupModal(false)}
+                                        style={{ 
+                                            flex: 1, padding: '12px', borderRadius: '12px', background: 'var(--bento-glass)', 
+                                            border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', 
+                                            fontSize: '13px', fontWeight: 700, cursor: 'pointer' 
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        disabled={isCleaningUp}
+                                        onClick={confirmSystemCleanup}
+                                        style={{ 
+                                            flex: 1.5, padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg, #ef4444, #b91c1c)', 
+                                            border: 'none', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                            boxShadow: '0 8px 16px -4px rgba(239,68,68,0.3)'
+                                        }}
+                                    >
+                                        {isCleaningUp ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                        {isCleaningUp ? 'Purging...' : 'Confirm Purge'}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showTelemetry && (
+                    <DiagnosticOverlay 
+                        onClose={() => setShowTelemetry(false)} 
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
