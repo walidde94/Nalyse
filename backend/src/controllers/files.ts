@@ -265,7 +265,8 @@ export const updateFileWorkspaceHandler = async (req: AuthRequest, res: Response
     const fileId = req.params.id as string;
 
     try {
-        const file = await prisma.file.findFirst({
+        const fileRepo = AppDataSource.getRepository(File);
+        const file = await fileRepo.findOne({
             where: { id: fileId, isDeleted: false }
         });
 
@@ -295,27 +296,32 @@ export const updateFileWorkspaceHandler = async (req: AuthRequest, res: Response
             }
         }
 
-        const updatedFile = await prisma.file.update({
-            where: { id: fileId },
-            data: { workspaceId: workspaceId || null },
-            include: { workspace: { select: { name: true } } }
-        });
+        const oldWorkspaceId = file.workspaceId;
+        file.workspaceId = workspaceId || null;
+        const updatedFile = await fileRepo.save(file);
         
+        // Setup Workspace Name resolution for proper UI event logging
+        let workspaceName = '';
+        if (workspaceId) {
+            const targetWs = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+            if (targetWs) workspaceName = targetWs.name;
+        }
+
         // Broadcast updates for real-time UI synchronization
         if (workspaceId) {
             await executeWorkspaceAction(workspaceId, userId, 'FILE_SHARED', fileId, { 
                 filename: updatedFile.filename,
-                workspaceName: updatedFile.workspace?.name 
+                workspaceName: workspaceName
             });
-        } else if (file.workspaceId) {
+        } else if (oldWorkspaceId) {
             // Log unshare event in the former workspace
-            await executeWorkspaceAction(file.workspaceId, userId, 'FILE_UNSHARED', fileId, { 
+            await executeWorkspaceAction(oldWorkspaceId, userId, 'FILE_UNSHARED', fileId, { 
                 filename: file.filename 
             });
         }
 
-        // res.json handles BigInt automatically now thanks to global toJSON override
-        res.json(updatedFile);
+        // res.json overrides BigInt parsing due to JSON map stringification setup
+        res.json({ ...updatedFile, size: updatedFile.size != null ? updatedFile.size.toString() : '0' });
     } catch (error: any) {
         console.error('[updateFileWorkspaceHandler] Failure:', error);
         res.status(500).json({ 
