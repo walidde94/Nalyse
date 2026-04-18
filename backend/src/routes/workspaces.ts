@@ -88,9 +88,12 @@ router.get('/:id/activity', authenticate, async (req: any, res: any) => {
         });
 
         res.json(logs);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching activity:', error);
-        res.status(500).json({ error: 'Failed to fetch activity' });
+        res.status(500).json({ 
+            error: 'Failed to fetch activity',
+            details: error.message 
+        });
     }
 });
 
