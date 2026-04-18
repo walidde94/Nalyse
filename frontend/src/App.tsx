@@ -1272,7 +1272,10 @@ function AppContent() {
                 )}
 
                 {tab.type === 'shared-workspaces' && (
-                  <SharedWorkspacesView onOpenFile={handleAnalyzeFile} />
+                  <SharedWorkspacesView 
+                    onOpenFile={handleAnalyzeFile} 
+                    onOpenDashboard={() => openTab('dashboard', 'Dashboard')}
+                  />
                 )}
 
                 {tab.type === 'webhooks' && (

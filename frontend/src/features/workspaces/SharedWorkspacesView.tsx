@@ -340,8 +340,8 @@ const ShareFileModal = ({ workspaceId, workspaceName, token, onClose, onShared }
 // DISCUSSION TAB WITH @MENTION SYSTEM
 // ═══════════════════════════════════════════════════════════════
 
-const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, user, onOpenFile }: {
-    workspaceId: string; token: string; messages: WorkspaceMessage[]; sharedFiles: any[]; onRefresh: () => void; user: any; onOpenFile?: (f: any) => void;
+const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, user, onOpenFile, onOpenDashboard }: {
+    workspaceId: string; token: string; messages: WorkspaceMessage[]; sharedFiles: any[]; onRefresh: () => void; user: any; onOpenFile?: (f: any) => void; onOpenDashboard?: () => void;
 }) => {
     const [inputValue, setInputValue] = useState('');
     const [sending, setSending] = useState(false);
@@ -542,11 +542,14 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
                 const handleClick = (e: any) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (!isUser && onOpenFile) {
+                    if (!isUser) {
                         const file = sharedFiles.find((f: any) => f.id === id);
                         if (file) {
-                            // Ensure the App handler treats it as processed so it fetches from cache correctly instead of attempting a full re-upload cycle!
-                            onOpenFile({ ...file, isProcessed: true });
+                            if (file.isProcessed) {
+                                onOpenFile?.(file);
+                            } else {
+                                onOpenDashboard?.();
+                            }
                         }
                     }
                 };
@@ -886,7 +889,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
-export const SharedWorkspacesView = ({ onOpenFile }: { onOpenFile?: (file: any) => void }) => {
+export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFile?: (file: any) => void, onOpenDashboard?: () => void }) => {
     const { token, user } = useAuth();
     const { workspaces, refreshWorkspaces, activeUsers, activityFeed } = useWorkspace();
 
@@ -1470,12 +1473,18 @@ export const SharedWorkspacesView = ({ onOpenFile }: { onOpenFile?: (file: any) 
                                         ) : (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                                 {sharedFiles.map(f => (
-                                                    <div key={f.id} style={{
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                        padding: '14px 18px', borderRadius: 16,
-                                                        border: '1px solid var(--border-subtle)',
-                                                        background: 'var(--bento-glass)', transition: 'all 0.2s', gap: 12
-                                                    }}>
+                                                    <div key={f.id} 
+                                                        onClick={() => f.isProcessed ? onOpenFile?.(f) : onOpenDashboard?.()}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                            padding: '14px 18px', borderRadius: 16,
+                                                            border: '1px solid var(--border-subtle)',
+                                                            background: 'var(--bento-glass)', transition: 'all 0.2s', gap: 12,
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                                                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+                                                    >
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
                                                             <div style={{
                                                                 width: 42, height: 42, borderRadius: 12,
@@ -1568,13 +1577,18 @@ export const SharedWorkspacesView = ({ onOpenFile }: { onOpenFile?: (file: any) 
                                                     const rowCount = stats?.rowCount || stats?.totalRows || '–';
                                                     const colCount = stats?.columnCount || stats?.totalColumns || '–';
                                                     return (
-                                                        <div key={a.id} style={{
-                                                            padding: 20, borderRadius: 18,
-                                                            border: '1px solid var(--border-subtle)',
-                                                            background: 'var(--bento-glass)',
-                                                            transition: 'all 0.25s', cursor: 'pointer',
-                                                            position: 'relative', overflow: 'hidden'
-                                                        }}>
+                                                        <div key={a.id} 
+                                                            onClick={() => onOpenFile?.(a.file)}
+                                                            style={{
+                                                                padding: 20, borderRadius: 18,
+                                                                border: '1px solid var(--border-subtle)',
+                                                                background: 'var(--bento-glass)',
+                                                                transition: 'all 0.25s', cursor: 'pointer',
+                                                                position: 'relative', overflow: 'hidden'
+                                                            }}
+                                                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+                                                        >
                                                             <div style={{
                                                                 position: 'absolute', top: 0, right: 0, width: 80, height: 80,
                                                                 background: 'radial-gradient(circle at top right, var(--primary-glow) 0%, transparent 70%)',
@@ -1641,6 +1655,7 @@ export const SharedWorkspacesView = ({ onOpenFile }: { onOpenFile?: (file: any) 
                                         onRefresh={fetchWorkspaceData}
                                         user={user}
                                         onOpenFile={onOpenFile}
+                                        onOpenDashboard={onOpenDashboard}
                                     />
                                 )}
 
