@@ -8,7 +8,7 @@ import {
     AlertTriangle, Activity, Clock, Sparkles, ArrowUpRight, ArrowDownRight,
     Search, ArrowRight, X, Lightbulb, Database, Table, Eye, Loader2,
     Layers, Target, Cpu, Archive, RotateCcw, HardDrive, CheckCircle2, FileJson,
-    FilePlus, Gauge, Info, ArrowUp, ArrowDown, Wifi,
+    FilePlus, Gauge, Info, ArrowUp, ArrowDown, Wifi, Globe, Lock
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip, BarChart, Bar, XAxis, LineChart, Line } from 'recharts';
 import { calculatePulse } from './pulseEngine';
