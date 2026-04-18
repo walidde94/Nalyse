@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { prisma } from '../config/database';
 import { authenticate } from '../middleware/auth';
 import { executeWorkspaceAction, broadcastMessage } from '../services/workspaceService';
+import { AppDataSource } from '../config/database';
+import { File } from '../entities/File';
 
 const router = Router();
 
@@ -226,26 +228,41 @@ router.get('/:id/files', authenticate, async (req: any, res: any) => {
         });
         if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
 
-        const files = await prisma.file.findMany({
-            where: { workspaceId, isDeleted: false },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                owner: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } },
-                analyses: {
-                    where: { status: 'completed' },
-                    orderBy: { completedAt: 'desc' },
-                    take: 1,
-                    select: { id: true, completedAt: true, status: true }
-                }
-            }
+        const files = await AppDataSource.getRepository(File)
+            .createQueryBuilder('file')
+            .leftJoinAndSelect('file.owner', 'owner')
+            .leftJoin('analyses', 'a', 'a."fileId" = file.id AND a.status = :status', { status: 'completed' })
+            .addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END', 'has_analysis')
+            .addSelect('a."completedAt"', 'analysis_completed_at')
+            .where('file.workspaceId = :workspaceId AND file.isDeleted = false', { workspaceId })
+            .orderBy('file.createdAt', 'DESC')
+            .getRawAndEntities();
+
+        const enriched = files.entities.map(f => {
+            const raw = files.raw.find(r => r.file_id === f.id);
+            const hasAnalysis = raw?.has_analysis === true || raw?.has_analysis === 't' || raw?.has_analysis === '1' || raw?.has_analysis === 1;
+            
+            return {
+                id: f.id,
+                filename: f.filename,
+                originalName: f.originalName,
+                size: f.size != null ? f.size.toString() : '0',
+                mimeType: f.mimeType,
+                createdAt: f.createdAt,
+                updatedAt: f.updatedAt,
+                isFavorite: f.isFavorite,
+                isArchived: f.isArchived,
+                isProcessed: f.isProcessed || hasAnalysis,
+                groupId: f.groupId,
+                workspaceId: f.workspaceId,
+                checksum: f.checksum,
+                owner: f.owner ? { id: f.owner.id, email: f.owner.email, displayName: f.owner.displayName, firstName: f.owner.firstName, lastName: f.owner.lastName, avatarUrl: f.owner.avatarUrl } : null,
+                hasAnalysis: hasAnalysis,
+                latestAnalysisDate: raw?.analysis_completed_at || null
+            };
         });
 
-        res.json(files.map(f => ({
-            ...serializeFile(f),
-            hasAnalysis: f.analyses.length > 0,
-            latestAnalysisId: f.analyses[0]?.id || null,
-            latestAnalysisDate: f.analyses[0]?.completedAt || null
-        })));
+        res.json(enriched);
     } catch (error) {
         console.error('Error fetching workspace files:', error);
         res.status(500).json({ error: 'Failed to fetch workspace files' });
@@ -276,8 +293,15 @@ router.get('/:id/analyses', authenticate, async (req: any, res: any) => {
                 createdBy: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } }
             }
         });
+        const mappedAnalyses = analyses.map(a => ({
+            ...a,
+            file: a.file ? {
+                ...a.file,
+                size: a.file.size != null ? a.file.size.toString() : '0'
+            } : null
+        }));
 
-        res.json(analyses);
+        res.json(mappedAnalyses);
     } catch (error) {
         console.error('Error fetching workspace analyses:', error);
         res.status(500).json({ error: 'Failed to fetch workspace analyses' });
