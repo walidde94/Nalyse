@@ -266,10 +266,7 @@ router.get('/:id/analyses', authenticate, async (req: any, res: any) => {
         // Get analyses for files in this workspace OR analyses directly assigned to workspace
         const analyses = await prisma.analysis.findMany({
             where: {
-                OR: [
-                    { workspaceId },
-                    { file: { workspaceId } }
-                ],
+                file: { workspaceId },
                 status: 'completed'
             },
             orderBy: { completedAt: 'desc' },
