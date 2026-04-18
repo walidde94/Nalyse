@@ -395,11 +395,31 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
         return () => controller.abort();
     }, [mentionQuery, workspaceId, token]);
 
+    const [unsharedFiles, setUnsharedFiles] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchUnshared = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/workspaces/my-unshared-files`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) setUnsharedFiles((await res.json()) || []);
+            } catch (e) {}
+        };
+        fetchUnshared();
+    }, [token]);
+
     const filteredFiles = useMemo(() => {
         if (fileMentionQuery === null) return [];
         const q = fileMentionQuery.toLowerCase();
-        return sharedFiles.filter((f: any) => (f.originalName || f.filename).toLowerCase().includes(q)).slice(0, 5);
-    }, [sharedFiles, fileMentionQuery]);
+        const combined = [...sharedFiles, ...unsharedFiles];
+        const unique = Array.from(new Map(combined.map(f => [f.id, f])).values());
+        
+        return unique.filter((f: any) => {
+            const name = f.originalName || f.filename || '';
+            return name.toLowerCase().includes(q);
+        }).slice(0, 5);
+    }, [sharedFiles, unsharedFiles, fileMentionQuery]);
 
     useEffect(() => { setMentionFileIdx(0); }, [filteredFiles]);
 
@@ -419,6 +439,13 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
         } else if (fileMentionMatch) {
             setFileMentionQuery(fileMentionMatch[1]);
             setMentionQuery(null);
+            
+            // Re-fetch occasionally when they look for files
+            if (unsharedFiles.length === 0) {
+                fetch(`${API_URL}/api/workspaces/my-unshared-files`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).then(async r => { if (r.ok) setUnsharedFiles(await r.json() || []) }).catch(()=>{});
+            }
         } else {
             setMentionQuery(null);
             setFileMentionQuery(null);
@@ -436,7 +463,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
         inputRef.current?.focus();
     };
 
-    const insertFileMention = (file: any) => {
+    const insertFileMention = async (file: any) => {
         const name = file.originalName || file.filename;
         const textBefore = inputValue.slice(0, cursorPos);
         const textAfter = inputValue.slice(cursorPos);
@@ -445,6 +472,18 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
         setInputValue(textBefore.slice(0, mentionStart) + mention + textAfter);
         setFileMentionQuery(null);
         inputRef.current?.focus();
+
+        if (!sharedFiles.some(f => f.id === file.id)) {
+            try {
+                // Instantly Auto-share
+                await fetch(`${API_URL}/api/workspaces/${workspaceId}/share-file`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ fileId: file.id })
+                });
+                onRefresh();
+            } catch (e) { console.error('Failed auto share', e); }
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
