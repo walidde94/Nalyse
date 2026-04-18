@@ -16,14 +16,11 @@ export const initializeWorkspaceSocket = (io: Server) => {
         socket.on('join_workspace', async (data: { workspaceId: string, userId: string }) => {
             const { workspaceId, userId } = data;
             
-            // Validate membership via Prisma
-            const membership = await prisma.workspaceMember.findUnique({
-                where: {
-                    workspaceId_userId: { workspaceId, userId }
-                }
-            });
+            // NEW GENERIC LOGIC: Check if user and workspace are in the same organization
+            const user = await prisma.user.findUnique({ where: { id: userId }, select: { organizationId: true } });
+            const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { organizationId: true } });
 
-            if (membership) {
+            if (user && workspace && user.organizationId === workspace.organizationId) {
                 socket.join(`workspace:${workspaceId}`);
                 
                 // Track presence
@@ -115,5 +112,14 @@ export const executeWorkspaceAction = async (
         }
     } catch (err) {
         console.error('Failed to log workspace activity', err);
+    }
+};
+
+/**
+ * Broadcast a new chat message to all users in a workspace room
+ */
+export const broadcastMessage = (workspaceId: string, message: any) => {
+    if (ioInstance) {
+        ioInstance.to(`workspace:${workspaceId}`).emit('new_message', message);
     }
 };

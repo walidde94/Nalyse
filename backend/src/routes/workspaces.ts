@@ -489,6 +489,10 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
             });
         }
 
+        // Broadcast to real-time socket
+        const { broadcastMessage } = require('../services/workspaceService');
+        broadcastMessage(workspaceId, message);
+
         // Log to audit
         await executeWorkspaceAction(workspaceId, userId, 'MESSAGE_SENT', message.id, {
             preview: content.slice(0, 50),
