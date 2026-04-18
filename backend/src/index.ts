@@ -11,7 +11,7 @@ import morgan from 'morgan';
 import { globalApiLimiter, authLimiter as redisAuthLimiter, webhookLimiter } from './middleware/rateLimiter';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { initializeDatabase } from './config/database';
+import { initializeDatabase, prisma } from './config/database';
 import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import reportRoutes from './routes/reports';
