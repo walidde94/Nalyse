@@ -898,6 +898,19 @@ export const DashboardView = ({
         }
     };
 
+    const handleSystemCleanup = () => {
+        // System wide cleanup: Purges all archived files or old failed uploads (older than 1 hr)
+        const junkFiles = safeFiles.filter((f: any) => f.isArchived || (!f.isProcessed && !f.groupId && new Date(f.createdAt).getTime() < Date.now() - 3600000));
+        if (junkFiles.length === 0) {
+            alert("System is optimized. No archived or stagnant files found.");
+            return;
+        }
+        if (confirm(`Clean up ${junkFiles.length} junk/archived files system-wide?`)) {
+            onDeleteMultiple(junkFiles.map((f: any) => f.id));
+            setSelectedFiles(new Set());
+        }
+    };
+
     // Group logic for 'All Files' view
     const groupedFiles: Record<string, any[]> = { 'ungrouped': [] };
     const safeGroups = Array.isArray(groups) ? groups : [];
@@ -1154,15 +1167,54 @@ export const DashboardView = ({
                                                         Archived{archivedFilesCount > 0 && <span style={{ marginLeft: '6px', opacity: 0.6 }}>({archivedFilesCount})</span>}
                                                     </button>
                                                 </div>
-                                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => document.getElementById('file-input')?.click()} disabled={isOverLimit} style={{
-                                                    background: 'var(--primary)',
-                                                    color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px',
-                                                    fontWeight: 700, fontSize: '13px', cursor: 'pointer',
-                                                    opacity: isOverLimit ? 0.5 : 1,
-                                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                                }}>
-                                                    <CloudUpload size={15} /> Upload
-                                                </motion.button>
+
+                                                {selectedFiles.size > 0 ? (
+                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', background: 'var(--primary-subtle)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--primary-glow)' }}>
+                                                            {selectedFiles.size} Selected
+                                                        </span>
+                                                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleBulkDelete} style={{
+                                                            background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', padding: '10px 16px', borderRadius: '10px',
+                                                            fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                                                        }}>
+                                                            <Trash2 size={15} /> Delete Selected
+                                                        </motion.button>
+                                                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setSelectedFiles(new Set())} style={{
+                                                            background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
+                                                            fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                                                        }}>
+                                                            <X size={15} /> Clear
+                                                        </motion.button>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => {
+                                                            const newSet = new Set<string>();
+                                                            filteredFiles.forEach((f: any) => newSet.add(f.id));
+                                                            setSelectedFiles(newSet);
+                                                        }} style={{
+                                                            background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
+                                                            fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                                                        }}>
+                                                            <CheckCircle2 size={15} /> Select All
+                                                        </motion.button>
+                                                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSystemCleanup} title="Delete all archived & old unprocessed items" style={{
+                                                            background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
+                                                            fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                                                        }}>
+                                                            <Activity size={15} /> Clean Up
+                                                        </motion.button>
+                                                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => document.getElementById('file-input')?.click()} disabled={isOverLimit} style={{
+                                                            background: 'var(--primary)',
+                                                            color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px',
+                                                            fontWeight: 700, fontSize: '13px', cursor: 'pointer',
+                                                            opacity: isOverLimit ? 0.5 : 1,
+                                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                                        }}>
+                                                            <CloudUpload size={15} /> Upload
+                                                        </motion.button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
