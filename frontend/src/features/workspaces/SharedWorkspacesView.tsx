@@ -395,31 +395,17 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
         return () => controller.abort();
     }, [mentionQuery, workspaceId, token]);
 
-    const [unsharedFiles, setUnsharedFiles] = useState<any[]>([]);
 
-    useEffect(() => {
-        const fetchUnshared = async () => {
-            try {
-                const res = await fetch(`${API_URL}/api/workspaces/my-unshared-files`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (res.ok) setUnsharedFiles((await res.json()) || []);
-            } catch (e) {}
-        };
-        fetchUnshared();
-    }, [token]);
 
     const filteredFiles = useMemo(() => {
         if (fileMentionQuery === null) return [];
         const q = fileMentionQuery.toLowerCase();
-        const combined = [...sharedFiles, ...unsharedFiles];
-        const unique = Array.from(new Map(combined.map(f => [f.id, f])).values());
         
-        return unique.filter((f: any) => {
+        return sharedFiles.filter((f: any) => {
             const name = f.originalName || f.filename || '';
             return name.toLowerCase().includes(q);
         }).slice(0, 5);
-    }, [sharedFiles, unsharedFiles, fileMentionQuery]);
+    }, [sharedFiles, fileMentionQuery]);
 
     useEffect(() => { setMentionFileIdx(0); }, [filteredFiles]);
 
@@ -439,13 +425,6 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
         } else if (fileMentionMatch) {
             setFileMentionQuery(fileMentionMatch[1]);
             setMentionQuery(null);
-            
-            // Re-fetch occasionally when they look for files
-            if (unsharedFiles.length === 0) {
-                fetch(`${API_URL}/api/workspaces/my-unshared-files`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }).then(async r => { if (r.ok) setUnsharedFiles(await r.json() || []) }).catch(()=>{});
-            }
         } else {
             setMentionQuery(null);
             setFileMentionQuery(null);
