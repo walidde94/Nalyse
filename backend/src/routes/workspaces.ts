@@ -4,6 +4,7 @@ import { authenticate } from '../middleware/auth';
 import { executeWorkspaceAction, broadcastMessage } from '../services/workspaceService';
 import { AppDataSource } from '../config/database';
 import { File } from '../entities/File';
+import { AiService } from '../services/aiService';
 
 const router = Router();
 
@@ -601,6 +602,113 @@ router.get('/:id/mentionable-users', authenticate, async (req: any, res: any) =>
     } catch (error) {
         console.error('Error fetching mentionable users:', error);
         res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
+// POST an Agent Task
+router.post('/:id/agent-task', authenticate, async (req: any, res: any) => {
+    try {
+        const { id: workspaceId } = req.params;
+        const { input } = req.body;
+        const userId = req.user.userId || req.user.id;
+
+        if (!input?.trim()) return res.status(400).json({ error: 'Input is required' });
+
+        const member = await prisma.workspaceMember.findUnique({
+            where: { workspaceId_userId: { workspaceId, userId } }
+        });
+        if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
+
+        // 1. Ensure Agent User exists
+        let agentUser = await prisma.user.findUnique({ where: { email: 'agent@nalyse.app' } });
+        if (!agentUser) {
+            agentUser = await prisma.user.create({
+                data: {
+                    email: 'agent@nalyse.app',
+                    passwordHash: 'system_generated',
+                    displayName: 'Nalyse Agent',
+                    role: 'system',
+                    avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=nalyse-agent&backgroundColor=8b5cf6'
+                }
+            });
+            // Ensure agent is in the workspace
+            await prisma.workspaceMember.create({
+                data: { workspaceId, userId: agentUser.id, role: 'editor' }
+            });
+        } else {
+            // Check if agent is already a member
+            const agentMember = await prisma.workspaceMember.findUnique({
+                where: { workspaceId_userId: { workspaceId, userId: agentUser.id } }
+            });
+            if (!agentMember) {
+                await prisma.workspaceMember.create({
+                    data: { workspaceId, userId: agentUser.id, role: 'editor' }
+                });
+            }
+        }
+
+        // 2. Add the User's command message
+        const userMessage = await prisma.workspaceMessage.create({
+            data: {
+                workspaceId,
+                authorId: userId,
+                content: input.trim(),
+            },
+            include: {
+                author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } },
+                replyTo: { select: { id: true, content: true, author: { select: { displayName: true, email: true } } } }
+            }
+        });
+        broadcastMessage(workspaceId, userMessage);
+        
+        res.status(202).json({ success: true, message: 'Agent task started' });
+
+        // 3. Process visual agent response asynchronously
+        const fileMatch = input.match(/#\[([^\]]+)\]\(([^)]+)\)/);
+        let contentResponse = '';
+
+        if (fileMatch) {
+            const fileName = fileMatch[1];
+            const fileId = fileMatch[2];
+            
+            try {
+                const aiService = new AiService();
+                const file = await prisma.file.findUnique({ where: { id: fileId } });
+                contentResponse = await aiService.analyzeContext(`User requested analysis. Command: ${input}`, { fileName, status: file?.status, size: file?.size?.toString() });
+            } catch (aiErr) {
+               console.error('AI Service Error:', aiErr);
+               contentResponse = `I attempted to analyze **${fileName}**, but encountered an error connecting to the neural core. Please try again.`;
+            }
+        } else {
+            contentResponse = `I am the Nalyse Neural Agent. Please mention a file using \`#\` so I can analyze it for you! Examples: \`/analyze #[Sales.csv] find anomalies\``;
+        }
+
+        // Wait a bit for "thinking" effect
+        setTimeout(async () => {
+            try {
+                const agentMessage = await prisma.workspaceMessage.create({
+                    data: {
+                        workspaceId,
+                        authorId: agentUser!.id,
+                        content: contentResponse,
+                        replyToId: userMessage.id
+                    },
+                    include: {
+                        author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } },
+                        replyTo: { select: { id: true, content: true, author: { select: { displayName: true, email: true } } } }
+                    }
+                });
+                broadcastMessage(workspaceId, agentMessage);
+            } catch (error) {
+                console.error('Failed to save agent message block:', error);
+            }
+        }, 1500);
+
+    } catch (error) {
+        console.error('Error starting agent task:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to start agent task' });
+        }
     }
 });
 

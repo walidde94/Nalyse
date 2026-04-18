@@ -8,7 +8,7 @@ import {
     Share2, ChevronRight, Activity, Database, Lock, Unlock, X,
     CheckCircle2, AlertTriangle, Layers, Zap, Globe, Upload, Download,
     UserCheck, Crown, Edit3, FileJson, HardDrive, TrendingUp, Sparkles,
-    MessageCircle, AtSign, Send, Link, Copy, Check, Reply, File
+    MessageCircle, AtSign, Send, Link, Copy, Check, Reply, File, BarChart2, LineChart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -511,6 +511,23 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
     const handleSend = async () => {
         if (!inputValue.trim() || sending) return;
         setSending(true);
+        if (inputValue.trim().startsWith('/analyze')) {
+            try {
+                const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}/agent-task`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ input: inputValue.trim() })
+                });
+                if (res.ok) {
+                    setInputValue('');
+                    setReplyingTo(null);
+                    onRefresh();
+                }
+            } catch (e) { console.error(e); }
+            finally { setSending(false); }
+            return;
+        }
+
         try {
             const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}/messages`, {
                 method: 'POST',
@@ -570,19 +587,46 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                 };
 
                 result.push(
-                    <span 
-                        key={`mention-${i}`} 
-                        onClick={handleClick}
-                        style={{
-                            background: isUser ? 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.15))' : 'linear-gradient(135deg, rgba(52,211,153,0.15), rgba(16,185,129,0.15))',
-                            color: isUser ? '#a78bfa' : '#34d399',
-                            fontWeight: 700, padding: '2px 8px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
-                            display: 'inline-flex', alignItems: 'center', gap: 4, margin: '0 4px', whiteSpace: 'nowrap'
-                        }}
-                    >
-                        {isUser ? <AtSign size={12} /> : <File size={12} />}
-                        {name}
-                    </span>
+                    isUser ? (
+                        <span 
+                            key={`mention-${i}`} 
+                            onClick={handleClick}
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.15))',
+                                color: '#a78bfa',
+                                fontWeight: 700, padding: '2px 8px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
+                                display: 'inline-flex', alignItems: 'center', gap: 4, margin: '0 4px', whiteSpace: 'nowrap'
+                            }}
+                        >
+                            <AtSign size={12} /> {name}
+                        </span>
+                    ) : (
+                        <div
+                            key={`mention-${i}`}
+                            onClick={handleClick}
+                            className="group"
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 12,
+                                background: 'linear-gradient(135deg, rgba(52,211,153,0.1), rgba(16,185,129,0.1))',
+                                border: '1px solid rgba(52,211,153,0.2)',
+                                padding: '10px 14px', borderRadius: 12, margin: '8px 4px',
+                                cursor: 'pointer', verticalAlign: 'middle', minWidth: 200, maxWidth: 320,
+                                transition: 'all 0.2s', boxShadow: '0 4px 12px -4px rgba(52,211,153,0.1)'
+                            }}
+                        >
+                            <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(52,211,153,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Database size={18} color="#34d399" />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {name}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#34d399', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <Sparkles size={10} /> Neural Linked
+                                </div>
+                            </div>
+                        </div>
+                    )
                 );
             }
         }
@@ -961,6 +1005,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
     const [memberSearch, setMemberSearch] = useState('');
     const [shareLink, setShareLink] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [overlayFile, setOverlayFile] = useState<any>(null);
 
     // Set default workspace
     useEffect(() => {
@@ -1710,7 +1755,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                                         sharedAnalyses={sharedAnalyses}
                                         onRefresh={fetchWorkspaceData}
                                         user={user}
-                                        onOpenFile={onOpenFile}
+                                        onOpenFile={setOverlayFile}
                                         onOpenDashboard={onOpenDashboard}
                                     />
                                 )}
@@ -1827,6 +1872,56 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                         onClose={() => setShowShareModal(false)}
                         onShared={() => fetchWorkspaceData()}
                     />
+                )}
+            </AnimatePresence>
+
+            {/* Canvas Overlay Modal */}
+            <AnimatePresence>
+                {overlayFile && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        style={{
+                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)',
+                            zIndex: 1000, display: 'flex', flexDirection: 'column',
+                            padding: '32px 48px'
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, #10b981, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 32px -8px rgba(16,185,129,0.5)' }}>
+                                    <BarChart2 color="#fff" size={28} />
+                                </div>
+                                <div>
+                                    <h2 style={{ margin: 0, color: '#fff', fontSize: 28, fontWeight: 900, letterSpacing: '-0.02em' }}>Canvas Overview</h2>
+                                    <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.6)', fontSize: 15, fontWeight: 500 }}>{overlayFile.originalName || overlayFile.filename}</p>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 12 }}>
+                                <button onClick={() => { onOpenFile?.(overlayFile); setOverlayFile(null); }} style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 20px -8px var(--primary-glow)' }}>
+                                    Open Full Analysis
+                                </button>
+                                <button onClick={() => setOverlayFile(null)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', ...({ '&:hover': { background: 'rgba(255,255,255,0.2)' }} as any) }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Embedded Visualization Area */}
+                        <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', borderRadius: 32, padding: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)' }}>
+                            <div style={{ textAlign: 'center', maxWidth: 500 }}>
+                                <div style={{ display: 'inline-flex', padding: 24, borderRadius: '50%', background: 'rgba(139,92,246,0.15)', marginBottom: 24, border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 0 40px rgba(139,92,246,0.2)' }}>
+                                    <LineChart size={56} color="#a78bfa" />
+                                </div>
+                                <h3 style={{ color: '#fff', fontSize: 24, fontWeight: 800, marginBottom: 12, letterSpacing: '-0.02em' }}>Data Models Synced</h3>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, lineHeight: 1.6, fontWeight: 500 }}>
+                                    The underlying data structure for <b style={{color: '#fff'}}>{overlayFile.originalName || overlayFile.filename}</b> has been indexed into the workspace vector space.
+                                    <br /><br />
+                                    Users can query this dataset using <code style={{background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 8, color: '#34d399', fontSize: 14}}>/analyze #[{overlayFile.originalName || overlayFile.filename}]</code>.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>
