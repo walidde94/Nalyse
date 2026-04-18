@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { upload } from '../middleware/upload';
 import { authenticate } from '../middleware/auth';
-import { uploadFile, getFiles, analyzeFileHandler, scrapeUrlHandler, deleteFileHandler, toggleFavoriteHandler, transformFileHandler, updateFileGroupHandler, updateFileWorkspaceHandler, previewFileHandler, toggleArchiveHandler } from '../controllers/files';
+import { uploadFile, getFiles, analyzeFileHandler, scrapeUrlHandler, deleteFileHandler, toggleFavoriteHandler, transformFileHandler, updateFileGroupHandler, updateFileWorkspaceHandler, previewFileHandler, toggleArchiveHandler, cleanupFilesHandler } from '../controllers/files';
 import { uploadMultipleFilesHandler, analyzeMultipleDatasetsHandler } from '../controllers/multiDataset';
 import { runForecastHandler } from '../controllers/forecast';
 import { runKMeansHandler } from '../controllers/automl';
@@ -10,6 +10,7 @@ import { checkStorageLimit, checkFeatureAccess } from '../middleware/gating';
 
 const router = Router();
 
+router.post('/cleanup', authenticate, cleanupFilesHandler);
 router.post('/upload', authenticate, checkStorageLimit, upload.single('file'), uploadFile);
 router.post('/upload-multiple', authenticate, checkFeatureAccess('multi_dataset'), checkStorageLimit, upload.array('files', 20), uploadMultipleFilesHandler);
 router.post('/analyze-multiple', authenticate, checkFeatureAccess('multi_dataset'), analyzeMultipleDatasetsHandler);
