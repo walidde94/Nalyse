@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import 'reflect-metadata'; // Required for TypeORM
+(BigInt.prototype as any).toJSON = function () {
+    return this.toString();
+};
 import express from 'express';
 import path from 'path';
 import cors from 'cors';

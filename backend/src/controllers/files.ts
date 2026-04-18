@@ -207,6 +207,7 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
                 isProcessed: f.isProcessed || hasAnalysis,
                 processedAt: f.processedAt || raw?.analysis_completed_at || null,
                 groupId: f.groupId,
+                workspaceId: f.workspaceId,
                 checksum: f.checksum
             };
         });
@@ -234,6 +235,7 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
                 isProcessed: f.isProcessed,
                 processedAt: f.processedAt,
                 groupId: f.groupId,
+                workspaceId: f.workspaceId,
                 checksum: f.checksum
             })));
         } catch (e2) {
@@ -278,45 +280,59 @@ export const updateFileWorkspaceHandler = async (req: AuthRequest, res: Response
             where: { id: fileId, isDeleted: false }
         });
 
-        if (!file) return res.status(404).json({ error: 'File not found' });
+        if (!file) {
+            return res.status(404).json({ error: 'File not found or has been deleted.' });
+        }
         
         // Ensure user owns the file OR is part of the file's current organization
         if (file.ownerId !== userId) {
             // Check if user is in the organization
             const user = await prisma.user.findUnique({ where: { id: userId } });
             if (user?.organizationId !== file.organizationId) {
-                return res.status(404).json({ error: 'File not found or unauthorized' });
+                return res.status(403).json({ error: 'You do not have permission to modify this file.' });
             }
         }
 
         if (workspaceId) {
-            // Verify workspace exists and user is admin/editor (or at least member, allowing permissive sharing)
+            // Verify workspace exists and user is admin/editor
             const membership = await prisma.workspaceMember.findFirst({
                 where: { userId, workspaceId }
             });
-            if (!membership) return res.status(403).json({ error: 'You are not a member of this workspace' });
+            if (!membership) {
+                return res.status(403).json({ error: 'You are not a member of the target workspace.' });
+            }
+            if (membership.role === 'viewer') {
+                return res.status(403).json({ error: 'Viewers are not permitted to assign files to this workspace.' });
+            }
         }
 
         const updatedFile = await prisma.file.update({
             where: { id: fileId },
-            data: { workspaceId: workspaceId || null }
+            data: { workspaceId: workspaceId || null },
+            include: { workspace: { select: { name: true } } }
         });
         
-        // Broadcast
+        // Broadcast updates for real-time UI synchronization
         if (workspaceId) {
-            await executeWorkspaceAction(workspaceId, userId, 'FILE_SHARED', fileId, { filename: updatedFile.filename });
+            await executeWorkspaceAction(workspaceId, userId, 'FILE_SHARED', fileId, { 
+                filename: updatedFile.filename,
+                workspaceName: updatedFile.workspace?.name 
+            });
+        } else if (file.workspaceId) {
+            // Log unshare event in the former workspace
+            await executeWorkspaceAction(file.workspaceId, userId, 'FILE_UNSHARED', fileId, { 
+                filename: file.filename 
+            });
         }
 
-        // Serialize BigInt safely for JSON response
-        const safeFile = {
-            ...updatedFile,
-            size: updatedFile.size ? updatedFile.size.toString() : 0
-        };
-
-        res.json(safeFile);
-    } catch (error) {
-        console.error('Workspace assignment failed', error);
-        res.status(500).json({ error: 'Workspace assignment failed' });
+        // res.json handles BigInt automatically now thanks to global toJSON override
+        res.json(updatedFile);
+    } catch (error: any) {
+        console.error('[updateFileWorkspaceHandler] Failure:', error);
+        res.status(500).json({ 
+            error: 'Workspace assignment failed', 
+            message: process.env.NODE_ENV === 'development' ? error.message : 'Database error' 
+        });
     }
 };
 
