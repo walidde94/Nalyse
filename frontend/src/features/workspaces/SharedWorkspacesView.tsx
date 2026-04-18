@@ -997,6 +997,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
     const [sharedAnalyses, setSharedAnalyses] = useState<SharedAnalysis[]>([]);
     const [wsActivity, setWsActivity] = useState<ActivityLog[]>([]);
     const [messages, setMessages] = useState<WorkspaceMessage[]>([]);
+    const [activityError, setActivityError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
@@ -1047,12 +1048,23 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
             ]);
             if (filesRes.ok) setSharedFiles(await filesRes.json());
             if (analysesRes.ok) setSharedAnalyses(await analysesRes.json());
-            if (activityRes.ok) setWsActivity(await activityRes.json());
+            
+            if (activityRes.ok) {
+                setWsActivity(await activityRes.json());
+                setActivityError(null);
+            } else {
+                const errData = await activityRes.json();
+                setActivityError(errData.details || 'Failed to fetch activity');
+            }
+
             if (messagesRes.ok) {
                 const data = await messagesRes.json();
                 setMessages(data.messages || []);
             }
-        } catch (e) { console.error('Failed to fetch workspace data:', e); }
+        } catch (e: any) { 
+            console.error('Failed to fetch workspace data:', e);
+            setActivityError(e.message);
+        }
     }, [token, selectedWorkspaceId]);
 
     useEffect(() => { fetchWorkspaceData(); }, [fetchWorkspaceData]);
@@ -1771,7 +1783,22 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                                             </p>
                                         </div>
 
-                                        {wsActivity.length === 0 ? (
+                                        {activityError ? (
+                                            <div style={{
+                                                padding: '24px', borderRadius: 20, background: 'rgba(239, 68, 68, 0.05)',
+                                                border: '1px solid rgba(239, 68, 68, 0.2)', marginBottom: 20
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#ef4444', marginBottom: 8 }}>
+                                                    <AlertTriangle size={18} />
+                                                    <span style={{ fontWeight: 800, fontSize: 13 }}>Neural Sync Error</span>
+                                                </div>
+                                                <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                                                    The system encountered an error fetching activity logs from the production gateway. This usually means the database metadata is still synchronizing. 
+                                                    <br/><br/>
+                                                    <code style={{ fontSize: 10, background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: 4 }}>{activityError}</code>
+                                                </p>
+                                            </div>
+                                        ) : wsActivity.length === 0 ? (
                                             <div style={{
                                                 textAlign: 'center', padding: '60px 20px',
                                                 border: '2px dashed var(--border-subtle)', borderRadius: 20
