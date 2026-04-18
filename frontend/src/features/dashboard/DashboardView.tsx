@@ -636,7 +636,6 @@ export const DashboardView = ({
     const [activeTab, setActiveTab] = useState<'properties' | 'preview'>('properties');
     const [datasetTab, setDatasetTab] = useState<'active' | 'archived'>('active');
     const [workspaceFilter, setWorkspaceFilter] = useState<string>('all'); // 'all', 'private', or specific workspaceId
-    const { token } = useAuth();
     const safeFiles = Array.isArray(files) ? files : [];
 
     const filteredFiles = useMemo(() => {
