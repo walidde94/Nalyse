@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../config/database';
 import { authenticate } from '../middleware/auth';
-import { executeWorkspaceAction } from '../services/workspaceService';
+import { executeWorkspaceAction, broadcastMessage } from '../services/workspaceService';
 
 const router = Router();
 
@@ -467,7 +467,6 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
         });
 
         // 1. Instantly Broadcast to real-time socket
-        const { broadcastMessage } = require('../services/workspaceService');
         broadcastMessage(workspaceId, message);
 
         // 2. Create notifications for mentioned users (wrapped in try/catch to prevent 500 errors if DB is out of sync)

@@ -500,10 +500,15 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
                 const id = parts[i + 3];
                 const isUser = type === '@';
                 
-                const handleClick = () => {
+                const handleClick = (e: any) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (!isUser && onOpenFile) {
                         const file = sharedFiles.find((f: any) => f.id === id);
-                        if (file) onOpenFile(file);
+                        if (file) {
+                            // Ensure the App handler treats it as processed so it fetches from cache correctly instead of attempting a full re-upload cycle!
+                            onOpenFile({ ...file, isProcessed: true });
+                        }
                     }
                 };
 
