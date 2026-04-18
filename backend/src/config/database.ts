@@ -93,7 +93,17 @@ export const initializeDatabase = async () => {
         await AppDataSource.initialize();
         console.log('✅ Database connection established.');
 
-        // Legacy auto-sync block removed. Schema should be managed exclusively via Prisma.
+        // Phase 5/6: Auto-Sync Neural Schema (Ensures table existence in volatile production environments like Render)
+        if (process.env.NODE_ENV === 'production') {
+            try {
+                const { execSync } = require('child_process');
+                console.log('🧬 [Prisma] Synchronizing schema with production database...');
+                execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+                console.log('✅ [Prisma] Schema synchronization complete.');
+            } catch (syncErr: any) {
+                console.error('⚠️ [Prisma] Schema synchronization failed:', syncErr.message);
+            }
+        }
     } catch (error: any) {
         console.error('❌ Database connection failed!');
         console.error('Error Message:', error.message);
