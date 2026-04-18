@@ -355,13 +355,35 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
     const [mentionFileIdx, setMentionFileIdx] = useState(0);
 
     const [cursorPos, setCursorPos] = useState(0);
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [hasNewMessages, setHasNewMessages] = useState(false);
+    
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Auto-scroll to bottom when messages change
+    const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+        messagesEndRef.current?.scrollIntoView({ behavior });
+        setHasNewMessages(false);
+        setIsAtBottom(true);
+    };
+
+    // Auto-scroll logic
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (isAtBottom) {
+            scrollToBottom('smooth');
+        } else {
+            setHasNewMessages(true);
+        }
     }, [messages]);
+
+    const handleScroll = () => {
+        if (!scrollContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+        const atBottom = scrollHeight - scrollTop - clientHeight < 100;
+        setIsAtBottom(atBottom);
+        if (atBottom) setHasNewMessages(false);
+    };
 
     // Listen for new real-time messages
     useEffect(() => {
@@ -585,10 +607,38 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                     </div>
 
                     {/* Messages Area */}
-                    <div style={{
-                        flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px',
-                        padding: '20px 24px',
-                    }}>
+                    <div 
+                        ref={scrollContainerRef}
+                        onScroll={handleScroll}
+                        style={{
+                            flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px',
+                            padding: '20px 24px', position: 'relative'
+                        }}
+                    >
+                        {/* New Message Notification Button */}
+                        <AnimatePresence>
+                            {(hasNewMessages && !isAtBottom) && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    onClick={() => scrollToBottom('smooth')}
+                                    style={{
+                                        position: 'sticky', bottom: 10, left: 0, right: 0, margin: '0 auto',
+                                        width: 'max-content', zIndex: 100,
+                                        background: 'linear-gradient(135deg, #818cf8, #6366f1)',
+                                        color: '#fff', padding: '10px 18px', borderRadius: 20,
+                                        fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                                        boxShadow: '0 10px 25px -5px rgba(99,102,241,0.5)',
+                                        display: 'flex', alignItems: 'center', gap: 8,
+                                        border: '1px solid rgba(255,255,255,0.2)'
+                                    }}
+                                >
+                                    <ArrowUpRight size={14} style={{ transform: 'rotate(90deg)' }} />
+                                    New messages below
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                         {messages.length === 0 ? (
                             <div style={{
                                 textAlign: 'center', padding: '60px 20px',
