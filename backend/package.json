@@ -6,8 +6,8 @@
   "scripts": {
     "test": "jest",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "prisma generate && prisma db push --accept-data-loss && tsc",
-    "start": "node scripts/boot.js"
+    "build": "prisma generate && tsc",
+    "start": "npx prisma db push --accept-data-loss && node scripts/boot.js"
   },
   "keywords": [],
   "author": "",
