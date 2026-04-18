@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from '../common/Logo';
-import { Search, Bell, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint, Compass, Command } from 'lucide-react';
+import { Search, Bell, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint, Compass, Command, MessageCircle, AtSign } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -25,6 +26,75 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     const [showProfile, setShowProfile] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    
+    // Toast notification state
+    const [toastData, setToastData] = useState<{ title: string; message: string; author: any; type: 'mention' | 'message' } | null>(null);
+
+    // Listen for real-time messages to show toast and play sound
+    useEffect(() => {
+        const handleNewMessage = (e: CustomEvent) => {
+            const msg = e.detail;
+            if (!msg || !msg.author) return;
+            
+            // Don't notify the sender!
+            if (msg.author.id === user?.id) return;
+
+            const isMention = msg.mentions?.includes(user?.id);
+
+            // 1. Play Dynamic Sound via Web Audio API
+            try {
+                const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+                if (AudioContext) {
+                    const ctx = new AudioContext();
+                    if (ctx.state === 'suspended') ctx.resume();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    
+                    osc.type = isMention ? 'square' : 'sine';
+                    osc.frequency.setValueAtTime(isMention ? 880 : 600, ctx.currentTime);
+                    if (isMention) osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.1);
+                    else osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+                    
+                    gain.gain.setValueAtTime(0, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + (isMention ? 0.3 : 0.2));
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + (isMention ? 0.3 : 0.2));
+                }
+            } catch (err) { console.warn('Audio auto-play blocked', err); }
+
+            // 2. Play Bell Animation
+            const bell = document.getElementById('hdr-bell-icon');
+            if (bell) {
+                bell.classList.remove('animate-bell');
+                void bell.offsetWidth; // force reflow
+                bell.classList.add('animate-bell');
+            }
+
+            // 3. Show Visual Toast
+            const preview = msg.content.replace(/[@#]\[([^\]]+)\]\([^)]+\)/g, '$1');
+            setToastData({
+                title: isMention ? 'You were mentioned' : 'New Message',
+                message: preview,
+                author: msg.author,
+                type: isMention ? 'mention' : 'message'
+            });
+
+            // Auto dismiss toast
+            setTimeout(() => {
+                setToastData(current => {
+                    // Only dismiss if it's the same exact toast (prevent dismissing newer ones)
+                    return current?.message === preview ? null : current;
+                });
+            }, 6000);
+        };
+
+        window.addEventListener('workspace:new_message', handleNewMessage as EventListener);
+        return () => window.removeEventListener('workspace:new_message', handleNewMessage as EventListener);
+    }, [user?.id]);
 
     const isDark = theme === 'dark' || theme === 'midnight';
     const isMidnight = theme === 'midnight';
@@ -232,6 +302,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     {/* Notifications */}
                     <div style={{ position: 'relative' }}>
                         <button
+                            id="hdr-bell-icon"
                             className="hdr-icon-btn"
                             onClick={() => { setShowNotifications(!showNotifications); setShowUserMenu(false); }}
                         >
@@ -247,6 +318,50 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 boxShadow: '0 0 6px #f43f5e',
                             }} />
                         </button>
+
+                        {/* Real-time Toast Popup */}
+                        <AnimatePresence>
+                            {toastData && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -20, x: '-50%' }}
+                                    animate={{ opacity: 1, y: 0, x: '-50%' }}
+                                    exit={{ opacity: 0, y: -20, x: '-50%' }}
+                                    transition={{ type: 'spring', bounce: 0.4 }}
+                                    style={{
+                                        position: 'fixed',
+                                        top: 60,
+                                        left: '50%',
+                                        zIndex: 9999,
+                                        background: toastData.type === 'mention' ? 'rgba(139, 92, 246, 0.95)' : 'var(--bg-elevated)',
+                                        backdropFilter: 'blur(20px)',
+                                        border: `1px solid ${toastData.type === 'mention' ? '#8b5cf6' : 'var(--border-subtle)'}`,
+                                        borderRadius: 16,
+                                        padding: '12px 16px',
+                                        display: 'flex',
+                                        gap: 12,
+                                        alignItems: 'center',
+                                        boxShadow: toastData.type === 'mention' ? '0 10px 40px -10px rgba(139, 92, 246, 0.5)' : 'var(--shadow-xl)',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => setToastData(null)}
+                                >
+                                    <div style={{ 
+                                        width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.1)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0
+                                    }}>
+                                        {toastData.type === 'mention' ? <AtSign size={16} /> : <MessageCircle size={16} />}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <div style={{ fontSize: 13, fontWeight: 800, color: toastData.type === 'mention' ? '#fff' : 'var(--text-primary)' }}>
+                                            {toastData.title}
+                                        </div>
+                                        <div style={{ fontSize: 12, color: toastData.type === 'mention' ? 'rgba(255,255,255,0.8)' : 'var(--text-secondary)', maxWidth: 250, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {toastData.message}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Notifications Dropdown */}
                         {showNotifications && (
@@ -523,6 +638,21 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             {showNotifications && <div onClick={() => setShowNotifications(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />}
 
             <style>{`
+                @keyframes bellRing {
+                    0% { transform: rotate(0deg); }
+                    15% { transform: rotate(15deg); }
+                    30% { transform: rotate(-15deg); }
+                    45% { transform: rotate(10deg); }
+                    60% { transform: rotate(-10deg); }
+                    75% { transform: rotate(5deg); }
+                    85% { transform: rotate(-5deg); }
+                    100% { transform: rotate(0deg); }
+                }
+                .animate-bell svg {
+                    animation: bellRing 0.6s ease-in-out;
+                    transform-origin: top center;
+                    color: var(--primary) !important;
+                }
                 @keyframes slideUpFade {
                     from { opacity: 0; transform: translateY(8px) scale(0.97); }
                     to { opacity: 1; transform: translateY(0) scale(1); }

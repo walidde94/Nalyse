@@ -138,6 +138,10 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
             window.dispatchEvent(new CustomEvent('workspace:global_update', { detail: log }));
         });
 
+        newSocket.on('new_message', (msg: any) => {
+            window.dispatchEvent(new CustomEvent('workspace:new_message', { detail: msg }));
+        });
+
         newSocket.on('workspace:presence', (presence: Presence) => {
             setActiveUsers(prev => {
                 const next = { ...prev };

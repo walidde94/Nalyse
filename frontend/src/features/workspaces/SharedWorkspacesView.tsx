@@ -363,6 +363,15 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, onRefresh, u
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    // Listen for new real-time messages
+    useEffect(() => {
+        const handleNewMessage = () => {
+            onRefresh();
+        };
+        window.addEventListener('workspace:new_message', handleNewMessage);
+        return () => window.removeEventListener('workspace:new_message', handleNewMessage);
+    }, [onRefresh]);
+
     // Fetch mentionable users when @ is typed
     useEffect(() => {
         if (mentionQuery === null) { setMentionUsers([]); return; }
