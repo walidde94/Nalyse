@@ -598,12 +598,12 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '24px', flex: 1 }}>
                 
                 {/* Main Chat Area */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
+                <div style={{ background: 'var(--bento-glass)', border: '1px solid var(--border-subtle)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
                             <MessageCircle size={16} color="#818cf8" /> Workspace Discussion
                         </h3>
-                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{messages.length} messages</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>{messages.length} messages</span>
                     </div>
 
                     {/* Messages Area */}
@@ -679,9 +679,9 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                         >
                                             {/* Hover Reply Button */}
                                             <div className="opacity-0 group-hover:opacity-100 transition-opacity" style={{
-                                                position: 'absolute', right: -10, top: -5, background: 'var(--bento-glass)',
+                                                position: 'absolute', right: -10, top: -5, background: 'var(--bg-elevated)',
                                                 border: '1px solid var(--border-subtle)', borderRadius: 10, padding: 4, zIndex: 10,
-                                                boxShadow: '0 8px 24px -4px rgba(0,0,0,0.5)'
+                                                boxShadow: 'var(--shadow-lg)'
                                             }}>
                                                 <button onClick={() => setReplyingTo(msg)} style={{
                                                     background: 'none', border: 'none', color: 'var(--text-secondary)',
@@ -700,7 +700,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                                 {msg.replyTo && (
                                                     <div style={{
                                                         display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8,
-                                                        padding: '6px 12px', background: 'rgba(255,255,255,0.03)',
+                                                        padding: '6px 12px', background: 'var(--bg-app)',
                                                         borderLeft: '3px solid #a78bfa', borderRadius: '4px 8px 8px 4px',
                                                         fontSize: 12, cursor: 'pointer'
                                                     }}>
@@ -715,10 +715,10 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
 
                                                 {showAvatar && (
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                                                        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>
+                                                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                                                             {self ? 'You' : getUserName(msg.author)}
                                                         </span>
-                                                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
+                                                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
                                                             {timeAgo(msg.createdAt)}
                                                         </span>
                                                         {hasMentions && (
@@ -734,7 +734,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                                     </div>
                                                 )}
                                                 <div style={{
-                                                    fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6,
+                                                    fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6,
                                                     wordBreak: 'break-word', fontWeight: 400
                                                 }}>
                                                     {renderContent(msg.content)}
@@ -749,7 +749,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                     </div>
 
                     {/* Compose Area */}
-                    <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                    <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', position: 'relative' }}>
                         
                         {/* Reply Indicator Preview */}
                         {replyingTo && (
@@ -776,13 +776,13 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
                                     style={{
                                         position: 'absolute', bottom: '100%', left: '24px', right: '24px',
-                                        background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)',
+                                        background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
                                         borderRadius: 14, padding: 6, marginBottom: replyingTo ? 44 : 6,
-                                        boxShadow: '0 12px 40px -8px rgba(0,0,0,0.6)',
+                                        boxShadow: 'var(--shadow-xl)',
                                         zIndex: 50, maxHeight: 200, overflowY: 'auto'
                                     }}
                                 >
-                                    <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.4)', padding: '4px 10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', padding: '4px 10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                                         Attach a file
                                     </div>
                                     {filteredFiles.length === 0 ? (
@@ -855,15 +855,15 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                         </AnimatePresence>
 
                         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '4px 8px', transition: 'border-color 0.2s' }}>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: 'var(--bg-app)', border: '1px solid var(--border-subtle)', borderRadius: '12px', padding: '4px 8px', transition: 'border-color 0.2s' }}>
                                 <div style={{
                                     width: 32, height: 32, borderRadius: 8,
-                                    color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     flexShrink: 0, cursor: 'pointer', transition: 'color 0.2s'
                                 }}
                                 title="Type @ to mention"
                                 onClick={() => { setInputValue(prev => prev + '@'); setMentionQuery(''); inputRef.current?.focus(); }}
-                                className="hover:text-white"
+                                className="hover:text-primary"
                                 >
                                     <AtSign size={16} />
                                 </div>
@@ -872,7 +872,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                     placeholder="Type a message... @ for members, # for files" rows={1}
                                     style={{
                                         flex: 1, background: 'none', border: 'none', outline: 'none',
-                                        fontSize: 13, color: '#fff', fontWeight: 500, resize: 'none', lineHeight: 1.5, maxHeight: 120, minHeight: 24, padding: '8px 4px', fontFamily: 'var(--font-main)'
+                                        fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, resize: 'none', lineHeight: 1.5, maxHeight: 120, minHeight: 24, padding: '8px 4px', fontFamily: 'var(--font-main)'
                                     }}
                                     onInput={(e) => {
                                         const t = e.currentTarget;
@@ -899,26 +899,26 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
 
                 {/* Sidebar Stats Area */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '20px' }}>
-                        <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Thread Stats</h4>
+                    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '20px' }}>
+                        <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Thread Stats</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Total Messages</span>
-                                <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{messages.length}</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total Messages</span>
+                                <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{messages.length}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Mentions</span>
-                                <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{messages.filter(m => m.mentions && m.mentions.length > 0).length}</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Mentions</span>
+                                <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{messages.filter(m => m.mentions && m.mentions.length > 0).length}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div style={{ background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(52, 211, 153, 0.05))', border: '1px solid rgba(129, 140, 248, 0.2)', borderRadius: '16px', padding: '20px' }}>
+                    <div style={{ background: 'var(--primary-subtle)', border: '1px solid var(--primary)', borderRadius: '16px', padding: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                            <Sparkles size={16} color="#818cf8" />
-                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#818cf8' }}>AI Insights</span>
+                            <Sparkles size={16} color="var(--primary)" />
+                            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--primary)' }}>AI Insights</span>
                         </div>
-                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                             Based on your recent workspace message activity, team engagement is steady. Consider creating dashboards out of the files shared in the Data tab to stimulate further discussion.
                         </p>
                     </div>
@@ -1281,17 +1281,17 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                                             onClick={() => setActiveTab(t.id)}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10,
-                                                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                                                border: `1px solid ${isActive ? 'rgba(255,255,255,0.12)' : 'transparent'}`,
-                                                color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                                                background: isActive ? 'var(--primary-subtle)' : 'transparent',
+                                                border: `1px solid ${isActive ? 'var(--primary)' : 'transparent'}`,
+                                                color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                                                 fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
                                             }}
                                         >
                                             <Icon size={15} /> {t.label}
                                             <span style={{ 
-                                                background: isActive ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.05)', 
+                                                background: isActive ? 'var(--primary-subtle)' : 'var(--bg-app)', 
                                                 padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 800, 
-                                                color: isActive ? '#34d399' : 'rgba(255,255,255,0.4)' 
+                                                color: isActive ? 'var(--primary)' : 'var(--text-muted)' 
                                             }}>
                                                 {t.count || 0}
                                             </span>
