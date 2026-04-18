@@ -15,11 +15,21 @@ const serializeFile = (f: any) => ({
 router.get('/', authenticate, async (req: any, res: any) => {
     try {
         const userId = req.user.userId || req.user.id;
+        
+        // 1. Get user's org info
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { organizationId: true }
+        });
+
+        if (!user || !user.organizationId) {
+            return res.json([]); // No org, no workspaces
+        }
+
+        // 2. Fetch ALL workspaces for this organization
         const workspaces = await prisma.workspace.findMany({
             where: {
-                members: {
-                    some: { userId }
-                }
+                organizationId: user.organizationId
             },
             include: {
                 organization: { select: { name: true } },
@@ -391,10 +401,13 @@ router.get('/:id/messages', authenticate, async (req: any, res: any) => {
         const cursor = req.query.cursor as string | undefined;
         const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
 
-        const member = await prisma.workspaceMember.findUnique({
-            where: { workspaceId_userId: { workspaceId, userId } }
-        });
-        if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
+        // Verify user is in the same organization as the workspace
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { organizationId: true } });
+        const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { organizationId: true } });
+
+        if (!user || !workspace || user.organizationId !== workspace.organizationId) {
+            return res.status(403).json({ error: 'Unauthorized: Not a member of this organization' });
+        }
 
         const messages = await prisma.workspaceMessage.findMany({
             where: { workspaceId },
