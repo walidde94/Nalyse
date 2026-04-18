@@ -166,36 +166,32 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
         });
         const workspaceIds = userWorkspaces.map(w => w.workspaceId);
 
-        const files = await prisma.file.findMany({
-            where: {
-                isDeleted: false,
-                OR: [
-                    { ownerId: userId },
-                    ...(workspaceIds.length > 0 ? [{ workspaceId: { in: workspaceIds } }] : [])
-                ]
-            },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                analyses: {
-                    where: { status: 'completed' },
-                    orderBy: { completedAt: 'desc' },
-                    take: 1,
-                    select: { id: true, completedAt: true }
-                }
-            }
-        });
+        let query = AppDataSource.getRepository(File)
+            .createQueryBuilder('file')
+            .leftJoin('analyses', 'a', 'a."fileId" = file.id AND a.status = :status', { status: 'completed' })
+            .addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END', 'has_analysis')
+            .addSelect('a."completedAt"', 'analysis_completed_at');
 
-        const enriched = files.map(f => {
-            const hasAnalysis = f.analyses && f.analyses.length > 0;
-            const isProcessed = f.isProcessed || hasAnalysis;
-            const processedAt = f.processedAt || (hasAnalysis ? f.analyses[0].completedAt : null);
+        if (workspaceIds.length > 0) {
+            query = query.where('(file.ownerId = :userId OR file.workspaceId IN (:...workspaceIds))', { userId, workspaceIds });
+        } else {
+            query = query.where('file.ownerId = :userId', { userId });
+        }
+
+        const files = await query
+            .andWhere('file.isDeleted = false')
+            .orderBy('file.createdAt', 'DESC')
+            .getRawAndEntities();
+
+        const enriched = files.entities.map((f) => {
+            const raw = files.raw.find(r => r.file_id === f.id);
+            const hasAnalysis = raw?.has_analysis === true || raw?.has_analysis === 't' || raw?.has_analysis === '1' || raw?.has_analysis === 1;
 
             // If DB says it has analysis but file record doesn't reflect it, fix it (async, non-blocking)
             if (hasAnalysis && !f.isProcessed) {
-                prisma.file.update({
-                    where: { id: f.id },
-                    data: { isProcessed: true, processedAt: processedAt }
-                }).catch(() => {});
+                f.isProcessed = true;
+                f.processedAt = raw?.analysis_completed_at || new Date();
+                AppDataSource.getRepository(File).save(f).catch(() => { });
             }
 
             return {
@@ -208,8 +204,8 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
                 updatedAt: f.updatedAt,
                 isFavorite: f.isFavorite,
                 isArchived: f.isArchived,
-                isProcessed: isProcessed,
-                processedAt: processedAt,
+                isProcessed: f.isProcessed || hasAnalysis,
+                processedAt: f.processedAt || raw?.analysis_completed_at || null,
                 groupId: f.groupId,
                 workspaceId: f.workspaceId,
                 checksum: f.checksum
@@ -229,14 +225,14 @@ export const toggleArchiveHandler = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.userId;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
+    const fileRepo = AppDataSource.getRepository(File);
+
     try {
         const fileId = req.params.id as string;
         
-        const file = await prisma.file.findUnique({
-            where: { id: fileId }
-        });
+        const file = await fileRepo.findOne({ where: { id: fileId, isDeleted: false } });
 
-        if (!file || file.isDeleted) return res.status(404).json({ error: 'File not found' });
+        if (!file) return res.status(404).json({ error: 'File not found' });
 
         if (file.ownerId !== userId) {
             if (!file.workspaceId) return res.status(403).json({ error: 'Forbidden' });
@@ -249,10 +245,8 @@ export const toggleArchiveHandler = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        const updated = await prisma.file.update({
-            where: { id: fileId },
-            data: { isArchived: !file.isArchived }
-        });
+        file.isArchived = !file.isArchived;
+        const updated = await fileRepo.save(file);
 
         res.json({ ...updated, size: updated.size != null ? updated.size.toString() : '0' });
     } catch (error) {
