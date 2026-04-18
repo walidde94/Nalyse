@@ -138,12 +138,21 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        time: new Date().toISOString(),
+        dbError: (global as any).DB_CONNECTION_ERROR || null 
     });
+});
+
+app.get('/api/health/db', async (req, res) => {
+    try {
+        const auditLogCount = await prisma.auditLog.count();
+        res.json({ status: 'healthy', auditLogCount });
+    } catch (err: any) {
+        res.status(500).json({ status: 'unhealthy', error: err.message });
+    }
 });
 
 // Lightweight heartbeat for latency measurement
