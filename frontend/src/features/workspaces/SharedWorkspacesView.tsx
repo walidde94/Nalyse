@@ -593,7 +593,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
 
     return (
         <motion.div key="discussion" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-            style={{ display: 'flex', flexDirection: 'column', height: 600 }}
+            style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 480px)', minHeight: 400 }}
         >
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '24px', flex: 1 }}>
                 
@@ -1142,14 +1142,14 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
 
     return (
         <div style={{
-            fontFamily: 'var(--font-main)', height: '100%', overflowY: 'auto',
+            fontFamily: 'var(--font-main)', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
             background: 'var(--bg-app)', position: 'relative', zIndex: 10
         }}>
             {/* Atmospheric Glow */}
             <div style={{ position: 'absolute', top: '5%', left: '40%', width: '40vw', height: '40vh', background: 'radial-gradient(ellipse, rgba(52, 211, 153, 0.05), transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
             <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '30vw', height: '30vh', background: 'radial-gradient(circle, rgba(129, 140, 248, 0.04), transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
 
-            <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 32px 64px', position: 'relative', zIndex: 1 }}>
+            <div style={{ flex: 1, maxWidth: 1400, margin: '0 auto', padding: '24px 32px', position: 'relative', display: 'flex', flexDirection: 'column', zIndex: 1, width: '100%', overflow: 'hidden' }}>
                 
                 {/* ─── HEADER ──────────────────────────────────────────── */}
                 <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
@@ -1315,7 +1315,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
                         </div>
 
                         {/* Tab Content */}
-                        <div style={{ padding: 28, minHeight: 400 }}>
+                        <div style={{ padding: '20px 24px', flex: 1, overflowY: 'auto' }}>
                             <AnimatePresence mode="wait">
                                 {activeTab === 'team' && (
                                     <motion.div key="team" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
