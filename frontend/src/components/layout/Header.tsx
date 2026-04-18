@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 title: isMention ? 'You were mentioned' : `Message from ${msg.author.firstName || 'User'}`,
                 message: preview,
                 timestamp: new Date().toISOString(),
-                type: isMention ? 'mention' : 'message',
+                type: (isMention ? 'mention' : 'message') as 'mention' | 'message',
                 read: false
             };
             
