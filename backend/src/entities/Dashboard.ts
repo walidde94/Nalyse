@@ -22,9 +22,6 @@ export class Dashboard {
     @Column({ nullable: true })
     organizationId: string;
 
-    @Column({ nullable: true })
-    workspaceId: string;
-
     @CreateDateColumn()
     createdAt: Date;
 
