@@ -334,7 +334,14 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                     setOrgData(data.organization);
                     setMembers(data.members || []);
                     setStats({ totalMembers: data.members?.length || 0, activeMembers: data.members?.filter((m: any) => m.isActive).length || 0 });
+                    if (data.currentUserRole) setCurrentUserRole(data.currentUserRole);
+                    setWorkspaces([]);
+                    setAuditLogs([]);
+                    setInvitations([]);
+                    setRecentMessages([]);
                 } else {
+                    const text = await res.text();
+                    console.error('[Governance Error details]', text);
                     throw new Error('Failed to fetch organization data');
                 }
                 return;
@@ -453,6 +460,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                     fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 6,
                                     background: isActive ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
                                     color: isActive ? '#fff' : 'rgba(255,255,255,0.3)',
+                                    minWidth: 16, textAlign: 'center'
                                 }}>
                                     {tab.count}
                                 </span>
