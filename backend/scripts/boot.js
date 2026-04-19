@@ -8,9 +8,18 @@ function run() {
     console.log("[Boot] Phase A.1: Generating Prisma Client...");
     spawnSync('npx', ['prisma', 'generate'], { stdio: 'inherit', shell: true });
 
-    // Phase A.2: Schema Synchronization (Safe db push)
+    // Phase A.2: Schema Synchronization (Safe db push using DIRECT_URL if available)
     console.log("[Boot] Phase A.2: Synchronizing Schema...");
-    spawnSync('npx', ['prisma', 'db', 'push', '--accept-data-loss'], { stdio: 'inherit', shell: true });
+    const syncEnv = { ...process.env };
+    if (process.env.DIRECT_URL) {
+        console.log("[Boot] Using DIRECT_URL for schema synchronization...");
+        syncEnv.DATABASE_URL = process.env.DIRECT_URL;
+    }
+    spawnSync('npx', ['prisma', 'db', 'push', '--accept-data-loss'], { 
+        stdio: 'inherit', 
+        shell: true,
+        env: syncEnv
+    });
 
     // Phase A.3: Neural Schema Repair (Align IDs)
     console.log("[Boot] Phase A.3: Running Neural Schema Repair...");
