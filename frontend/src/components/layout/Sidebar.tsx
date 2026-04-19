@@ -49,6 +49,7 @@ import {
 
 interface SidebarProps {
     currentView: string;
+    openedViews?: string[];
     onViewChange: (view: any) => void;
 }
 
@@ -153,7 +154,7 @@ function orderedGroupItemIds(group: SidebarGroupKey, prefs: ReturnType<typeof lo
     return out.filter((id) => !prefs.hiddenNavIds.includes(id));
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [], onViewChange }) => {
     const { t } = useLanguage();
     const { user } = useAuth();
     const { isArchitectMode } = useArchitect();
@@ -326,6 +327,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                     label={t('nav.home')}
                     icon={<Home size={16} strokeWidth={2} />}
                     isActive={currentView === 'landing'}
+                    isOpened={openedViews.includes('landing')}
                     collapsed={collapsed}
                     hovered={hoveredItem === 'landing'}
                     sectorAccent="#94a3b8"
@@ -427,6 +429,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                                                 label={sidebarNavLabel(itemId, t)}
                                                 icon={NAV_ICONS[itemId] ?? <Activity size={16} strokeWidth={2} />}
                                                 isActive={currentView === itemId}
+                                                isOpened={openedViews.includes(itemId)}
                                                 collapsed={collapsed}
                                                 hovered={hoveredItem === itemId}
                                                 sectorAccent={theme.accent}
@@ -471,6 +474,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                                 label={sidebarNavLabel(fid, t)}
                                 icon={NAV_ICONS[fid] ?? <Activity size={16} strokeWidth={2} />}
                                 isActive={fid === 'docs' ? false : currentView === fid}
+                                isOpened={fid === 'docs' ? false : openedViews.includes(fid)}
                                 collapsed={collapsed}
                                 hovered={hoveredItem === fid}
                                 sectorAccent={a}
@@ -566,6 +570,7 @@ interface NavItemProps {
     label: string;
     icon: React.ReactNode;
     isActive: boolean;
+    isOpened?: boolean;
     collapsed: boolean;
     hovered: boolean;
     sectorAccent: string;
@@ -579,6 +584,7 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
     label,
     icon,
     isActive,
+    isOpened,
     collapsed,
     hovered,
     sectorAccent,
@@ -647,8 +653,23 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
                     background: isActive ? `${sectorAccent}18` : 'transparent',
                     flexShrink: 0,
                     transition: 'all 0.15s ease',
+                    position: 'relative'
                 }}>
                     {icon}
+                    {/* Open service indicator dot */}
+                    {isOpened && !isActive && (
+                        <span style={{
+                            position: 'absolute',
+                            top: collapsed ? -4 : -2,
+                            right: collapsed ? -6 : -2,
+                            width: 6,
+                            height: 6,
+                            borderRadius: '50%',
+                            background: sectorAccent,
+                            boxShadow: `0 0 6px ${sectorGlow}`,
+                            border: '1.5px solid var(--bento-glass)'
+                        }} />
+                    )}
                 </span>
 
                 {!collapsed && (

@@ -1116,6 +1116,7 @@ function AppContent() {
 
       <RootLayout
         currentView={currentViewType}
+        openedViews={tabs.map(t => t.type)}
         isMobileMenuOpen={isMobileMenuOpen}
         onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
         onViewChange={(viewInfo) => {

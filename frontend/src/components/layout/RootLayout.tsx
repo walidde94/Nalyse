@@ -11,6 +11,7 @@ interface RootLayoutProps {
     tabBar?: React.ReactNode;
     isMobileMenuOpen?: boolean;
     onCloseMobileMenu?: () => void;
+    openedViews?: string[];
 }
 
 export const RootLayout: React.FC<RootLayoutProps> = ({
@@ -19,7 +20,8 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
     onViewChange,
     tabBar,
     isMobileMenuOpen,
-    onCloseMobileMenu
+    onCloseMobileMenu,
+    openedViews
 }) => {
     const { isArchitectMode } = useArchitect();
 
@@ -35,6 +37,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
             <div className={isMobileMenuOpen ? 'mobile-sidebar-open' : 'sidebar-mobile-hidden desktop-visible'} style={{ height: '100%', zIndex: 1000 }}>
                 <Sidebar
                     currentView={currentView}
+                    openedViews={openedViews}
                     onViewChange={(view) => {
                         onViewChange(view);
                         onCloseMobileMenu?.();
