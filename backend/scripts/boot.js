@@ -1,37 +1,12 @@
-const { spawnSync } = require('child_process');
-const path = require('path');
+const { spawn, execSync } = require('child_process');
 
 function run() {
-    console.log("[Boot] 🚀 Starting Neural Command Architecture...");
-
-    // Phase A.1: Prisma Generation (Ensure client matches schema)
-    console.log("[Boot] Phase A.1: Generating Prisma Client...");
-    spawnSync('npx', ['prisma', 'generate'], { stdio: 'inherit', shell: true });
-
-    // Phase A.2: Schema Synchronization (Safe db push using DIRECT_URL if available)
-    console.log("[Boot] Phase A.2: Synchronizing Schema...");
-    const syncEnv = { ...process.env };
-    if (process.env.DIRECT_URL) {
-        console.log("[Boot] Using DIRECT_URL for schema synchronization...");
-        syncEnv.DATABASE_URL = process.env.DIRECT_URL;
-    }
-    spawnSync('npx', ['prisma', 'db', 'push', '--accept-data-loss'], { 
-        stdio: 'inherit', 
-        shell: true,
-        env: syncEnv
-    });
-
-    // Phase A.3: Neural Schema Repair (Align IDs)
-    console.log("[Boot] Phase A.3: Running Neural Schema Repair...");
-    spawnSync('node', [path.join(__dirname, 'repair-db.js')], { stdio: 'inherit', shell: true });
+    console.log("[Boot] 🚀 Starting Neural Command in Fast-Boot mode...");
 
     // Phase B: Start server
-    console.log("[Boot] Phase B: Launching Application Server...");
-    const { spawn } = require('child_process');
     const server = spawn('node', ['dist/src/index.js'], { 
         stdio: 'inherit', 
-        env: { ...process.env, NODE_ENV: 'production' },
-        shell: true
+        env: { ...process.env, NODE_ENV: 'production' } 
     });
 
     server.on('close', (code) => {

@@ -6,7 +6,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model Organization {
@@ -28,7 +27,6 @@ model Organization {
   isActive              Boolean          @default(true)
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
-  orgRoles              OrgRole[]
   dashboards            Dashboard[]
   files                 File[]
   reports               Report[]
@@ -41,20 +39,6 @@ model Organization {
   @@map("organizations")
 }
 
-model OrgRole {
-  id             String       @id @default(uuid())
-  name           String
-  permissions    Json         @default("[]") // permissions matrix: ['datasets:read', 'users:manage']
-  organizationId String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  users          User[]
-
-  @@unique([organizationId, name])
-  @@map("org_roles")
-}
-
 model User {
   id                      String                  @id @default(uuid())
   email                   String                  @unique
@@ -62,7 +46,6 @@ model User {
   firstName               String?
   lastName                String?
   role                    String                  @default("member")
-  orgRoleId               String?
   plan                    String                  @default("free")
   isActive                Boolean                 @default(true)
   bio                     String?
@@ -80,7 +63,6 @@ model User {
   apiKeys                 Json?                   @default("[]")
   createdAt               DateTime                @default(now())
   updatedAt               DateTime                @updatedAt
-  orgRole                 OrgRole?                @relation(fields: [orgRoleId], references: [id])
   agents                  Agent[]
   analyses                Analysis[]
   analysisConfigs         AnalysisConfiguration[]

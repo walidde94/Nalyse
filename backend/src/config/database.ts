@@ -2,6 +2,31 @@ import 'dotenv/config';
 import path from 'path';
 import { DataSource } from 'typeorm';
 import { PrismaClient } from '@prisma/client';
+
+// Prisma instance is at the bottom of the file
+
+
+async function ensureAuditLogTable() {
+    try {
+        console.log('🧬 [Metadata] Verifying Audit Pipeline...');
+        // We use a raw query to check and create the table bypassing the Prisma CLI push logic
+        await prisma.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "audit_logs" (
+                "id" TEXT PRIMARY KEY,
+                "workspaceId" TEXT NOT NULL,
+                "userId" TEXT NOT NULL,
+                "action" TEXT NOT NULL,
+                "entityId" TEXT,
+                "details" JSONB,
+                "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log('✅ [Metadata] Audit Pipeline Verified.');
+    } catch (err: any) {
+        console.error('⚠️ [Metadata] Audit Pipeline verification failed (non-critical):', err.message);
+    }
+}
+
 import { createClient } from '@clickhouse/client';
 import { User } from '../entities/User';
 import { Organization } from '../entities/Organization';
@@ -92,6 +117,9 @@ export const initializeDatabase = async () => {
         console.log(`🔌 Initializing database connection for: ${connectionTarget}`);
         await AppDataSource.initialize();
         console.log('✅ Database connection established.');
+        
+        // Ensure critical Prisma tables exist (Manual fallback for Supabase pooler issues)
+        await ensureAuditLogTable();
     } catch (error: any) {
         console.error('❌ Database connection failed!');
         console.error('Error Message:', error.message);
