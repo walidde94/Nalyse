@@ -59,7 +59,16 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                     storageUsed: true, storageLimit: true,
                     userLimit: true, fileLimit: true, maxUsers: true,
                 }
-            }).catch(e => { console.error('[Org Error]', e); return null; }),
+            }).catch(async e => {
+                console.error('[Org Error]', e.message);
+                return await prisma.organization.findUnique({
+                    where: { id: orgId },
+                    select: {
+                        id: true, name: true, slug: true, plan: true,
+                        isActive: true, createdAt: true
+                    }
+                }).catch(() => null);
+            }),
 
             // Members with workspace memberships + relations for asset counting
             prisma.user.findMany({
@@ -231,8 +240,8 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
         res.json({
             organization: {
                 ...org,
-                storageUsed: org.storageUsed?.toString() || '0',
-                storageLimit: org.storageLimit?.toString() || '0',
+                storageUsed: (org as any).storageUsed?.toString() || '0',
+                storageLimit: (org as any).storageLimit?.toString() || '0',
             },
             members: enrichedMembers,
             workspaces,
