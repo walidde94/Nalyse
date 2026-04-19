@@ -87,15 +87,26 @@ const StatCard = ({ icon: Icon, label, value, sub, color, delay = 0 }: {
     </motion.div>
 );
 
-// ═══════════════════════════════════════════════════════════════
-// MEMBER ROW
-// ═══════════════════════════════════════════════════════════════
+const STATUS_THEME: Record<string, { color: string; glow: boolean; label: string }> = {
+    online: { color: '#22c55e', glow: true, label: 'Online' },
+    active: { color: '#10b981', glow: false, label: 'Active' },
+    away:   { color: '#f59e0b', glow: false, label: 'Away' },
+    offline:{ color: '#64748b', glow: false, label: 'Offline' },
+};
 
 const MemberRow = ({ m, idx }: { m: any; idx: number }) => {
     const rt = getRoleTheme(m.role);
     const RoleIcon = rt.icon;
     const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#eab308'];
     const avatarColor = colors[(m.email || '').charCodeAt(0) % colors.length];
+    const status = STATUS_THEME[m.activityStatus] || STATUS_THEME.offline;
+
+    // Use enriched assets from backend, fallback to _count
+    const assets = m.assets || {};
+    const fileCount = (assets.ownedFiles || 0) + (assets.sharedFiles || 0);
+    const analysisCount = assets.analyses || m._count?.analyses || 0;
+    const msgCount = assets.messages || m._count?.workspaceMessages || 0;
+    const wsCount = assets.workspaces || m._count?.workspaceMembers || 0;
 
     return (
         <motion.tr
@@ -107,14 +118,23 @@ const MemberRow = ({ m, idx }: { m: any; idx: number }) => {
         >
             <td style={{ padding: '14px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{
-                        width: 36, height: 36, borderRadius: 10,
-                        background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 13, fontWeight: 900, color: '#fff',
-                        boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0,
-                    }}>
-                        {(m.firstName?.charAt(0) || m.email.charAt(0)).toUpperCase()}
+                    <div style={{ position: 'relative' }}>
+                        <div style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 13, fontWeight: 900, color: '#fff',
+                            boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0,
+                        }}>
+                            {(m.firstName?.charAt(0) || m.email.charAt(0)).toUpperCase()}
+                        </div>
+                        {/* Status dot on avatar */}
+                        <div style={{
+                            position: 'absolute', bottom: -1, right: -1,
+                            width: 10, height: 10, borderRadius: '50%',
+                            background: status.color, border: '2px solid #0d0d0d',
+                            boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none',
+                        }} />
                     </div>
                     <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
@@ -135,21 +155,27 @@ const MemberRow = ({ m, idx }: { m: any; idx: number }) => {
                 </div>
             </td>
             <td style={{ padding: '14px 24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: m.isActive ? '#10b981' : '#f59e0b' }}>
-                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: m.isActive ? '#10b981' : '#f59e0b', boxShadow: m.isActive ? '0 0 8px rgba(16,185,129,0.5)' : 'none' }} />
-                    {m.isActive ? 'Active' : 'Inactive'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: status.color }}>
+                    <div style={{
+                        width: 7, height: 7, borderRadius: '50%', background: status.color,
+                        boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none',
+                    }} />
+                    {status.label}
                 </div>
             </td>
             <td style={{ padding: '14px 24px' }}>
-                <div style={{ display: 'flex', gap: 16 }}>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <FileText size={12} /> {m._count?.files || 0}
+                <div style={{ display: 'flex', gap: 14 }}>
+                    <span title="Files (owned + shared)" style={{ fontSize: 12, color: fileCount > 0 ? '#a78bfa' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: fileCount > 0 ? 700 : 500 }}>
+                        <FileText size={12} /> {fileCount}
                     </span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <BarChart3 size={12} /> {m._count?.analyses || 0}
+                    <span title="Analyses run" style={{ fontSize: 12, color: analysisCount > 0 ? '#3b82f6' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: analysisCount > 0 ? 700 : 500 }}>
+                        <BarChart3 size={12} /> {analysisCount}
                     </span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <MessageCircle size={12} /> {m._count?.workspaceMessages || 0}
+                    <span title="Messages sent" style={{ fontSize: 12, color: msgCount > 0 ? '#10b981' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: msgCount > 0 ? 700 : 500 }}>
+                        <MessageCircle size={12} /> {msgCount}
+                    </span>
+                    <span title="Workspaces" style={{ fontSize: 12, color: wsCount > 0 ? '#f59e0b' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: wsCount > 0 ? 700 : 500 }}>
+                        <Globe size={12} /> {wsCount}
                     </span>
                 </div>
             </td>
@@ -163,6 +189,7 @@ const MemberRow = ({ m, idx }: { m: any; idx: number }) => {
             </td>
         </motion.tr>
     );
+
 };
 
 // ═══════════════════════════════════════════════════════════════

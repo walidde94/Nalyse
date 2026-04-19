@@ -61,7 +61,7 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                 }
             }),
 
-            // Members with their workspace memberships
+            // Members with workspace memberships + relations for asset counting
             prisma.user.findMany({
                 where: { organizationId: orgId },
                 select: {
@@ -75,8 +75,21 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                             dashboards: true,
                             workspaceMembers: true,
                             workspaceMessages: true,
+                            auditLogs: true,
                         }
-                    }
+                    },
+                    // Include workspace memberships to compute shared assets
+                    workspaceMembers: {
+                        select: {
+                            role: true,
+                            workspace: {
+                                select: {
+                                    id: true, name: true,
+                                    _count: { select: { files: true, messages: true } }
+                                }
+                            }
+                        }
+                    },
                 },
                 orderBy: { createdAt: 'asc' },
             }),
@@ -145,16 +158,56 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
 
         if (!org) return res.status(404).json({ error: 'Organization not found' });
 
+        // Enrich members with computed status and workspace assets
+        const now = Date.now();
+        const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+        const enrichedMembers = members.map(m => {
+            // Compute activity status from lastLoginAt instead of stale isActive boolean
+            let activityStatus: 'online' | 'active' | 'away' | 'offline' = 'offline';
+            if (m.lastLoginAt) {
+                const elapsed = now - new Date(m.lastLoginAt).getTime();
+                if (elapsed < 15 * 60 * 1000) activityStatus = 'online';       // <15 min
+                else if (elapsed < SEVEN_DAYS) activityStatus = 'active';       // <7 days
+                else if (elapsed < THIRTY_DAYS) activityStatus = 'away';        // <30 days
+                // else: offline
+            }
+
+            // Aggregate workspace-level shared assets for this user
+            const wsMembers = (m as any).workspaceMembers || [];
+            const sharedFiles = wsMembers.reduce((sum: number, wm: any) => sum + (wm.workspace?._count?.files || 0), 0);
+            const sharedMessages = wsMembers.reduce((sum: number, wm: any) => sum + (wm.workspace?._count?.messages || 0), 0);
+            const workspaceRoles = wsMembers.map((wm: any) => ({ workspaceId: wm.workspace?.id, workspaceName: wm.workspace?.name, role: wm.role }));
+
+            // Strip workspace raw data from response to keep payload lean
+            const { workspaceMembers: _ws, ...memberData } = m as any;
+
+            return {
+                ...memberData,
+                activityStatus,
+                assets: {
+                    ownedFiles: m._count?.files || 0,
+                    analyses: m._count?.analyses || 0,
+                    dashboards: m._count?.dashboards || 0,
+                    messages: m._count?.workspaceMessages || 0,
+                    workspaces: m._count?.workspaceMembers || 0,
+                    auditActions: m._count?.auditLogs || 0,
+                    sharedFiles,
+                    sharedMessages,
+                },
+                workspaceRoles,
+            };
+        });
+
         // Compute role distribution from existing User.role field
         const roleDistribution: Record<string, number> = {};
-        members.forEach(m => {
+        enrichedMembers.forEach(m => {
             const r = m.role || 'member';
             roleDistribution[r] = (roleDistribution[r] || 0) + 1;
         });
 
         // Compute activity heatmap (last 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const activityByDay: Record<string, number> = {};
         auditLogs.forEach(log => {
             const day = new Date(log.createdAt).toISOString().split('T')[0];
@@ -162,9 +215,7 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
         });
 
         // Members active in last 7 days
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const activeLastWeek = members.filter(m => m.lastLoginAt && new Date(m.lastLoginAt) > sevenDaysAgo).length;
+        const activeLastWeek = enrichedMembers.filter(m => m.activityStatus === 'online' || m.activityStatus === 'active').length;
 
         res.json({
             organization: {
@@ -172,7 +223,7 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                 storageUsed: org.storageUsed?.toString() || '0',
                 storageLimit: org.storageLimit?.toString() || '0',
             },
-            members,
+            members: enrichedMembers,
             workspaces,
             invitations,
             auditLogs,
