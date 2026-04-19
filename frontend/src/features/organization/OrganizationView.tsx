@@ -94,19 +94,53 @@ const STATUS_THEME: Record<string, { color: string; glow: boolean; label: string
     offline:{ color: '#64748b', glow: false, label: 'Offline' },
 };
 
-const MemberRow = ({ m, idx }: { m: any; idx: number }) => {
+const AVAILABLE_ROLES = ['admin', 'user', 'member', 'viewer'] as const;
+
+const MemberRow = ({ m, idx, isAdmin, token, onRefresh }: { m: any; idx: number; isAdmin: boolean; token?: string; onRefresh: () => void }) => {
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [rolePickerOpen, setRolePickerOpen] = useState(false);
+    const [confirmRemove, setConfirmRemove] = useState(false);
+    const [acting, setActing] = useState(false);
+
     const rt = getRoleTheme(m.role);
     const RoleIcon = rt.icon;
     const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#eab308'];
     const avatarColor = colors[(m.email || '').charCodeAt(0) % colors.length];
     const status = STATUS_THEME[m.activityStatus] || STATUS_THEME.offline;
 
-    // Use enriched assets from backend, fallback to _count
     const assets = m.assets || {};
     const fileCount = (assets.ownedFiles || 0) + (assets.sharedFiles || 0);
     const analysisCount = assets.analyses || m._count?.analyses || 0;
     const msgCount = assets.messages || m._count?.workspaceMessages || 0;
     const wsCount = assets.workspaces || m._count?.workspaceMembers || 0;
+
+    const handleRoleChange = async (newRole: string) => {
+        if (newRole === m.role || acting) return;
+        setActing(true);
+        try {
+            const res = await fetch(`${API_URL}/api/organization/members/${m.id}/role`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ role: newRole })
+            });
+            if (res.ok) onRefresh();
+            else { const err = await res.json(); alert(err.error || 'Failed to change role'); }
+        } catch (e) { console.error(e); }
+        finally { setActing(false); setRolePickerOpen(false); setMenuOpen(false); }
+    };
+
+    const handleRemove = async () => {
+        if (acting) return;
+        setActing(true);
+        try {
+            const res = await fetch(`${API_URL}/api/organization/members/${m.id}`, {
+                method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) onRefresh();
+            else { const err = await res.json(); alert(err.error || 'Failed to remove member'); }
+        } catch (e) { console.error(e); }
+        finally { setActing(false); setConfirmRemove(false); setMenuOpen(false); }
+    };
 
     return (
         <motion.tr
@@ -119,77 +153,104 @@ const MemberRow = ({ m, idx }: { m: any; idx: number }) => {
             <td style={{ padding: '14px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ position: 'relative' }}>
-                        <div style={{
-                            width: 36, height: 36, borderRadius: 10,
-                            background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 13, fontWeight: 900, color: '#fff',
-                            boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0,
-                        }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#fff', boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0 }}>
                             {(m.firstName?.charAt(0) || m.email.charAt(0)).toUpperCase()}
                         </div>
-                        {/* Status dot on avatar */}
-                        <div style={{
-                            position: 'absolute', bottom: -1, right: -1,
-                            width: 10, height: 10, borderRadius: '50%',
-                            background: status.color, border: '2px solid #0d0d0d',
-                            boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none',
-                        }} />
+                        <div style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderRadius: '50%', background: status.color, border: '2px solid #0d0d0d', boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none' }} />
                     </div>
                     <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
-                            {getUserName(m)}
-                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{getUserName(m)}</div>
                         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{m.email}</div>
                     </div>
                 </div>
             </td>
             <td style={{ padding: '14px 24px' }}>
-                <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '5px 12px', borderRadius: 8,
-                    background: rt.bg, border: `1px solid ${rt.color}25`,
-                }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 8, background: rt.bg, border: `1px solid ${rt.color}25` }}>
                     <RoleIcon size={12} color={rt.color} />
                     <span style={{ fontSize: 11, fontWeight: 700, color: rt.color }}>{rt.label}</span>
                 </div>
             </td>
             <td style={{ padding: '14px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: status.color }}>
-                    <div style={{
-                        width: 7, height: 7, borderRadius: '50%', background: status.color,
-                        boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none',
-                    }} />
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: status.color, boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none' }} />
                     {status.label}
                 </div>
             </td>
             <td style={{ padding: '14px 24px' }}>
                 <div style={{ display: 'flex', gap: 14 }}>
-                    <span title="Files (owned + shared)" style={{ fontSize: 12, color: fileCount > 0 ? '#a78bfa' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: fileCount > 0 ? 700 : 500 }}>
-                        <FileText size={12} /> {fileCount}
-                    </span>
-                    <span title="Analyses run" style={{ fontSize: 12, color: analysisCount > 0 ? '#3b82f6' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: analysisCount > 0 ? 700 : 500 }}>
-                        <BarChart3 size={12} /> {analysisCount}
-                    </span>
-                    <span title="Messages sent" style={{ fontSize: 12, color: msgCount > 0 ? '#10b981' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: msgCount > 0 ? 700 : 500 }}>
-                        <MessageCircle size={12} /> {msgCount}
-                    </span>
-                    <span title="Workspaces" style={{ fontSize: 12, color: wsCount > 0 ? '#f59e0b' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: wsCount > 0 ? 700 : 500 }}>
-                        <Globe size={12} /> {wsCount}
-                    </span>
+                    <span title="Files (owned + shared)" style={{ fontSize: 12, color: fileCount > 0 ? '#a78bfa' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: fileCount > 0 ? 700 : 500 }}><FileText size={12} /> {fileCount}</span>
+                    <span title="Analyses run" style={{ fontSize: 12, color: analysisCount > 0 ? '#3b82f6' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: analysisCount > 0 ? 700 : 500 }}><BarChart3 size={12} /> {analysisCount}</span>
+                    <span title="Messages" style={{ fontSize: 12, color: msgCount > 0 ? '#10b981' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: msgCount > 0 ? 700 : 500 }}><MessageCircle size={12} /> {msgCount}</span>
+                    <span title="Workspaces" style={{ fontSize: 12, color: wsCount > 0 ? '#f59e0b' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: wsCount > 0 ? 700 : 500 }}><Globe size={12} /> {wsCount}</span>
                 </div>
             </td>
-            <td style={{ padding: '14px 24px', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
-                {timeAgo(m.lastLoginAt)}
-            </td>
-            <td style={{ padding: '14px 24px', textAlign: 'right' }}>
-                <button style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
-                    <MoreVertical size={14} />
-                </button>
+            <td style={{ padding: '14px 24px', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{timeAgo(m.lastLoginAt)}</td>
+            <td style={{ padding: '14px 24px', textAlign: 'right', position: 'relative' }}>
+                {isAdmin ? (
+                    <>
+                        <button onClick={() => { setMenuOpen(!menuOpen); setRolePickerOpen(false); setConfirmRemove(false); }}
+                            style={{ background: menuOpen ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px', color: menuOpen ? '#fff' : 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.15s' }}>
+                            <MoreVertical size={14} />
+                        </button>
+                        <AnimatePresence>
+                            {menuOpen && (
+                                <motion.div initial={{ opacity: 0, scale: 0.9, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
+                                    style={{ position: 'absolute', right: 24, top: '100%', marginTop: -4, zIndex: 50, background: 'rgba(20,20,20,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 6, minWidth: 180, boxShadow: '0 20px 40px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)' }}>
+                                    {!rolePickerOpen && !confirmRemove ? (
+                                        <>
+                                            <button onClick={() => setRolePickerOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 12px', background: 'none', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                                <Shield size={14} color="#8b5cf6" /> Change Role
+                                            </button>
+                                            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 0' }} />
+                                            <button onClick={() => setConfirmRemove(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 12px', background: 'none', border: 'none', borderRadius: 8, color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                                <XCircle size={14} /> Remove Member
+                                            </button>
+                                        </>
+                                    ) : rolePickerOpen ? (
+                                        <div style={{ padding: 4 }}>
+                                            <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', padding: '4px 8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Select Role</div>
+                                            {AVAILABLE_ROLES.map(r => {
+                                                const rTheme = getRoleTheme(r);
+                                                const isCurrent = m.role === r;
+                                                return (
+                                                    <button key={r} onClick={() => handleRoleChange(r)} disabled={acting || isCurrent}
+                                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 10px', background: isCurrent ? 'rgba(255,255,255,0.04)' : 'none', border: 'none', borderRadius: 6, color: isCurrent ? 'rgba(255,255,255,0.3)' : '#fff', fontSize: 12, fontWeight: 600, cursor: isCurrent ? 'default' : 'pointer' }}
+                                                        onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                                                        onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = isCurrent ? 'rgba(255,255,255,0.04)' : 'none'; }}>
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: rTheme.color }} />
+                                                            <span style={{ textTransform: 'capitalize' }}>{r}</span>
+                                                        </span>
+                                                        {isCurrent && <CheckCircle2 size={13} color="rgba(255,255,255,0.3)" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div style={{ padding: '12px 8px', textAlign: 'center' }}>
+                                            <AlertTriangle size={20} color="#ef4444" style={{ marginBottom: 8 }} />
+                                            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Remove {getUserName(m)}?</div>
+                                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>They will lose access to this org.</div>
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <button onClick={() => setConfirmRemove(false)} style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                                                <button onClick={handleRemove} disabled={acting} style={{ flex: 1, padding: '8px', background: '#ef4444', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', opacity: acting ? 0.5 : 1 }}>{acting ? '...' : 'Remove'}</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </>
+                ) : (
+                    <button style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px', color: 'rgba(255,255,255,0.15)', cursor: 'default' }}>
+                        <MoreVertical size={14} />
+                    </button>
+                )}
             </td>
         </motion.tr>
     );
-
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -212,6 +273,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
     const [invitations, setInvitations] = useState<any[]>([]);
     const [recentMessages, setRecentMessages] = useState<any[]>([]);
     const [stats, setStats] = useState<any>({});
+    const [currentUserRole, setCurrentUserRole] = useState<string>('user');
 
     useEffect(() => {
         fetchGovernanceData();
@@ -249,6 +311,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
             setInvitations(data.invitations || []);
             setRecentMessages(data.recentMessages || []);
             setStats(data.stats || {});
+            if (data.currentUserRole) setCurrentUserRole(data.currentUserRole);
         } catch (err: any) {
             setError(err.message);
             console.error('Governance fetch failed:', err);
@@ -549,7 +612,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             </thead>
                                             <tbody>
                                                 {filteredMembers.length > 0 ? filteredMembers.map((m, i) => (
-                                                    <MemberRow key={m.id} m={m} idx={i} />
+                                                    <MemberRow key={m.id} m={m} idx={i} isAdmin={currentUserRole === 'admin'} token={token} onRefresh={fetchGovernanceData} />
                                                 )) : (
                                                     <tr>
                                                         <td colSpan={6} style={{ padding: 64, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>

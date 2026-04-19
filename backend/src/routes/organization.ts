@@ -249,4 +249,110 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
     }
 });
 
+// ═══════════════════════════════════════════════════════════════
+// GOVERNANCE ACTIONS — Writes (admin-only)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * PATCH /api/organization/members/:memberId/role
+ * Change a member's organization role. Admin only.
+ */
+router.patch('/members/:memberId/role', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const memberId = req.params.memberId as string;
+        const { role } = req.body;
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+        if (!role || !['admin', 'user', 'member', 'viewer'].includes(role)) {
+            return res.status(400).json({ error: 'Invalid role. Must be: admin, user, member, viewer' });
+        }
+
+        // Verify admin
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true } });
+        if (!admin || admin.role !== 'admin') return res.status(403).json({ error: 'Only admins can change roles' });
+
+        // Verify target is in same org
+        const target = await prisma.user.findUnique({ where: { id: memberId }, select: { id: true, organizationId: true, role: true, email: true } });
+        if (!target || target.organizationId !== admin.organizationId) {
+            return res.status(404).json({ error: 'Member not found in your organization' });
+        }
+
+        // Prevent self-demotion
+        if (memberId === adminId && role !== 'admin') {
+            return res.status(400).json({ error: 'You cannot demote yourself' });
+        }
+
+        const previousRole = target.role;
+        await prisma.user.update({ where: { id: memberId }, data: { role } });
+
+        console.log(`[Governance] Role changed: ${target.email} from ${previousRole} to ${role} by ${adminId}`);
+        res.json({ success: true, memberId, previousRole, newRole: role });
+    } catch (err: any) {
+        console.error('[Governance] Role change failed:', err);
+        res.status(500).json({ error: 'Failed to update role', details: err.message });
+    }
+});
+
+/**
+ * DELETE /api/organization/members/:memberId
+ * Remove a member from the organization. Admin only.
+ */
+router.delete('/members/:memberId', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const memberId = req.params.memberId as string;
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true } });
+        if (!admin || admin.role !== 'admin') return res.status(403).json({ error: 'Only admins can remove members' });
+
+        if (memberId === adminId) return res.status(400).json({ error: 'You cannot remove yourself' });
+
+        const target = await prisma.user.findUnique({ where: { id: memberId }, select: { id: true, organizationId: true, email: true } });
+        if (!target || target.organizationId !== admin.organizationId) {
+            return res.status(404).json({ error: 'Member not found in your organization' });
+        }
+
+        // Unlink from organization (don't delete the user account)
+        await prisma.user.update({ where: { id: memberId }, data: { organizationId: null } });
+
+        console.log(`[Governance] Member removed: ${target.email} by ${adminId}`);
+        res.json({ success: true, memberId, removedEmail: target.email });
+    } catch (err: any) {
+        console.error('[Governance] Member removal failed:', err);
+        res.status(500).json({ error: 'Failed to remove member', details: err.message });
+    }
+});
+
+/**
+ * DELETE /api/organization/invitations/:invitationId
+ * Revoke a pending invitation. Admin only.
+ */
+router.delete('/invitations/:invitationId', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const invitationId = req.params.invitationId as string;
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true } });
+        if (!admin || admin.role !== 'admin') return res.status(403).json({ error: 'Only admins can revoke invitations' });
+
+        const invite = await prisma.userInvitation.findUnique({ where: { id: invitationId }, select: { id: true, organizationId: true, email: true } });
+        if (!invite || invite.organizationId !== admin.organizationId) {
+            return res.status(404).json({ error: 'Invitation not found' });
+        }
+
+        await prisma.userInvitation.update({ where: { id: invitationId }, data: { status: 'revoked' } });
+
+        console.log(`[Governance] Invitation revoked: ${invite.email} by ${adminId}`);
+        res.json({ success: true, invitationId, revokedEmail: invite.email });
+    } catch (err: any) {
+        console.error('[Governance] Invitation revoke failed:', err);
+        res.status(500).json({ error: 'Failed to revoke invitation', details: err.message });
+    }
+});
+
 export default router;
