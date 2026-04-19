@@ -97,7 +97,7 @@ const STATUS_THEME: Record<string, { color: string; glow: boolean; label: string
 
 const AVAILABLE_ROLES = ['admin', 'user', 'member', 'viewer'] as const;
 
-const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any; idx: number; isAdmin: boolean; token?: string; activeUsers?: Record<string, boolean>; onRefresh: () => void }) => {
+const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any; idx: number; isAdmin: boolean; token?: string; activeUsers?: any; onRefresh: () => void }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [rolePickerOpen, setRolePickerOpen] = useState(false);
     const [confirmRemove, setConfirmRemove] = useState(false);
