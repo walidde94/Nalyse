@@ -22,7 +22,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`${API_URL}/organization`, {
+            const res = await fetch(`${API_URL}/api/organization`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -39,7 +39,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
 
     const fetchRoles = async () => {
         try {
-            const res = await fetch(`${API_URL}/organization/roles`, {
+            const res = await fetch(`${API_URL}/api/organization/roles`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
