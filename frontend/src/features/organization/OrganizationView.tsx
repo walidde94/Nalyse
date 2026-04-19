@@ -264,6 +264,10 @@ export const OrganizationView = ({ token }: { token?: string }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteRole, setInviteRole] = useState('user');
+    const [inviting, setInviting] = useState(false);
 
     // Data
     const [orgData, setOrgData] = useState<any>(null);
@@ -274,6 +278,31 @@ export const OrganizationView = ({ token }: { token?: string }) => {
     const [recentMessages, setRecentMessages] = useState<any[]>([]);
     const [stats, setStats] = useState<any>({});
     const [currentUserRole, setCurrentUserRole] = useState<string>('user');
+
+    const handleInvite = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!inviteEmail || inviting) return;
+        setInviting(true);
+        try {
+            const res = await fetch(`${API_URL}/api/organization/invite`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ email: inviteEmail, role: inviteRole })
+            });
+            if (res.ok) {
+                setInviteEmail('');
+                setInviteModalOpen(false);
+                fetchGovernanceData();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Failed to send invite');
+            }
+        } catch (err) {
+            console.error('Invite error', err);
+        } finally {
+            setInviting(false);
+        }
+    };
 
     useEffect(() => {
         fetchGovernanceData();
@@ -592,10 +621,22 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', padding: '9px 16px 9px 36px', borderRadius: 10, color: '#fff', fontSize: 13, width: '100%', outline: 'none' }}
                                             />
                                         </div>
-                                        <div style={{ display: 'flex', gap: 8 }}>
-                                            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 600, padding: '8px 0' }}>
+                                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>
                                                 {filteredMembers.length} of {members.length}
                                             </span>
+                                            {currentUserRole === 'admin' && (
+                                                <button
+                                                    onClick={() => setInviteModalOpen(true)}
+                                                    style={{
+                                                        background: '#fff', color: '#000', border: 'none', borderRadius: 8, padding: '8px 16px',
+                                                        fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                                                        boxShadow: '0 4px 12px rgba(255,255,255,0.1)'
+                                                    }}
+                                                >
+                                                    <UserPlus size={14} /> Invite Member
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     <div style={{ overflowX: 'auto' }}>
@@ -750,6 +791,92 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Invite Modal */}
+            <AnimatePresence>
+                {inviteModalOpen && (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                            onClick={() => setInviteModalOpen(false)}
+                            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            style={{
+                                position: 'relative', width: 440, background: '#121212', borderRadius: 24, padding: 32,
+                                border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 32px 64px rgba(0,0,0,0.5)'
+                            }}
+                        >
+                            <button onClick={() => setInviteModalOpen(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+                                <XCircle size={20} />
+                            </button>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                                <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(99,102,241,0.25)' }}>
+                                    <Mail size={24} color="#fff" />
+                                </div>
+                                <div>
+                                    <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Invite Member</h2>
+                                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '4px 0 0' }}>Send an email invitation to join {orgData?.name}</p>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleInvite}>
+                                <div style={{ marginBottom: 20 }}>
+                                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Email Address</label>
+                                    <input
+                                        type="email" required autoFocus
+                                        value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+                                        placeholder="colleague@company.com"
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: 14, outline: 'none', transition: 'border-color 0.2s' }}
+                                        onFocus={e => e.currentTarget.style.borderColor = '#6366f1'}
+                                        onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                    />
+                                </div>
+
+                                <div style={{ marginBottom: 32 }}>
+                                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Role</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                        {[
+                                            { id: 'admin', label: 'Admin', desc: 'Full access' },
+                                            { id: 'user', label: 'User', desc: 'Can create' },
+                                            { id: 'member', label: 'Member', desc: 'Can collaborate' },
+                                            { id: 'viewer', label: 'Viewer', desc: 'Read only' }
+                                        ].map(r => (
+                                            <div
+                                                key={r.id} onClick={() => setInviteRole(r.id)}
+                                                style={{
+                                                    padding: 12, borderRadius: 12, cursor: 'pointer',
+                                                    border: inviteRole === r.id ? '1px solid #6366f1' : '1px solid rgba(255,255,255,0.08)',
+                                                    background: inviteRole === r.id ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.02)'
+                                                }}
+                                            >
+                                                <div style={{ fontSize: 13, fontWeight: 700, color: inviteRole === r.id ? '#fff' : 'rgba(255,255,255,0.7)' }}>{r.label}</div>
+                                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{r.desc}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit" disabled={inviting || !inviteEmail}
+                                    style={{
+                                        width: '100%', padding: '14px', background: '#fff', color: '#000', border: 'none', borderRadius: 12,
+                                        fontSize: 14, fontWeight: 800, cursor: (inviting || !inviteEmail) ? 'not-allowed' : 'pointer',
+                                        opacity: (inviting || !inviteEmail) ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                                    }}
+                                >
+                                    {inviting ? <Loader2 size={18} className="animate-spin" /> : <Mail size={18} />}
+                                    {inviting ? 'Sending...' : 'Send Invitation'}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
         </div>
     );
 };
