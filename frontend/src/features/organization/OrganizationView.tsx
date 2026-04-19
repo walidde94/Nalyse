@@ -8,6 +8,7 @@ import {
     HardDrive, MessageCircle, AlertTriangle, Lock, RefreshCw
 } from 'lucide-react';
 import { API_URL } from '../../config';
+import { useWorkspace } from '../../contexts/WorkspaceContext';
 
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
@@ -96,7 +97,7 @@ const STATUS_THEME: Record<string, { color: string; glow: boolean; label: string
 
 const AVAILABLE_ROLES = ['admin', 'user', 'member', 'viewer'] as const;
 
-const MemberRow = ({ m, idx, isAdmin, token, onRefresh }: { m: any; idx: number; isAdmin: boolean; token?: string; onRefresh: () => void }) => {
+const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any; idx: number; isAdmin: boolean; token?: string; activeUsers?: Record<string, boolean>; onRefresh: () => void }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [rolePickerOpen, setRolePickerOpen] = useState(false);
     const [confirmRemove, setConfirmRemove] = useState(false);
@@ -106,7 +107,13 @@ const MemberRow = ({ m, idx, isAdmin, token, onRefresh }: { m: any; idx: number;
     const RoleIcon = rt.icon;
     const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#eab308'];
     const avatarColor = colors[(m.email || '').charCodeAt(0) % colors.length];
-    const status = STATUS_THEME[m.activityStatus] || STATUS_THEME.offline;
+    
+    // Fallback to offline if undefined
+    let finalStatus = m.activityStatus || 'offline';
+    // Override with live websocket presence if available
+    if (activeUsers && activeUsers[m.id]) finalStatus = 'online';
+    
+    const status = STATUS_THEME[finalStatus] || STATUS_THEME.offline;
 
     const assets = m.assets || {};
     const fileCount = (assets.ownedFiles || 0) + (assets.sharedFiles || 0);
@@ -260,6 +267,7 @@ const MemberRow = ({ m, idx, isAdmin, token, onRefresh }: { m: any; idx: number;
 type TabId = 'overview' | 'members' | 'workspaces' | 'audit';
 
 export const OrganizationView = ({ token }: { token?: string }) => {
+    const { activeUsers } = useWorkspace();
     const [activeTab, setActiveTab] = useState<TabId>('overview');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -653,7 +661,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             </thead>
                                             <tbody>
                                                 {filteredMembers.length > 0 ? filteredMembers.map((m, i) => (
-                                                    <MemberRow key={m.id} m={m} idx={i} isAdmin={currentUserRole === 'admin'} token={token} onRefresh={fetchGovernanceData} />
+                                                    <MemberRow key={m.id} m={m} idx={i} isAdmin={currentUserRole === 'admin'} token={token} activeUsers={activeUsers} onRefresh={fetchGovernanceData} />
                                                 )) : (
                                                     <tr>
                                                         <td colSpan={6} style={{ padding: 64, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>
