@@ -59,7 +59,7 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                     storageUsed: true, storageLimit: true,
                     userLimit: true, fileLimit: true, maxUsers: true,
                 }
-            }),
+            }).catch(e => { console.error('[Org Error]', e); return null; }),
 
             // Members with workspace memberships + relations for asset counting
             prisma.user.findMany({
@@ -92,6 +92,17 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                     },
                 },
                 orderBy: { createdAt: 'asc' },
+            }).catch(async e => { 
+                console.error('[Members Error]', e.message); 
+                return await prisma.user.findMany({
+                    where: { organizationId: orgId },
+                    select: {
+                        id: true, email: true, firstName: true, lastName: true,
+                        displayName: true, avatarUrl: true, role: true, isActive: true,
+                        lastLoginAt: true, createdAt: true, plan: true
+                    },
+                    orderBy: { createdAt: 'asc' }
+                }).catch(() => []);
             }),
 
             // Workspaces
@@ -103,19 +114,19 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                         select: { members: true, files: true, messages: true }
                     }
                 }
-            }),
+            }).catch(e => { console.error('[Workspaces Error]', e); return []; }),
 
             // Org-wide file stats
             prisma.file.aggregate({
                 where: { organizationId: orgId },
                 _count: true,
                 _sum: { size: true },
-            }),
+            }).catch(e => { console.error('[Files Error]', e); return { _count: 0, _sum: { size: 0 } }; }),
 
             // Analysis count
             prisma.analysis.count({
                 where: { file: { organizationId: orgId } }
-            }),
+            }).catch(e => { console.error('[Analyses Error]', e); return 0; }),
 
             // Recent audit logs (last 50)
             prisma.auditLog.findMany({
@@ -127,7 +138,7 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                     user: { select: { id: true, email: true, firstName: true, lastName: true, displayName: true, avatarUrl: true } },
                     workspace: { select: { id: true, name: true } },
                 }
-            }),
+            }).catch(e => { console.error('[Audit Error]', e); return []; }),
 
             // Pending invitations
             prisma.userInvitation.findMany({
@@ -136,12 +147,12 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                     id: true, email: true, role: true, status: true, createdAt: true, expiresAt: true,
                     inviter: { select: { email: true, firstName: true, lastName: true } }
                 }
-            }),
+            }).catch(e => { console.error('[Invitations Error]', e); return []; }),
 
             // Dashboard count
             prisma.dashboard.count({
                 where: { organizationId: orgId }
-            }),
+            }).catch(e => { console.error('[Dashboard Error]', e); return 0; }),
 
             // Recent workspace messages (last 20, for activity feed)
             prisma.workspaceMessage.findMany({
@@ -153,7 +164,7 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                     author: { select: { email: true, firstName: true, lastName: true, displayName: true, avatarUrl: true } },
                     workspace: { select: { name: true } },
                 }
-            }),
+            }).catch(e => { console.error('[Messages Error]', e); return []; }),
         ]);
 
         if (!org) return res.status(404).json({ error: 'Organization not found' });
@@ -187,12 +198,12 @@ router.get('/governance', authenticate, async (req: AuthRequest, res: Response) 
                 ...memberData,
                 activityStatus,
                 assets: {
-                    ownedFiles: m._count?.files || 0,
-                    analyses: m._count?.analyses || 0,
-                    dashboards: m._count?.dashboards || 0,
-                    messages: m._count?.workspaceMessages || 0,
-                    workspaces: m._count?.workspaceMembers || 0,
-                    auditActions: m._count?.auditLogs || 0,
+                    ownedFiles: (m as any)._count?.files || 0,
+                    analyses: (m as any)._count?.analyses || 0,
+                    dashboards: (m as any)._count?.dashboards || 0,
+                    messages: (m as any)._count?.workspaceMessages || 0,
+                    workspaces: (m as any)._count?.workspaceMembers || 0,
+                    auditActions: (m as any)._count?.auditLogs || 0,
                     sharedFiles,
                     sharedMessages,
                 },
