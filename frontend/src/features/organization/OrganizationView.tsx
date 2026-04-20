@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { API_URL } from '../../config';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
-import { useToast } from '../../components/ui/Toast';
 
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
@@ -98,7 +97,7 @@ const STATUS_THEME: Record<string, { color: string; glow: boolean; label: string
 
 const AVAILABLE_ROLES = ['admin', 'user', 'member', 'viewer'] as const;
 
-const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh, onSelect }: { m: any; idx: number; isAdmin: boolean; token?: string; activeUsers?: any; onRefresh: () => void; onSelect: () => void }) => {
+const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any; idx: number; isAdmin: boolean; token?: string; activeUsers?: any; onRefresh: () => void }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [rolePickerOpen, setRolePickerOpen] = useState(false);
     const [confirmRemove, setConfirmRemove] = useState(false);
@@ -154,8 +153,7 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh, onSelect }:
         <motion.tr
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}
-            onClick={onSelect}
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
@@ -197,7 +195,7 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh, onSelect }:
             <td style={{ padding: '14px 24px', textAlign: 'right', position: 'relative' }}>
                 {isAdmin ? (
                     <>
-                        <button onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); setRolePickerOpen(false); setConfirmRemove(false); }}
+                        <button onClick={() => { setMenuOpen(!menuOpen); setRolePickerOpen(false); setConfirmRemove(false); }}
                             style={{ background: menuOpen ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px', color: menuOpen ? '#fff' : 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.15s' }}>
                             <MoreVertical size={14} />
                         </button>
@@ -288,42 +286,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
     const [recentMessages, setRecentMessages] = useState<any[]>([]);
     const [stats, setStats] = useState<any>({});
     const [currentUserRole, setCurrentUserRole] = useState<string>('user');
-    const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
-
-    const selectedMember = useMemo(() => 
-        members.find(m => m.id === selectedMemberId), 
-        [members, selectedMemberId]
-    );
-
-    const handleRevokeInvite = async (invId: string) => {
-        try {
-            const res = await fetch(`${API_URL}/api/organization/invitations/${invId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                fetchGovernanceData();
-                addToast('Invitation revoked.', 'info');
-            }
-        } catch (err) {
-            addToast('Failed to revoke invitation.', 'error');
-        }
-    };
-
-    const handleResendInvite = async (invId: string) => {
-        try {
-            const res = await fetch(`${API_URL}/api/organization/invitations/${invId}/resend`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                fetchGovernanceData();
-                addToast('Invitation resent with a fresh link.', 'success');
-            }
-        } catch (err) {
-            addToast('Failed to resend invitation.', 'error');
-        }
-    };
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -638,43 +600,26 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                 )}
                                             </div>
                                         </div>
-
-                                        {/* Pending Invitations */}
-                                        {invitations.length > 0 && (
-                                            <div style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: 16, padding: 20 }}>
-                                                <h3 style={{ fontSize: 13, fontWeight: 800, margin: '0 0 12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                    <Mail size={15} /> Pending Invitations ({invitations.length})
-                                                </h3>
-                                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                                    {invitations.map(inv => (
-                                                        <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)', position: 'relative' }}>
-                                                            <Mail size={13} color="#f59e0b" />
-                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{inv.email}</span>
-                                                                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{inv.role} · Expires {timeAgo(inv.expiresAt)}</span>
-                                                            </div>
-                                                            <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
-                                                                <button 
-                                                                    onClick={() => handleResendInvite(inv.id)}
-                                                                    title="Resend Invitation"
-                                                                    style={{ background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: 4, padding: 4, color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
-                                                                >
-                                                                    <RefreshCw size={11} />
-                                                                </button>
-                                                                <button 
-                                                                    onClick={() => handleRevokeInvite(inv.id)}
-                                                                    title="Revoke Invitation"
-                                                                    style={{ background: 'rgba(239,68,68,0.08)', border: 'none', borderRadius: 4, padding: 4, color: '#ef4444', cursor: 'pointer' }}
-                                                                >
-                                                                    <XCircle size={11} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
+
+                                    {/* Pending Invitations */}
+                                    {invitations.length > 0 && (
+                                        <div style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: 16, padding: 20 }}>
+                                            <h3 style={{ fontSize: 13, fontWeight: 800, margin: '0 0 12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <Mail size={15} /> Pending Invitations ({invitations.length})
+                                            </h3>
+                                            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                                {invitations.map(inv => (
+                                                    <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+                                                        <Mail size={13} color="#f59e0b" />
+                                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>{inv.email}</span>
+                                                        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{inv.role}</span>
+                                                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>· expires {timeAgo(inv.expiresAt)}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -724,13 +669,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             </thead>
                                             <tbody>
                                                 {filteredMembers.length > 0 ? filteredMembers.map((m, i) => (
-                                                    <MemberRow 
-                                                        key={m.id} m={m} idx={i} 
-                                                        isAdmin={currentUserRole === 'admin'} 
-                                                        token={token} activeUsers={activeUsers} 
-                                                        onRefresh={fetchGovernanceData} 
-                                                        onSelect={() => setSelectedMemberId(m.id)}
-                                                    />
+                                                    <MemberRow key={m.id} m={m} idx={i} isAdmin={currentUserRole === 'admin'} token={token} activeUsers={activeUsers} onRefresh={fetchGovernanceData} />
                                                 )) : (
                                                     <tr>
                                                         <td colSpan={6} style={{ padding: 64, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>
@@ -790,26 +729,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                         <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 80, color: 'rgba(255,255,255,0.25)' }}>
                                             <Globe size={48} style={{ opacity: 0.1, marginBottom: 12 }} />
                                             <div style={{ fontSize: 14, fontWeight: 600 }}>No workspaces yet</div>
-                                        </div>
-                                    )}
-
-                                    {/* Access Matrix (Bulk Management) */}
-                                    {currentUserRole === 'admin' && workspaces.length > 0 && (
-                                        <div style={{ gridColumn: '1 / -1', marginTop: 24, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 20, padding: 32 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
-                                                <div>
-                                                    <h3 style={{ fontSize: 16, fontWeight: 900, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                        <Database size={18} color="#f59e0b" /> Access Control Matrix
-                                                    </h3>
-                                                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>Manage all member workspace permissions in a high-density grid</p>
-                                                </div>
-                                            </div>
-                                            <AccessMatrix 
-                                                members={members} 
-                                                workspaces={workspaces} 
-                                                token={token} 
-                                                onRefresh={fetchGovernanceData} 
-                                            />
                                         </div>
                                     )}
                                 </div>
@@ -974,305 +893,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                 )}
             </AnimatePresence>
 
-            {/* Member Details Sidebar */}
-            <AnimatePresence>
-                {selectedMember && (
-                    <MemberDetailsSidebar 
-                        member={selectedMember} 
-                        token={token} 
-                        allWorkspaces={workspaces}
-                        onClose={() => setSelectedMemberId(null)}
-                        onRefresh={fetchGovernanceData}
-                        isAdmin={currentUserRole === 'admin'}
-                    />
-                )}
-            </AnimatePresence>
-        </div>
-    );
-};
-
-    );
-};
-
-const AccessMatrix = ({ members, workspaces, token, onRefresh }: { members: any[]; workspaces: any[]; token?: string; onRefresh: () => void }) => {
-    const { addToast } = useToast();
-    const [updatingIds, setUpdatingIds] = useState<string[]>([]);
-    
-    const handleToggle = async (memberId: string, wsId: string, currentIds: string[]) => {
-        const opId = `${memberId}-${wsId}`;
-        if (updatingIds.includes(opId)) return;
-        
-        const isRemoving = currentIds.includes(wsId);
-        const newIds = isRemoving ? currentIds.filter(id => id !== wsId) : [...currentIds, wsId];
-        
-        setUpdatingIds(prev => [...prev, opId]);
-        try {
-            const res = await fetch(`${API_URL}/api/organization/members/${memberId}/workspaces`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ workspaceIds: newIds })
-            });
-            if (res.ok) onRefresh();
-            else addToast('Access update failed.', 'error');
-        } catch (e) { addToast('Network error.', 'error'); }
-        finally { setUpdatingIds(prev => prev.filter(id => id !== opId)); }
-    };
-
-    return (
-        <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid rgba(255,255,255,0.04)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                    <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                        <th style={{ padding: '14px 20px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>Member Identity</th>
-                        {workspaces.map(ws => (
-                            <th key={ws.id} style={{ padding: '14px 20px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', textAlign: 'center' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                                    <Globe size={12} color="#3b82f6" />
-                                    {ws.name}
-                                </div>
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {members.map(m => {
-                        const mWsIds = m.workspaces?.map((w: any) => w.id) || [];
-                        return (
-                            <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                                <td style={{ padding: '12px 20px' }}>
-                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{getUserName(m)}</div>
-                                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>{m.email}</div>
-                                </td>
-                                {workspaces.map(ws => {
-                                    const isIncluded = mWsIds.includes(ws.id);
-                                    const isUpdating = updatingIds.includes(`${m.id}-${ws.id}`);
-                                    return (
-                                        <td key={ws.id} style={{ padding: '12px 20px', textAlign: 'center' }}>
-                                            <button 
-                                                onClick={() => handleToggle(m.id, ws.id, mWsIds)}
-                                                disabled={isUpdating}
-                                                style={{ 
-                                                    background: 'none', border: 'none', cursor: isUpdating ? 'wait' : 'pointer',
-                                                    color: isIncluded ? '#10b981' : 'rgba(255,255,255,0.05)',
-                                                    transition: 'all 0.2s', opacity: isUpdating ? 0.3 : 1
-                                                }}
-                                            >
-                                                {isIncluded ? <CheckCircle2 size={16} /> : <div style={{ width: 14, height: 14, borderRadius: 4, border: '2px solid currentColor', margin: '0 auto' }} />}
-                                            </button>
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </div>
-    );
-};
-
-const PolicyMatrix = () => {
-    const policies = [
-        { feature: 'Workspace Creation', roles: { admin: true, user: true, member: false, viewer: false } },
-        { feature: 'Member Management', roles: { admin: true, user: false, member: false, viewer: false } },
-        { feature: 'Data Source Connectors', roles: { admin: true, user: true, member: true, viewer: false } },
-        { feature: 'BI Dashboard Publish', roles: { admin: true, user: true, member: false, viewer: false } },
-        { feature: 'Security Audit View', roles: { admin: true, user: false, member: false, viewer: false } },
-        { feature: 'LLM Policy Control', roles: { admin: true, user: false, member: false, viewer: false } },
-    ];
-    
-    return (
-        <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <th style={{ padding: '12px 16px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>Capability</th>
-                        <th style={{ padding: '12px 16px', fontSize: 10, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', textAlign: 'center' }}>Admin</th>
-                        <th style={{ padding: '12px 16px', fontSize: 10, fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', textAlign: 'center' }}>User</th>
-                        <th style={{ padding: '12px 16px', fontSize: 10, fontWeight: 800, color: '#8b5cf6', textTransform: 'uppercase', textAlign: 'center' }}>Member</th>
-                        <th style={{ padding: '12px 16px', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', textAlign: 'center' }}>Viewer</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {policies.map((p, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                            <td style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>{p.feature}</td>
-                            {Object.values(p.roles).map((allowed, j) => (
-                                <td key={j} style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                    {allowed ? <CheckCircle2 size={14} color="#10b981" /> : <XCircle size={14} color="rgba(255,255,255,0.1)" />}
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
-};
-
-interface MemberDetailsSidebarProps {
-    member: any;
-    token?: string;
-    allWorkspaces: any[];
-    onClose: () => void;
-    onRefresh: () => void;
-    isAdmin: boolean;
-}
-
-const MemberDetailsSidebar = ({ member, token, allWorkspaces, onClose, onRefresh, isAdmin }: MemberDetailsSidebarProps) => {
-    const { addToast } = useToast();
-    const [updating, setUpdating] = useState(false);
-    const [activeWsIds, setActiveWsIds] = useState<string[]>(member.workspaces?.map((w: any) => w.id) || []);
-
-    const toggleWorkspace = async (wsId: string) => {
-        if (!isAdmin || updating) return;
-        const isRemoving = activeWsIds.includes(wsId);
-        const newIds = isRemoving 
-            ? activeWsIds.filter(id => id !== wsId)
-            : [...activeWsIds, wsId];
-        
-        setActiveWsIds(newIds);
-        setUpdating(true);
-        try {
-            const res = await fetch(`${API_URL}/api/organization/members/${member.id}/workspaces`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ workspaceIds: newIds })
-            });
-            if (res.ok) {
-                onRefresh();
-                addToast(isRemoving ? 'Access revoked.' : 'Access granted.', 'success');
-            } else {
-                addToast('Failed to update workspace access.', 'error');
-                setActiveWsIds(activeWsIds); // Revert UI
-            }
-        } catch (e) { 
-            console.error(e);
-            addToast('Network error during access update.', 'error');
-            setActiveWsIds(activeWsIds); // Revert UI
-        }
-        finally { setUpdating(false); }
-    };
-
-    const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#eab308'];
-    const avatarColor = colors[(member.email || '').charCodeAt(0) % colors.length];
-
-    return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', justifyContent: 'flex-end' }}>
-            <motion.div 
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                onClick={onClose}
-                style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} 
-            />
-            <motion.div
-                initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                style={{ 
-                    position: 'relative', width: 480, height: '100%', background: '#0d0d0d', 
-                    borderLeft: '1px solid rgba(255,255,255,0.08)', boxShadow: '-20px 0 60px rgba(0,0,0,0.5)',
-                    display: 'flex', flexDirection: 'column'
-                }}
-            >
-                {/* Header */}
-                <div style={{ padding: '32px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <button onClick={onClose} style={{ position: 'absolute', top: 24, right: 24, background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer' }}>
-                        <XCircle size={18} />
-                    </button>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                        <div style={{ width: 64, height: 64, borderRadius: 20, background: `linear-gradient(135deg, ${avatarColor}, ${avatarColor}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', boxShadow: `0 12px 32px ${avatarColor}44` }}>
-                            {(member.firstName?.charAt(0) || member.email.charAt(0)).toUpperCase()}
-                        </div>
-                        <div>
-                            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>{getUserName(member)}</h2>
-                            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: '4px 0 0' }}>{member.email}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
-                    {/* Stats Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 40 }}>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 16, border: '1px solid rgba(255,255,255,0.04)' }}>
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', marginBottom: 8 }}>Owned Assets</div>
-                            <div style={{ fontSize: 24, fontWeight: 900, color: '#8b5cf6' }}>{member.files?.length || 0}</div>
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Files & Datasets</div>
-                        </div>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 16, border: '1px solid rgba(255,255,255,0.04)' }}>
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', marginBottom: 8 }}>Nalyse Activity</div>
-                            <div style={{ fontSize: 24, fontWeight: 900, color: '#3b82f6' }}>{member.messages?.length || 0}</div>
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Total Interations</div>
-                        </div>
-                    </div>
-
-                    {/* Workspace Matrix */}
-                    <div style={{ marginBottom: 40 }}>
-                        <h3 style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <Globe size={16} color="#3b82f6" /> Workspace Access Control
-                        </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            {allWorkspaces.map(ws => {
-                                const isActive = activeWsIds.includes(ws.id);
-                                return (
-                                    <div 
-                                        key={ws.id}
-                                        onClick={() => toggleWorkspace(ws.id)}
-                                        style={{ 
-                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                                            padding: '12px 16px', background: isActive ? 'rgba(59,130,246,0.06)' : 'rgba(255,255,255,0.01)', 
-                                            borderRadius: 12, border: `1px solid ${isActive ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.04)'}`,
-                                            cursor: isAdmin ? 'pointer' : 'default', transition: 'all 0.2s'
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                            <div style={{ width: 32, height: 32, borderRadius: 8, background: isActive ? '#3b82f6' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <Globe size={14} color={isActive ? '#fff' : 'rgba(255,255,255,0.3)'} />
-                                            </div>
-                                            <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? '#fff' : 'rgba(255,255,255,0.6)' }}>{ws.name}</span>
-                                        </div>
-                                        {isActive ? (
-                                            <div style={{ width: 18, height: 18, borderRadius: 6, background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <CheckCircle2 size={12} color="#fff" />
-                                            </div>
-                                        ) : (
-                                            <div style={{ width: 18, height: 18, borderRadius: 6, border: '2px solid rgba(255,255,255,0.1)' }} />
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Metadata */}
-                    <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.04)' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '12px 24px' }}>
-                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>Member Since</span>
-                            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{new Date(member.createdAt).toLocaleDateString()}</span>
-                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>Last Activity</span>
-                            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{timeAgo(member.lastLoginAt)}</span>
-                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>Platform Role</span>
-                            <span style={{ fontSize: 11, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase' }}>{member.role}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer Actions */}
-                <div style={{ padding: '24px 40px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: 12 }}>
-                    <button 
-                        onClick={onClose}
-                        style={{ flex: 1, padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                        Close Profile
-                    </button>
-                    {isAdmin && (
-                         <button 
-                            onClick={() => { onClose(); /* Handle secondary action if needed */ }}
-                            style={{ flex: 1, padding: '14px', borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-                        >
-                            Audit Activity
-                        </button>
-                    )}
-                </div>
-            </motion.div>
         </div>
     );
 };

@@ -8,7 +8,7 @@ import { API_URL } from './config';
 import { Header } from './components/layout/Header';
 import { RootLayout } from './components/layout/RootLayout';
 import { CommandPalette } from './components/ui/CommandPalette';
-import { ToastProvider, useToast } from './components/ui/Toast';
+import { useToast } from './components/ui/Toast';
 import { TabBar } from './components/layout/TabBar';
 import type { TabType } from './components/layout/TabBar';
 import {
@@ -118,7 +118,7 @@ function AppContent() {
 
   // Tab State
   const [tabs, setTabs] = useState<TabType[]>(() => {
-    const saved = localStorage.getItem(user?.id ? `tabs-${user.id}` : 'tabs');
+    const saved = localStorage.getItem('nalyse_tabs_v1');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -131,9 +131,7 @@ function AppContent() {
   });
 
   const [activeTabId, setActiveTabId] = useState(() => {
-    const saved = localStorage.getItem(user?.id ? `activeTabId-${user.id}` : 'activeTabId');
-    if (saved) return saved;
-    return 'landing';
+    return localStorage.getItem('nalyse_active_tab_v1') || 'landing';
   });
 
   // Files State (Shared across tabs)
@@ -250,14 +248,6 @@ function AppContent() {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [isAuthenticated, addToast, syncSubscription]);
-
-  // Persist tabs and active tab
-  useEffect(() => {
-    const tabsKey = user?.id ? `tabs-${user.id}` : 'tabs';
-    const activeKey = user?.id ? `activeTabId-${user.id}` : 'activeTabId';
-    localStorage.setItem(tabsKey, JSON.stringify(tabs));
-    localStorage.setItem(activeKey, activeTabId);
-  }, [tabs, activeTabId, user?.id]);
 
   // Apply theme on mount and change
   useEffect(() => {
@@ -586,14 +576,30 @@ function AppContent() {
     }
   }, [token]);
 
+  // Persistent Tabs Sync
+  useEffect(() => {
+    localStorage.setItem('nalyse_tabs_v1', JSON.stringify(tabs));
+  }, [tabs]);
+
+  useEffect(() => {
+    localStorage.setItem('nalyse_active_tab_v1', activeTabId);
+  }, [activeTabId]);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchFiles();
       fetchGroups();
-      // Automatically switch to dashboard if on landing
+      // Automatically switch to dashboard if on landing and no other tabs exist
       if (tabs.length === 1 && tabs[0].type === 'landing') {
-        setTabs([{ id: 'dash-main', title: 'Dashboard', type: 'dashboard' }]);
-        setActiveTabId('dash-main');
+        const defaultDashboard = { id: 'dash-main', title: 'Dashboard', type: 'dashboard' as const };
+        setTabs([defaultDashboard]);
+        setActiveTabId(defaultDashboard.id);
+      }
+    } else {
+      // If not authenticated and we have non-landing tabs, reset to landing
+      if (tabs.length > 0 && !tabs.every(t => t.type === 'landing')) {
+        setTabs([{ id: 'landing', title: 'Home', type: 'landing' }]);
+        setActiveTabId('landing');
       }
     }
   }, [isAuthenticated, fetchFiles, fetchGroups]);
@@ -1427,13 +1433,11 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <ToastProvider>
-          <WorkspaceProvider>
-            <ArchitectProvider>
-              <AppContent />
-            </ArchitectProvider>
-          </WorkspaceProvider>
-        </ToastProvider>
+        <WorkspaceProvider>
+          <ArchitectProvider>
+            <AppContent />
+          </ArchitectProvider>
+        </WorkspaceProvider>
       </LanguageProvider>
     </AuthProvider>
   );
