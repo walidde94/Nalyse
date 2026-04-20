@@ -97,7 +97,7 @@ const STATUS_THEME: Record<string, { color: string; glow: boolean; label: string
 
 const AVAILABLE_ROLES = ['admin', 'user', 'member', 'viewer'] as const;
 
-const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any; idx: number; isAdmin: boolean; token?: string; activeUsers?: any; onRefresh: () => void }) => {
+const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh, onSelect }: { m: any; idx: number; isAdmin: boolean; token?: string; activeUsers?: any; onRefresh: () => void; onSelect: (m: any) => void }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [rolePickerOpen, setRolePickerOpen] = useState(false);
     const [confirmRemove, setConfirmRemove] = useState(false);
@@ -131,6 +131,15 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any;
                 body: JSON.stringify({ role: newRole })
             });
             if (res.ok) onRefresh();
+        } catch (err) {
+            console.error('Failed to update role', err);
+        } finally {
+            setActing(false);
+            setRolePickerOpen(false);
+            setMenuOpen(false);
+        }
+    };
+
     return (
         <motion.tr
             initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
