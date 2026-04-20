@@ -375,4 +375,83 @@ router.delete('/invitations/:invitationId', authenticate, async (req: AuthReques
     }
 });
 
+/**
+ * POST /api/organization/members/:memberId/workspaces
+ * Sync workspace memberships for a member. Admin only.
+ */
+router.post('/members/:memberId/workspaces', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const memberId = req.params.memberId as string;
+        const { workspaceIds } = req.body; // Array of { id: string, role: string }
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+        if (!Array.isArray(workspaceIds)) return res.status(400).json({ error: 'workspaceIds must be an array' });
+
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true } });
+        if (!admin || admin.role !== 'admin') return res.status(403).json({ error: 'Only admins can manage workspace assignments' });
+
+        const target = await prisma.user.findUnique({ where: { id: memberId }, select: { id: true, organizationId: true } });
+        if (!target || target.organizationId !== admin.organizationId) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Transactions: Delete old, create new
+        await prisma.$transaction([
+            prisma.workspaceMember.deleteMany({ where: { userId: memberId } }),
+            prisma.workspaceMember.createMany({
+                data: workspaceIds.map((ws: any) => ({
+                    userId: memberId,
+                    workspaceId: ws.id,
+                    role: ws.role || 'editor'
+                }))
+            })
+        ]);
+
+        res.json({ success: true, memberId, workspaceCount: workspaceIds.length });
+    } catch (err: any) {
+        console.error('[Governance] Workspace sync failed:', err);
+        res.status(500).json({ error: 'Failed to sync workspace memberships', details: err.message });
+    }
+});
+
+/**
+ * POST /api/organization/invitations/:invitationId/resend
+ * Refresh token and expiry for an invitation. Admin only.
+ */
+router.post('/invitations/:invitationId/resend', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const invitationId = req.params.invitationId as string;
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true } });
+        if (!admin || admin.role !== 'admin') return res.status(403).json({ error: 'Only admins can resend invitations' });
+
+        const invite = await prisma.userInvitation.findUnique({ where: { id: invitationId } });
+        if (!invite || invite.organizationId !== admin.organizationId) {
+            return res.status(404).json({ error: 'Invitation not found' });
+        }
+
+        const newToken = require('crypto').randomBytes(32).toString('hex');
+        const newExpiry = new Date();
+        newExpiry.setDate(newExpiry.getDate() + 7);
+
+        await prisma.userInvitation.update({
+            where: { id: invitationId },
+            data: {
+                token: newToken,
+                expiresAt: newExpiry,
+                status: 'pending'
+            }
+        });
+
+        res.json({ success: true, invitationId, newExpiry });
+    } catch (err: any) {
+        console.error('[Governance] Invitation resend failed:', err);
+        res.status(500).json({ error: 'Failed to resend invitation', details: err.message });
+    }
+});
+
 export default router;

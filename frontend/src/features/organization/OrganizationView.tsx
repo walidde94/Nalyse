@@ -131,30 +131,12 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any;
                 body: JSON.stringify({ role: newRole })
             });
             if (res.ok) onRefresh();
-            else { const err = await res.json(); alert(err.error || 'Failed to change role'); }
-        } catch (e) { console.error(e); }
-        finally { setActing(false); setRolePickerOpen(false); setMenuOpen(false); }
-    };
-
-    const handleRemove = async () => {
-        if (acting) return;
-        setActing(true);
-        try {
-            const res = await fetch(`${API_URL}/api/organization/members/${m.id}`, {
-                method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) onRefresh();
-            else { const err = await res.json(); alert(err.error || 'Failed to remove member'); }
-        } catch (e) { console.error(e); }
-        finally { setActing(false); setConfirmRemove(false); setMenuOpen(false); }
-    };
-
     return (
         <motion.tr
-            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.04 }}
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            onClick={() => onSelect(m)}
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.015)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
             <td style={{ padding: '14px 24px' }}>
@@ -173,7 +155,7 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any;
             </td>
             <td style={{ padding: '14px 24px' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 8, background: rt.bg, border: `1px solid ${rt.color}25` }}>
-                    <RoleIcon size={12} color={rt.color} />
+                    <rt.icon size={12} color={rt.color} />
                     <span style={{ fontSize: 11, fontWeight: 700, color: rt.color }}>{rt.label}</span>
                 </div>
             </td>
@@ -192,69 +174,10 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh }: { m: any;
                 </div>
             </td>
             <td style={{ padding: '14px 24px', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{timeAgo(m.lastLoginAt)}</td>
-            <td style={{ padding: '14px 24px', textAlign: 'right', position: 'relative' }}>
-                {isAdmin ? (
-                    <>
-                        <button onClick={() => { setMenuOpen(!menuOpen); setRolePickerOpen(false); setConfirmRemove(false); }}
-                            style={{ background: menuOpen ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px', color: menuOpen ? '#fff' : 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.15s' }}>
-                            <MoreVertical size={14} />
-                        </button>
-                        <AnimatePresence>
-                            {menuOpen && (
-                                <motion.div initial={{ opacity: 0, scale: 0.9, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
-                                    style={{ position: 'absolute', right: 24, top: '100%', marginTop: -4, zIndex: 50, background: 'rgba(20,20,20,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 6, minWidth: 180, boxShadow: '0 20px 40px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)' }}>
-                                    {!rolePickerOpen && !confirmRemove ? (
-                                        <>
-                                            <button onClick={() => setRolePickerOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 12px', background: 'none', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
-                                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                                                <Shield size={14} color="#8b5cf6" /> Change Role
-                                            </button>
-                                            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 0' }} />
-                                            <button onClick={() => setConfirmRemove(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 12px', background: 'none', border: 'none', borderRadius: 8, color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
-                                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                                                <XCircle size={14} /> Remove Member
-                                            </button>
-                                        </>
-                                    ) : rolePickerOpen ? (
-                                        <div style={{ padding: 4 }}>
-                                            <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', padding: '4px 8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Select Role</div>
-                                            {AVAILABLE_ROLES.map(r => {
-                                                const rTheme = getRoleTheme(r);
-                                                const isCurrent = m.role === r;
-                                                return (
-                                                    <button key={r} onClick={() => handleRoleChange(r)} disabled={acting || isCurrent}
-                                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 10px', background: isCurrent ? 'rgba(255,255,255,0.04)' : 'none', border: 'none', borderRadius: 6, color: isCurrent ? 'rgba(255,255,255,0.3)' : '#fff', fontSize: 12, fontWeight: 600, cursor: isCurrent ? 'default' : 'pointer' }}
-                                                        onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-                                                        onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = isCurrent ? 'rgba(255,255,255,0.04)' : 'none'; }}>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: rTheme.color }} />
-                                                            <span style={{ textTransform: 'capitalize' }}>{r}</span>
-                                                        </span>
-                                                        {isCurrent && <CheckCircle2 size={13} color="rgba(255,255,255,0.3)" />}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                            <AlertTriangle size={20} color="#ef4444" style={{ marginBottom: 8 }} />
-                                            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Remove {getUserName(m)}?</div>
-                                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>They will lose access to this org.</div>
-                                            <div style={{ display: 'flex', gap: 6 }}>
-                                                <button onClick={() => setConfirmRemove(false)} style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                                                <button onClick={handleRemove} disabled={acting} style={{ flex: 1, padding: '8px', background: '#ef4444', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', opacity: acting ? 0.5 : 1 }}>{acting ? '...' : 'Remove'}</button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </>
-                ) : (
-                    <button style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px', color: 'rgba(255,255,255,0.15)', cursor: 'default' }}>
-                        <MoreVertical size={14} />
-                    </button>
-                )}
+            <td style={{ padding: '14px 24px', textAlign: 'right' }}>
+                <button style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+                    <MoreVertical size={14} />
+                </button>
             </td>
         </motion.tr>
     );
@@ -276,6 +199,9 @@ export const OrganizationView = ({ token }: { token?: string }) => {
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState('user');
     const [inviting, setInviting] = useState(false);
+    const [selectedMember, setSelectedMember] = useState<any | null>(null);
+    const [acting, setActing] = useState(false);
+    const [currentUserRole, setCurrentUserRole] = useState('user');
 
     // Data
     const [orgData, setOrgData] = useState<any>(null);
@@ -283,9 +209,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
     const [workspaces, setWorkspaces] = useState<any[]>([]);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
     const [invitations, setInvitations] = useState<any[]>([]);
-    const [recentMessages, setRecentMessages] = useState<any[]>([]);
     const [stats, setStats] = useState<any>({});
-    const [currentUserRole, setCurrentUserRole] = useState<string>('user');
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -317,54 +241,72 @@ export const OrganizationView = ({ token }: { token?: string }) => {
     }, []);
 
     const fetchGovernanceData = async () => {
+        if (!token) return;
         try {
             setLoading(true);
-            setError(null);
             const res = await fetch(`${API_URL}/api/organization/governance`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (!res.ok) {
-                // Fallback to base organization endpoint
                 const fallbackRes = await fetch(`${API_URL}/api/organization`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (fallbackRes.ok) {
-                    const data = await fallbackRes.json();
-                    setOrgData(data.organization);
-                    setMembers(data.members || []);
-                    setStats({ totalMembers: data.members?.length || 0, activeMembers: data.members?.filter((m: any) => m.isActive).length || 0 });
-                    if (data.currentUserRole) setCurrentUserRole(data.currentUserRole);
+                    const fallbackData = await fallbackRes.json();
+                    setMembers(fallbackData.members || []);
+                    setOrgData(fallbackData.organization || null);
                     setWorkspaces([]);
                     setAuditLogs([]);
                     setInvitations([]);
-                    setRecentMessages([]);
                 } else {
-                    const text = await res.text();
-                    console.error('[Governance Error details]', text);
                     throw new Error('Failed to fetch organization data');
                 }
                 return;
             }
 
             const data = await res.json();
-            setOrgData(data.organization);
+            setOrgData(data.organization || null);
             setMembers(data.members || []);
             setWorkspaces(data.workspaces || []);
             setAuditLogs(data.auditLogs || []);
             setInvitations(data.invitations || []);
-            setRecentMessages(data.recentMessages || []);
             setStats(data.stats || {});
             if (data.currentUserRole) setCurrentUserRole(data.currentUserRole);
         } catch (err: any) {
+            console.error('[Governance Fetch Error]', err);
             setError(err.message);
-            console.error('Governance fetch failed:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    // Filtered members
+    const handleRevokeInvite = async (invId: string) => {
+        try {
+            setActing(true);
+            const res = await fetch(`${API_URL}/api/organization/invitations/${invId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) fetchGovernanceData();
+        } finally {
+            setActing(false);
+        }
+    };
+
+    const handleResendInvite = async (invId: string) => {
+        try {
+            setActing(true);
+            const res = await fetch(`${API_URL}/api/organization/invitations/${invId}/resend`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) fetchGovernanceData();
+        } finally {
+            setActing(false);
+        }
+    };
+
     const filteredMembers = useMemo(() => {
         if (!searchQuery) return members;
         const q = searchQuery.toLowerCase();
@@ -375,7 +317,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
         );
     }, [members, searchQuery]);
 
-    // Storage percentage
     const storagePct = orgData ? Math.round((parseInt(stats.totalStorage || '0') / parseInt(orgData.storageLimit || '1')) * 100) : 0;
 
     const tabs: { id: TabId; label: string; icon: any; count?: number }[] = [
@@ -387,10 +328,8 @@ export const OrganizationView = ({ token }: { token?: string }) => {
 
     return (
         <div style={{ padding: '28px 32px', maxWidth: 1440, margin: '0 auto', fontFamily: 'var(--font-main)', minHeight: '100%', position: 'relative' }}>
-            {/* Ambient glow */}
             <div style={{ position: 'absolute', top: '-5%', left: '15%', width: '50vw', height: '40vh', background: 'radial-gradient(ellipse, rgba(139,92,246,0.06), transparent 65%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
-            {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, position: 'relative', zIndex: 1 }}
@@ -435,7 +374,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                 </button>
             </motion.div>
 
-            {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 28, position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.02)', borderRadius: 14, padding: 4, border: '1px solid rgba(255,255,255,0.04)' }}>
                 {tabs.map(tab => {
                     const isActive = activeTab === tab.id;
@@ -470,7 +408,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                 })}
             </div>
 
-            {/* Content */}
             <div style={{ position: 'relative', zIndex: 1, minHeight: 500 }}>
                 <AnimatePresence mode="wait">
                     {loading ? (
@@ -496,10 +433,8 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                     ) : (
                         <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
 
-                            {/* ═══ OVERVIEW TAB ═══ */}
                             {activeTab === 'overview' && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                                    {/* Stat Cards */}
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
                                         <StatCard icon={Users} label="Members" value={stats.totalMembers || 0} sub={`${stats.activeLastWeek || 0} active this week`} color="#8b5cf6" delay={0} />
                                         <StatCard icon={Globe} label="Workspaces" value={stats.totalWorkspaces || 0} sub={`${stats.totalDashboards || 0} dashboards`} color="#3b82f6" delay={0.05} />
@@ -507,9 +442,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                         <StatCard icon={Zap} label="Analyses" value={stats.totalAnalyses || 0} sub="Total executed" color="#f59e0b" delay={0.15} />
                                     </div>
 
-                                    {/* Two-column layout */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                                        {/* Role Distribution */}
                                         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 24 }}>
                                             <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8, color: '#fff' }}>
                                                 <Shield size={16} color="#8b5cf6" /> Role Distribution
@@ -539,7 +472,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                 })}
                                             </div>
 
-                                            {/* Storage Usage */}
                                             <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                                                     <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -564,7 +496,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             </div>
                                         </div>
 
-                                        {/* Live Activity Feed */}
                                         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column' }}>
                                             <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: '#fff' }}>
                                                 <Activity size={16} color="#10b981" /> Recent Activity
@@ -602,7 +533,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                         </div>
                                     </div>
 
-                                    {/* Pending Invitations */}
                                     {invitations.length > 0 && (
                                         <div style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: 16, padding: 20 }}>
                                             <h3 style={{ fontSize: 13, fontWeight: 800, margin: '0 0 12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -610,11 +540,19 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             </h3>
                                             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                                 {invitations.map(inv => (
-                                                    <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
-                                                        <Mail size={13} color="#f59e0b" />
-                                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>{inv.email}</span>
-                                                        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{inv.role}</span>
-                                                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>· expires {timeAgo(inv.expiresAt)}</span>
+                                                    <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                            <Mail size={13} color="#f59e0b" />
+                                                            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{inv.email}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: 10, fontWeight: 800, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>{inv.role}</div>
+                                                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>Expires {timeAgo(inv.expiresAt)}</div>
+                                                        {currentUserRole === 'admin' && (
+                                                            <div style={{ display: 'flex', gap: 4, marginLeft: 4, paddingLeft: 8, borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                <button onClick={() => handleResendInvite(inv.id)} disabled={acting} title="Resend Invite" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', padding: 4, cursor: 'pointer' }}><RefreshCw size={12} /></button>
+                                                                <button onClick={() => handleRevokeInvite(inv.id)} disabled={acting} title="Revoke Invite" style={{ background: 'none', border: 'none', color: '#ef4444', padding: 4, cursor: 'pointer' }}><XCircle size={12} /></button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -623,7 +561,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                 </div>
                             )}
 
-                            {/* ═══ MEMBERS TAB ═══ */}
                             {activeTab === 'members' && (
                                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, overflow: 'hidden' }}>
                                     <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -669,7 +606,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             </thead>
                                             <tbody>
                                                 {filteredMembers.length > 0 ? filteredMembers.map((m, i) => (
-                                                    <MemberRow key={m.id} m={m} idx={i} isAdmin={currentUserRole === 'admin'} token={token} activeUsers={activeUsers} onRefresh={fetchGovernanceData} />
+                                                    <MemberRow key={m.id} m={m} idx={i} isAdmin={currentUserRole === 'admin'} token={token} activeUsers={activeUsers} onRefresh={fetchGovernanceData} onSelect={setSelectedMember} />
                                                 )) : (
                                                     <tr>
                                                         <td colSpan={6} style={{ padding: 64, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>
@@ -686,7 +623,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                 </div>
                             )}
 
-                            {/* ═══ WORKSPACES TAB ═══ */}
                             {activeTab === 'workspaces' && (
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
                                     {workspaces.length > 0 ? workspaces.map((ws, i) => (
@@ -734,7 +670,6 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                 </div>
                             )}
 
-                            {/* ═══ AUDIT LOG TAB ═══ */}
                             {activeTab === 'audit' && (
                                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, overflow: 'hidden' }}>
                                     <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -894,5 +829,145 @@ export const OrganizationView = ({ token }: { token?: string }) => {
             </AnimatePresence>
 
         </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MEMBER SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+
+const MemberSidebar = ({ member, onClose, worksaces, auditLogs, token, onRefresh, adminRole }: any) => {
+    const { activeUsers } = useWorkspace();
+    const isOnline = !!activeUsers[member.id];
+    const theme = getRoleTheme(member.role);
+    const [syncing, setSyncing] = useState(false);
+
+    // Calc memberships
+    const userWorkspaceIds = new Set(member.workspaceRoles?.map((w: any) => w.workspaceId) || []);
+
+    const toggleWorkspace = async (wsId: string) => {
+        const next = new Set(userWorkspaceIds);
+        if (next.has(wsId)) next.delete(wsId);
+        else next.add(wsId);
+
+        try {
+            setSyncing(true);
+            const res = await fetch(`${API_URL}/api/organization/members/${member.id}/workspaces`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ workspaceIds: Array.from(next).map(id => ({ id, role: 'editor' })) })
+            });
+            if (res.ok) onRefresh();
+        } finally {
+            setSyncing(false);
+        }
+    };
+
+    const userActions = auditLogs.filter((l: any) => l.user?.id === member.id);
+
+    return (
+        <motion.div
+            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            style={{
+                position: 'fixed', top: 0, right: 0, width: 420, height: '100%',
+                background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(32px)',
+                borderLeft: '1px solid rgba(255,255,255,0.08)', zIndex: 1000,
+                boxShadow: '-20px 0 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column'
+            }}
+        >
+            {/* Header */}
+            <div style={{ padding: 24, paddingBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: 16 }}>
+                    <div style={{ position: 'relative' }}>
+                        <div style={{ width: 64, height: 64, borderRadius: 20, background: 'linear-gradient(135deg, #334155, #1e293b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            {member.avatarUrl ? <img src={member.avatarUrl} style={{ width: '100%', height: '100%', borderRadius: 'inherit' }} /> : getUserName(member)[0]}
+                        </div>
+                        <div style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: isOnline ? '#10b981' : '#64748b', border: '3px solid #0f172a' }} />
+                    </div>
+                    <div>
+                        <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>{getUserName(member)}</h2>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Mail size={12} /> {member.email}
+                        </div>
+                        <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: theme.bg, color: theme.color, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <theme.icon size={12} /> {theme.label}
+                        </div>
+                    </div>
+                </div>
+                <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <ArrowUpRight size={16} />
+                </button>
+            </div>
+
+            <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '0 24px 32px' }}>
+                {/* Stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+                    <div style={{ padding: 16, borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{member.assets?.ownedFiles || 0}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Assets Created</div>
+                    </div>
+                    <div style={{ padding: 16, borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{member.assets?.auditActions || 0}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Total Actions</div>
+                    </div>
+                </div>
+
+                {/* Workspace Access */}
+                <div style={{ marginTop: 32 }}>
+                    <h3 style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Layers size={14} /> Workspace Access
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {worksaces.map((ws: any) => {
+                            const hasAccess = userWorkspaceIds.has(ws.id);
+                            return (
+                                <div key={ws.id}
+                                    onClick={() => (adminRole === 'admin' || adminRole === 'owner') && toggleWorkspace(ws.id)}
+                                    style={{
+                                        padding: '12px 16px', borderRadius: 12, background: hasAccess ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.02)',
+                                        border: '1px solid', borderColor: hasAccess ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.04)',
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: (adminRole === 'admin' || adminRole === 'owner') ? 'pointer' : 'default', transition: 'all 0.2s'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: hasAccess ? '#3b82f6' : 'rgba(255,255,255,0.1)' }} />
+                                        <span style={{ fontSize: 13, fontWeight: 700, color: hasAccess ? '#fff' : 'rgba(255,255,255,0.4)' }}>{ws.name}</span>
+                                    </div>
+                                    {hasAccess ? <CheckCircle2 size={14} color="#3b82f6" /> : syncing ? <Loader2 className="animate-spin" size={14} color="rgba(255,255,255,0.1)" /> : null}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Activity */}
+                <div style={{ marginTop: 32 }}>
+                    <h3 style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Activity size={14} /> Personal Activity
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {userActions.length > 0 ? userActions.slice(0, 10).map((log: any) => (
+                            <div key={log.id} style={{ display: 'flex', gap: 12 }}>
+                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', width: 60, flexShrink: 0, marginTop: 2 }}>{timeAgo(log.createdAt)}</div>
+                                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.4 }}>
+                                    {ACTION_LABELS[log.action]?.label || log.action}
+                                    {log.workspace && <span style={{ color: 'rgba(255,255,255,0.3)' }}> in {log.workspace.name}</span>}
+                                </div>
+                            </div>
+                        )) : <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>No activity found.</div>}
+                    </div>
+                </div>
+            </div>
+            
+            {/* Footer Actions */}
+            {(adminRole === 'admin' || adminRole === 'owner') && (
+                <div style={{ padding: 24, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: 12 }}>
+                     <button style={{ flex: 1, padding: '12px', borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+                        Remove Member
+                     </button>
+                </div>
+            )}
+        </motion.div>
     );
 };
