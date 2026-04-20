@@ -13,12 +13,12 @@ async function ensureAuditLogTable() {
         await prisma.$executeRawUnsafe(`
             CREATE TABLE IF NOT EXISTS "audit_logs" (
                 "id" TEXT PRIMARY KEY,
-                "workspaceId" TEXT NOT NULL,
-                "userId" TEXT NOT NULL,
+                "workspace_id" TEXT NOT NULL,
+                "user_id" TEXT NOT NULL,
                 "action" TEXT NOT NULL,
-                "entityId" TEXT,
+                "entity_id" TEXT,
                 "details" JSONB,
-                "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+                "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
         `);
         console.log('✅ [Metadata] Audit Pipeline Verified.');

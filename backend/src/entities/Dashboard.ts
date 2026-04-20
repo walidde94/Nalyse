@@ -13,27 +13,27 @@ export class Dashboard {
     @Column({ type: 'jsonb', default: [] })
     panels: any[];
 
-    @Column({ type: 'jsonb', default: [] })
+    @Column({ name: 'grid_layout', type: 'jsonb', default: [] })
     gridLayout: any[];
 
-    @Column()
+    @Column({ name: 'user_id', type: 'uuid' })
     userId: string;
 
-    @Column({ nullable: true })
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
     organizationId: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 
     @ManyToOne(() => User, (user) => user.dashboards)
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'user_id' })
     user: User;
 
     @ManyToOne(() => Organization, (org) => org.dashboards)
-    @JoinColumn({ name: 'organizationId' })
+    @JoinColumn({ name: 'organization_id' })
     organization: Organization;
 
     @BeforeInsert()

@@ -240,11 +240,11 @@ router.get('/:id/files', authenticate, async (req: any, res: any) => {
         const files = await AppDataSource.getRepository(File)
             .createQueryBuilder('file')
             .leftJoinAndSelect('file.owner', 'owner')
-            .leftJoin('analyses', 'a', 'a."fileId" = file.id AND a.status = :status', { status: 'completed' })
+            .leftJoin('analyses', 'a', 'a."file_id" = file.id AND a.status = :status', { status: 'completed' })
             .addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END', 'has_analysis')
-            .addSelect('a."completedAt"', 'analysis_completed_at')
-            .where('file.workspaceId = :workspaceId AND file.isDeleted = false', { workspaceId })
-            .orderBy('file.createdAt', 'DESC')
+            .addSelect('a."completed_at"', 'analysis_completed_at')
+            .where('file."workspace_id" = :workspaceId AND file."is_deleted" = false', { workspaceId })
+            .orderBy('file."created_at"', 'DESC')
             .getRawAndEntities();
 
         const enriched = files.entities.map(f => {

@@ -9,10 +9,11 @@ export function getLayoutPrefsKey(userId?: string): string {
     return userId ? `nalyse-layout-preferences-${userId}` : LAYOUT_PREFS_STORAGE_KEY;
 }
 
-export const DEFAULT_GROUP_ORDER = ['decision', 'analytics', 'predictive', 'bi', 'selfservice'] as const;
+export const DEFAULT_GROUP_ORDER = ['social', 'decision', 'analytics', 'predictive', 'bi', 'selfservice'] as const;
 export type SidebarGroupKey = (typeof DEFAULT_GROUP_ORDER)[number];
 
 export const DEFAULT_ITEMS: Record<SidebarGroupKey, readonly string[]> = {
+    social: ['private-chat'],
     decision: ['simulation'],
     analytics: ['dashboard', 'lens', 'correlate', 'diff', 'anomaly', 'financial'],
     predictive: ['forecast', 'spatial', 'automl', 'developer', 'webhooks', 'embed'],
@@ -27,6 +28,7 @@ export type FooterNavId = (typeof DEFAULT_FOOTER_ORDER)[number];
 export const PROTECTED_NAV_IDS = new Set<string>(['landing', 'settings']);
 
 export const GROUP_TITLES: Record<SidebarGroupKey, string> = {
+    social: 'Neural Bridge',
     decision: 'Decision Engine',
     analytics: 'Analytics Studio',
     predictive: 'Predictive Models',

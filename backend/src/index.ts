@@ -31,8 +31,10 @@ import collaborationRoutes from './routes/collaboration';
 import webhookRoutes from './routes/webhooks';
 import dashboardRoutes from './routes/dashboards';
 import workspaceRoutes from './routes/workspaces';
+import chatRoutes from './routes/chats';
 import { startScheduleEngine } from './services/scheduleEngine';
 import { initializeWorkspaceSocket } from './services/workspaceService';
+import { initializeChatSocket } from './services/chatService';
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
@@ -63,6 +65,7 @@ export const broadcastUpdate = (entity: string, data: any) => {
 };
 
 initializeWorkspaceSocket(io); // Attach Real-Time Workspace Engine
+initializeChatSocket(io); // Attach Real-Time Private Chat Engine
 
 io.on('connection', (socket) => {
 });
@@ -134,6 +137,7 @@ app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/webhooks', webhookLimiter, webhookRoutes);
 app.use('/api/dashboards', dashboardRoutes);
 app.use('/api/workspaces', workspaceRoutes);
+app.use('/api/chats', chatRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

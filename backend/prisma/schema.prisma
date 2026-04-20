@@ -78,6 +78,8 @@ model User {
   webhooks                Webhook[]
   workspaceMembers        WorkspaceMember[]
   workspaceMessages       WorkspaceMessage[]
+  directMessages          DirectMessage[]
+  directConversations     DirectConversation[]    @relation("ConversationParticipants")
 
   @@map("users")
 }
@@ -359,4 +361,34 @@ model AgentTask {
   agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@map("agent_task")
+}
+
+model DirectConversation {
+  id            String          @id @default(uuid())
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  messages      DirectMessage[]
+  participants  User[]          @relation("ConversationParticipants")
+
+  @@map("direct_conversations")
+}
+
+model DirectMessage {
+  id             String             @id @default(uuid())
+  conversationId String             @map("conversation_id")
+  senderId       String             @map("sender_id")
+  content        String
+  imageUrl       String?            @map("image_url")
+  replyToId      String?            @map("reply_to_id")
+  reactions      Json?              @default("[]")
+  isEdited       Boolean            @default(false) @map("is_edited")
+  isDeleted      Boolean            @default(false) @map("is_deleted")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  conversation   DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User               @relation(fields: [senderId], references: [id])
+  replyTo        DirectMessage?     @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies        DirectMessage[]    @relation("MessageReplies")
+
+  @@map("direct_messages")
 }

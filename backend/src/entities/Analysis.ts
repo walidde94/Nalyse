@@ -10,16 +10,17 @@ export class Analysis {
     id: string;
 
     @ManyToOne(() => File, file => file.analyses, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'fileId' })
+    @JoinColumn({ name: 'file_id' })
     file: File;
 
-    @Column()
+    @Column({ name: 'file_id', type: 'uuid' })
     fileId: string;
 
     @ManyToOne(() => User)
+    @JoinColumn({ name: 'created_by_id' })
     createdBy: User;
 
-    @Column()
+    @Column({ name: 'created_by_id', type: 'uuid' })
     createdById: string;
 
     @Column({ type: 'varchar', default: 'pending' })
@@ -34,19 +35,19 @@ export class Analysis {
     @Column({ type: isTest ? 'simple-json' : 'jsonb', nullable: true })
     statistics: any;
 
-    @Column({ type: 'text', nullable: true })
+    @Column({ name: 'error_message', type: 'text', nullable: true })
     errorMessage: string;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ name: 'processing_time_ms', type: 'int', nullable: true })
     processingTimeMs: number;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 
-    @Column({ type: isTest ? 'datetime' : 'timestamp', nullable: true })
+    @Column({ name: 'completed_at', type: isTest ? 'datetime' : 'timestamp', nullable: true })
     completedAt: Date;
 
     @BeforeInsert()

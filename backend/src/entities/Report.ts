@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
 
 @Entity('reports')
@@ -12,18 +12,19 @@ export class Report {
     @Column({ type: 'text' })
     config: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
     @ManyToOne(() => User, user => user.reports)
+    @JoinColumn({ name: 'user_id' })
     user: User;
 
-    @Column()
+    @Column({ name: 'user_id', type: 'uuid' })
     userId: string; // Changed from Int to string (UUID)
 
-    @Column({ nullable: true, unique: true })
+    @Column({ name: 'share_token', nullable: true, unique: true })
     shareToken: string;
 
-    @Column({ default: false })
+    @Column({ name: 'is_public', default: false })
     isPublic: boolean;
 }

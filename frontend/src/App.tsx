@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, Suspense, useRef } from 'react
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ArchitectProvider } from './contexts/ArchitectContext';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
+import { ChatProvider } from './contexts/ChatContext';
 import { io } from 'socket.io-client';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { API_URL } from './config';
@@ -66,6 +67,7 @@ const WebhookSystemView = React.lazy(() => import('./features/webhooks/WebhookSy
 const DashboardCanvas = React.lazy(() => import('./features/canvas/DashboardCanvas').then(m => ({ default: m.DashboardCanvas })));
 const LensVisualizer = React.lazy(() => import('./features/lens/LensVisualizer').then(m => ({ default: m.LensVisualizer })));
 const EmbedSDKView = React.lazy(() => import('./features/embed/EmbedSDKView').then(m => ({ default: m.EmbedSDKView })));
+const PrivateChatView = React.lazy(() => import('./features/collaboration/PrivateChatView').then(m => ({ default: m.PrivateChatView })));
 
 
 
@@ -1343,6 +1345,10 @@ function AppContent() {
                   <CollaborationView token={token || ''} />
                 )}
 
+                {tab.type === 'private-chat' && (
+                  <PrivateChatView />
+                )}
+
                 {tab.type === 'shared-workspaces' && (
                   <SharedWorkspacesView 
                     onOpenFile={handleAnalyzeFile} 
@@ -1475,11 +1481,13 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <WorkspaceProvider>
-          <ArchitectProvider>
-            <AppContent />
-          </ArchitectProvider>
-        </WorkspaceProvider>
+        <ChatProvider>
+          <WorkspaceProvider>
+            <ArchitectProvider>
+              <AppContent />
+            </ArchitectProvider>
+          </WorkspaceProvider>
+        </ChatProvider>
       </LanguageProvider>
     </AuthProvider>
   );

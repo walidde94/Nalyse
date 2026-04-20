@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Organization } from './Organization';
 import { User } from './User';
 
@@ -17,23 +17,25 @@ export class UserInvitation {
     token: string;
 
     @ManyToOne(() => Organization, org => org.id)
+    @JoinColumn({ name: 'organization_id' })
     organization: Organization;
 
-    @Column()
+    @Column({ name: 'organization_id', type: 'uuid' })
     organizationId: string;
 
     @ManyToOne(() => User, user => user.id)
+    @JoinColumn({ name: 'inviter_id' })
     inviter: User;
 
-    @Column()
+    @Column({ name: 'inviter_id', type: 'uuid' })
     inviterId: string;
 
-    @Column({ type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamp' })
+    @Column({ name: 'expires_at', type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamp' })
     expiresAt: Date;
 
     @Column({ default: 'pending' })
     status: 'pending' | 'accepted' | 'expired';
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 }

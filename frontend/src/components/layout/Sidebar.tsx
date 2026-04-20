@@ -44,7 +44,8 @@ import {
     Webhook,
     Boxes,
     Layers,
-    Users
+    Users,
+    Send
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -63,11 +64,12 @@ const SECTOR_THEMES = [
 ] as const;
 
 const GROUP_THEME_INDEX: Record<SidebarGroupKey, number> = {
-    decision: 0,
-    analytics: 1,
-    predictive: 2,
-    bi: 3,
-    selfservice: 4,
+    social: 0,
+    decision: 1,
+    analytics: 2,
+    predictive: 3,
+    bi: 4,
+    selfservice: 0, // Fallback reuse
 };
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
@@ -91,6 +93,7 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
     automation: <Activity size={16} strokeWidth={2} />,
     collaboration: <MessageSquare size={16} strokeWidth={2} />,
     'shared-workspaces': <Users size={16} strokeWidth={2} />,
+    'private-chat': <Send size={16} strokeWidth={2} />,
     sources: <Database size={16} strokeWidth={2} />,
     migration: <ArrowRightLeft size={16} strokeWidth={2} />,
     organization: <Building2 size={16} strokeWidth={2} />,
@@ -128,6 +131,7 @@ function sidebarNavLabel(id: string, t: (key: string) => string): string {
         automation: 'Automated Reports',
         collaboration: 'Collaboration',
         'shared-workspaces': 'Shared Workspaces',
+        'private-chat': 'Personal Chat',
         sources: 'Data Connectors',
         migration: 'Data Migration',
         organization: 'Organization & RBAC',

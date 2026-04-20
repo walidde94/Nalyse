@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from '../common/Logo';
-import { Search, Bell, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint, Compass, Command, MessageCircle, AtSign } from 'lucide-react';
+import { Search, Bell, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint, Compass, Command, MessageCircle, AtSign, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
@@ -8,6 +8,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { UserProfile } from '../UserProfile';
 import { ArchitectNode } from './ArchitectNode';
+import { useChat } from '../../contexts/ChatContext';
 
 export type SettingsNavTab = 'profile' | 'api' | 'notifications' | 'subscription';
 
@@ -27,8 +28,10 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     
+    const { unreadCount: dmUnreadCount } = useChat();
+    
     // Toast and dropdown notification state
-    const [toastData, setToastData] = useState<{ title: string; message: string; author: any; type: 'mention' | 'message' } | null>(null);
+    const [toastData, setToastData] = useState<{ title: string; message: string; author: any; type: 'mention' | 'message' | 'dm' } | null>(null);
     const [notifications, setNotifications] = useState<any[]>([]);
 
     // Listen for real-time messages to show toast and play sound
@@ -103,8 +106,40 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             }, 8000); // 8s for more interaction time
         };
 
+        const handleDirectMessage = (e: any) => {
+            const msg = e.detail;
+            if (!msg || msg.senderId === user?.id) return;
+
+            const preview = msg.content || 'Sent an image';
+            const newNotif = {
+                id: 'dm-' + msg.id,
+                title: `Direct message from ${msg.sender.firstName || 'User'}`,
+                message: preview,
+                timestamp: new Date().toISOString(),
+                type: 'dm' as const,
+                read: false
+            };
+
+            setToastData({
+                title: newNotif.title,
+                message: newNotif.message,
+                author: msg.sender,
+                type: 'dm'
+            });
+
+            setNotifications(prev => [newNotif, ...prev].slice(0, 20));
+            
+            setTimeout(() => {
+                setToastData(current => current?.message === preview ? null : current);
+            }, 8000);
+        };
+
         window.addEventListener('workspace:new_message', handleNewMessage as EventListener);
-        return () => window.removeEventListener('workspace:new_message', handleNewMessage as EventListener);
+        window.addEventListener('chat:new_message', handleDirectMessage as EventListener);
+        return () => {
+            window.removeEventListener('workspace:new_message', handleNewMessage as EventListener);
+            window.removeEventListener('chat:new_message', handleDirectMessage as EventListener);
+        };
     }, [user?.id, onNavigate]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -312,6 +347,38 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         ))}
                     </div>
 
+                    {/* Private Chat Shortcut */}
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            className="hdr-icon-btn"
+                            onClick={() => onNavigate?.('private-chat', { title: 'Personal Chat' } as any)}
+                            title="Personal neural chats"
+                        >
+                            <Send size={16} />
+                            {dmUnreadCount > 0 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '4px',
+                                    right: '4px',
+                                    minWidth: '12px',
+                                    height: '12px',
+                                    borderRadius: '6px',
+                                    background: 'var(--primary)',
+                                    color: '#fff',
+                                    fontSize: '8px',
+                                    fontWeight: 900,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 0 6px var(--primary-glow)',
+                                    padding: '0 3px'
+                                }}>
+                                    {dmUnreadCount > 9 ? '9+' : dmUnreadCount}
+                                </div>
+                            )}
+                        </button>
+                    </div>
+
                     {/* Notifications */}
                     <div style={{ position: 'relative' }}>
                         <button
@@ -359,15 +426,21 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                         cursor: 'pointer'
                                     }}
                                     onClick={() => {
-                                        onNavigate?.('shared-workspaces', { discussion: true } as any);
+                                        if (toastData.type === 'dm') {
+                                            onNavigate?.('private-chat');
+                                        } else {
+                                            onNavigate?.('shared-workspaces', { discussion: true } as any);
+                                        }
                                         setToastData(null);
                                     }}
                                 >
-                                    <div style={{ 
-                                        width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.1)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0
+                                    <div className="ntf-toast-icon" style={{
+                                        background: toastData.type === 'mention' ? 'rgba(239, 68, 68, 0.15)' : (toastData.type === 'dm' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(99, 102, 241, 0.15)'),
+                                        color: toastData.type === 'mention' ? '#ef4444' : (toastData.type === 'dm' ? '#34d399' : '#6366f1'),
+                                        width: 32, height: 32, borderRadius: 10,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                                     }}>
-                                        {toastData.type === 'mention' ? <AtSign size={16} /> : <MessageCircle size={16} />}
+                                        {toastData.type === 'mention' ? <AtSign size={16} /> : (toastData.type === 'dm' ? <Send size={16} /> : <MessageCircle size={16} />)}
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                                         <div style={{ fontSize: 13, fontWeight: 800, color: toastData.type === 'mention' ? '#fff' : 'var(--text-primary)' }}>

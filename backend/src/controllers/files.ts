@@ -168,19 +168,19 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
 
         let query = AppDataSource.getRepository(File)
             .createQueryBuilder('file')
-            .leftJoin('analyses', 'a', 'a."fileId" = file.id AND a.status = :status', { status: 'completed' })
+            .leftJoin('analyses', 'a', 'a."file_id" = file.id AND a.status = :status', { status: 'completed' })
             .addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END', 'has_analysis')
-            .addSelect('a."completedAt"', 'analysis_completed_at');
+            .addSelect('a."completed_at"', 'analysis_completed_at');
 
         if (workspaceIds.length > 0) {
-            query = query.where('(file.ownerId = :userId OR file.workspaceId IN (:...workspaceIds))', { userId, workspaceIds });
+            query = query.where('(file."owner_id" = :userId OR file."workspace_id" IN (:...workspaceIds))', { userId, workspaceIds });
         } else {
-            query = query.where('file.ownerId = :userId', { userId });
+            query = query.where('file."owner_id" = :userId', { userId });
         }
 
         const files = await query
-            .andWhere('file.isDeleted = false')
-            .orderBy('file.createdAt', 'DESC')
+            .andWhere('file."is_deleted" = false')
+            .orderBy('file."created_at"', 'DESC')
             .getRawAndEntities();
 
         const enriched = files.entities.map((f) => {
@@ -837,9 +837,9 @@ export const cleanupFilesHandler = async (req: AuthRequest, res: Response) => {
         const oneHourAgo = new Date(Date.now() - 3600000);
 
         const junkFiles = await fileRepo.createQueryBuilder('file')
-            .where('file.ownerId = :userId', { userId })
-            .andWhere('file.isDeleted = false')
-            .andWhere('(file.isArchived = true OR (file.isProcessed = false AND file.groupId IS NULL AND file.createdAt < :oneHourAgo))', { oneHourAgo })
+            .where('file."owner_id" = :userId', { userId })
+            .andWhere('file."is_deleted" = false')
+            .andWhere('(file."is_archived" = true OR (file."is_processed" = false AND file."group_id" IS NULL AND file."created_at" < :oneHourAgo))', { oneHourAgo })
             .getMany();
 
         if (junkFiles.length === 0) {

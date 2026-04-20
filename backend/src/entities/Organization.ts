@@ -17,31 +17,31 @@ export class Organization {
     @Column({ type: 'varchar', default: 'free' })
     plan: 'free' | 'pro' | 'enterprise';
 
-    @Column({ type: 'varchar', nullable: true })
+    @Column({ name: 'stripe_customer_id', type: 'varchar', nullable: true })
     stripeCustomerId: string | null;
 
-    @Column({ type: 'varchar', nullable: true })
+    @Column({ name: 'stripe_subscription_id', type: 'varchar', nullable: true })
     stripeSubscriptionId: string | null;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ name: 'subscription_started_at', type: 'timestamp', nullable: true })
     subscriptionStartedAt: Date | null;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ name: 'current_period_end', type: 'timestamp', nullable: true })
     currentPeriodEnd: Date | null;
 
-    @Column({ type: 'boolean', default: false })
+    @Column({ name: 'cancel_at_period_end', type: 'boolean', default: false })
     cancelAtPeriodEnd: boolean;
 
-    @Column({ type: 'bigint', default: 0 })
+    @Column({ name: 'storage_used', type: 'bigint', default: 0 })
     storageUsed: number;
 
-    @Column({ type: 'bigint', default: 104857600 }) // 100MB default for free plan
+    @Column({ name: 'storage_limit', type: 'bigint', default: 104857600 }) // 100MB default for free plan
     storageLimit: number;
 
-    @Column({ type: 'int', default: 1 })
+    @Column({ name: 'user_limit', type: 'int', default: 1 })
     userLimit: number;
 
-    @Column({ type: 'int', default: 5 })
+    @Column({ name: 'file_limit', type: 'int', default: 5 })
     fileLimit: number;
 
     @OneToMany(() => User, user => user.organization)
@@ -53,13 +53,13 @@ export class Organization {
     @OneToMany(() => Dashboard, dashboard => dashboard.organization)
     dashboards: Dashboard[];
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 
-    @Column({ default: true })
+    @Column({ name: 'is_active', default: true })
     isActive: boolean;
 
     @BeforeInsert()
