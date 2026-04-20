@@ -1178,6 +1178,8 @@ function AppContent() {
               'Settings',
               options?.settingsTab ? { initialTab: options.settingsTab } : undefined
             );
+          } else if (path === 'shared-workspaces') {
+             openTab('shared-workspaces', 'Shared Workspaces', options);
           }
         }}
       />
@@ -1345,6 +1347,7 @@ function AppContent() {
                   <SharedWorkspacesView 
                     onOpenFile={handleAnalyzeFile} 
                     onOpenDashboard={() => openTab('dashboard', 'Dashboard')}
+                    initialTab={tab.data?.discussion ? 'discussion' : 'team'}
                   />
                 )}
 

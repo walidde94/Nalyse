@@ -100,12 +100,12 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 setToastData(current => {
                     return current?.message === preview ? null : current;
                 });
-            }, 6000);
+            }, 8000); // 8s for more interaction time
         };
 
         window.addEventListener('workspace:new_message', handleNewMessage as EventListener);
         return () => window.removeEventListener('workspace:new_message', handleNewMessage as EventListener);
-    }, [user?.id]);
+    }, [user?.id, onNavigate]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -358,7 +358,10 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                         boxShadow: toastData.type === 'mention' ? '0 10px 40px -10px rgba(139, 92, 246, 0.5)' : 'var(--shadow-xl)',
                                         cursor: 'pointer'
                                     }}
-                                    onClick={() => setToastData(null)}
+                                    onClick={() => {
+                                        onNavigate?.('shared-workspaces', { discussion: true } as any);
+                                        setToastData(null);
+                                    }}
                                 >
                                     <div style={{ 
                                         width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.1)',
@@ -418,13 +421,23 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                         </div>
                                     ) : (
                                         notifications.map(n => (
-                                            <div key={n.id} style={{
-                                                display: 'flex', gap: '10px', padding: '10px', borderRadius: '10px',
-                                                background: n.read ? 'transparent' : 'var(--bg-surface)',
-                                                border: `1px solid ${n.read ? 'transparent' : 'var(--border-subtle)'}`,
-                                                opacity: n.read ? 0.7 : 1,
-                                                transition: 'all 0.2s'
-                                            }}>
+                                            <div 
+                                                key={n.id} 
+                                                onClick={() => {
+                                                    if (n.type === 'message' || n.type === 'mention') {
+                                                        onNavigate?.('shared-workspaces', { discussion: true } as any);
+                                                    }
+                                                    setShowNotifications(false);
+                                                }}
+                                                style={{
+                                                    display: 'flex', gap: '10px', padding: '10px', borderRadius: '10px',
+                                                    background: n.read ? 'transparent' : 'var(--bg-surface)',
+                                                    border: `1px solid ${n.read ? 'transparent' : 'var(--border-subtle)'}`,
+                                                    opacity: n.read ? 0.7 : 1,
+                                                    transition: 'all 0.2s',
+                                                    cursor: (n.type === 'message' || n.type === 'mention') ? 'pointer' : 'default'
+                                                }}
+                                            >
                                                 <div style={{
                                                     width: '30px', height: '30px', borderRadius: '8px', 
                                                     background: n.type === 'mention' ? 'rgba(139, 92, 246, 0.12)' : 'rgba(59, 130, 246, 0.12)',

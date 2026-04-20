@@ -987,7 +987,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
-export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFile?: (file: any) => void, onOpenDashboard?: () => void }) => {
+export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }: { onOpenFile?: (file: any) => void, onOpenDashboard?: () => void, initialTab?: TabId }) => {
     const { token, user } = useAuth();
     const { workspaces, refreshWorkspaces, activeUsers, activityFeed } = useWorkspace();
 
@@ -1001,7 +1001,14 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard }: { onOpenFi
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
-    const [activeTab, setActiveTab] = useState<TabId>('team');
+    const [activeTab, setActiveTab] = useState<TabId>(initialTab || 'team');
+
+    // Sync internal tab if prop changes externally
+    useEffect(() => {
+        if (initialTab) {
+            setActiveTab(initialTab);
+        }
+    }, [initialTab]);
     const [showShareModal, setShowShareModal] = useState(false);
     const [memberSearch, setMemberSearch] = useState('');
     const [shareLink, setShareLink] = useState<string | null>(null);
