@@ -12,21 +12,21 @@ model Organization {
   id                    String           @id @default(uuid())
   name                  String           @unique
   slug                  String?          @unique
-  subscriptionTier      String           @default("free")
+  subscriptionTier      String           @default("free") @map("subscription_tier")
   plan                  String           @default("free")
-  stripeCustomerId      String?
-  stripeSubscriptionId  String?
-  subscriptionStartedAt DateTime?
-  currentPeriodEnd      DateTime?
-  cancelAtPeriodEnd     Boolean          @default(false)
-  storageUsed           BigInt           @default(0)
-  storageLimit          BigInt           @default(104857600)
-  userLimit             Int              @default(1)
-  fileLimit             Int              @default(5)
-  maxUsers              Int              @default(5)
-  isActive              Boolean          @default(true)
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
+  stripeCustomerId      String?          @map("stripe_customer_id")
+  stripeSubscriptionId  String?          @map("stripe_subscription_id")
+  subscriptionStartedAt DateTime?        @map("subscription_started_at")
+  currentPeriodEnd      DateTime?        @map("current_period_end")
+  cancelAtPeriodEnd     Boolean          @default(false) @map("cancel_at_period_end")
+  storageUsed           BigInt           @default(0) @map("storage_used")
+  storageLimit          BigInt           @default(104857600) @map("storage_limit")
+  userLimit             Int              @default(1) @map("user_limit")
+  fileLimit             Int              @default(5) @map("file_limit")
+  maxUsers              Int              @default(5) @map("max_users")
+  isActive              Boolean          @default(true) @map("is_active")
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
   dashboards            Dashboard[]
   files                 File[]
   reports               Report[]
@@ -42,27 +42,27 @@ model Organization {
 model User {
   id                      String                  @id @default(uuid())
   email                   String                  @unique
-  passwordHash            String
-  firstName               String?
-  lastName                String?
+  passwordHash            String                  @map("password_hash")
+  firstName               String?                 @map("first_name")
+  lastName                String?                 @map("last_name")
   role                    String                  @default("member")
   plan                    String                  @default("free")
-  isActive                Boolean                 @default(true)
+  isActive                Boolean                 @default(true) @map("is_active")
   bio                     String?
-  displayName             String?
-  avatarUrl               String?
-  stripeCustomerId        String?
-  subscriptionStatus      String                  @default("inactive")
-  lastLoginAt             DateTime?
-  organizationId          String?
-  emailVerified           Boolean                 @default(false)
-  emailVerificationToken  String?
-  passwordResetToken      String?
-  passwordResetExpires    DateTime?
-  notificationPreferences Json?                   @default("{}")
-  apiKeys                 Json?                   @default("[]")
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
+  displayName             String?                 @map("display_name")
+  avatarUrl               String?                 @map("avatar_url")
+  stripeCustomerId        String?                 @map("stripe_customer_id")
+  subscriptionStatus      String                  @default("inactive") @map("subscription_status")
+  lastLoginAt             DateTime?               @map("last_login_at")
+  organizationId          String?                 @map("organization_id")
+  emailVerified           Boolean                 @default(false) @map("email_verified")
+  emailVerificationToken  String?                 @map("email_verification_token")
+  passwordResetToken      String?                 @map("password_reset_token")
+  passwordResetExpires    DateTime?               @map("password_reset_expires")
+  notificationPreferences Json?                   @default("{}") @map("notification_preferences")
+  apiKeys                 Json?                   @default("[]") @map("api_keys")
+  createdAt               DateTime                @default(now()) @map("created_at")
+  updatedAt               DateTime                @updatedAt @map("updated_at")
   agents                  Agent[]
   analyses                Analysis[]
   analysisConfigs         AnalysisConfiguration[]
@@ -85,26 +85,26 @@ model User {
 model File {
   id             String        @id @default(uuid())
   filename       String
-  originalName   String?
-  mimeType       String?
+  originalName   String?       @map("original_name")
+  mimeType       String?       @map("mime_type")
   size           BigInt        @default(0)
   path           String?
-  s3Key          String?
-  s3Bucket       String?
-  groupId        String?
+  s3Key          String?       @map("s3_key")
+  s3Bucket       String?       @map("s3_bucket")
+  groupId        String?       @map("group_id")
   metadata       Json?
   checksum       String?
   status         String        @default("ready")
-  isFavorite     Boolean       @default(false)
-  isDeleted      Boolean       @default(false)
-  isProcessed    Boolean       @default(false)
-  isArchived     Boolean       @default(false)
-  processedAt    DateTime?
-  ownerId        String
-  organizationId String?
-  workspaceId    String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  isFavorite     Boolean       @default(false) @map("is_favorite")
+  isDeleted      Boolean       @default(false) @map("is_deleted")
+  isProcessed    Boolean       @default(false) @map("is_processed")
+  isArchived     Boolean       @default(false) @map("is_archived")
+  processedAt    DateTime?     @map("processed_at")
+  ownerId        String        @map("owner_id")
+  organizationId String?       @map("organization_id")
+  workspaceId    String?       @map("workspace_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
   analyses       Analysis[]
   group          Group?        @relation(fields: [groupId], references: [id])
   organization   Organization? @relation(fields: [organizationId], references: [id])
@@ -117,17 +117,17 @@ model File {
 
 model Analysis {
   id               String    @id @default(uuid())
-  fileId           String
-  createdById      String
+  fileId           String    @map("file_id")
+  createdById      String    @map("created_by_id")
   status           String    @default("pending")
   results          Json?
   insights         Json?
   statistics       Json?
-  errorMessage     String?
-  processingTimeMs Int?
-  completedAt      DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  errorMessage     String?   @map("error_message")
+  processingTimeMs Int?      @map("processing_time_ms")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
   createdBy        User      @relation(fields: [createdById], references: [id])
   file             File      @relation(fields: [fileId], references: [id])
 
@@ -138,12 +138,12 @@ model Report {
   id             String        @id @default(uuid())
   title          String
   config         Json
-  userId         String
-  organizationId String?
-  shareToken     String?       @unique
-  isPublic       Boolean       @default(false)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  userId         String        @map("user_id")
+  organizationId String?       @map("organization_id")
+  shareToken     String?       @unique @map("share_token")
+  isPublic       Boolean       @default(false) @map("is_public")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User          @relation(fields: [userId], references: [id])
 
@@ -152,24 +152,24 @@ model Report {
 
 model Notification {
   id             String   @id @default(uuid())
-  userId         String
-  organizationId String?
+  userId         String   @map("user_id")
+  organizationId String?  @map("organization_id")
   title          String
   message        String
   category       String   @default("info")
   priority       String   @default("medium")
   source         String   @default("SYSTEM")
-  iconType       String   @default("bell")
+  iconType       String   @default("bell") @map("icon_type")
   color          String   @default("#6366f1")
-  actionLabel    String?
-  actionUrl      String?
+  actionLabel    String?  @map("action_label")
+  actionUrl      String?  @map("action_url")
   prediction     String?
   confidence     Float?
-  impactScore    Float?
+  impactScore    Float?   @map("impact_score")
   metadata       Json     @default("{}")
   read           Boolean  @default(false)
   pinned         Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  createdAt      DateTime @default(now()) @map("created_at")
   user           User     @relation(fields: [userId], references: [id])
 
   @@map("notifications")
@@ -180,11 +180,11 @@ model UserInvitation {
   email          String
   role           String       @default("member")
   token          String       @unique
-  organizationId String
-  inviterId      String
-  expiresAt      DateTime
+  organizationId String       @map("organization_id")
+  inviterId      String       @map("inviter_id")
+  expiresAt      DateTime     @map("expires_at")
   status         String       @default("pending")
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime     @default(now()) @map("created_at")
   inviter        User         @relation("invitedBy", fields: [inviterId], references: [id])
   organization   Organization @relation(fields: [organizationId], references: [id])
 
@@ -196,12 +196,12 @@ model AnalysisConfiguration {
   name        String
   description String?
   mode        String   @default("standard")
-  isPreset    Boolean  @default(false)
-  isBuiltIn   Boolean  @default(false)
+  isPreset    Boolean  @default(false) @map("is_preset")
+  isBuiltIn   Boolean  @default(false) @map("is_built_in")
   config      Json
-  ownerId     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  ownerId     String?  @map("owner_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   owner       User?    @relation(fields: [ownerId], references: [id])
 
   @@map("analysis_configurations")
@@ -210,16 +210,16 @@ model AnalysisConfiguration {
 model Schedule {
   id              String       @id @default(uuid())
   name            String
-  cronExpression  String
-  targetFileId    String?
+  cronExpression  String       @map("cron_expression")
+  targetFileId    String?      @map("target_file_id")
   config          Json?
-  isActive        Boolean      @default(true)
-  organizationId  String
-  createdByUserId String
-  lastRun         DateTime?
-  nextRun         DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  isActive        Boolean      @default(true) @map("is_active")
+  organizationId  String       @map("organization_id")
+  createdByUserId String       @map("created_by_user_id")
+  lastRun         DateTime?    @map("last_run")
+  nextRun         DateTime?    @map("next_run")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
   createdBy       User         @relation(fields: [createdByUserId], references: [id])
   organization    Organization @relation(fields: [organizationId], references: [id])
   targetFile      File?        @relation(fields: [targetFileId], references: [id])
@@ -233,11 +233,11 @@ model Webhook {
   url             String
   secret          String?
   events          Json         @default("[\"analysis.completed\"]")
-  isActive        Boolean      @default(true)
-  organizationId  String
-  createdByUserId String
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  isActive        Boolean      @default(true) @map("is_active")
+  organizationId  String       @map("organization_id")
+  createdByUserId String       @map("created_by_user_id")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
   createdBy       User         @relation(fields: [createdByUserId], references: [id])
   organization    Organization @relation(fields: [organizationId], references: [id])
 
@@ -248,12 +248,12 @@ model Dashboard {
   id             String        @id @default(uuid())
   name           String
   panels         Json          @default("[]")
-  gridLayout     Json          @default("[]")
-  userId         String
-  organizationId String?
-  workspaceId    String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  gridLayout     Json          @default("[]") @map("grid_layout")
+  userId         String        @map("user_id")
+  organizationId String?       @map("organization_id")
+  workspaceId    String?       @map("workspace_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User          @relation(fields: [userId], references: [id])
   workspace      Workspace?    @relation(fields: [workspaceId], references: [id])
@@ -264,8 +264,8 @@ model Dashboard {
 model Workspace {
   id             String             @id @default(uuid())
   name           String
-  organizationId String
-  createdAt      DateTime           @default(now())
+  organizationId String             @map("organization_id")
+  createdAt      DateTime           @default(now()) @map("created_at")
   auditLogs      AuditLog[]
   dashboards     Dashboard[]
   files          File[]
@@ -278,26 +278,26 @@ model Workspace {
 
 model WorkspaceMember {
   id          String    @id @default(uuid())
-  workspaceId String
-  userId      String
+  workspaceId String    @map("workspace_id")
+  userId      String    @map("user_id")
   role        String    @default("editor")
   user        User      @relation(fields: [userId], references: [id])
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  @@unique([workspaceId, userId])
+  @@unique([workspaceId, userId], name: "workspaceId_userId")
   @@map("workspace_members")
 }
 
 model WorkspaceMessage {
   id          String             @id @default(uuid())
-  workspaceId String
-  authorId    String
+  workspaceId String             @map("workspace_id")
+  authorId    String             @map("author_id")
   content     String
-  replyToId   String?
+  replyToId   String?            @map("reply_to_id")
   mentions    String[]           @default([])
   reactions   Json?              @default("[]")
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
   author      User               @relation(fields: [authorId], references: [id])
   replyTo     WorkspaceMessage?  @relation("MessageReplies", fields: [replyToId], references: [id])
   replies     WorkspaceMessage[] @relation("MessageReplies")
@@ -308,12 +308,12 @@ model WorkspaceMessage {
 
 model AuditLog {
   id          String    @id @default(uuid())
-  workspaceId String
-  userId      String
+  workspaceId String    @map("workspace_id")
+  userId      String    @map("user_id")
   action      String
-  entityId    String?
+  entityId    String?   @map("entity_id")
   details     Json?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @map("created_at")
   user        User      @relation(fields: [userId], references: [id])
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 

@@ -89,7 +89,12 @@ router.get('/:id/activity', authenticate, async (req: any, res: any) => {
 
         res.json(logs);
     } catch (error: any) {
-        console.error('Error fetching activity:', error);
+        console.error('Error fetching activity:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            meta: error.meta
+        });
         res.status(500).json({ 
             error: 'Failed to fetch activity',
             details: error.message 
@@ -449,9 +454,17 @@ router.get('/:id/messages', authenticate, async (req: any, res: any) => {
             messages: messages.reverse(),
             nextCursor: messages.length === limit ? messages[0]?.id : null
         });
-    } catch (error) {
-        console.error('Error fetching workspace messages:', error);
-        res.status(500).json({ error: 'Failed to fetch messages' });
+    } catch (error: any) {
+        console.error('Error fetching workspace messages:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            meta: error.meta
+        });
+        res.status(500).json({ 
+            error: 'Failed to fetch messages',
+            details: error.message
+        });
     }
 });
 
@@ -529,9 +542,16 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
 
         res.status(201).json(message);
     } catch (error: any) {
-        console.error('Error sending workspace message:', error);
-        // require('fs').writeFileSync('./scratch_debug.log', error.stack || error.toString()); // Removed hardcoded local path
-        res.status(500).json({ error: 'Failed to send message' });
+        console.error('Error sending workspace message:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            meta: error.meta
+        });
+        res.status(500).json({ 
+            error: 'Failed to send message',
+            details: error.message
+        });
     }
 });
 
