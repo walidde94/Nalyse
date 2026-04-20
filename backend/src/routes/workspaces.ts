@@ -563,6 +563,67 @@ router.delete('/:id/messages/:messageId', authenticate, async (req: any, res: an
     }
 });
 
+// Add/Toggle reaction on a message
+router.post('/:id/messages/:messageId/react', authenticate, async (req: any, res: any) => {
+    try {
+        const { id: workspaceId, messageId } = req.params;
+        const { emoji } = req.body;
+        const userId = req.user.userId || req.user.id;
+
+        if (!emoji) return res.status(400).json({ error: 'Emoji is required' });
+
+        const member = await prisma.workspaceMember.findUnique({
+            where: { workspaceId_userId: { workspaceId, userId } }
+        });
+        if (!member) return res.status(403).json({ error: 'Not a member of this workspace' });
+
+        const message = await prisma.workspaceMessage.findUnique({
+            where: { id: messageId }
+        });
+        if (!message || message.workspaceId !== workspaceId) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        let reactions = (message.reactions as any[]) || [];
+        const existingEmojiIndex = reactions.findIndex(r => r.emoji === emoji);
+
+        if (existingEmojiIndex > -1) {
+            const userIndex = reactions[existingEmojiIndex].userIds.indexOf(userId);
+            if (userIndex > -1) {
+                // Remove user from this emoji (Toggle off)
+                reactions[existingEmojiIndex].userIds.splice(userIndex, 1);
+                // If no more users, remove the emoji entry entirely
+                if (reactions[existingEmojiIndex].userIds.length === 0) {
+                    reactions.splice(existingEmojiIndex, 1);
+                }
+            } else {
+                // Add user to existing emoji
+                reactions[existingEmojiIndex].userIds.push(userId);
+            }
+        } else {
+            // New emoji reaction
+            reactions.push({ emoji, userIds: [userId] });
+        }
+
+        const updated = await prisma.workspaceMessage.update({
+            where: { id: messageId },
+            data: { reactions },
+            include: {
+                author: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } },
+                replyTo: { select: { id: true, content: true, author: { select: { displayName: true, email: true } } } }
+            }
+        });
+
+        // Broadcast updated message to all members to trigger refresh
+        broadcastMessage(workspaceId, updated);
+
+        res.json(updated);
+    } catch (error) {
+        console.error('Error toggling reaction:', error);
+        res.status(500).json({ error: 'Failed to toggle reaction' });
+    }
+});
+
 // GET workspace members for @mention autocomplete
 router.get('/:id/mentionable-users', authenticate, async (req: any, res: any) => {
     try {

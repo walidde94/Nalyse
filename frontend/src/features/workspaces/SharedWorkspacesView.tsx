@@ -8,7 +8,7 @@ import {
     Share2, ChevronRight, Activity, Database, Lock, Unlock, X,
     CheckCircle2, AlertTriangle, Layers, Zap, Globe, Upload, Download,
     UserCheck, Crown, Edit3, FileJson, HardDrive, TrendingUp, Sparkles,
-    MessageCircle, AtSign, Send, Link, Copy, Check, Reply, File, BarChart2, LineChart
+    MessageCircle, AtSign, Send, Link, Copy, Check, Reply, File, BarChart2, LineChart, Smile
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -71,6 +71,7 @@ interface WorkspaceMessage {
         content: string;
         author: { id: string; email: string; displayName?: string; firstName?: string; lastName?: string; avatarUrl?: string };
     } | null;
+    reactions?: { emoji: string; userIds: string[] }[];
 }
 
 interface MentionableUser {
@@ -354,6 +355,8 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
     const [fileMentionQuery, setFileMentionQuery] = useState<string | null>(null);
     const [mentionFileIdx, setMentionFileIdx] = useState(0);
 
+    const [activeEmojiPicker, setActiveEmojiPicker] = useState<string | null>(null);
+
     const [cursorPos, setCursorPos] = useState(0);
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [hasNewMessages, setHasNewMessages] = useState(false);
@@ -541,6 +544,22 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
             }
         } catch (e) { console.error(e); }
         finally { setSending(false); }
+    };
+
+    const handleReact = async (messageId: string, emoji: string) => {
+        try {
+            const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}/messages/${messageId}/react`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ emoji })
+            });
+            if (res.ok) {
+                onRefresh();
+                setActiveEmojiPicker(null);
+            }
+        } catch (e) {
+            console.error('Failed to react', e);
+        }
     };
 
     // Render message content with highlighted @mentions and #files
@@ -732,12 +751,18 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                                 transition: 'all 0.2s', marginLeft: mentionsMe ? '-15px' : '0'
                                             }}
                                         >
-                                            {/* Hover Reply Button */}
+                                            {/* Hover Toolbar */}
                                             <div className="opacity-0 group-hover:opacity-100 transition-opacity" style={{
                                                 position: 'absolute', right: -10, top: -5, background: 'var(--bg-elevated)',
-                                                border: '1px solid var(--border-subtle)', borderRadius: 10, padding: 4, zIndex: 10,
-                                                boxShadow: 'var(--shadow-lg)'
+                                                border: '1px solid var(--border-subtle)', borderRadius: 10, padding: '2px 4px', zIndex: 10,
+                                                boxShadow: 'var(--shadow-lg)', display: 'flex', alignItems: 'center', gap: 2
                                             }}>
+                                                <button onClick={() => setActiveEmojiPicker(activeEmojiPicker === msg.id ? null : msg.id)} style={{
+                                                    background: 'none', border: 'none', color: 'var(--text-secondary)',
+                                                    cursor: 'pointer', padding: 6, borderRadius: 6
+                                                }}>
+                                                    <Smile size={16} />
+                                                </button>
                                                 <button onClick={() => setReplyingTo(msg)} style={{
                                                     background: 'none', border: 'none', color: 'var(--text-secondary)',
                                                     cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center',
@@ -746,6 +771,37 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                                     <Reply size={14} /> Reply
                                                 </button>
                                             </div>
+
+                                            {/* Emoji Picker Popover */}
+                                            <AnimatePresence>
+                                                {activeEmojiPicker === msg.id && (
+                                                    <motion.div 
+                                                        initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                                                        style={{
+                                                            position: 'absolute', right: 20, top: -45, zIndex: 100,
+                                                            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+                                                            borderRadius: 14, padding: '8px 10px', boxShadow: 'var(--shadow-xl)',
+                                                            display: 'flex', gap: 6
+                                                        }}
+                                                    >
+                                                        {['👍', '❤️', '🔥', '🚀', '👏', '😂', '😮', '🙏'].map(emoji => (
+                                                            <button 
+                                                                key={emoji}
+                                                                onClick={() => handleReact(msg.id, emoji)}
+                                                                style={{
+                                                                    background: 'none', border: 'none', cursor: 'pointer',
+                                                                    fontSize: 20, padding: 4, borderRadius: 8, transition: 'all 0.2s'
+                                                                }}
+                                                                className="hover:bg-white/10"
+                                                            >
+                                                                {emoji}
+                                                            </button>
+                                                        ))}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
 
                                             <div style={{ width: 32, flexShrink: 0, marginTop: showAvatar ? (msg.replyTo ? 28 : 0) : 28 }}>
                                                 {showAvatar && <UserAvatar user={msg.author} size={32} />}
@@ -794,6 +850,33 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                                 }}>
                                                     {renderContent(msg.content)}
                                                 </div>
+
+                                                {/* Reactions List */}
+                                                {(msg.reactions && msg.reactions.length > 0) && (
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                                                        {msg.reactions.map(r => {
+                                                            const hasReacted = r.userIds.includes(user?.id);
+                                                            return (
+                                                                <button
+                                                                    key={r.emoji}
+                                                                    onClick={() => handleReact(msg.id, r.emoji)}
+                                                                    style={{
+                                                                        display: 'flex', alignItems: 'center', gap: 4,
+                                                                        padding: '4px 8px', borderRadius: 10, fontSize: 12,
+                                                                        background: hasReacted ? 'rgba(139,92,246,0.15)' : 'var(--bg-app)',
+                                                                        border: `1px solid ${hasReacted ? 'rgba(139,92,246,0.3)' : 'var(--border-subtle)'}`,
+                                                                        color: hasReacted ? '#a78bfa' : 'var(--text-secondary)',
+                                                                        cursor: 'pointer', transition: 'all 0.2s',
+                                                                        fontWeight: hasReacted ? 700 : 500
+                                                                    }}
+                                                                >
+                                                                    <span>{r.emoji}</span>
+                                                                    <span style={{ fontSize: 10 }}>{r.userIds.length}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </React.Fragment>
