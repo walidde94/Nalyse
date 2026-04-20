@@ -588,7 +588,11 @@ export const PrivateChatView: React.FC = () => {
                                                                         onError={() => {
                                                                             setBrokenImageIds(prev => new Set(prev).add(msg.id));
                                                                         }}
-                                                                        onClick={() => window.open(msg.imageUrl.startsWith('http') ? msg.imageUrl : `${API_URL}${msg.imageUrl}`, '_blank')}
+                                                                        onClick={() => {
+                                                                            if (!msg.imageUrl) return;
+                                                                            const url = msg.imageUrl.startsWith('http') ? msg.imageUrl : `${API_URL}${msg.imageUrl}`;
+                                                                            window.open(url, '_blank');
+                                                                        }}
                                                                     />
                                                                 )
                                                             )}
