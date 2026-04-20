@@ -116,9 +116,51 @@ function AppContent() {
   // --- Global State ---
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
 
-  // Tab State
-  const [tabs, setTabs] = useState<TabType[]>([{ id: 'landing', title: 'Home', type: 'landing' }]);
-  const [activeTabId, setActiveTabId] = useState('landing');
+  // --- Persistent Tab State ---
+  const [tabs, setTabs] = useState<TabType[]>(() => {
+    const stored = localStorage.getItem('tabs-initial');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return [{ id: 'landing', title: 'Home', type: 'landing' }];
+  });
+  const [activeTabId, setActiveTabId] = useState(() => localStorage.getItem('activeTab-initial') || 'landing');
+
+  // Load user-specific tabs when auth state resolves
+  useEffect(() => {
+    const userTabsKey = user?.id ? `tabs-${user.id}` : 'tabs-initial';
+    const userActiveTabKey = user?.id ? `activeTab-${user.id}` : 'activeTab-initial';
+    
+    const storedTabs = localStorage.getItem(userTabsKey);
+    const storedActiveTab = localStorage.getItem(userActiveTabKey);
+
+    if (storedTabs) {
+      try {
+        const parsed = JSON.parse(storedTabs);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTabs(parsed);
+          if (storedActiveTab) setActiveTabId(storedActiveTab);
+        }
+      } catch (e) {}
+    }
+  }, [user?.id]);
+
+  // Persist tabs on change
+  useEffect(() => {
+    const userTabsKey = user?.id ? `tabs-${user.id}` : 'tabs-initial';
+    const userActiveTabKey = user?.id ? `activeTab-${user.id}` : 'activeTab-initial';
+
+    // We use timeout to avoid excessive writes if tabs are changing rapidly
+    const timeout = setTimeout(() => {
+        localStorage.setItem(userTabsKey, JSON.stringify(tabs));
+        localStorage.setItem(userActiveTabKey, activeTabId);
+    }, 500);
+    
+    return () => clearTimeout(timeout);
+  }, [tabs, activeTabId, user?.id]);
 
   // Files State (Shared across tabs)
   const [files, setFiles] = useState<FileData[]>([]);
@@ -135,7 +177,6 @@ function AppContent() {
 
   // --- Theme State ---
   const [theme, setTheme] = useState<'dark' | 'light' | 'midnight'>(() => {
-    // Initial read won't have auth state resolved yet, fallback to generic
     return (localStorage.getItem('theme') as 'dark' | 'light' | 'midnight') || 'dark';
   });
 
