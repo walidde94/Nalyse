@@ -32,6 +32,26 @@ else
     sleep 3
 fi
 
+# Check if Redis is installed
+echo -e "\n${YELLOW}[2.5/5] Checking Redis...${NC}"
+if command -v redis-cli &> /dev/null; then
+    echo -e "${GREEN}✅ Redis is installed${NC}"
+else
+    echo -e "${RED}❌ Redis not found${NC}"
+    echo -e "${YELLOW}Installing Redis...${NC}"
+    brew install redis
+    brew services start redis
+fi
+
+# Check if Redis is running
+if redis-cli ping &> /dev/null; then
+    echo -e "${GREEN}✅ Redis is running${NC}"
+else
+    echo -e "${YELLOW}Starting Redis...${NC}"
+    brew services start redis
+    sleep 2
+fi
+
 # Create database
 echo -e "\n${YELLOW}[3/5] Creating database...${NC}"
 if psql -lqt | cut -d \| -f 1 | grep -qw nalyse_dev; then

@@ -10,12 +10,21 @@ if (process.env.REDIS_URL) {
     connection = new Redis(process.env.REDIS_URL, {
         maxRetriesPerRequest: null,
         enableOfflineQueue: false,
+        lazyConnect: true,
+        connectTimeout: 5000,
         retryStrategy(times) {
             if (times > 3) return null;
             return Math.min(times * 200, 2000);
         }
     }) as any;
-    (connection as Redis).on('error', () => { /* silently ignore */ });
+    (connection as Redis).on('error', () => { /* silently ignore in dev */ });
+    
+    // Non-blocking connection attempt
+    (connection as Redis).connect().catch(() => {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('[Automation] Running without Redis background worker (local dev).');
+        }
+    });
 }
 
 // Only create Queue and Worker if Redis is available

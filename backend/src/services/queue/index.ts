@@ -8,17 +8,44 @@ let connection: Redis | null = null;
 let redisAvailable = false;
 
 // Only attempt connection if REDIS_URL is explicitly set (i.e. Redis is expected to be available)
+const isOptional = process.env.NODE_ENV === 'development';
+
 if (process.env.REDIS_URL) {
-    connection = new Redis(redisUrl, {
-        maxRetriesPerRequest: null,
-        enableOfflineQueue: false,
-        retryStrategy(times) {
-            if (times > 3) return null;
-            return Math.min(times * 200, 2000);
-        }
-    });
-    connection.on('error', () => { /* silently ignore */ });
-    connection.on('ready', () => { redisAvailable = true; });
+    try {
+        connection = new Redis(redisUrl, {
+            maxRetriesPerRequest: null,
+            enableOfflineQueue: false,
+            lazyConnect: true, // Don't connect immediately
+            connectTimeout: 5000,
+            retryStrategy(times) {
+                if (times > 3) {
+                    if (isOptional) console.warn('[Queue] Redis connection failed. Running without background worker.');
+                    return null;
+                }
+                return Math.min(times * 200, 2000);
+            }
+        });
+
+        connection.on('error', (err) => {
+            if (isOptional) {
+                // Silently handle connection errors in dev mode
+                return;
+            }
+            console.error('[Queue] Redis Error:', err.message);
+        });
+
+        connection.on('ready', () => { 
+            redisAvailable = true;
+            console.log('✅ [Queue] Redis connection established.');
+        });
+        
+        // Attempt to connect but don't block
+        connection.connect().catch(() => {
+            if (!isOptional) console.error('[Queue] Failed to connect to Redis.');
+        });
+    } catch (err) {
+        console.warn('[Queue] Redis initialization failed:', err);
+    }
 }
 
 export interface IJobData {
