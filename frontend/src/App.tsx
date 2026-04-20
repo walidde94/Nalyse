@@ -139,53 +139,6 @@ function AppContent() {
     return (localStorage.getItem('theme') as 'dark' | 'light' | 'midnight') || 'dark';
   });
 
-  // Persistence Handling
-  const isTabsLoadedRef = useRef(false);
-
-  // Sync Tabs from Storage
-  useEffect(() => {
-    if (isAuthenticated && user?.id && !isTabsLoadedRef.current) {
-      const tabsKey = `nalyse_tabs_${user.id}`;
-      const activeTabKey = `nalyse_active_tab_${user.id}`;
-      
-      const storedTabs = localStorage.getItem(tabsKey);
-      const storedActive = localStorage.getItem(activeTabKey);
-
-      if (storedTabs) {
-        try {
-          const parsed = JSON.parse(storedTabs);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTabs(parsed);
-            if (storedActive && parsed.some((t: any) => t.id === storedActive)) {
-              setActiveTabId(storedActive);
-            } else {
-              setActiveTabId(parsed[parsed.length - 1].id);
-            }
-          }
-        } catch (e) {
-          console.error('Failed to restore persistent tabs:', e);
-        }
-      }
-      isTabsLoadedRef.current = true;
-    }
-    
-    // Clear tabs on logout to prevent state bleed
-    if (!isAuthenticated) {
-      isTabsLoadedRef.current = false;
-    }
-  }, [isAuthenticated, user?.id]);
-
-  // Persist Tabs to Storage
-  useEffect(() => {
-    // Only persist if we've successfully loaded or decided we have nothing to load (isTabsLoadedRef.current is true)
-    if (isTabsLoadedRef.current && isAuthenticated && user?.id) {
-      const tabsKey = `nalyse_tabs_${user.id}`;
-      const activeTabKey = `nalyse_active_tab_${user.id}`;
-      
-      localStorage.setItem(tabsKey, JSON.stringify(tabs));
-      localStorage.setItem(activeTabKey, activeTabId);
-    }
-  }, [tabs, activeTabId, isAuthenticated, user?.id]);
 
   // Reload theme when user changes
   useEffect(() => {
