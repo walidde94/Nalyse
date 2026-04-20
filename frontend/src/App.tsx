@@ -117,8 +117,24 @@ function AppContent() {
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
 
   // Tab State
-  const [tabs, setTabs] = useState<TabType[]>([{ id: 'landing', title: 'Home', type: 'landing' }]);
-  const [activeTabId, setActiveTabId] = useState('landing');
+  const [tabs, setTabs] = useState<TabType[]>(() => {
+    const saved = localStorage.getItem(user?.id ? `tabs-${user.id}` : 'tabs');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error('Failed to parse saved tabs', e);
+      }
+    }
+    return [{ id: 'landing', title: 'Home', type: 'landing' }];
+  });
+
+  const [activeTabId, setActiveTabId] = useState(() => {
+    const saved = localStorage.getItem(user?.id ? `activeTabId-${user.id}` : 'activeTabId');
+    if (saved) return saved;
+    return 'landing';
+  });
 
   // Files State (Shared across tabs)
   const [files, setFiles] = useState<FileData[]>([]);
@@ -234,6 +250,14 @@ function AppContent() {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [isAuthenticated, addToast, syncSubscription]);
+
+  // Persist tabs and active tab
+  useEffect(() => {
+    const tabsKey = user?.id ? `tabs-${user.id}` : 'tabs';
+    const activeKey = user?.id ? `activeTabId-${user.id}` : 'activeTabId';
+    localStorage.setItem(tabsKey, JSON.stringify(tabs));
+    localStorage.setItem(activeKey, activeTabId);
+  }, [tabs, activeTabId, user?.id]);
 
   // Apply theme on mount and change
   useEffect(() => {
