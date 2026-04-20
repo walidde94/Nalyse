@@ -118,7 +118,17 @@ function AppContent() {
 
   // --- Persistent Tab State ---
   const [tabs, setTabs] = useState<TabType[]>(() => {
-    const stored = localStorage.getItem('tabs-initial');
+    // Attempt to pre-resolve user from localStorage to pick the right tab set immediately
+    const storedUser = localStorage.getItem('user');
+    let userTabsKey = 'tabs-initial';
+    if (storedUser) {
+      try {
+        const u = JSON.parse(storedUser);
+        if (u?.id) userTabsKey = `tabs-${u.id}`;
+      } catch (e) {}
+    }
+
+    const stored = localStorage.getItem(userTabsKey);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -127,12 +137,24 @@ function AppContent() {
     }
     return [{ id: 'landing', title: 'Home', type: 'landing' }];
   });
-  const [activeTabId, setActiveTabId] = useState(() => localStorage.getItem('activeTab-initial') || 'landing');
 
-  // Load user-specific tabs when auth state resolves
+  const [activeTabId, setActiveTabId] = useState(() => {
+    const storedUser = localStorage.getItem('user');
+    let userActiveTabKey = 'activeTab-initial';
+    if (storedUser) {
+      try {
+        const u = JSON.parse(storedUser);
+        if (u?.id) userActiveTabKey = `activeTab-${u.id}`;
+      } catch (e) {}
+    }
+    return localStorage.getItem(userActiveTabKey) || 'landing';
+  });
+
+  // Load user-specific tabs when auth state resolves (fallback in case pre-resolve missed it)
   useEffect(() => {
-    const userTabsKey = user?.id ? `tabs-${user.id}` : 'tabs-initial';
-    const userActiveTabKey = user?.id ? `activeTab-${user.id}` : 'activeTab-initial';
+    if (!user?.id) return;
+    const userTabsKey = `tabs-${user.id}`;
+    const userActiveTabKey = `activeTab-${user.id}`;
     
     const storedTabs = localStorage.getItem(userTabsKey);
     const storedActiveTab = localStorage.getItem(userActiveTabKey);
@@ -141,8 +163,10 @@ function AppContent() {
       try {
         const parsed = JSON.parse(storedTabs);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setTabs(parsed);
-          if (storedActiveTab) setActiveTabId(storedActiveTab);
+          // Only update if current tabs are still the initial landing tab
+          // to avoid racing with user actions or auto-switches
+          setTabs(prev => (prev.length === 1 && prev[0].type === 'landing') ? parsed : prev);
+          if (storedActiveTab) setActiveTabId(prev => prev === 'landing' ? storedActiveTab : prev);
         }
       } catch (e) {}
     }
@@ -157,7 +181,7 @@ function AppContent() {
     const timeout = setTimeout(() => {
         localStorage.setItem(userTabsKey, JSON.stringify(tabs));
         localStorage.setItem(userActiveTabKey, activeTabId);
-    }, 500);
+    }, 100);
     
     return () => clearTimeout(timeout);
   }, [tabs, activeTabId, user?.id]);
@@ -608,8 +632,11 @@ function AppContent() {
     if (isAuthenticated) {
       fetchFiles();
       fetchGroups();
-      // Automatically switch to dashboard if on landing
-      if (tabs.length === 1 && tabs[0].type === 'landing') {
+      // Automatically switch to dashboard IF we don't have any persistent tabs
+      const userTabsKey = user?.id ? `tabs-${user.id}` : 'tabs-initial';
+      const hasStoredTabs = !!localStorage.getItem(userTabsKey);
+      
+      if (!hasStoredTabs && tabs.length === 1 && tabs[0].type === 'landing') {
         setTabs([{ id: 'dash-main', title: 'Dashboard', type: 'dashboard' }]);
         setActiveTabId('dash-main');
       }
