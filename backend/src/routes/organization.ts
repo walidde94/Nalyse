@@ -375,4 +375,182 @@ router.delete('/invitations/:invitationId', authenticate, async (req: AuthReques
     }
 });
 
+/**
+ * POST /api/organization/invitations/:invitationId/resend
+ * Refresh and resend a pending invitation. Admin only.
+ */
+router.post('/invitations/:invitationId/resend', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const invitationId = req.params.invitationId as string;
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true } });
+        if (!admin || admin.role !== 'admin' || !admin.organizationId) return res.status(403).json({ error: 'Insufficient permissions' });
+
+        const invite = await prisma.userInvitation.findUnique({
+            where: { id: invitationId },
+            select: { id: true, organizationId: true, email: true }
+        });
+
+        if (!invite || invite.organizationId !== admin.organizationId) {
+            return res.status(404).json({ error: 'Invitation not found' });
+        }
+
+        // Generate new token and expiry (7 days from now)
+        const newToken = require('crypto').randomBytes(32).toString('hex');
+        const newExpiry = new Date();
+        newExpiry.setDate(newExpiry.getDate() + 7);
+
+        await prisma.userInvitation.update({
+            where: { id: invitationId },
+            data: {
+                token: newToken,
+                expiresAt: newExpiry,
+                status: 'pending' // Reset if it was revoked/expired
+            }
+        });
+
+        console.log(`[Governance] Invitation resent: ${invite.email} by ${adminId}`);
+        res.json({ success: true, message: 'Invitation resent successfully' });
+    } catch (err: any) {
+        console.error('[Governance] Invitation resend failed:', err);
+        res.status(500).json({ error: 'Failed to resend invitation', details: err.message });
+    }
+});
+
+/**
+ * PUT /api/organization/members/:memberId
+ * Update a member's organization-level role. Admin only.
+ */
+router.put('/members/:memberId', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const memberId = req.params.memberId as string;
+        const { role } = req.body;
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+        if (!['admin', 'member', 'guest'].includes(role)) {
+            return res.status(400).json({ error: 'Invalid role specified' });
+        }
+
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true, id: true } });
+        if (!admin || admin.role !== 'admin' || !admin.organizationId) {
+            return res.status(403).json({ error: 'Only admins can modify member roles' });
+        }
+
+        const member = await prisma.user.findUnique({ where: { id: memberId }, select: { id: true, organizationId: true, role: true } });
+        if (!member || member.organizationId !== admin.organizationId) {
+            return res.status(404).json({ error: 'Member not found in organization' });
+        }
+
+        // Safety: Cannot demote yourself if you are an admin (prevents lockouts)
+        if (memberId === adminId && role !== 'admin') {
+            return res.status(400).json({ error: 'Operation rejected: Cannot demote your own administrative role.' });
+        }
+
+        await prisma.user.update({
+            where: { id: memberId },
+            data: { role }
+        });
+
+        console.log(`[Governance] Member role updated: ${memberId} -> ${role} by ${adminId}`);
+        res.json({ success: true, memberId, newRole: role });
+    } catch (err: any) {
+        console.error('[Governance] Member update failed:', err);
+        res.status(500).json({ error: 'Failed to update member', details: err.message });
+    }
+});
+
+/**
+ * DELETE /api/organization/members/:memberId
+ * Remove a member from the organization. Admin only.
+ */
+router.delete('/members/:memberId', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const memberId = req.params.memberId as string;
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true } });
+        if (!admin || admin.role !== 'admin' || !admin.organizationId) return res.status(403).json({ error: 'Only admins can remove members' });
+
+        const member = await prisma.user.findUnique({ where: { id: memberId }, select: { id: true, organizationId: true, email: true } });
+        if (!member || member.organizationId !== admin.organizationId) {
+            return res.status(404).json({ error: 'Member not found in organization' });
+        }
+
+        // Safety: Cannot remove yourself
+        if (memberId === adminId) {
+            return res.status(400).json({ error: 'Operation rejected: Cannot remove yourself from the organization.' });
+        }
+
+        // Disassociate user from organization and clear workspace memberships
+        await prisma.$transaction([
+            prisma.workspaceMember.deleteMany({ where: { userId: memberId } }),
+            prisma.user.update({
+                where: { id: memberId },
+                data: { organizationId: null, role: 'member' } // Reset to a neutral state
+            })
+        ]);
+
+        console.log(`[Governance] Member removed: ${member.email} by ${adminId}`);
+        res.json({ success: true, removedUser: member.email });
+    } catch (err: any) {
+        console.error('[Governance] Member removal failed:', err);
+        res.status(500).json({ error: 'Failed to remove member', details: err.message });
+    }
+});
+
+/**
+ * POST /api/organization/members/:memberId/workspaces
+ * Sync a member's workspace memberships. Admin only.
+ */
+router.post('/members/:memberId/workspaces', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminId = req.user?.userId;
+        const memberId = req.params.memberId as string;
+        const { workspaceIds } = req.body; // Array of workspace IDs the user should belong to
+
+        if (!adminId) return res.status(401).json({ error: 'Unauthorized' });
+        if (!Array.isArray(workspaceIds)) return res.status(400).json({ error: 'workspaceIds must be an array' });
+
+        const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { role: true, organizationId: true } });
+        if (!admin || admin.role !== 'admin' || !admin.organizationId) return res.status(403).json({ error: 'Only admins can manage workspace memberships' });
+
+        // Ensure all targeted workspaces belong to the admin's organization
+        const orgWorkspaces = await prisma.workspace.findMany({
+            where: { organizationId: admin.organizationId },
+            select: { id: true }
+        });
+        const orgWorkspaceIds = orgWorkspaces.map(w => w.id);
+        const validIds = workspaceIds.filter(id => orgWorkspaceIds.includes(id));
+
+        // Sync memberships: Remove current and replace with new set
+        await prisma.$transaction([
+            prisma.workspaceMember.deleteMany({
+                where: {
+                    userId: memberId,
+                    workspaceId: { in: orgWorkspaceIds }
+                }
+            }),
+            prisma.workspaceMember.createMany({
+                data: validIds.map(wId => ({
+                    userId: memberId,
+                    workspaceId: wId as string,
+                    role: 'editor' // Default for now
+                }))
+            })
+        ]);
+
+        console.log(`[Governance] Workspace membership sync for ${memberId} by ${adminId}`);
+        res.json({ success: true, syncedCount: validIds.length });
+    } catch (err: any) {
+        console.error('[Governance] Workspace sync failed:', err);
+        res.status(500).json({ error: 'Failed to sync workspace memberships', details: err.message });
+    }
+});
+
 export default router;

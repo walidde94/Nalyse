@@ -8,7 +8,7 @@ import { API_URL } from './config';
 import { Header } from './components/layout/Header';
 import { RootLayout } from './components/layout/RootLayout';
 import { CommandPalette } from './components/ui/CommandPalette';
-import { useToast } from './components/ui/Toast';
+import { ToastProvider, useToast } from './components/ui/Toast';
 import { TabBar } from './components/layout/TabBar';
 import type { TabType } from './components/layout/TabBar';
 import {
@@ -1427,11 +1427,13 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <WorkspaceProvider>
-          <ArchitectProvider>
-            <AppContent />
-          </ArchitectProvider>
-        </WorkspaceProvider>
+        <ToastProvider>
+          <WorkspaceProvider>
+            <ArchitectProvider>
+              <AppContent />
+            </ArchitectProvider>
+          </WorkspaceProvider>
+        </ToastProvider>
       </LanguageProvider>
     </AuthProvider>
   );
