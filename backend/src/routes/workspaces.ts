@@ -529,8 +529,8 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
 
         res.status(201).json(message);
     } catch (error: any) {
-        require('fs').writeFileSync('/Users/admin/Documents/Nalyse/backend/scratch_debug.log', error.stack || error.toString());
         console.error('Error sending workspace message:', error);
+        // require('fs').writeFileSync('./scratch_debug.log', error.stack || error.toString()); // Removed hardcoded local path
         res.status(500).json({ error: 'Failed to send message' });
     }
 });
