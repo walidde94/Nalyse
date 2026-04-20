@@ -653,23 +653,8 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
                     background: isActive ? `${sectorAccent}18` : 'transparent',
                     flexShrink: 0,
                     transition: 'all 0.15s ease',
-                    position: 'relative'
                 }}>
                     {icon}
-                    {/* Open service indicator dot */}
-                    {isOpened && !isActive && (
-                        <span style={{
-                            position: 'absolute',
-                            top: collapsed ? -4 : -2,
-                            right: collapsed ? -6 : -2,
-                            width: 6,
-                            height: 6,
-                            borderRadius: '50%',
-                            background: sectorAccent,
-                            boxShadow: `0 0 6px ${sectorGlow}`,
-                            border: '1.5px solid var(--bento-glass)'
-                        }} />
-                    )}
                 </span>
 
                 {!collapsed && (
@@ -680,10 +665,26 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
                             textOverflow: 'ellipsis',
                             flex: 1,
                             textAlign: 'left',
+                            paddingRight: 16,
                         }}
                     >
                         {label}
                     </span>
+                )}
+
+                {/* Open service indicator dot */}
+                {isOpened && !isActive && (
+                    <span style={{
+                        position: 'absolute',
+                        right: collapsed ? 10 : 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        background: sectorAccent,
+                        boxShadow: `0 0 6px ${sectorGlow}`,
+                    }} />
                 )}
             </button>
 
