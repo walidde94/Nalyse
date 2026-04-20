@@ -5,6 +5,7 @@ services:
     env: node
     rootDir: backend
     buildCommand: "npm install && npm run build"
+    releaseCommand: "npx prisma db push --accept-data-loss"
     startCommand: "npm run start"
     envVars:
       - key: PORT
