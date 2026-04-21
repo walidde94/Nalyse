@@ -11,7 +11,7 @@ import morgan from 'morgan';
 import { globalApiLimiter, authLimiter as redisAuthLimiter, webhookLimiter } from './middleware/rateLimiter';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { initializeDatabase, prisma } from './config/database';
+import { initializeDatabase, prisma, typeormReady, prismaReady } from './config/database';
 import authRoutes from './routes/auth';
 import fileRoutes from './routes/files';
 import reportRoutes from './routes/reports';
@@ -32,7 +32,6 @@ import webhookRoutes from './routes/webhooks';
 import dashboardRoutes from './routes/dashboards';
 import workspaceRoutes from './routes/workspaces';
 import chatRoutes from './routes/chats';
-import { startScheduleEngine } from './services/scheduleEngine';
 import { initializeWorkspaceSocket } from './services/workspaceService';
 import { initializeChatSocket } from './services/chatService';
 const allowedOrigins = [
@@ -64,14 +63,8 @@ export const broadcastUpdate = (entity: string, data: any) => {
     io.emit('live_update', { entity, data, timestamp: new Date() });
 };
 
-initializeWorkspaceSocket(io); // Attach Real-Time Workspace Engine
-initializeChatSocket(io); // Attach Real-Time Private Chat Engine
-
-io.on('connection', (socket) => {
-});
-
-// Start the Automated Reporting Cron Engine
-startScheduleEngine(20000); // Evaluates reporting schedules every 20 seconds
+// NOTE: Socket initialization and schedule engine are started AFTER database
+// initialization inside startServer() to prevent Prisma queries before DB is ready.
 
 const PORT = process.env.PORT || 3000;
 
@@ -146,6 +139,10 @@ app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         time: new Date().toISOString(),
+        services: {
+            typeorm: typeormReady ? 'connected' : 'unavailable',
+            prisma: prismaReady ? 'connected' : 'unavailable',
+        },
         dbError: (global as any).DB_CONNECTION_ERROR || null 
     });
 });
@@ -264,22 +261,55 @@ app.use((req, res) => {
 
 // Initialize database and start server
 const startServer = async () => {
+    const isProd = process.env.NODE_ENV === 'production';
+
     try {
         // Initialize database connection
         await initializeDatabase();
+    } catch (error) {
+        if (isProd) {
+            console.error('💀 Fatal: Database connection required in production. Exiting.');
+            process.exit(1);
+        }
+        // In development, we continue without a database (logged in initializeDatabase)
+    }
 
-        // Start Analytical Workers
+    // ── Start services that depend on the database ──────────────────────
+    // These are started AFTER initializeDatabase() so Prisma queries
+    // inside socket handlers and the schedule engine don't fire before
+    // the connection is established.
+
+    // Attach Real-Time Workspace & Chat Engines
+    initializeWorkspaceSocket(io);
+    initializeChatSocket(io);
+
+    // Start the Automated Reporting Cron Engine
+    if (prismaReady) {
+        const { startScheduleEngine } = require('./services/scheduleEngine');
+        startScheduleEngine(20000); // Evaluates reporting schedules every 20 seconds
+    } else {
+        console.warn('⚠️  Schedule engine skipped (database unavailable)');
+    }
+
+    // Start Analytical Workers
+    try {
         const { initAnalysisWorker } = require('./services/workers/analysisWorker');
         initAnalysisWorker();
-
-        // Start server
-        httpServer.listen(Number(PORT), () => {
-            console.log(`Server started on port ${PORT}`);
-        });
-    } catch (error) {
-        console.error('Failed to start server:', error);
-        process.exit(1);
+    } catch (error: any) {
+        console.warn('⚠️  Analysis worker skipped:', error.message);
     }
+
+    // ── Start HTTP Server ───────────────────────────────────────────────
+    httpServer.listen(Number(PORT), () => {
+        console.log('');
+        console.log('╔══════════════════════════════════════════════════════════════╗');
+        console.log(`║  🚀 Nalyse Backend running on port ${PORT}                    ║`);
+        console.log('║                                                              ║');
+        console.log(`║  TypeORM:   ${typeormReady ? '✅ Connected' : '❌ Unavailable'}                                  ║`);
+        console.log(`║  Prisma:    ${prismaReady  ? '✅ Connected' : '❌ Unavailable'}                                  ║`);
+        console.log('╚══════════════════════════════════════════════════════════════╝');
+        console.log('');
+    });
 };
 
 if (process.env.NODE_ENV !== 'test') {

@@ -80,6 +80,7 @@ model User {
   workspaceMessages       WorkspaceMessage[]
   directMessages          DirectMessage[]
   directConversations     DirectConversation[]    @relation("ConversationParticipants")
+  remoteSources           RemoteSource[]
 
   @@map("users")
 }
@@ -108,11 +109,11 @@ model File {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   analyses       Analysis[]
+  schedules      Schedule[]
   group          Group?        @relation(fields: [groupId], references: [id])
   organization   Organization? @relation(fields: [organizationId], references: [id])
   owner          User          @relation(fields: [ownerId], references: [id])
   workspace      Workspace?    @relation(fields: [workspaceId], references: [id])
-  schedules      Schedule[]
 
   @@map("files")
 }
@@ -132,6 +133,7 @@ model Analysis {
   updatedAt        DateTime  @updatedAt @map("updated_at")
   createdBy        User      @relation(fields: [createdById], references: [id])
   file             File      @relation(fields: [fileId], references: [id])
+  schedules        Schedule[]
 
   @@map("analyses")
 }
@@ -214,19 +216,39 @@ model Schedule {
   name            String
   cronExpression  String       @map("cron_expression")
   targetFileId    String?      @map("target_file_id")
+  dashboardId     String?      @map("dashboard_id")
+  analysisId      String?      @map("analysis_id")
   config          Json?
   isActive        Boolean      @default(true) @map("is_active")
   organizationId  String       @map("organization_id")
   createdByUserId String       @map("created_by_user_id")
-  lastRun         DateTime?    @map("last_run")
-  nextRun         DateTime?    @map("next_run")
+  lastRunAt       DateTime?    @map("last_run_at")
+  nextRunAt       DateTime?    @map("next_run_at")
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
   createdBy       User         @relation(fields: [createdByUserId], references: [id])
   organization    Organization @relation(fields: [organizationId], references: [id])
   targetFile      File?        @relation(fields: [targetFileId], references: [id])
+  dashboard       Dashboard?   @relation(fields: [dashboardId], references: [id])
+  analysis        Analysis?    @relation(fields: [analysisId], references: [id])
+  runs            ScheduleRun[]
 
   @@map("schedules")
+}
+
+model ScheduleRun {
+  id          String   @id @default(uuid())
+  scheduleId  String   @map("schedule_id")
+  status      String   @default("pending") // pending, success, failed
+  startedAt   DateTime @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  durationMs  Int?     @map("duration_ms")
+  outputUrl   String?  @map("output_url")
+  errorMessage String? @map("error_message")
+  metadata    Json?
+  schedule    Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@map("schedule_runs")
 }
 
 model Webhook {
@@ -259,6 +281,7 @@ model Dashboard {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User          @relation(fields: [userId], references: [id])
   workspace      Workspace?    @relation(fields: [workspaceId], references: [id])
+  schedules      Schedule[]
 
   @@map("dashboards")
 }
@@ -326,9 +349,9 @@ model Group {
   id          String   @id @default(uuid())
   name        String
   description String?
-  ownerId     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  ownerId     String   @map("owner_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   files       File[]
   owner       User     @relation(fields: [ownerId], references: [id])
 
@@ -340,11 +363,11 @@ model Agent {
   name        String
   role        String
   status      String
-  currentGoal String?
-  finalReport String?
-  userId      String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  currentGoal String?     @map("current_goal")
+  finalReport String?     @map("final_report")
+  userId      String      @map("user_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
   user        User        @relation(fields: [userId], references: [id])
   tasks       AgentTask[]
 
@@ -356,8 +379,8 @@ model AgentTask {
   description String
   status      String   @default("pending")
   result      String?
-  agentId     String
-  createdAt   DateTime @default(now())
+  agentId     String   @map("agent_id")
+  createdAt   DateTime @default(now()) @map("created_at")
   agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@map("agent_task")
@@ -391,4 +414,19 @@ model DirectMessage {
   replies        DirectMessage[]    @relation("MessageReplies")
 
   @@map("direct_messages")
+}
+
+model RemoteSource {
+  id           String    @id @default(uuid())
+  name         String
+  type         String
+  config       Json?
+  status       String    @default("active")
+  lastSyncedAt DateTime? @map("last_synced_at")
+  ownerId      String    @map("owner_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  owner        User      @relation(fields: [ownerId], references: [id])
+
+  @@map("remote_sources")
 }

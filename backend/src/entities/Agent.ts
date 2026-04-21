@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
 
 @Entity()
@@ -15,21 +15,22 @@ export class Agent {
     @Column()
     status: string; // 'idle', 'working', 'paused'
 
-    @Column({ nullable: true })
+    @Column({ name: 'current_goal', nullable: true })
     currentGoal: string;
 
-    @Column({ type: 'text', nullable: true })
+    @Column({ name: 'final_report', type: 'text', nullable: true })
     finalReport: string;
 
     @ManyToOne(() => User, user => user.id)
+    @JoinColumn({ name: 'user_id' })
     user: User;
 
-    @Column()
+    @Column({ name: 'user_id' })
     userId: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 }

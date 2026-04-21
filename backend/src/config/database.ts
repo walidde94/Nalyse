@@ -3,6 +3,12 @@ import path from 'path';
 import { DataSource } from 'typeorm';
 import { PrismaClient } from '@prisma/client';
 
+// ─── State flags ────────────────────────────────────────────────────────────
+/** True once TypeORM has connected successfully */
+export let typeormReady = false;
+/** True once Prisma has connected successfully */
+export let prismaReady = false;
+
 // Prisma instance is at the bottom of the file
 
 
@@ -27,7 +33,6 @@ async function ensureAuditLogTable() {
     }
 }
 
-import { createClient } from '@clickhouse/client';
 import { User } from '../entities/User';
 import { Organization } from '../entities/Organization';
 import { File } from '../entities/File';
@@ -98,6 +103,7 @@ const getOptions = (): any => {
 export const AppDataSource = new DataSource(getOptions());
 
 export const initializeDatabase = async () => {
+    // ── TypeORM ──────────────────────────────────────────────────────────
     try {
         const options = getOptions();
         let connectionTarget = '';
@@ -116,29 +122,91 @@ export const initializeDatabase = async () => {
 
         console.log(`🔌 Initializing database connection for: ${connectionTarget}`);
         await AppDataSource.initialize();
-        console.log('✅ Database connection established.');
-        
-        // Ensure critical Prisma tables exist (Manual fallback for Supabase pooler issues)
-        await ensureAuditLogTable();
+        typeormReady = true;
+        console.log('✅ TypeORM database connection established.');
     } catch (error: any) {
-        console.error('❌ Database connection failed!');
-        console.error('Error Message:', error.message);
-        console.error('Error Code:', error.code);
+        console.error('❌ TypeORM database connection failed!');
+        console.error('   Error:', error.message);
         
         // Store the error globally so we can report it in health checks
         (global as any).DB_CONNECTION_ERROR = error.message;
         
-        throw error;
+        if (isProd) {
+            // In production, a database failure is fatal
+            throw error;
+        }
+        
+        console.warn('');
+        console.warn('╔══════════════════════════════════════════════════════════════╗');
+        console.warn('║  ⚠️  DATABASE UNAVAILABLE — Running in degraded mode        ║');
+        console.warn('║                                                              ║');
+        console.warn('║  The server will start, but database-dependent features      ║');
+        console.warn('║  (auth, files, workspaces, etc.) will return errors.         ║');
+        console.warn('║                                                              ║');
+        console.warn('║  To fix:                                                     ║');
+        console.warn('║    • docker-compose up -d db    (easiest)                    ║');
+        console.warn('║    • Install PostgreSQL locally                              ║');
+        console.warn('║    • Set DATABASE_URL in .env                                ║');
+        console.warn('╚══════════════════════════════════════════════════════════════╝');
+        console.warn('');
+    }
+
+    // ── Prisma ───────────────────────────────────────────────────────────
+    try {
+        await prisma.$connect();
+        prismaReady = true;
+        console.log('✅ Prisma database connection established.');
+        
+        // Ensure critical Prisma tables exist (Manual fallback for Supabase pooler issues)
+        await ensureAuditLogTable();
+    } catch (error: any) {
+        console.error('❌ Prisma database connection failed:', error.message);
+        
+        if (isProd) {
+            throw error;
+        }
+        // In development, we already showed the banner above — just continue
     }
 };
 
 // ─── Prisma Client (used by sprint-6 modules) ──────────────────────────────
 export const prisma = new PrismaClient();
 
-// ─── ClickHouse Client (used by ClickHouseService) ─────────────────────────
-export const clickhouse = createClient({
-    url: process.env.CLICKHOUSE_URL || 'http://localhost:8123',
-    username: process.env.CLICKHOUSE_USER || 'default',
-    password: process.env.CLICKHOUSE_PASSWORD || '',
-    database: process.env.CLICKHOUSE_DATABASE || 'default',
+// ─── ClickHouse Client (lazy — only created when needed) ────────────────────
+let _clickhouse: any = null;
+
+export const getClickhouse = () => {
+    if (!_clickhouse) {
+        try {
+            const { createClient } = require('@clickhouse/client');
+            _clickhouse = createClient({
+                url: process.env.CLICKHOUSE_URL || 'http://localhost:8123',
+                username: process.env.CLICKHOUSE_USER || 'default',
+                password: process.env.CLICKHOUSE_PASSWORD || '',
+                database: process.env.CLICKHOUSE_DATABASE || 'default',
+            });
+        } catch (err: any) {
+            console.warn('[ClickHouse] Client creation failed (non-critical):', err.message);
+            return null;
+        }
+    }
+    return _clickhouse;
+};
+
+// Backward-compatible export — lazy proxy
+export const clickhouse = new Proxy({} as any, {
+    get(_target, prop) {
+        const client = getClickhouse();
+        if (!client) {
+            // Return no-op functions for missing ClickHouse
+            if (typeof prop === 'string') {
+                return (..._args: any[]) => {
+                    console.warn(`[ClickHouse] Not available — skipping ${String(prop)}()`);
+                    return Promise.resolve(null);
+                };
+            }
+            return undefined;
+        }
+        return client[prop];
+    }
 });

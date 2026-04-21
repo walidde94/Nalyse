@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Agent } from './Agent';
 
 @Entity()
@@ -16,11 +16,12 @@ export class AgentTask {
     result: string;
 
     @ManyToOne(() => Agent, agent => agent.id, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'agent_id' })
     agent: Agent;
 
-    @Column()
+    @Column({ name: 'agent_id' })
     agentId: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 }
