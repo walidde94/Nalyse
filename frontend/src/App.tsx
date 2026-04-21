@@ -1305,7 +1305,7 @@ function AppContent() {
                 )}
 
                 {tab.type === 'sources' && (
-                  <ConnectorsView token={token || ''} />
+                  <ConnectorsView token={token || ''} isActive={tab.id === activeTabId} />
                 )}
 
                 {tab.type === 'logistics' && (

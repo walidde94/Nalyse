@@ -123,6 +123,12 @@ const neuralStyles = `
         visibility: visible !important;
         transform: translateY(-5px) !important;
         pointer-events: auto !important;
+        transition-delay: 0s !important;
+    }
+
+    .message-actions-popover {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition-delay: 0.15s;
     }
 
     .message-actions-popover::before {
@@ -131,7 +137,7 @@ const neuralStyles = `
         top: 100%;
         left: 0;
         right: 0;
-        height: 15px;
+        height: 20px;
         background: transparent;
     }
 

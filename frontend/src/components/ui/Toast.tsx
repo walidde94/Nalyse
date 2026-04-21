@@ -172,14 +172,14 @@ const ToastItem: React.FC<{ toast: Toast; onDismiss: (id: string) => void }> = (
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
-    const addToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration: number = 4000) => {
+    const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration: number = 4000) => {
         const id = Math.random().toString(36).substr(2, 9);
         setToasts(prev => [...prev, { id, message, type, duration, createdAt: Date.now() }]);
-    };
+    }, []);
 
-    const dismissToast = (id: string) => {
+    const dismissToast = useCallback((id: string) => {
         setToasts(prev => prev.filter(t => t.id !== id));
-    };
+    }, []);
 
     return (
         <ToastContext.Provider value={{ addToast }}>

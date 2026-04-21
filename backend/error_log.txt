@@ -1,0 +1,10 @@
+
+
+[2026-04-21T18:10:17.456Z] ERROR: modules is not defined
+STACK: ReferenceError: modules is not defined
+    at /Users/admin/Documents/Nalyse/backend/src/routes/automation.ts:349:15
+
+
+[2026-04-21T18:10:28.011Z] ERROR: modules is not defined
+STACK: ReferenceError: modules is not defined
+    at /Users/admin/Documents/Nalyse/backend/src/routes/automation.ts:349:15

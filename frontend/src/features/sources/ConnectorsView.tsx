@@ -172,7 +172,7 @@ const AvailableConnectorCard = ({ type, onClick }: { type: string; onClick: () =
 };
 
 /* ═══════════════════════════════════════════════════════════════ */
-export const ConnectorsView = ({ token }: { token: string }) => {
+export const ConnectorsView = ({ token, isActive = true }: { token: string; isActive?: boolean }) => {
     const { addToast } = useToast();
     const [sources, setSources] = useState<RemoteSource[]>([]);
     const [loading, setLoading] = useState(true);
@@ -208,7 +208,11 @@ export const ConnectorsView = ({ token }: { token: string }) => {
         }
     }, [token, addToast]);
 
-    useEffect(() => { fetchSources(); }, [fetchSources]);
+    useEffect(() => { 
+        if (isActive) {
+            fetchSources(); 
+        }
+    }, [fetchSources, isActive]);
 
     const resetForm = () => {
         setNewName(''); setNewUrl(''); setNewRootKey(''); setNewApiKey(''); setNewHost('');

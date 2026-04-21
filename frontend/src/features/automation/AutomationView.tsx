@@ -171,16 +171,36 @@ export const AutomationView = () => {
     const handleTrigger = async (id: string) => {
         addToast('Triggering immediate execution...', 'info');
         try {
+            // Optimistically add a pending run
+            const optimisticRun = {
+                id: 'temp-' + Date.now(),
+                scheduleId: id,
+                status: 'pending',
+                startedAt: new Date().toISOString(),
+                schedule: schedules.find(s => s.id === id) || { name: 'Report Generation' }
+            };
+            setGlobalHistory(prev => [optimisticRun, ...prev]);
+            
             const res = await fetch(`${API_URL}/api/automation/schedules/${id}/trigger`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
                 addToast('Execution started', 'success');
-                setTimeout(fetchData, 2000);
+                // Poll for updates
+                let attempts = 0;
+                const interval = setInterval(async () => {
+                    await fetchData();
+                    attempts++;
+                    // Stop polling if no more pending runs or after 10 attempts
+                    if (attempts >= 10) clearInterval(interval);
+                }, 3000);
+            } else {
+                fetchData(); // Reset on error
             }
         } catch (e) {
             addToast('Trigger failed', 'error');
+            fetchData();
         }
     };
 
