@@ -77,16 +77,12 @@ app.use(helmet({
 }));
 app.use(cors({
     origin: (origin, callback) => {
-        // In production, we allow the specific FRONTEND_URL or fallback to allowing the requester's origin
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            // If it's not in our list, we still allow it but return the origin itself
-            // to satisfy browsers when credentials: true is used.
-            callback(null, origin);
-        }
+        // Reflect origin to satisfy credentials: true requirement
+        callback(null, true);
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
 // Logging
