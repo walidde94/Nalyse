@@ -73,7 +73,14 @@ const getOptions = (): any => {
     };
 
     // Support standard PG environment variables and common hosting patterns
-    const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL || process.env.POSTGRES_URL;
+    // We check for length to ensure we don't pick up empty strings from .env files
+    const dbUrl = [
+        process.env.DATABASE_URL,
+        process.env.DATABASE_PUBLIC_URL,
+        process.env.POSTGRES_URL,
+        process.env.DIRECT_URL
+    ].find(url => url && url.length > 10);
+
     const dbHost = process.env.DB_HOST || process.env.PGHOST || 'localhost';
     const dbPort = parseInt(process.env.DB_PORT || process.env.PGPORT || '5432');
     const dbUser = process.env.DB_USER || process.env.PGUSER || 'admin';
@@ -98,7 +105,7 @@ const getOptions = (): any => {
     }
 
     // SSL Handling for Render/Supabase/Railway
-    if (isProd || process.env.DB_SSL === 'true' || dbUrl?.includes('sslmode=require')) {
+    if (isProd || process.env.DB_SSL === 'true' || (dbUrl && dbUrl.includes('sslmode=require'))) {
         config.ssl = {
             rejectUnauthorized: false
         };
