@@ -41,30 +41,54 @@ async function ensureAuditLogTable() {
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS subscription_tier text DEFAULT 'free'`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free'`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS stripe_customer_id text`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS stripe_subscription_id text`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS subscription_started_at timestamp with time zone`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS current_period_end timestamp with time zone`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS cancel_at_period_end boolean DEFAULT false`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS storage_used bigint DEFAULT 0`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS storage_limit bigint DEFAULT 104857600`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS user_limit int DEFAULT 1`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS file_limit int DEFAULT 5`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS max_users int DEFAULT 5`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
             // Users
             `CREATE TABLE IF NOT EXISTS users (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), email text UNIQUE NOT NULL, password_hash text NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name text`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name text`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS role text DEFAULT 'member'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS bio text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'inactive'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at timestamp with time zone`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id uuid`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean DEFAULT false`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token text`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token text`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires timestamp with time zone`,
-            `ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name text`,
-            `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences jsonb DEFAULT '{}'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS api_keys jsonb DEFAULT '[]'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
             // Workspaces
             `CREATE TABLE IF NOT EXISTS workspaces (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, organization_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            
             `CREATE TABLE IF NOT EXISTS workspace_members (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), workspace_id uuid NOT NULL, user_id uuid NOT NULL, role text DEFAULT 'editor')`,
+            
             `CREATE TABLE IF NOT EXISTS workspace_messages (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), workspace_id uuid NOT NULL, author_id uuid NOT NULL, content text NOT NULL, created_at timestamp with time zone DEFAULT now())`,
             `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS mentions text[] DEFAULT '{}'`,
             `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reactions jsonb DEFAULT '[]'`,
             `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reply_to_id uuid`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
             // Files
             `CREATE TABLE IF NOT EXISTS files (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), filename text NOT NULL, owner_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
@@ -73,12 +97,19 @@ async function ensureAuditLogTable() {
             `ALTER TABLE files ADD COLUMN IF NOT EXISTS mime_type text`,
             `ALTER TABLE files ADD COLUMN IF NOT EXISTS size bigint DEFAULT 0`,
             `ALTER TABLE files ADD COLUMN IF NOT EXISTS is_favorite boolean DEFAULT false`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
             // Schedules
             `CREATE TABLE IF NOT EXISTS schedules (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, cron_expression text NOT NULL, organization_id uuid NOT NULL, created_by_user_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS last_run_at timestamp with time zone`,
-            `CREATE TABLE IF NOT EXISTS schedule_runs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), schedule_id uuid NOT NULL, status text DEFAULT 'pending', started_at timestamp with time zone DEFAULT now())`
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
+            
+            `CREATE TABLE IF NOT EXISTS schedule_runs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), schedule_id uuid NOT NULL, status text DEFAULT 'pending', started_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS started_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS completed_at timestamp with time zone`
         ];
 
         for (const query of healingQueries) {
