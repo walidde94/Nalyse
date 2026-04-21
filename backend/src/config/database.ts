@@ -16,18 +16,49 @@ async function ensureAuditLogTable() {
     try {
         console.log('🧬 [Metadata] Verifying Audit Pipeline...');
         // We use a raw query to check and create the table bypassing the Prisma CLI push logic
-        await prisma.$executeRawUnsafe(`
-            CREATE TABLE IF NOT EXISTS "audit_logs" (
-                "id" TEXT PRIMARY KEY,
-                "workspace_id" TEXT NOT NULL,
-                "user_id" TEXT NOT NULL,
-                "action" TEXT NOT NULL,
-                "entity_id" TEXT,
-                "details" JSONB,
-                "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
+        // 1. Audit Log Table
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+
+        await queryRunner.query(`
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                workspace_id uuid,
+                user_id uuid,
+                action text NOT NULL,
+                entity_id text,
+                details jsonb DEFAULT '{}',
+                created_at timestamp with time zone DEFAULT now()
+            )
         `);
-        console.log('✅ [Metadata] Audit Pipeline Verified.');
+
+        // 2. Manual column healing for critical fields (Fallback if Prisma sync is blocked)
+        console.log('🧬 [Metadata] Checking for critical schema columns...');
+        
+        // Ensure organization_id on users
+        await queryRunner.query(`
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='organization_id') THEN
+                    ALTER TABLE users ADD COLUMN organization_id uuid;
+                END IF;
+            END $$;
+        `);
+
+        // Ensure cron_expression on schedules
+        await queryRunner.query(`
+            DO $$ 
+            BEGIN 
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='schedules') THEN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='schedules' AND column_name='cron_expression') THEN
+                        ALTER TABLE schedules ADD COLUMN cron_expression text;
+                    END IF;
+                END IF;
+            END $$;
+        `);
+
+        await queryRunner.release();
+        console.log('✅ [Metadata] Audit Pipeline & Schema Healing Verified.');
     } catch (err: any) {
         console.error('⚠️ [Metadata] Audit Pipeline verification failed (non-critical):', err.message);
     }
