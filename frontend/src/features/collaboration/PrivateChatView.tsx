@@ -508,81 +508,104 @@ export const PrivateChatView: React.FC = () => {
                 </div>
 
                 <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px 12px' }}>
-                    {searchTerm && searchResults.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            <div style={{ padding: '0 16px 12px', fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Found Results</div>
-                            {searchResults.map(u => (
-                                <motion.button
-                                    key={u.id}
-                                    whileHover={{ x: 4 }}
-                                    onClick={() => handleStartChat(u)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: 14, width: '100%',
-                                        padding: '12px 16px', border: 'none', background: 'transparent',
-                                        cursor: 'pointer', borderRadius: 16, textAlign: 'left', transition: 'all 0.2s'
-                                    }}
-                                    className="hover-bg"
-                                >
-                                    <UserAvatar user={u} size={40} />
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{getUserName(u)}</div>
-                                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.email}</div>
-                                    </div>
-                                </motion.button>
-                            ))}
+                    {isSearching ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: 16 }}>
+                            <motion.div 
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                style={{ width: 32, height: 32, border: '3px solid rgba(99, 102, 241, 0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}
+                            />
+                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Scanning Network...</div>
                         </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            {conversations.map(conv => {
-                                const other = conv.participants?.[0];
-                                const lastMsg = conv.messages?.[0];
-                                const isActive = activeConversation?.id === conv.id;
-                                
-                                return (
+                    ) : searchTerm && searchTerm.length >= 2 ? (
+                        searchResults.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                <div style={{ padding: '0 16px 12px', fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Found Connections</div>
+                                {searchResults.map(u => (
                                     <motion.button
-                                        key={conv.id}
+                                        key={u.id}
                                         whileHover={{ x: 4 }}
-                                        onClick={() => setActiveConversation(conv)}
+                                        onClick={() => handleStartChat(u)}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: 14, width: '100%',
-                                            padding: '14px 16px', border: 'none',
-                                            background: isActive ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
-                                            cursor: 'pointer', borderRadius: 20, textAlign: 'left',
-                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            position: 'relative'
+                                            padding: '12px 16px', border: 'none', background: 'transparent',
+                                            cursor: 'pointer', borderRadius: 16, textAlign: 'left', transition: 'all 0.2s'
                                         }}
-                                        className={!isActive ? "hover-bg" : "sidebar-item-active"}
+                                        className="hover-bg"
                                     >
-                                        <UserAvatar user={other} size={48} />
+                                        <UserAvatar user={u} size={40} />
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                                <span style={{ fontSize: 15, fontWeight: 800, color: isActive ? 'var(--primary)' : '#fff' }}>
-                                                    {getUserName(other)}
-                                                </span>
-                                                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
-                                                    {timeAgo(conv.updatedAt)}
-                                                </span>
-                                            </div>
-                                            <div style={{ 
-                                                fontSize: 13, color: isActive ? 'rgba(99, 102, 241, 0.8)' : 'rgba(255,255,255,0.5)', 
-                                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                                                fontWeight: (lastMsg && !isActive) ? 600 : 400
-                                            }}>
-                                                {lastMsg ? (lastMsg.senderId === user?.id ? 'You: ' : '') + lastMsg.content : 'Initiate sequence...'}
-                                            </div>
+                                            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{getUserName(u)}</div>
+                                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.email}</div>
                                         </div>
-                                        {isActive && (
-                                            <motion.div 
-                                                layoutId="active-indicator"
-                                                style={{ position: 'absolute', right: 12, width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }} 
-                                            />
-                                        )}
                                     </motion.button>
-                                );
-                            })}
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>No users found for "{searchTerm}"</div>
+                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 8 }}>Verify identity and try again</div>
+                            </div>
+                        )
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            {conversations.length > 0 ? (
+                                conversations.map(conv => {
+                                    const other = conv.participants?.[0];
+                                    const lastMsg = conv.messages?.[0];
+                                    const isActive = activeConversation?.id === conv.id;
+                                    
+                                    return (
+                                        <motion.button
+                                            key={conv.id}
+                                            whileHover={{ x: 4 }}
+                                            onClick={() => setActiveConversation(conv)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+                                                padding: '14px 16px', border: 'none',
+                                                background: isActive ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
+                                                cursor: 'pointer', borderRadius: 20, textAlign: 'left',
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                position: 'relative'
+                                            }}
+                                            className={!isActive ? "hover-bg" : "sidebar-item-active"}
+                                        >
+                                            <UserAvatar user={other} size={48} />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                                    <span style={{ fontSize: 15, fontWeight: 800, color: isActive ? 'var(--primary)' : '#fff' }}>
+                                                        {getUserName(other)}
+                                                    </span>
+                                                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+                                                        {timeAgo(conv.updatedAt)}
+                                                    </span>
+                                                </div>
+                                                <div style={{ 
+                                                    fontSize: 13, color: isActive ? 'rgba(99, 102, 241, 0.8)' : 'rgba(255,255,255,0.5)', 
+                                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                    fontWeight: (lastMsg && !isActive) ? 600 : 400
+                                                }}>
+                                                    {lastMsg ? (lastMsg.senderId === user?.id ? 'You: ' : '') + lastMsg.content : 'Initiate sequence...'}
+                                                </div>
+                                            </div>
+                                            {isActive && (
+                                                <motion.div 
+                                                    layoutId="active-indicator"
+                                                    style={{ position: 'absolute', right: 12, width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }} 
+                                                />
+                                            )}
+                                        </motion.button>
+                                    );
+                                })
+                            ) : (
+                                <div style={{ padding: '40px 20px', textAlign: 'center', opacity: 0.5 }}>
+                                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>No active tunnels</div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
+
             </div>
 
             {/* ─── Main Chat ─── */}
