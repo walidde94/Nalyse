@@ -43,25 +43,33 @@ const getInitials = (u: any) => {
 // COMPONENTS
 // ═══════════════════════════════════════════════════════════════
 
-const UserAvatar = ({ user, size = 40 }: { user: ChatParticipant; size?: number }) => {
+const UserAvatar = ({ user, size = 40, status = 'online' }: { user: ChatParticipant; size?: number; status?: 'online' | 'offline' }) => {
     const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
     const idx = (user?.email || '').charCodeAt(0) % colors.length;
     
     return (
         <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
             {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '35%', objectFit: 'cover' }} />
+                <img src={user.avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '32%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.05)' }} />
             ) : (
                 <div style={{
-                    width: size, height: size, borderRadius: '35%',
-                    background: `linear-gradient(135deg, ${colors[idx]}cc, ${colors[idx]}88)`,
+                    width: size, height: size, borderRadius: '32%',
+                    background: `linear-gradient(135deg, ${colors[idx]}dd, ${colors[idx]}88)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: size * 0.38, fontWeight: 800, color: '#fff',
-                    boxShadow: `0 4px 12px ${colors[idx]}22`
+                    boxShadow: `0 8px 16px ${colors[idx]}33`,
+                    textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
                     {getInitials(user)}
                 </div>
             )}
+            <div style={{
+                position: 'absolute', bottom: -1, right: -1,
+                width: size * 0.28, height: size * 0.28, borderRadius: '50%',
+                background: status === 'online' ? '#22c55e' : '#94a3b8',
+                border: '2px solid var(--bg-app)',
+                boxShadow: status === 'online' ? '0 0 8px #22c55e88' : 'none'
+            }} />
         </div>
     );
 };
@@ -293,37 +301,47 @@ export const PrivateChatView: React.FC = () => {
         }}>
             {/* ─── Sidebar ─── */}
             <div style={{
-                width: 320,
+                width: 340,
                 borderRight: '1px solid var(--border-subtle)',
                 display: 'flex',
                 flexDirection: 'column',
-                background: 'rgba(255, 255, 255, 0.02)',
-                backdropFilter: 'blur(10px)',
+                background: 'rgba(255, 255, 255, 0.01)',
+                backdropFilter: 'blur(20px)',
+                position: 'relative',
+                zIndex: 20
             }}>
-                <div style={{ padding: '20px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                        <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Personal Chat</h2>
+                <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, var(--primary), #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px var(--primary-subtle)' }}>
+                                <MessageSquare size={18} color="#fff" />
+                            </div>
+                            <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Neural Link</h2>
+                        </div>
                         <button style={{
-                            width: 32, height: 32, borderRadius: 8, border: 'none',
-                            background: 'var(--primary-subtle)', color: 'var(--primary)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                        }}>
-                           <Plus size={18} />
+                            width: 36, height: 36, borderRadius: 12, border: 'none',
+                            background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                        }} className="hover-lift">
+                           <Plus size={20} />
                         </button>
                     </div>
                     
                     <div style={{ position: 'relative' }}>
-                        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                        <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', opacity: 0.7 }} />
                         <input
                             type="text"
-                            placeholder="Search people..."
+                            placeholder="Find connections..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
-                                width: '100%', padding: '10px 12px 10px 38px', borderRadius: 12,
-                                background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-                                color: 'var(--text-primary)', fontSize: 13, outline: 'none'
+                                width: '100%', padding: '12px 14px 12px 42px', borderRadius: 14,
+                                background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)',
+                                color: 'var(--text-primary)', fontSize: 13, outline: 'none',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                             }}
+                            className="focus-glow"
                         />
                     </div>
                 </div>
@@ -414,13 +432,20 @@ export const PrivateChatView: React.FC = () => {
                             background: 'var(--bg-app)',
                             zIndex: 10
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                <UserAvatar user={otherMember!} size={38} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <div style={{ position: 'relative' }}>
+                                    <UserAvatar user={otherMember!} size={42} />
+                                    <motion.div 
+                                        animate={{ scale: [1, 1.2, 1] }}
+                                        transition={{ repeat: Infinity, duration: 2 }}
+                                        style={{ position: 'absolute', -top: 2, -right: 2, width: 10, height: 10, borderRadius: '50%', background: '#22c55e', border: '2px solid var(--bg-app)' }}
+                                    />
+                                </div>
                                 <div>
-                                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>{getUserName(otherMember)}</div>
-                                    <div style={{ fontSize: 12, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }}></div>
-                                        Active now
+                                    <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{getUserName(otherMember)}</div>
+                                    <div style={{ fontSize: 11, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        <Sparkles size={10} />
+                                        Encrypted Neural Tunnel
                                     </div>
                                 </div>
                             </div>
@@ -509,18 +534,24 @@ export const PrivateChatView: React.FC = () => {
                                                     className="message-bubble-trigger"
                                                     style={{
                                                         position: 'relative',
-                                                        padding: msg.imageUrl ? '8px' : '10px 16px',
+                                                        padding: msg.imageUrl ? '10px' : '12px 18px',
                                                         borderRadius: isMe 
-                                                            ? (isLastInGroup ? '18px 18px 4px 18px' : '18px 18px 18px 18px')
-                                                            : (isLastInGroup ? '18px 18px 18px 4px' : '18px 18px 18px 18px'),
-                                                        background: isMe ? 'var(--primary)' : 'var(--bg-surface)',
+                                                            ? (isLastInGroup ? '22px 22px 6px 22px' : '22px 22px 22px 22px')
+                                                            : (isLastInGroup ? '22px 22px 22px 6px' : '22px 22px 22px 22px'),
+                                                        background: isMe 
+                                                            ? 'linear-gradient(135deg, var(--primary), #4f46e5)' 
+                                                            : 'rgba(255, 255, 255, 0.03)',
                                                         color: isMe ? '#fff' : 'var(--text-primary)',
-                                                        boxShadow: isMe ? '0 4px 12px rgba(99, 102, 241, 0.2)' : '0 2px 8px rgba(0,0,0,0.05)',
+                                                        border: isMe ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
+                                                        boxShadow: isMe 
+                                                            ? '0 10px 25px -5px rgba(99, 102, 241, 0.4)' 
+                                                            : '0 4px 12px rgba(0,0,0,0.1)',
                                                         fontSize: 14,
-                                                        lineHeight: 1.5,
+                                                        lineHeight: 1.6,
                                                         display: 'flex',
                                                         flexDirection: 'column',
-                                                        gap: 4
+                                                        gap: 6,
+                                                        transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                                                     }}
                                                 >
                                                     {msg.replyTo && (
@@ -849,99 +880,76 @@ export const PrivateChatView: React.FC = () => {
                 )}
             </div>
 
-            <style>{`
-                .hover-bg:hover {
+                @keyframes neural-pulse {
+                    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+                    70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+                }
+                .hover-lift {
+                    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+                }
+                .hover-lift:hover {
+                    transform: translateY(-2px) scale(1.02);
+                }
+                .focus-glow:focus {
+                    border-color: var(--primary) !important;
+                    box-shadow: 0 0 0 3px var(--primary-subtle) !important;
                     background: rgba(255, 255, 255, 0.05) !important;
                 }
+                .message-bubble-trigger {
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .message-bubble-trigger:hover {
+                    transform: scale(1.01);
+                }
+                .hover-bg:hover {
+                    background: rgba(255, 255, 255, 0.04) !important;
+                    backdrop-filter: blur(5px);
+                }
                 .icon-btn-subtle {
-                    width: 36px; 
-                    height: 36px; 
-                    border-radius: 10px; 
+                    width: 40px; 
+                    height: 40px; 
+                    border-radius: 12px; 
                     display: flex; 
                     align-items: center; 
                     justify-content: center;
-                    background: transparent; 
-                    border: none; 
+                    background: rgba(255,255,255,0.02); 
+                    border: 1px solid rgba(255,255,255,0.05); 
                     color: var(--text-muted); 
                     cursor: pointer; 
                     transition: all 0.2s;
-                    outline: none;
                 }
                 .icon-btn-subtle:hover {
-                    background: var(--bg-surface-hover);
-                    color: var(--text-primary);
-                    transform: translateY(-1px);
-                }
-                .icon-btn-subtle:active {
-                    transform: translateY(0);
-                }
-                .message-bubble-trigger {
-                    position: relative;
-                }
-                .message-bubble-trigger::before {
-                    content: '';
-                    position: absolute;
-                    top: -44px;
-                    left: -8px;
-                    right: -8px;
-                    height: 44px;
-                    z-index: 15;
-                    pointer-events: none;
-                }
-                .message-bubble-trigger:hover::before {
-                    pointer-events: auto;
-                }
-                .message-actions-popover {
-                    transition: opacity 0.15s ease, visibility 0.15s ease;
+                    background: var(--primary-subtle);
+                    color: var(--primary);
+                    border-color: var(--primary-subtle);
+                    transform: translateY(-2px);
                 }
                 .message-bubble-trigger:hover .message-actions-popover {
                     visibility: visible !important;
                     opacity: 1 !important;
-                    top: -36px !important;
+                    top: -42px !important;
                 }
                 .emoji-item {
                     font-size: 20px;
                     padding: 8px;
                     cursor: pointer;
-                    border-radius: 8px;
-                    transition: all 0.2s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+                    border-radius: 10px;
+                    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
                 .emoji-item:hover {
-                    background: var(--bg-surface-hover);
-                    transform: scale(1.2);
-                }
-                .more-menu-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    width: 100%;
-                    padding: 10px 14px;
-                    border: none;
-                    background: transparent;
-                    color: var(--text-primary);
-                    font-size: 13px;
-                    cursor: pointer;
-                    text-align: left;
-                    transition: all 0.2s;
-                }
-                .more-menu-item:hover {
-                    background: var(--bg-surface-hover);
-                }
-                .more-menu-item.danger {
-                    color: var(--danger);
+                    background: var(--primary-subtle);
+                    transform: scale(1.25) rotate(5deg);
                 }
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 4px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
+                    width: 5px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: var(--border-subtle);
+                    background: rgba(255, 255, 255, 0.1);
                     border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: var(--primary);
                 }
             `}</style>
         </div>
