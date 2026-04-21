@@ -13,6 +13,141 @@ import { API_URL } from '../../config';
 import { useToast } from '../../components/ui/Toast';
 
 // ═══════════════════════════════════════════════════════════════
+// NEURAL THEME STYLES
+// ═══════════════════════════════════════════════════════════════
+
+const neuralStyles = `
+    @keyframes neural-pulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+        50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 15px 4px rgba(34, 197, 94, 0.2); }
+    }
+    
+    @keyframes floating-data {
+        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+        20% { opacity: 0.15; }
+        80% { opacity: 0.15; }
+        100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+    }
+
+    @keyframes scan-line {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+    }
+
+    .neural-bg {
+        position: fixed;
+        inset: 0;
+        background: #020308;
+        overflow: hidden;
+        z-index: 0;
+    }
+
+    .neural-mesh {
+        position: absolute;
+        inset: 0;
+        background: 
+            radial-gradient(circle at 20% 30%, hsla(253,16%,7%,1) 0, transparent 50%), 
+            radial-gradient(circle at 80% 70%, hsla(225,39%,30%,0.15) 0, transparent 50%), 
+            radial-gradient(circle at 50% 50%, hsla(339,49%,30%,0.1) 0, transparent 50%);
+        filter: blur(100px);
+        opacity: 0.8;
+    }
+
+    .data-particle {
+        position: absolute;
+        bottom: -20px;
+        background: linear-gradient(to top, transparent, var(--primary), transparent);
+        width: 1px;
+        height: 120px;
+        filter: blur(1px);
+        animation: floating-data 12s linear infinite;
+    }
+
+    .glass-panel-premium {
+        background: rgba(8, 12, 22, 0.75);
+        backdrop-filter: blur(50px) saturate(200%);
+        -webkit-backdrop-filter: blur(50px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar-item-active {
+        background: linear-gradient(90deg, rgba(99, 102, 241, 0.18) 0%, transparent 100%);
+        border-left: 4px solid var(--primary);
+    }
+
+    .message-bubble-own {
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+        color: white;
+    }
+
+    .message-bubble-other {
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        color: #fff;
+    }
+
+    .neural-status-indicator {
+        background: #22c55e;
+        box-shadow: 0 0 10px #22c55e;
+        animation: neural-pulse 2.5s infinite ease-in-out;
+    }
+
+    .hover-lift {
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .hover-lift:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+    }
+
+    .focus-glow {
+        transition: all 0.3s ease;
+    }
+    .focus-glow:focus {
+        border-color: var(--primary) !important;
+        background: rgba(255, 255, 255, 0.07) !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 0 20px rgba(99, 102, 241, 0.1) !important;
+    }
+
+    .message-bubble-own:hover, .message-bubble-other:hover {
+        transform: scale(1.01) translateY(-1px);
+        filter: brightness(1.1);
+    }
+
+    .message-bubble-own:hover .message-actions-popover,
+    .message-bubble-other:hover .message-actions-popover {
+        opacity: 1 !important;
+        transform: translateY(-8px) !important;
+        pointer-events: auto !important;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    .emoji-item {
+        font-size: 20px;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.3s var(--ease-spring);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .emoji-item:hover {
+        background: rgba(255,255,255,0.08);
+        transform: scale(1.3) rotate(5deg);
+    }
+`;
+
+
+
+// ═══════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════
 
@@ -50,29 +185,47 @@ const UserAvatar = ({ user, size = 40, status = 'online' }: { user: ChatParticip
     return (
         <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
             {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '32%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.05)' }} />
+                <img src={user.avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '14px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
             ) : (
                 <div style={{
-                    width: size, height: size, borderRadius: '32%',
+                    width: size, height: size, borderRadius: '14px',
                     background: `linear-gradient(135deg, ${colors[idx]}dd, ${colors[idx]}88)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: size * 0.38, fontWeight: 800, color: '#fff',
-                    boxShadow: `0 8px 16px ${colors[idx]}33`,
-                    textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    boxShadow: `0 8px 16px ${colors[idx]}22`,
+                    border: '1px solid rgba(255,255,255,0.1)'
                 }}>
                     {getInitials(user)}
                 </div>
             )}
-            <div style={{
-                position: 'absolute', bottom: -1, right: -1,
-                width: size * 0.28, height: size * 0.28, borderRadius: '50%',
-                background: status === 'online' ? '#22c55e' : '#94a3b8',
-                border: '2px solid var(--bg-app)',
-                boxShadow: status === 'online' ? '0 0 8px #22c55e88' : 'none'
+            <div className={status === 'online' ? 'neural-status-indicator' : ''} style={{
+                position: 'absolute', bottom: -2, right: -2,
+                width: size * 0.25, height: size * 0.25, borderRadius: '50%',
+                background: status === 'online' ? '#22c55e' : '#64748b',
+                border: '2px solid #03040c',
+                display: status === 'online' ? 'block' : 'none'
             }} />
         </div>
     );
 };
+
+const NeuralBackground = () => (
+    <div className="neural-bg">
+        <div className="neural-mesh" />
+        {[...Array(12)].map((_, i) => (
+            <div 
+                key={i} 
+                className="data-particle" 
+                style={{ 
+                    left: `${Math.random() * 100}%`, 
+                    animationDelay: `${Math.random() * 10}s`,
+                    animationDuration: `${15 + Math.random() * 10}s`
+                }} 
+            />
+        ))}
+    </div>
+);
+
 
 export const PrivateChatView: React.FC = () => {
     const { user, token } = useAuth();
@@ -296,49 +449,57 @@ export const PrivateChatView: React.FC = () => {
         <div style={{
             display: 'flex',
             height: '100%',
-            background: 'var(--bg-app)',
+            position: 'relative',
             overflow: 'hidden',
+            fontFamily: 'var(--font-main)'
         }}>
+            <style>{neuralStyles}</style>
+            <NeuralBackground />
+            
             {/* ─── Sidebar ─── */}
-            <div style={{
-                width: 340,
-                borderRight: '1px solid var(--border-subtle)',
+            <div className="glass-panel-premium" style={{
+                width: 320,
                 display: 'flex',
                 flexDirection: 'column',
-                background: 'rgba(255, 255, 255, 0.01)',
-                backdropFilter: 'blur(20px)',
                 position: 'relative',
-                zIndex: 20
+                zIndex: 20,
+                borderRight: '1px solid rgba(255,255,255,0.05)'
             }}>
-                <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, var(--primary), #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px var(--primary-subtle)' }}>
-                                <MessageSquare size={18} color="#fff" />
+                <div style={{ padding: '30px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <motion.div 
+                                whileHover={{ rotate: 180 }}
+                                style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg, var(--primary), #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)' }}
+                            >
+                                <MessageSquare size={20} color="#fff" />
+                            </motion.div>
+                            <div>
+                                <h2 style={{ fontSize: 19, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>Neural Link</h2>
+                                <div style={{ fontSize: 10, color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>Quantum Core v3</div>
                             </div>
-                            <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Neural Link</h2>
                         </div>
                         <button style={{
-                            width: 36, height: 36, borderRadius: 12, border: 'none',
+                            width: 38, height: 38, borderRadius: 14, border: '1px solid rgba(99, 102, 241, 0.2)',
                             background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.3s ease'
                         }} className="hover-lift">
-                           <Plus size={20} />
+                           <Plus size={22} />
                         </button>
                     </div>
                     
                     <div style={{ position: 'relative' }}>
-                        <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', opacity: 0.7 }} />
+                        <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
                         <input
                             type="text"
-                            placeholder="Find connections..."
+                            placeholder="Identify connection..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
-                                width: '100%', padding: '12px 14px 12px 42px', borderRadius: 14,
-                                background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)',
-                                color: 'var(--text-primary)', fontSize: 13, outline: 'none',
+                                width: '100%', padding: '14px 16px 14px 46px', borderRadius: 16,
+                                background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)',
+                                color: '#fff', fontSize: 14, outline: 'none',
                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                             }}
                             className="focus-glow"
@@ -346,151 +507,149 @@ export const PrivateChatView: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '12px 8px' }}>
+                <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px 12px' }}>
                     {searchTerm && searchResults.length > 0 ? (
-                        <div>
-                            <div style={{ padding: '0 12px 8px', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Found</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <div style={{ padding: '0 16px 12px', fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Found Results</div>
                             {searchResults.map(u => (
-                                <button
+                                <motion.button
                                     key={u.id}
+                                    whileHover={{ x: 4 }}
                                     onClick={() => handleStartChat(u)}
                                     style={{
-                                        display: 'flex', alignItems: 'center', gap: 12, width: '100%',
-                                        padding: '10px 12px', border: 'none', background: 'transparent',
-                                        cursor: 'pointer', borderRadius: 12, textAlign: 'left', transition: 'all 0.2s'
+                                        display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+                                        padding: '12px 16px', border: 'none', background: 'transparent',
+                                        cursor: 'pointer', borderRadius: 16, textAlign: 'left', transition: 'all 0.2s'
                                     }}
                                     className="hover-bg"
                                 >
-                                    <UserAvatar user={u} size={36} />
+                                    <UserAvatar user={u} size={40} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{getUserName(u)}</div>
-                                        <div style={{ fontSize: 12, color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.email}</div>
+                                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{getUserName(u)}</div>
+                                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.email}</div>
                                     </div>
-                                </button>
+                                </motion.button>
                             ))}
                         </div>
-                    ) : searchTerm && !isSearching ? (
-                        <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                            No users found for "{searchTerm}"
-                        </div>
                     ) : (
-                        conversations.map(conv => {
-                            const other = conv.participants?.[0];
-                            const lastMsg = conv.messages?.[0];
-                            const isActive = activeConversation?.id === conv.id;
-                            
-                            return (
-                                <button
-                                    key={conv.id}
-                                    onClick={() => setActiveConversation(conv)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: 12, width: '100%',
-                                        padding: '12px', border: '1px solid transparent',
-                                        background: isActive ? 'var(--primary-subtle)' : 'transparent',
-                                        borderColor: isActive ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                                        cursor: 'pointer', borderRadius: 16, textAlign: 'left',
-                                        transition: 'all 0.2s', marginBottom: 4
-                                    }}
-                                    className={!isActive ? "hover-bg" : ""}
-                                >
-                                    <UserAvatar user={other} size={44} />
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                                            <span style={{ fontSize: 14, fontWeight: 700, color: isActive ? 'var(--primary)' : 'var(--text-primary)' }}>
-                                                {getUserName(other)}
-                                            </span>
-                                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                                                {timeAgo(conv.updatedAt)}
-                                            </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            {conversations.map(conv => {
+                                const other = conv.participants?.[0];
+                                const lastMsg = conv.messages?.[0];
+                                const isActive = activeConversation?.id === conv.id;
+                                
+                                return (
+                                    <motion.button
+                                        key={conv.id}
+                                        whileHover={{ x: 4 }}
+                                        onClick={() => setActiveConversation(conv)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+                                            padding: '14px 16px', border: 'none',
+                                            background: isActive ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
+                                            cursor: 'pointer', borderRadius: 20, textAlign: 'left',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            position: 'relative'
+                                        }}
+                                        className={!isActive ? "hover-bg" : "sidebar-item-active"}
+                                    >
+                                        <UserAvatar user={other} size={48} />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                                <span style={{ fontSize: 15, fontWeight: 800, color: isActive ? 'var(--primary)' : '#fff' }}>
+                                                    {getUserName(other)}
+                                                </span>
+                                                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+                                                    {timeAgo(conv.updatedAt)}
+                                                </span>
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: 13, color: isActive ? 'rgba(99, 102, 241, 0.8)' : 'rgba(255,255,255,0.5)', 
+                                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                fontWeight: (lastMsg && !isActive) ? 600 : 400
+                                            }}>
+                                                {lastMsg ? (lastMsg.senderId === user?.id ? 'You: ' : '') + lastMsg.content : 'Initiate sequence...'}
+                                            </div>
                                         </div>
-                                        <div style={{ 
-                                            fontSize: 12, color: 'var(--text-muted)', 
-                                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                                            fontWeight: (lastMsg && !isActive) ? 500 : 400
-                                        }}>
-                                            {lastMsg ? (lastMsg.senderId === user?.id ? 'You: ' : '') + lastMsg.content : 'No messages yet'}
-                                        </div>
-                                    </div>
-                                </button>
-                            );
-                        })
+                                        {isActive && (
+                                            <motion.div 
+                                                layoutId="active-indicator"
+                                                style={{ position: 'absolute', right: 12, width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }} 
+                                            />
+                                        )}
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
                     )}
                 </div>
             </div>
 
             {/* ─── Main Chat ─── */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 10 }}>
                 {activeConversation ? (
                     <>
                         {/* Header */}
-                        <div style={{
-                            padding: '14px 24px',
-                            borderBottom: '1px solid var(--border-subtle)',
+                        <div className="glass-panel-premium" style={{
+                            padding: '20px 32px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            background: 'var(--bg-app)',
-                            zIndex: 10
+                            zIndex: 10,
+                            borderBottom: '1px solid rgba(255,255,255,0.05)'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                <div style={{ position: 'relative' }}>
-                                    <UserAvatar user={otherMember!} size={42} />
-                                    <motion.div 
-                                        animate={{ scale: [1, 1.2, 1] }}
-                                        transition={{ repeat: Infinity, duration: 2 }}
-                                        style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: '50%', background: '#22c55e', border: '2px solid var(--bg-app)' }}
-                                    />
-                                </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                                <UserAvatar user={otherMember!} size={46} />
                                 <div>
-                                    <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{getUserName(otherMember)}</div>
-                                    <div style={{ fontSize: 11, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                        <Sparkles size={10} />
-                                        Encrypted Neural Tunnel
+                                    <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>{getUserName(otherMember)}</div>
+                                    <div style={{ fontSize: 11, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
+                                        <div className="neural-status-indicator" style={{ width: 6, height: 6 }} />
+                                        Neural Tunnel Active
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                 {isMsgSearchVisible ? (
                                     <motion.div 
                                         initial={{ width: 0, opacity: 0 }}
-                                        animate={{ width: 220, opacity: 1 }}
-                                        style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-surface)', padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border-subtle)' }}
+                                        animate={{ width: 240, opacity: 1 }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', padding: '8px 14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)' }}
                                     >
-                                        <Search size={14} color="var(--text-muted)" />
+                                        <Search size={16} color="rgba(255,255,255,0.5)" />
                                         <input 
                                             type="text" 
-                                            placeholder="Search messages..."
+                                            placeholder="Query history..."
                                             value={msgSearchQuery}
                                             onChange={(e) => setMsgSearchQuery(e.target.value)}
                                             autoFocus
-                                            style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 13, width: '100%' }}
+                                            style={{ background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: 14, width: '100%' }}
                                         />
-                                        <button onClick={() => { setIsMsgSearchVisible(false); setMsgSearchQuery(''); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={14} /></button>
+                                        <button onClick={() => { setIsMsgSearchVisible(false); setMsgSearchQuery(''); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }}><X size={16} /></button>
                                     </motion.div>
                                 ) : (
-                                    <button className="icon-btn-subtle" onClick={() => setIsMsgSearchVisible(true)}><Search size={18} /></button>
+                                    <button className="icon-btn-subtle" onClick={() => setIsMsgSearchVisible(true)} style={{ color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.05)', width: 40, height: 40, borderRadius: 12 }}><Search size={20} /></button>
                                 )}
                                 
                                 <div style={{ position: 'relative' }}>
-                                    <button className="icon-btn-subtle" onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}><MoreHorizontal size={18} /></button>
+                                    <button className="icon-btn-subtle" onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} style={{ color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.05)', width: 40, height: 40, borderRadius: 12 }}><MoreHorizontal size={20} /></button>
                                     <AnimatePresence>
                                         {isMoreMenuOpen && (
                                             <motion.div
-                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                initial={{ opacity: 0, y: 15, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                exit={{ opacity: 0, y: 15, scale: 0.95 }}
                                                 style={{
-                                                    position: 'absolute', top: '100%', right: 0, marginTop: 8,
-                                                    width: 180, background: 'var(--bg-elevated)', borderRadius: 12,
-                                                    border: '1px solid var(--border-subtle)', boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-                                                    zIndex: 100, overflow: 'hidden'
+                                                    position: 'absolute', top: '100%', right: 0, marginTop: 12,
+                                                    width: 200, background: 'rgba(15, 23, 42, 0.95)', borderRadius: 18,
+                                                    border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                                                    backdropFilter: 'blur(20px)',
+                                                    zIndex: 100, overflow: 'hidden', padding: '6px'
                                                 }}
                                             >
-                                                <button className="more-menu-item" onClick={() => setIsMoreMenuOpen(false)}><Bell size={16} /> Mute Notifications</button>
-                                                <button className="more-menu-item" onClick={() => setIsMoreMenuOpen(false)}><Download size={16} /> Export Chat</button>
-                                                <button className="more-menu-item" onClick={() => setIsMoreMenuOpen(false)}><Clock size={16} /> Set Reminder</button>
-                                                <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 0' }}></div>
-                                                <button className="more-menu-item danger" onClick={() => { setActiveMessages([]); setIsMoreMenuOpen(false); }}><Eraser size={16} /> Clear History</button>
+                                                <button className="more-menu-item" style={{ padding: '12px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, width: '100%', border: 'none', background: 'transparent', color: '#fff', cursor: 'pointer', borderRadius: 12 }} onClick={() => setIsMoreMenuOpen(false)}><Bell size={16} /> Mute Channel</button>
+                                                <button className="more-menu-item" style={{ padding: '12px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, width: '100%', border: 'none', background: 'transparent', color: '#fff', cursor: 'pointer', borderRadius: 12 }} onClick={() => setIsMoreMenuOpen(false)}><Download size={16} /> Archive Logs</button>
+                                                <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '4px 8px' }}></div>
+                                                <button className="more-menu-item danger" style={{ padding: '12px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, width: '100%', border: 'none', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', borderRadius: 12 }} onClick={() => { setActiveMessages([]); setIsMoreMenuOpen(false); }}><Eraser size={16} /> Wipe Terminal</button>
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
@@ -698,38 +857,42 @@ export const PrivateChatView: React.FC = () => {
 
                         {/* Input Area */}
                         <div style={{
-                            padding: '16px 24px 24px',
-                            background: 'var(--bg-app)',
-                            borderTop: '1px solid var(--border-subtle)'
+                            padding: '24px 32px 32px',
+                            zIndex: 10
                         }}>
                             {editingMessage ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-surface)', padding: '12px 16px', borderRadius: 16, marginBottom: 12 }}>
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(99, 102, 241, 0.1)', padding: '16px 20px', borderRadius: 20, marginBottom: 16, border: '1px solid rgba(99, 102, 241, 0.2)', backdropFilter: 'blur(20px)' }}
+                                >
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>Editing Message</div>
+                                        <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--primary)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Neural Stream Override</div>
                                         <input 
                                             type="text" 
                                             value={editContent} 
                                             onChange={(e) => setEditContent(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleEditMessage(editingMessage)}
-                                            style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none' }}
+                                            style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', outline: 'none', fontSize: 15 }}
                                             autoFocus
                                         />
                                     </div>
-                                    <button onClick={() => setEditingMessage(null)} className="icon-btn-subtle"><X size={16} /></button>
-                                    <button onClick={() => handleEditMessage(editingMessage)} className="icon-btn" style={{ background: 'var(--primary)' }}><Check size={16} /></button>
-                                </div>
+                                    <button onClick={() => setEditingMessage(null)} style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={18} /></button>
+                                    <button onClick={() => handleEditMessage(editingMessage)} style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'var(--primary)', color: '#fff', cursor: 'pointer' }}><Check size={18} /></button>
+                                </motion.div>
                             ) : (
                                 <form 
                                     onSubmit={handleSendMessage}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: 12,
-                                        background: 'var(--bg-surface)',
-                                        padding: '8px 12px',
-                                        borderRadius: 20,
-                                        border: '1px solid var(--border-subtle)',
-                                        boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+                                        gap: 16,
+                                        background: 'rgba(255, 255, 255, 0.04)',
+                                        padding: '10px 14px',
+                                        borderRadius: 24,
+                                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                                        boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                                        backdropFilter: 'blur(30px)'
                                     }}
                                 >
                                     <input 
@@ -740,49 +903,52 @@ export const PrivateChatView: React.FC = () => {
                                         accept="image/*"
                                     />
                                     
-                                    <button 
+                                    <motion.button 
+                                        whileHover={{ scale: 1.1, rotate: 5 }}
+                                        whileTap={{ scale: 0.9 }}
                                         type="button" 
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="icon-btn-subtle"
+                                        style={{ width: 44, height: 44, borderRadius: 18, border: 'none', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                         disabled={uploadingImage}
                                     >
-                                        {uploadingImage ? <Loader2 size={18} className="animate-spin" /> : <ImageIcon size={20} />}
-                                    </button>
+                                        {uploadingImage ? <Loader2 size={20} className="animate-spin" /> : <ImageIcon size={22} />}
+                                    </motion.button>
                                     
                                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative' }}>
                                     <AnimatePresence>
                                         {replyingTo && (
                                             <motion.div 
                                                 initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 44, opacity: 1 }}
+                                                animate={{ height: 50, opacity: 1 }}
                                                 exit={{ height: 0, opacity: 0 }}
                                                 style={{
-                                                    background: 'var(--bg-secondary)',
+                                                    background: 'rgba(99, 102, 241, 0.1)',
                                                     borderLeft: '4px solid var(--primary)',
-                                                    padding: '4px 12px',
+                                                    padding: '6px 14px',
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'center',
-                                                    fontSize: '13px',
+                                                    fontSize: '14px',
                                                     overflow: 'hidden',
-                                                    borderRadius: '8px 8px 0 0',
+                                                    borderRadius: '12px 12px 0 0',
                                                     marginBottom: -4,
-                                                    zIndex: 1
+                                                    zIndex: 1,
+                                                    backdropFilter: 'blur(10px)'
                                                 }}
                                             >
                                                 <div style={{ flex: 1, overflow: 'hidden' }}>
-                                                    <div style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '11px' }}>
-                                                        Replying to {replyingTo.sender.displayName}
+                                                    <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                        Targeting: {replyingTo.sender.displayName}
                                                     </div>
-                                                    <div style={{ opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '12px' }}>
-                                                        {replyingTo.content || 'Media'}
+                                                    <div style={{ color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '13px', marginTop: 2 }}>
+                                                        {replyingTo.content || 'Media Stream'}
                                                     </div>
                                                 </div>
                                                 <button 
                                                     onClick={() => setReplyingTo(null)}
-                                                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
+                                                    style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 6 }}
                                                 >
-                                                    <X size={14} />
+                                                    <X size={16} />
                                                 </button>
                                             </motion.div>
                                         )}
@@ -790,40 +956,42 @@ export const PrivateChatView: React.FC = () => {
                                     
                                     <input
                                         type="text"
-                                        placeholder="Type a message..."
+                                        placeholder="Transmit data packet..."
                                         value={messageInput}
                                         onChange={(e) => setMessageInput(e.target.value)}
                                         style={{
                                             width: '100%',
                                             background: 'transparent',
                                             border: 'none',
-                                            padding: '12px 4px',
-                                            color: 'var(--text-primary)',
-                                            fontSize: 14,
-                                            outline: 'none'
+                                            padding: '16px 8px',
+                                            color: '#fff',
+                                            fontSize: 15,
+                                            outline: 'none',
+                                            fontWeight: 500
                                         }}
                                     />
                                 </div>
                                     
                                     <div style={{ position: 'relative' }}>
-                                        <button type="button" className="icon-btn-subtle" onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}>
-                                            <Smile size={20} />
+                                        <button type="button" style={{ color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-lift" onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}>
+                                            <Smile size={22} />
                                         </button>
                                         <AnimatePresence>
                                             {isEmojiPickerOpen && (
                                                 <motion.div
-                                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                                    initial={{ opacity: 0, y: -15, scale: 0.9 }}
                                                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                                    exit={{ opacity: 0, y: -15, scale: 0.9 }}
                                                     style={{
-                                                        position: 'absolute', bottom: '100%', right: 0, marginBottom: 12,
-                                                        width: 280, height: 200, background: 'var(--bg-elevated)', borderRadius: 16,
-                                                        border: '1px solid var(--border-subtle)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                                                        zIndex: 100, padding: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column'
+                                                        position: 'absolute', bottom: '110%', right: 0,
+                                                        width: 320, height: 240, background: 'rgba(15, 23, 42, 0.98)', borderRadius: 24,
+                                                        border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 15px 50px rgba(0,0,0,0.6)',
+                                                        backdropFilter: 'blur(30px)',
+                                                        zIndex: 100, padding: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column'
                                                     }}
                                                 >
-                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, overflowY: 'auto' }} className="custom-scrollbar">
-                                                        {['❤️', '👍', '🔥', '😂', '😮', '😢', '😍', '🙌', '🚀', '✨', '💯', '🤔', '😎', '🙏', '🎉', '💡', '✅', '❌', 'Neural', 'AI', '⚡', '🤖', '🧠', '🌈'].map(emoji => (
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8, overflowY: 'auto' }} className="custom-scrollbar">
+                                                        {['❤️', '👍', '🔥', '😂', '😮', '😢', '😍', '🙌', '🚀', '✨', '💯', '🤔', '😎', '🙏', '🎉', '💡', '✅', '❌', '🧠', '🤖', '⚡', '🌌', '🔗', '🔒'].map(emoji => (
                                                             <div 
                                                                 key={emoji} 
                                                                 className="emoji-item"
@@ -841,21 +1009,23 @@ export const PrivateChatView: React.FC = () => {
                                         </AnimatePresence>
                                     </div>
                                     
-                                    <button 
+                                    <motion.button 
+                                        whileHover={{ scale: 1.1, x: 2 }}
+                                        whileTap={{ scale: 0.9 }}
                                         type="submit" 
                                         disabled={(!messageInput.trim() && !uploadingImage) || isSending}
                                         style={{
-                                            width: 40, height: 40, borderRadius: '50%',
+                                            width: 44, height: 44, borderRadius: 18,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             background: 'var(--primary)', color: '#fff',
                                             border: 'none', cursor: 'pointer',
-                                            boxShadow: '0 4px 10px rgba(99, 102, 241, 0.3)',
-                                            transition: 'all 0.2s',
-                                            opacity: (!messageInput.trim() && !uploadingImage) || isSending ? 0.6 : 1
+                                            boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)',
+                                            transition: 'all 0.3s ease',
+                                            opacity: (!messageInput.trim() && !uploadingImage) || isSending ? 0.5 : 1
                                         }}
                                     >
-                                        <Send size={18} />
-                                    </button>
+                                        <Send size={22} />
+                                    </motion.button>
                                 </form>
                             )}
                         </div>
@@ -863,95 +1033,36 @@ export const PrivateChatView: React.FC = () => {
                 ) : (
                     <div style={{ 
                         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        color: 'var(--text-muted)', textAlign: 'center', padding: 40
+                        color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 40, position: 'relative'
                     }}>
-                        <div style={{ 
-                            width: 80, height: 80, borderRadius: 28, background: 'var(--primary-subtle)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)',
-                            marginBottom: 24
-                        }}>
-                            <Send size={40} />
-                        </div>
-                        <h3 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>Personal Chat Hub</h3>
-                        <p style={{ maxWidth: 300, lineHeight: 1.6, fontSize: 14 }}>
-                            Pick a contact from the list or search for someone new to start a personal neural connection.
+                        <motion.div 
+                            animate={{ 
+                                scale: [1, 1.05, 1],
+                                opacity: [0.6, 1, 0.6]
+                            }}
+                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                            style={{ 
+                                width: 120, height: 120, borderRadius: 40, background: 'rgba(99, 102, 241, 0.08)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)',
+                                marginBottom: 32, border: '1px solid rgba(99, 102, 241, 0.15)',
+                                boxShadow: '0 0 40px rgba(99, 102, 241, 0.1)'
+                            }}
+                        >
+                            <MessageSquare size={54} />
+                        </motion.div>
+                        <h3 style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 12, letterSpacing: '-0.02em' }}>Neural Link Standby</h3>
+                        <p style={{ maxWidth: 320, lineHeight: 1.7, fontSize: 15, fontWeight: 500 }}>
+                            Select a neural pathway from the list or initiate a new connection to begin secure data transmission.
                         </p>
+                        
+                        <div style={{ position: 'absolute', bottom: 40, display: 'flex', gap: 24, opacity: 0.3 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}><Sparkles size={14} /> End-to-End Encryption</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}><Check size={14} /> Quantum Secure</div>
+                        </div>
                     </div>
                 )}
             </div>
-            <style>{`
-                @keyframes neural-pulse {
-                    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-                    70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
-                    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-                }
-                .hover-lift {
-                    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-                }
-                .hover-lift:hover {
-                    transform: translateY(-2px) scale(1.02);
-                }
-                .focus-glow:focus {
-                    border-color: var(--primary) !important;
-                    box-shadow: 0 0 0 3px var(--primary-subtle) !important;
-                    background: rgba(255, 255, 255, 0.05) !important;
-                }
-                .message-bubble-trigger {
-                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-                .message-bubble-trigger:hover {
-                    transform: scale(1.01);
-                }
-                .hover-bg:hover {
-                    background: rgba(255, 255, 255, 0.04) !important;
-                    backdrop-filter: blur(5px);
-                }
-                .icon-btn-subtle {
-                    width: 40px; 
-                    height: 40px; 
-                    border-radius: 12px; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center;
-                    background: rgba(255,255,255,0.02); 
-                    border: 1px solid rgba(255,255,255,0.05); 
-                    color: var(--text-muted); 
-                    cursor: pointer; 
-                    transition: all 0.2s;
-                }
-                .icon-btn-subtle:hover {
-                    background: var(--primary-subtle);
-                    color: var(--primary);
-                    border-color: var(--primary-subtle);
-                    transform: translateY(-2px);
-                }
-                .message-bubble-trigger:hover .message-actions-popover {
-                    visibility: visible !important;
-                    opacity: 1 !important;
-                    top: -42px !important;
-                }
-                .emoji-item {
-                    font-size: 20px;
-                    padding: 8px;
-                    cursor: pointer;
-                    border-radius: 10px;
-                    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                }
-                .emoji-item:hover {
-                    background: var(--primary-subtle);
-                    transform: scale(1.25) rotate(5deg);
-                }
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 5px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.1);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: var(--primary);
-                }
-            `}</style>
         </div>
     );
 };
+
