@@ -185,7 +185,19 @@ export const initializeDatabase = async () => {
 };
 
 // ─── Prisma Client (used by sprint-6 modules) ──────────────────────────────
-export const prisma = new PrismaClient();
+// Heuristic: If DATABASE_URL is empty but we found a valid URL, populate it for Prisma
+const finalOptions = getOptions();
+if (finalOptions.url && (!process.env.DATABASE_URL || process.env.DATABASE_URL.length < 10)) {
+    process.env.DATABASE_URL = finalOptions.url;
+}
+
+export const prisma = new PrismaClient({
+    datasources: {
+        db: {
+            url: finalOptions.url
+        }
+    }
+});
 
 // ─── ClickHouse Client (lazy — only created when needed) ────────────────────
 let _clickhouse: any = null;
