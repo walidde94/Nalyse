@@ -118,9 +118,9 @@ const neuralStyles = `
         filter: brightness(1.1);
     }
 
-    .message-bubble-own:hover .message-actions-popover,
-    .message-bubble-other:hover .message-actions-popover {
+    .message-bubble-trigger:hover .message-actions-popover {
         opacity: 1 !important;
+        visibility: visible !important;
         transform: translateY(-8px) !important;
         pointer-events: auto !important;
     }
