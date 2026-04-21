@@ -438,7 +438,7 @@ export const PrivateChatView: React.FC = () => {
                                     <motion.div 
                                         animate={{ scale: [1, 1.2, 1] }}
                                         transition={{ repeat: Infinity, duration: 2 }}
-                                        style={{ position: 'absolute', -top: 2, -right: 2, width: 10, height: 10, borderRadius: '50%', background: '#22c55e', border: '2px solid var(--bg-app)' }}
+                                        style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: '50%', background: '#22c55e', border: '2px solid var(--bg-app)' }}
                                     />
                                 </div>
                                 <div>
@@ -879,7 +879,7 @@ export const PrivateChatView: React.FC = () => {
                     </div>
                 )}
             </div>
-
+            <style>{`
                 @keyframes neural-pulse {
                     0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
                     70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
