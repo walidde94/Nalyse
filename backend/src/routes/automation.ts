@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { requirePermission, Permission } from '../middleware/rbac';
 import { prisma } from '../config/database';
@@ -226,7 +226,7 @@ async function generateEnterpriseReport(orgId: string, runId: string) {
             include: { user: { select: { firstName: true, lastName: true } } }
         }); 
     } catch (e) {}
-    try { fileTypeDistribution = await prisma.file.groupBy({
+    try { fileTypeDistribution = await (prisma.file.groupBy as any)({
         by: ['mimeType'],
         where: { organizationId: orgId },
         _count: { id: true }
@@ -391,8 +391,8 @@ router.get('/history', authenticate, requirePermission(Permission.READ_ANALYSIS)
 
 router.get('/reports/:id/download', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const orgId = req.user!.organizationId;
-        const runId = req.params.id;
+        const orgId = req.user!.organizationId as string;
+        const runId = req.params.id as string;
         const html = await generateEnterpriseReport(orgId, runId);
         const fileName = `Nalyse_Report_${runId.substring(0,8)}.html`;
         
@@ -405,13 +405,14 @@ router.get('/reports/:id/download', authenticate, async (req: AuthRequest, res: 
     }
 });
 
-router.get('/reports/:id/view', (req: Request, res: Response, next) => {
-    if (req.query.token) req.headers.authorization = `Bearer ${req.query.token}`;
-    authenticate(req as any, res, next);
+router.get('/reports/:id/view', (req: any, res: any, next: any) => {
+    const token = req.query?.token;
+    if (token) req.headers.authorization = `Bearer ${token}`;
+    authenticate(req, res, next);
 }, async (req: AuthRequest, res: Response) => {
     try {
-        const orgId = req.user!.organizationId;
-        const runId = req.params.id;
+        const orgId = req.user!.organizationId as string;
+        const runId = req.params.id as string;
         const html = await generateEnterpriseReport(orgId, runId);
         res.setHeader('Content-Type', 'text/html');
         res.send(html);

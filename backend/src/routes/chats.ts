@@ -85,7 +85,13 @@ router.post('/', authenticate, async (req: any, res: any) => {
                         where: { id: { not: userId } },
                         select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true }
                     },
-                    messages: true
+                    messages: {
+                        orderBy: { createdAt: 'desc' },
+                        take: 1,
+                        include: {
+                            sender: { select: { id: true, displayName: true } }
+                        }
+                    }
                 }
             });
         }
