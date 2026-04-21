@@ -87,57 +87,208 @@ async function ensureAuditLogTable() {
         }
 
         const healingQueries = [
-            // Ensure tables exist first
+            // === Core Tables ===
             `CREATE TABLE IF NOT EXISTS organizations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text UNIQUE NOT NULL)`,
             `CREATE TABLE IF NOT EXISTS users (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), email text UNIQUE NOT NULL)`,
             `CREATE TABLE IF NOT EXISTS workspaces (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, organization_id uuid NOT NULL)`,
-            `CREATE TABLE IF NOT EXISTS direct_conversations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), created_at timestamp with time zone DEFAULT now())`,
-            `CREATE TABLE IF NOT EXISTS user_invitations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), email text NOT NULL, token text UNIQUE NOT NULL, organization_id uuid NOT NULL, inviter_id uuid NOT NULL)`,
 
-            // Organizations
-            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS slug text UNIQUE`,
+            // === Organizations columns ===
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS slug text`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS subscription_tier text DEFAULT 'free'`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free'`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS stripe_customer_id text`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS stripe_subscription_id text`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS subscription_started_at timestamp with time zone`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS current_period_end timestamp with time zone`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS cancel_at_period_end boolean DEFAULT false`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS storage_used bigint DEFAULT 0`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS storage_limit bigint DEFAULT 104857600`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS user_limit int DEFAULT 1`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS file_limit int DEFAULT 5`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS max_users int DEFAULT 5`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
-            // Users
+            // === Users columns ===
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text`,
-            `ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id uuid`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name text`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS role text DEFAULT 'member'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS bio text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'inactive'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at timestamp with time zone`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id uuid`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean DEFAULT false`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires timestamp with time zone`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences jsonb DEFAULT '{}'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS api_keys jsonb DEFAULT '[]'`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
-            // Workspaces
+            // === Workspaces columns ===
+            `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS organization_id uuid`,
             `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
-            
-            // Files
+
+            // === Workspace Members ===
+            `CREATE TABLE IF NOT EXISTS workspace_members (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), workspace_id uuid NOT NULL, user_id uuid NOT NULL, role text DEFAULT 'editor')`,
+
+            // === Workspace Messages ===
+            `CREATE TABLE IF NOT EXISTS workspace_messages (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), workspace_id uuid NOT NULL, author_id uuid NOT NULL, content text NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reply_to_id uuid`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS mentions text[] DEFAULT '{}'`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reactions jsonb DEFAULT '[]'`,
+
+            // === Files ===
             `CREATE TABLE IF NOT EXISTS files (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), filename text NOT NULL, owner_id uuid NOT NULL)`,
             `ALTER TABLE files ADD COLUMN IF NOT EXISTS original_name text`,
-            `ALTER TABLE files ADD COLUMN IF NOT EXISTS organization_id uuid`,
-            `ALTER TABLE files ADD COLUMN IF NOT EXISTS workspace_id uuid`,
             `ALTER TABLE files ADD COLUMN IF NOT EXISTS mime_type text`,
             `ALTER TABLE files ADD COLUMN IF NOT EXISTS size bigint DEFAULT 0`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS path text`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS s3_key text`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS s3_bucket text`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS group_id uuid`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS metadata jsonb`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS checksum text`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS status text DEFAULT 'ready'`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS is_favorite boolean DEFAULT false`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS is_deleted boolean DEFAULT false`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS is_processed boolean DEFAULT false`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS is_archived boolean DEFAULT false`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS processed_at timestamp with time zone`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS organization_id uuid`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS workspace_id uuid`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
-            // Dashboards
-            `CREATE TABLE IF NOT EXISTS dashboards (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, user_id uuid NOT NULL)`,
-            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS organization_id uuid`,
-            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS grid_layout jsonb DEFAULT '[]'`,
-            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS panels jsonb DEFAULT '[]'`,
-
-            // Analyses
-            `CREATE TABLE IF NOT EXISTS analyses (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), file_id uuid NOT NULL, created_by_id uuid NOT NULL)`,
-            `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS status text DEFAULT 'pending'`,
+            // === Analyses ===
+            `CREATE TABLE IF NOT EXISTS analyses (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), file_id uuid NOT NULL, created_by_id uuid NOT NULL, status text DEFAULT 'pending', created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
             `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS results jsonb`,
+            `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS insights jsonb`,
+            `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS statistics jsonb`,
+            `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS error_message text`,
+            `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS processing_time_ms int`,
+            `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS completed_at timestamp with time zone`,
 
-            // Schedules
+            // === Dashboards ===
+            `CREATE TABLE IF NOT EXISTS dashboards (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, user_id uuid NOT NULL)`,
+            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS panels jsonb DEFAULT '[]'`,
+            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS grid_layout jsonb DEFAULT '[]'`,
+            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS organization_id uuid`,
+            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS workspace_id uuid`,
+            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
+
+            // === Schedules ===
             `CREATE TABLE IF NOT EXISTS schedules (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, cron_expression text NOT NULL, organization_id uuid NOT NULL, created_by_user_id uuid NOT NULL)`,
-            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS config jsonb DEFAULT '{}'`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS config jsonb`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS target_file_id uuid`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS dashboard_id uuid`,
-            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS analysis_id uuid`
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS analysis_id uuid`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS last_run_at timestamp with time zone`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS next_run_at timestamp with time zone`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
+
+            // === Schedule Runs ===
+            `CREATE TABLE IF NOT EXISTS schedule_runs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), schedule_id uuid NOT NULL, status text DEFAULT 'pending', started_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS completed_at timestamp with time zone`,
+            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS duration_ms int`,
+            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS output_url text`,
+            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS error_message text`,
+            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS metadata jsonb`,
+
+            // === Direct Conversations ===
+            `CREATE TABLE IF NOT EXISTS direct_conversations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE direct_conversations ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
+            // Prisma many-to-many join table for DirectConversation <-> User
+            `CREATE TABLE IF NOT EXISTS "_ConversationParticipants" ("A" uuid NOT NULL REFERENCES direct_conversations(id) ON DELETE CASCADE, "B" uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE)`,
+            `CREATE UNIQUE INDEX IF NOT EXISTS "_ConversationParticipants_AB_unique" ON "_ConversationParticipants"("A", "B")`,
+            `CREATE INDEX IF NOT EXISTS "_ConversationParticipants_B_index" ON "_ConversationParticipants"("B")`,
+
+            // === Direct Messages ===
+            `CREATE TABLE IF NOT EXISTS direct_messages (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), conversation_id uuid NOT NULL, sender_id uuid NOT NULL, content text NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS image_url text`,
+            `ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS reply_to_id uuid`,
+            `ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS reactions jsonb DEFAULT '[]'`,
+            `ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS is_edited boolean DEFAULT false`,
+            `ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS is_deleted boolean DEFAULT false`,
+
+            // === Notifications ===
+            `CREATE TABLE IF NOT EXISTS notifications (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL, title text NOT NULL, message text NOT NULL, created_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS organization_id uuid`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS category text DEFAULT 'info'`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS priority text DEFAULT 'medium'`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS source text DEFAULT 'SYSTEM'`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS icon_type text DEFAULT 'bell'`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS color text DEFAULT '#6366f1'`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS action_label text`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS action_url text`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS prediction text`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS confidence float`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS impact_score float`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS read boolean DEFAULT false`,
+            `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS pinned boolean DEFAULT false`,
+
+            // === Reports ===
+            `CREATE TABLE IF NOT EXISTS reports (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), title text NOT NULL, config jsonb NOT NULL, user_id uuid NOT NULL)`,
+            `ALTER TABLE reports ADD COLUMN IF NOT EXISTS organization_id uuid`,
+            `ALTER TABLE reports ADD COLUMN IF NOT EXISTS share_token text`,
+            `ALTER TABLE reports ADD COLUMN IF NOT EXISTS is_public boolean DEFAULT false`,
+            `ALTER TABLE reports ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE reports ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
+
+            // === User Invitations ===
+            `CREATE TABLE IF NOT EXISTS user_invitations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), email text NOT NULL, token text NOT NULL, organization_id uuid NOT NULL, inviter_id uuid NOT NULL)`,
+            `ALTER TABLE user_invitations ADD COLUMN IF NOT EXISTS role text DEFAULT 'member'`,
+            `ALTER TABLE user_invitations ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone`,
+            `ALTER TABLE user_invitations ADD COLUMN IF NOT EXISTS status text DEFAULT 'pending'`,
+            `ALTER TABLE user_invitations ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+
+            // === Audit Logs ===
+            `CREATE TABLE IF NOT EXISTS audit_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), workspace_id uuid NOT NULL, user_id uuid NOT NULL, action text NOT NULL, created_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_id text`,
+            `ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details jsonb`,
+
+            // === Groups ===
+            `CREATE TABLE IF NOT EXISTS groups (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, owner_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE groups ADD COLUMN IF NOT EXISTS description text`,
+
+            // === Agents ===
+            `CREATE TABLE IF NOT EXISTS agent (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, role text NOT NULL, status text NOT NULL, user_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE agent ADD COLUMN IF NOT EXISTS current_goal text`,
+            `ALTER TABLE agent ADD COLUMN IF NOT EXISTS final_report text`,
+            `CREATE TABLE IF NOT EXISTS agent_task (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), description text NOT NULL, agent_id uuid NOT NULL, status text DEFAULT 'pending', created_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE agent_task ADD COLUMN IF NOT EXISTS result text`,
+
+            // === Remote Sources ===
+            `CREATE TABLE IF NOT EXISTS remote_sources (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, type text NOT NULL, owner_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE remote_sources ADD COLUMN IF NOT EXISTS config jsonb`,
+            `ALTER TABLE remote_sources ADD COLUMN IF NOT EXISTS status text DEFAULT 'active'`,
+            `ALTER TABLE remote_sources ADD COLUMN IF NOT EXISTS last_synced_at timestamp with time zone`,
+
+            // === Webhooks ===
+            `CREATE TABLE IF NOT EXISTS webhooks (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, url text NOT NULL, organization_id uuid NOT NULL, created_by_user_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS secret text`,
+            `ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS events jsonb DEFAULT '["analysis.completed"]'`,
+            `ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
+
+            // === Analysis Configurations ===
+            `CREATE TABLE IF NOT EXISTS analysis_configurations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, config jsonb NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS description text`,
+            `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS mode text DEFAULT 'standard'`,
+            `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS is_preset boolean DEFAULT false`,
+            `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS is_built_in boolean DEFAULT false`,
+            `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS owner_id uuid`
         ];
 
         for (const query of healingQueries) {
