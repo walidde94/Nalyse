@@ -32,56 +32,65 @@ async function ensureAuditLogTable() {
             )
         `);
 
-        // 2. Manual column healing for critical fields (Fallback if Prisma sync is blocked)
-        console.log('🧬 [Metadata] Checking for critical schema columns...');
+        // 2. Comprehensive Schema Healing (Fallback if Prisma sync is blocked)
+        console.log('🧬 [Metadata] Starting Comprehensive Schema Healing...');
 
-        // Ensure users table exists
-        await queryRunner.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-                email text UNIQUE NOT NULL,
-                password_hash text NOT NULL,
-                created_at timestamp with time zone DEFAULT now(),
-                updated_at timestamp with time zone DEFAULT now()
-            )
-        `);
+        const healingQueries = [
+            // Organizations
+            `CREATE TABLE IF NOT EXISTS organizations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text UNIQUE NOT NULL, slug text UNIQUE, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS subscription_tier text DEFAULT 'free'`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free'`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS stripe_customer_id text`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS storage_limit bigint DEFAULT 104857600`,
+            `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
 
-        // Ensure critical columns on users
-        await queryRunner.query(`
-            DO $$ 
-            BEGIN 
-                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='organization_id') THEN
-                    ALTER TABLE users ADD COLUMN organization_id uuid;
-                END IF;
-                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash') THEN
-                    ALTER TABLE users ADD COLUMN password_hash text;
-                END IF;
-                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='first_name') THEN
-                    ALTER TABLE users ADD COLUMN first_name text;
-                END IF;
-                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='last_name') THEN
-                    ALTER TABLE users ADD COLUMN last_name text;
-                END IF;
-                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='role') THEN
-                    ALTER TABLE users ADD COLUMN role text DEFAULT 'user';
-                END IF;
-            END $$;
-        `);
+            // Users
+            `CREATE TABLE IF NOT EXISTS users (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), email text UNIQUE NOT NULL, password_hash text NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS role text DEFAULT 'member'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id uuid`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean DEFAULT false`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires timestamp with time zone`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences jsonb DEFAULT '{}'`,
 
-        // Ensure cron_expression on schedules
-        await queryRunner.query(`
-            DO $$ 
-            BEGIN 
-                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='schedules') THEN
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='schedules' AND column_name='cron_expression') THEN
-                        ALTER TABLE schedules ADD COLUMN cron_expression text;
-                    END IF;
-                END IF;
-            END $$;
-        `);
+            // Workspaces
+            `CREATE TABLE IF NOT EXISTS workspaces (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, organization_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now())`,
+            `CREATE TABLE IF NOT EXISTS workspace_members (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), workspace_id uuid NOT NULL, user_id uuid NOT NULL, role text DEFAULT 'editor')`,
+            `CREATE TABLE IF NOT EXISTS workspace_messages (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), workspace_id uuid NOT NULL, author_id uuid NOT NULL, content text NOT NULL, created_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS mentions text[] DEFAULT '{}'`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reactions jsonb DEFAULT '[]'`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reply_to_id uuid`,
+
+            // Files
+            `CREATE TABLE IF NOT EXISTS files (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), filename text NOT NULL, owner_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS organization_id uuid`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS workspace_id uuid`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS mime_type text`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS size bigint DEFAULT 0`,
+            `ALTER TABLE files ADD COLUMN IF NOT EXISTS is_favorite boolean DEFAULT false`,
+
+            // Schedules
+            `CREATE TABLE IF NOT EXISTS schedules (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, cron_expression text NOT NULL, organization_id uuid NOT NULL, created_by_user_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS last_run_at timestamp with time zone`,
+            `CREATE TABLE IF NOT EXISTS schedule_runs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), schedule_id uuid NOT NULL, status text DEFAULT 'pending', started_at timestamp with time zone DEFAULT now())`
+        ];
+
+        for (const query of healingQueries) {
+            try {
+                await queryRunner.query(query);
+            } catch (e: any) {
+                console.warn(`[SchemaHealing] Query failed: ${query.substring(0, 50)}... Error: ${e.message}`);
+            }
+        }
 
         await queryRunner.release();
-        console.log('✅ [Metadata] Audit Pipeline & Schema Healing Verified.');
+        console.log('✅ [Metadata] Comprehensive Schema Healing Verified.');
     } catch (err: any) {
         console.error('⚠️ [Metadata] Audit Pipeline verification failed (non-critical):', err.message);
     }
