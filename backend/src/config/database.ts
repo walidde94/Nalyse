@@ -102,6 +102,7 @@ async function ensureAuditLogTable() {
 
             // Schedules
             `CREATE TABLE IF NOT EXISTS schedules (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, cron_expression text NOT NULL, organization_id uuid NOT NULL, created_by_user_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS config jsonb DEFAULT '{}'`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS last_run_at timestamp with time zone`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS target_file_id uuid`,
@@ -117,7 +118,12 @@ async function ensureAuditLogTable() {
             // Workspace Messages
             `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reply_to_id uuid`,
             `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reactions jsonb DEFAULT '[]'`,
-            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS mentions text[] DEFAULT '{}'`
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS mentions text[] DEFAULT '{}'`,
+
+            // Legacy Cleanup: If CamelCase columns exist from failed deployments, rename or drop them
+            `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='passwordHash') THEN ALTER TABLE users RENAME COLUMN "passwordHash" TO password_hash; END IF; END $$;`,
+            `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='organizationId') THEN ALTER TABLE users RENAME COLUMN "organizationId" TO organization_id; END IF; END $$;`,
+            `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='passwordHash') THEN ALTER TABLE users DROP COLUMN "passwordHash"; END IF; END $$;`
         ];
 
         for (const query of healingQueries) {
