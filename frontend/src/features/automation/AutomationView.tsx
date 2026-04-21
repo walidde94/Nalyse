@@ -607,29 +607,42 @@ export const AutomationView = () => {
                 {activeTab === 'reports' && (
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-                            {globalHistory.filter((r: any) => r.status === 'success' && r.outputUrl).map((report: any) => (
-                                <div key={report.id} className="glass-panel" style={{ padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            {globalHistory.filter((r: any) => (r.status === 'success' || r.status === 'pending') && r.schedule).map((report: any) => (
+                                <div key={report.id} className="glass-panel" style={{ 
+                                    padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.06)',
+                                    position: 'relative', overflow: 'hidden'
+                                }}>
+                                    {report.status === 'pending' && (
+                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                                            <RefreshCw className="animate-spin" size={32} style={{ color: 'var(--primary)' }} />
+                                            <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Generating Intelligence...</div>
+                                        </div>
+                                    )}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                                         <div style={{ padding: '12px', borderRadius: '16px', background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}>
                                             <FileCode size={24} />
                                         </div>
                                         <div style={{ padding: '4px 10px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '10px', fontWeight: 800, color: '#fff', textTransform: 'uppercase' }}>
-                                            PDF
+                                            {report.schedule?.config?.format || 'PDF'}
                                         </div>
                                     </div>
-                                    <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>{report.schedule?.name}</h4>
-                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: '0 0 20px', fontWeight: 500 }}>Generated {formatDate(report.startedAt)}</p>
+                                    <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>{report.schedule?.name || 'Untitled Report'}</h4>
+                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: '0 0 20px', fontWeight: 500 }}>
+                                        {report.status === 'pending' ? 'Initiated now' : `Generated ${formatDate(report.startedAt)}`}
+                                    </p>
                                     <div style={{ display: 'flex', gap: '10px' }}>
                                         <button 
+                                            disabled={report.status === 'pending'}
                                             className="glass-button" 
-                                            style={{ flex: 1, padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: report.status === 'pending' ? 0.5 : 1 }}
                                             onClick={() => handleViewReport(report.outputUrl)}
                                         >
                                             <Eye size={14} /> Preview
                                         </button>
                                         <button 
+                                            disabled={report.status === 'pending'}
                                             className="glass-button" 
-                                            style={{ flex: 1, padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)', opacity: report.status === 'pending' ? 0.5 : 1 }}
                                             onClick={() => handleDownloadReport(report.id)}
                                         >
                                             <Download size={14} /> Download
@@ -637,10 +650,29 @@ export const AutomationView = () => {
                                     </div>
                                 </div>
                             ))}
-                            {globalHistory.filter((r: any) => r.status === 'success' && r.outputUrl).length === 0 && (
+                            {globalHistory.filter((r: any) => (r.status === 'success' || r.status === 'pending') && r.schedule).length === 0 && (
                                 <div style={{ gridColumn: '1 / -1', padding: '100px', textAlign: 'center', color: 'rgba(255,255,255,0.2)' }}>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Zero artifacts produced yet.</h3>
-                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.1)', marginTop: '8px' }}>Run a report from the "Schedules" tab to see it here.</p>
+                                    <div style={{ width: 80, height: 80, borderRadius: '24px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <FileCode size={40} style={{ opacity: 0.2 }} />
+                                    </div>
+                                    <h3 style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#fff' }}>Zero artifacts produced yet.</h3>
+                                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', marginTop: '8px', maxWidth: '400px', margin: '8px auto 32px' }}>
+                                        You haven't generated any intelligence dossiers. Start by triggering an existing schedule or create a new one.
+                                    </p>
+                                    <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                                        <button className="glass-button" style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '13px', fontWeight: 700 }} onClick={() => setActiveTab('workflows')}>
+                                            View Schedules
+                                        </button>
+                                        {schedules.length > 0 && (
+                                            <button 
+                                                className="glass-button" 
+                                                style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '13px', fontWeight: 700, background: 'var(--primary)', color: '#fff', border: 'none' }}
+                                                onClick={() => handleTrigger(schedules[0].id)}
+                                            >
+                                                Run First Schedule
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
