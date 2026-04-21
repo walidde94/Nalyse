@@ -45,23 +45,39 @@ async function ensureAuditLogTable() {
         for (const table of tablesToNormalize) {
             try {
                 // Fetch all columns for the table
-                const columns = await queryRunner.query(`
+                const columns: Array<{column_name: string}> = await queryRunner.query(`
                     SELECT column_name 
                     FROM information_schema.columns 
                     WHERE table_name = $1
                 `, [table]);
 
+                const columnNames = columns.map((c: {column_name: string}) => c.column_name);
+
                 for (const col of columns) {
                     const name = col.column_name;
-                    // If column is CamelCase, rename it to snake_case
+                    // If column is CamelCase, normalize it to snake_case
                     if (/[A-Z]/.test(name)) {
                         const snakeName = name.replace(/[A-Z]/g, (letter: string) => `_${letter.toLowerCase()}`);
-                        console.log(`[SchemaNormalizer] Normalizing ${table}.${name} -> ${snakeName}`);
-                        try {
-                            await queryRunner.query(`ALTER TABLE "${table}" RENAME COLUMN "${name}" TO "${snakeName}"`);
-                        } catch (e: any) {
-                            // If snakeName already exists, we might need to merge or drop. For now, just ignore.
-                            console.warn(`[SchemaNormalizer] Failed to rename ${name} to ${snakeName}: ${e.message}`);
+                        const snakeExists = columnNames.includes(snakeName);
+
+                        if (snakeExists) {
+                            // BOTH exist — copy data from CamelCase to snake_case, then DROP CamelCase
+                            console.log(`[SchemaNormalizer] Merging ${table}."${name}" -> "${snakeName}" (both exist)`);
+                            try {
+                                await queryRunner.query(`UPDATE "${table}" SET "${snakeName}" = "${name}" WHERE "${snakeName}" IS NULL AND "${name}" IS NOT NULL`);
+                                await queryRunner.query(`ALTER TABLE "${table}" DROP COLUMN "${name}"`);
+                                console.log(`[SchemaNormalizer] Dropped duplicate column ${table}."${name}"`);
+                            } catch (e: any) {
+                                console.warn(`[SchemaNormalizer] Merge/drop failed for ${table}."${name}": ${e.message}`);
+                            }
+                        } else {
+                            // Only CamelCase exists — rename it
+                            console.log(`[SchemaNormalizer] Renaming ${table}."${name}" -> "${snakeName}"`);
+                            try {
+                                await queryRunner.query(`ALTER TABLE "${table}" RENAME COLUMN "${name}" TO "${snakeName}"`);
+                            } catch (e: any) {
+                                console.warn(`[SchemaNormalizer] Rename failed for ${table}."${name}": ${e.message}`);
+                            }
                         }
                     }
                 }
