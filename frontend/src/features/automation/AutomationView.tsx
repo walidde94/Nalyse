@@ -144,7 +144,21 @@ export const AutomationView = () => {
             if (res.ok) {
                 addToast('Scheduled report created', 'success');
                 setIsCreating(false);
-                setNewSchedule({ name: '', cronExpression: '0 9 * * *', deliverTo: '', dashboardId: '', format: 'pdf', deliveryChannel: 'email' });
+                setNewSchedule({
+                    name: '',
+                    cronExpression: '0 9 * * *',
+                    deliverTo: '',
+                    dashboardId: '',
+                    analysisId: '',
+                    format: 'pdf',
+                    deliveryChannel: 'email',
+                    modules: {
+                        infrastructure: true,
+                        analysis: true,
+                        audit: true,
+                        business: true
+                    }
+                });
                 fetchData();
             }
         } catch (e) {
