@@ -121,8 +121,18 @@ const neuralStyles = `
     .message-bubble-trigger:hover .message-actions-popover {
         opacity: 1 !important;
         visibility: visible !important;
-        transform: translateY(-8px) !important;
+        transform: translateY(-5px) !important;
         pointer-events: auto !important;
+    }
+
+    .message-actions-popover::before {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        height: 15px;
+        background: transparent;
     }
 
     .custom-scrollbar::-webkit-scrollbar { width: 5px; }
