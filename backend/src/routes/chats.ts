@@ -37,7 +37,7 @@ router.get('/', authenticate, async (req: any, res: any) => {
         res.json(conversations);
     } catch (error) {
         console.error('Error fetching conversations:', error);
-        res.status(500).json({ error: 'Failed to fetch conversations' });
+        res.status(500).json({ error: 'Failed to fetch conversations', details: error instanceof Error ? error.message : String(error) });
     }
 });
 
@@ -99,7 +99,7 @@ router.post('/', authenticate, async (req: any, res: any) => {
         res.json(conversation);
     } catch (error) {
         console.error('Error creating/finding conversation:', error);
-        res.status(500).json({ error: 'Failed to manage conversation' });
+        res.status(500).json({ error: 'Failed to manage conversation', details: error instanceof Error ? error.message : String(error) });
     }
 });
 
@@ -137,7 +137,7 @@ router.get('/:id/messages', authenticate, async (req: any, res: any) => {
         });
     } catch (error) {
         console.error('Error fetching chat messages:', error);
-        res.status(500).json({ error: 'Failed to fetch messages' });
+        res.status(500).json({ error: 'Failed to fetch messages', details: error instanceof Error ? error.message : String(error) });
     }
 });
 
