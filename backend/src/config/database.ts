@@ -72,9 +72,16 @@ const getOptions = (): any => {
         migrations: [path.join(__dirname, '../migrations/**/*.{ts,js}')],
     };
 
-    // Favor URL if provided.
-    if (process.env.DATABASE_URL) {
-        let url = process.env.DATABASE_URL;
+    // Support standard PG environment variables and common hosting patterns
+    const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL || process.env.POSTGRES_URL;
+    const dbHost = process.env.DB_HOST || process.env.PGHOST || 'localhost';
+    const dbPort = parseInt(process.env.DB_PORT || process.env.PGPORT || '5432');
+    const dbUser = process.env.DB_USER || process.env.PGUSER || 'admin';
+    const dbPass = process.env.DB_PASSWORD || process.env.PGPASSWORD || '';
+    const dbName = process.env.DB_NAME || process.env.PGDATABASE || 'nalyse_dev';
+
+    if (dbUrl) {
+        let url = dbUrl;
         
         // Strip pgbouncer if present as TypeORM doesn't need it for basic connection
         if (url.includes('pgbouncer=true')) {
@@ -83,15 +90,15 @@ const getOptions = (): any => {
         
         config.url = url;
     } else {
-        config.host = process.env.DB_HOST || 'localhost';
-        config.port = parseInt(process.env.DB_PORT || '5432');
-        config.username = process.env.DB_USER || 'admin';
-        config.password = process.env.DB_PASSWORD || '';
-        config.database = process.env.DB_NAME || 'nalyse_dev';
+        config.host = dbHost;
+        config.port = dbPort;
+        config.username = dbUser;
+        config.password = dbPass;
+        config.database = dbName;
     }
 
-    // SSL Handling for Render/Supabase
-    if (isProd || process.env.DB_SSL === 'true') {
+    // SSL Handling for Render/Supabase/Railway
+    if (isProd || process.env.DB_SSL === 'true' || dbUrl?.includes('sslmode=require')) {
         config.ssl = {
             rejectUnauthorized: false
         };
@@ -132,7 +139,8 @@ export const initializeDatabase = async () => {
         (global as any).DB_CONNECTION_ERROR = error.message;
         
         if (isProd) {
-            // In production, a database failure is fatal
+            console.error('💀 Fatal: Database connection required in production. Exiting.');
+            console.error('   Available Env Keys:', Object.keys(process.env).filter(k => k.includes('DB') || k.includes('POSTGRES') || k.includes('URL') || k.includes('PG')));
             throw error;
         }
         
