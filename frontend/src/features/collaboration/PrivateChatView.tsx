@@ -875,6 +875,25 @@ export const PrivateChatView: React.FC = () => {
                 .icon-btn-subtle:active {
                     transform: translateY(0);
                 }
+                .message-bubble-trigger {
+                    position: relative;
+                }
+                .message-bubble-trigger::before {
+                    content: '';
+                    position: absolute;
+                    top: -44px;
+                    left: -8px;
+                    right: -8px;
+                    height: 44px;
+                    z-index: 15;
+                    pointer-events: none;
+                }
+                .message-bubble-trigger:hover::before {
+                    pointer-events: auto;
+                }
+                .message-actions-popover {
+                    transition: opacity 0.15s ease, visibility 0.15s ease;
+                }
                 .message-bubble-trigger:hover .message-actions-popover {
                     visibility: visible !important;
                     opacity: 1 !important;
