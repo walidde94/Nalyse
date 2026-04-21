@@ -34,13 +34,36 @@ async function ensureAuditLogTable() {
 
         // 2. Manual column healing for critical fields (Fallback if Prisma sync is blocked)
         console.log('🧬 [Metadata] Checking for critical schema columns...');
-        
-        // Ensure organization_id on users
+
+        // Ensure users table exists
+        await queryRunner.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                email text UNIQUE NOT NULL,
+                password_hash text NOT NULL,
+                created_at timestamp with time zone DEFAULT now(),
+                updated_at timestamp with time zone DEFAULT now()
+            )
+        `);
+
+        // Ensure critical columns on users
         await queryRunner.query(`
             DO $$ 
             BEGIN 
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='organization_id') THEN
                     ALTER TABLE users ADD COLUMN organization_id uuid;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash') THEN
+                    ALTER TABLE users ADD COLUMN password_hash text;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='first_name') THEN
+                    ALTER TABLE users ADD COLUMN first_name text;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='last_name') THEN
+                    ALTER TABLE users ADD COLUMN last_name text;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='role') THEN
+                    ALTER TABLE users ADD COLUMN role text DEFAULT 'user';
                 END IF;
             END $$;
         `);
