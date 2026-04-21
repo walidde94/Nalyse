@@ -104,12 +104,20 @@ async function ensureAuditLogTable() {
             `CREATE TABLE IF NOT EXISTS schedules (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, cron_expression text NOT NULL, organization_id uuid NOT NULL, created_by_user_id uuid NOT NULL, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS last_run_at timestamp with time zone`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS target_file_id uuid`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS dashboard_id uuid`,
+            `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS analysis_id uuid`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
             `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
             
             `CREATE TABLE IF NOT EXISTS schedule_runs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), schedule_id uuid NOT NULL, status text DEFAULT 'pending', started_at timestamp with time zone DEFAULT now())`,
             `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS started_at timestamp with time zone DEFAULT now()`,
-            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS completed_at timestamp with time zone`
+            `ALTER TABLE schedule_runs ADD COLUMN IF NOT EXISTS completed_at timestamp with time zone`,
+
+            // Workspace Messages
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reply_to_id uuid`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS reactions jsonb DEFAULT '[]'`,
+            `ALTER TABLE workspace_messages ADD COLUMN IF NOT EXISTS mentions text[] DEFAULT '{}'`
         ];
 
         for (const query of healingQueries) {

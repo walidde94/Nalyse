@@ -124,6 +124,10 @@ export class AuthService {
             throw new Error('Account is deactivated');
         }
 
+        if (!user.passwordHash) {
+            throw new Error('Account data mismatch. Please use "Forgot Password" or re-register.');
+        }
+
         const isValidPassword = await bcrypt.compare(password, user.passwordHash);
         if (!isValidPassword) {
             throw new Error('Invalid credentials');
