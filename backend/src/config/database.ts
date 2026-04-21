@@ -55,17 +55,17 @@ async function ensureAuditLogTable() {
                     const name = col.column_name;
                     // If column is CamelCase, rename it to snake_case
                     if (/[A-Z]/.test(name)) {
-                        const snakeName = name.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+                        const snakeName = name.replace(/[A-Z]/g, (letter: string) => `_${letter.toLowerCase()}`);
                         console.log(`[SchemaNormalizer] Normalizing ${table}.${name} -> ${snakeName}`);
                         try {
                             await queryRunner.query(`ALTER TABLE "${table}" RENAME COLUMN "${name}" TO "${snakeName}"`);
-                        } catch (e) {
+                        } catch (e: any) {
                             // If snakeName already exists, we might need to merge or drop. For now, just ignore.
                             console.warn(`[SchemaNormalizer] Failed to rename ${name} to ${snakeName}: ${e.message}`);
                         }
                     }
                 }
-            } catch (e) {
+            } catch (e: any) {
                 console.warn(`[SchemaNormalizer] Failed to process table ${table}: ${e.message}`);
             }
         }
