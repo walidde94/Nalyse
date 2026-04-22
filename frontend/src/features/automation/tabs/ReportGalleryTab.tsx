@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { FileText, Download, Eye, Trash2, Clock, RefreshCw, Zap, ExternalLink } from 'lucide-react';
+import { FileText, Download, Eye, Trash2, Clock, RefreshCw, Zap, ExternalLink, Share2 } from 'lucide-react';
 import { StatusBadge } from '../AutomationComponents';
 
-export const ReportGalleryTab = ({ history, onView, onDownload, onDelete, onGoSchedules, onTriggerFirst, hasSchedules }: any) => {
+export const ReportGalleryTab = ({ history, onView, onDownload, onDelete, onShare, onGoSchedules, onTriggerFirst, hasSchedules }: any) => {
     // Only show runs that were intended to be reports
     const reportRuns = history.filter((h: any) => h.status === 'completed' || h.status === 'pending' || h.status === 'running');
 
