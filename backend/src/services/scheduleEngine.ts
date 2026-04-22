@@ -107,15 +107,6 @@ export const processSingleSchedule = async (schedule: any) => {
                 }
             });
 
-            // If one-time, deactivate schedule
-            if ((schedule.config as any)?.isOneTime) {
-                await prisma.schedule.update({
-                    where: { id: schedule.id },
-                    data: { isActive: false }
-                });
-                console.log(`[ScheduleEngine] 🏳️ One-time schedule "${schedule.name}" deactivated.`);
-            }
-
             // Delivery logic
             const deliveryChannel = (schedule.config as any)?.deliveryChannel || 'email';
             const deliverTo = (schedule.config as any)?.deliverTo;
