@@ -63,6 +63,15 @@ export const AutomationView = () => {
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
+    // Live Heartbeat: Refresh stats every 30s when on Command Center
+    useEffect(() => {
+        let interval: any;
+        if (activeTab === 'command') {
+            interval = setInterval(() => fetchData(), 30000);
+        }
+        return () => clearInterval(interval);
+    }, [activeTab, fetchData]);
+
     const handleCreate = async (data: any) => {
         setLoading(true);
         try {
