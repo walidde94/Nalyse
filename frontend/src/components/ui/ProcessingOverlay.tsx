@@ -521,7 +521,8 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         /* ────── BACKDROP ────── */
                         .po-backdrop {
                             position: absolute; inset: 0;
-                            background: color-mix(in srgb, var(--bg-app) 92%, transparent);
+                            background: var(--bg-app);
+                            opacity: 0.92;
                             backdrop-filter: blur(40px) saturate(120%);
                             -webkit-backdrop-filter: blur(40px) saturate(120%);
                         }
@@ -626,7 +627,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                             position: relative; z-index: 5;
                             width: 80px; height: 80px; border-radius: 24px;
                             display: flex; align-items: center; justify-content: center;
-                            color: var(--text-primary);
+                            color: white;
                             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
                         }
 
@@ -693,14 +694,14 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                             transition: all 0.3s;
                         }
                         .po-stage-icon-done {
-                            background: #10b981; border-color: #10b981; color: var(--text-primary);
+                            background: #10b981; border-color: #10b981; color: white;
                         }
                         .po-stage-icon-active {
                             background: var(--primary, #3b82f6); border-color: var(--primary, #3b82f6);
-                            color: var(--text-primary); box-shadow: 0 4px 16px -4px rgba(59,130,246,0.4);
+                            color: white; box-shadow: 0 4px 16px -4px rgba(59,130,246,0.4);
                         }
                         .po-stage-icon-error {
-                            background: #ef4444; border-color: #ef4444; color: var(--text-primary);
+                            background: #ef4444; border-color: #ef4444; color: white;
                         }
                         .po-stage-num { font-family: var(--font-mono, monospace); }
                         .po-stage-text {
@@ -755,14 +756,14 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         .po-btn-primary {
                             padding: 18px 24px; border-radius: 16px; font-size: 14px;
                             background: linear-gradient(135deg, #3b82f6, #6366f1);
-                            color: var(--text-primary);
+                            color: white;
                             box-shadow: 0 6px 24px -4px rgba(59,130,246,0.4);
                         }
                         .po-btn-primary:hover { box-shadow: 0 10px 36px -6px rgba(59,130,246,0.5); }
                         .po-btn-danger {
                             padding: 18px 24px; border-radius: 16px; font-size: 14px;
                             background: linear-gradient(135deg, #dc2626, #b91c1c);
-                            color: var(--text-primary);
+                            color: white;
                             box-shadow: 0 6px 24px -4px rgba(239,68,68,0.3);
                         }
                         .po-btn-ghost {
