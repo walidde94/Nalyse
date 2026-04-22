@@ -120,7 +120,20 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
             height: '320px'
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 style={{ 
+                    fontSize: '11px', 
+                    fontWeight: 900, 
+                    color: 'rgba(255, 255, 255, 0.4)', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.15em',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px' 
+                }}>
+                    {title === 'CPU usage' && <Cpu size={14} style={{ color: '#3b82f6' }} />}
+                    {title === 'Memory usage' && <Activity size={14} style={{ color: '#10b981' }} />}
+                    {title === 'Network egress' && <Wifi size={14} style={{ color: '#a855f7' }} />}
+                    {title === 'Disk usage' && <HardDrive size={14} style={{ color: '#f59e0b' }} />}
                     {title}
                 </h3>
             </div>
