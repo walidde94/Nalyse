@@ -13,7 +13,7 @@ router.get('/analyses', authenticate, async (req: AuthRequest, res: Response) =>
     try {
         const analyses = await prisma.analysis.findMany({
             where: {
-                createdBy: { organizationId: req.user!.organizationId }
+                createdBy: { organizationId: req.user!.organizationId! }
             },
             include: { file: true },
             orderBy: { createdAt: 'desc' }
@@ -28,7 +28,7 @@ router.get('/analyses', authenticate, async (req: AuthRequest, res: Response) =>
 router.get('/schedules', authenticate, requirePermission(Permission.READ_ANALYSIS), async (req: AuthRequest, res: Response) => {
     try {
         const schedules = await prisma.schedule.findMany({
-            where: { organizationId: req.user!.organizationId },
+            where: { organizationId: req.user!.organizationId! },
             include: { 
                 targetFile: true,
                 dashboard: true,
@@ -65,7 +65,7 @@ router.post('/schedules', authenticate, requirePermission(Permission.CREATE_ANAL
                 analysisId: analysisId || null,
                 config: config || { format: 'pdf', deliveryChannel: 'email' },
                 isActive: isActive ?? true,
-                organizationId: req.user!.organizationId,
+                organizationId: req.user!.organizationId!,
                 createdByUserId: req.user!.userId
             }
         });
@@ -79,7 +79,7 @@ router.post('/schedules', authenticate, requirePermission(Permission.CREATE_ANAL
 
 router.put('/schedules/:id', authenticate, requirePermission(Permission.UPDATE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const existing = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId } });
+        const existing = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId! } });
 
         if (!existing) {
             res.status(404).json({ error: 'Schedule not found' });
@@ -100,7 +100,7 @@ router.put('/schedules/:id', authenticate, requirePermission(Permission.UPDATE_A
 
 router.delete('/schedules/:id', authenticate, requirePermission(Permission.DELETE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const existing = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId } });
+        const existing = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId! } });
 
         if (!existing) {
             res.status(404).json({ error: 'Schedule not found' });
@@ -118,7 +118,7 @@ router.delete('/schedules/:id', authenticate, requirePermission(Permission.DELET
 router.post('/schedules/:id/trigger', authenticate, requirePermission(Permission.CREATE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const schedule = await prisma.schedule.findFirst({
-            where: { id: req.params.id as string, organizationId: req.user!.organizationId }
+            where: { id: req.params.id as string, organizationId: req.user!.organizationId! }
         });
 
         if (!schedule) {
@@ -142,7 +142,7 @@ router.post('/schedules/:id/trigger', authenticate, requirePermission(Permission
 
 router.get('/webhooks', authenticate, requirePermission(Permission.MANAGE_ORG), async (req: AuthRequest, res: Response) => {
     try {
-        const webhooks = await prisma.webhook.findMany({ where: { organizationId: req.user!.organizationId } });
+        const webhooks = await prisma.webhook.findMany({ where: { organizationId: req.user!.organizationId! } });
         res.json(webhooks);
     } catch (error) {
         console.error(error);
@@ -161,7 +161,7 @@ router.post('/webhooks', authenticate, requirePermission(Permission.MANAGE_ORG),
                 secret,
                 events: events || ['analysis.completed'],
                 isActive: isActive ?? true,
-                organizationId: req.user!.organizationId!,
+                organizationId: req.user!.organizationId!!,
                 createdByUserId: req.user!.userId!
             }
         });
@@ -175,7 +175,7 @@ router.post('/webhooks', authenticate, requirePermission(Permission.MANAGE_ORG),
 
 router.delete('/webhooks/:id', authenticate, requirePermission(Permission.MANAGE_ORG), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const existing = await prisma.webhook.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId } });
+        const existing = await prisma.webhook.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId! } });
 
         if (!existing) {
             res.status(404).json({ error: 'Webhook not found' });
@@ -395,7 +395,7 @@ async function generateEnterpriseReport(orgId: string, runId: string) {
 router.get('/history', authenticate, requirePermission(Permission.READ_ANALYSIS), async (req: AuthRequest, res: Response) => {
     try {
         const { status, scheduleId, from, to, page = '1', limit = '50' } = req.query as any;
-        const where: any = { schedule: { organizationId: req.user!.organizationId } };
+        const where: any = { schedule: { organizationId: req.user!.organizationId! } };
         if (status && status !== 'all') where.status = status;
         if (scheduleId) where.scheduleId = scheduleId;
         if (from || to) {
@@ -457,7 +457,7 @@ router.get('/reports/:id/view', (req: any, res: any, next: any) => {
 router.delete('/reports/:id', authenticate, requirePermission(Permission.DELETE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const run = await prisma.scheduleRun.findFirst({
-            where: { id: req.params.id as string, schedule: { organizationId: req.user!.organizationId } }
+            where: { id: req.params.id as string, schedule: { organizationId: req.user!.organizationId! } }
         });
         if (!run) { res.status(404).json({ error: 'Report not found' }); return; }
         await prisma.scheduleRun.delete({ where: { id: run.id } });
@@ -512,14 +512,14 @@ router.get('/stats', authenticate, requirePermission(Permission.READ_ANALYSIS), 
 
 router.post('/schedules/:id/duplicate', authenticate, requirePermission(Permission.CREATE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const original = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId } });
+        const original = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId! } });
         if (!original) { res.status(404).json({ error: 'Schedule not found' }); return; }
         const dup = await prisma.schedule.create({
             data: {
                 name: `${original.name} (Copy)`, cronExpression: original.cronExpression,
                 targetFileId: original.targetFileId, dashboardId: original.dashboardId,
                 analysisId: original.analysisId, config: original.config as any,
-                isActive: false, organizationId: req.user!.organizationId,
+                isActive: false, organizationId: req.user!.organizationId!,
                 createdByUserId: req.user!.userId
             }
         });
@@ -568,7 +568,7 @@ router.post('/templates/:id/deploy', authenticate, requirePermission(Permission.
             data: {
                 name: tpl.name, cronExpression: tpl.cronExpression,
                 config: { format: tpl.format, deliveryChannel: 'email', deliverTo: req.body.deliverTo || '', modules: tpl.modules, priority: tpl.priority, templateId: tpl.id } as any,
-                isActive: false, organizationId: req.user!.organizationId, createdByUserId: req.user!.userId
+                isActive: false, organizationId: req.user!.organizationId!, createdByUserId: req.user!.userId
             }
         });
         res.status(201).json(schedule);
@@ -577,7 +577,7 @@ router.post('/templates/:id/deploy', authenticate, requirePermission(Permission.
 
 router.post('/schedules/:id/retry-last', authenticate, requirePermission(Permission.CREATE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const schedule = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId } });
+        const schedule = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId! } });
         if (!schedule) { res.status(404).json({ error: 'Schedule not found' }); return; }
         const { processSingleSchedule } = require('../services/scheduleEngine');
         await processSingleSchedule(schedule);
