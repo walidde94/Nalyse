@@ -1407,7 +1407,7 @@ export const DashboardView = ({
             {createPortal(
                 <AnimatePresence>
                     {showTelemetry && (
-                        <ObservabilityDashboard onClose={() => setShowTelemetry(false)} token={token} />
+                        <ObservabilityDashboard onClose={() => setShowTelemetry(false)} token={token || ''} />
                     )}
                 </AnimatePresence>,
                 document.body
