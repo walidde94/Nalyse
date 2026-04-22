@@ -326,7 +326,7 @@ export const RCAPanel = ({ anomaly, kpiSummary, allKpis, surroundingData, datase
                                                         exit={{ height: 0, opacity: 0 }}
                                                         style={{ overflow: 'hidden' }}
                                                     >
-                                                        <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                                                        <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border-default)' }}>
                                                             <div style={{ padding: '12px 0', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                                                                 <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Evidence:</strong> {rc.evidence}
                                                             </div>

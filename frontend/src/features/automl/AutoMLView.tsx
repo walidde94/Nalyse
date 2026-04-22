@@ -18,7 +18,7 @@ const ScatterTooltip = ({ active, payload }: any) => {
     const data = payload[0].payload;
     return (
         <div style={{
-            background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)',
+            background: 'var(--bg-card)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)',
             padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)',
             minWidth: '180px', color: 'var(--text-primary)'
         }}>

@@ -84,7 +84,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
     };
 
     return (
-        <div style={{ width: '100vw', height: '100vh', position: 'fixed', inset: 0, display: 'flex', background: '#050508' }}>
+        <div style={{ width: '100vw', height: '100vh', position: 'fixed', inset: 0, display: 'flex', background: 'var(--bg-main)' }}>
 
             {/* ═══════ LEFT SIDE — Cinematic Hero ═══════ */}
             <motion.div

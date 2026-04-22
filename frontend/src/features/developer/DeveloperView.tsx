@@ -232,7 +232,7 @@ export const DeveloperView = ({ token }: { token: string }) => {
                                     <div key={ep.path} className="card p-8 flex-col gap-6 bg-bg-card">
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-4">
-                                                <span className={`badge ${ep.method === 'GET' ? 'bg-success' : 'bg-primary'}`} style={{ color: 'white', padding: '4px 12px', fontWeight: 900 }}>{ep.method}</span>
+                                                <span className={`badge ${ep.method === 'GET' ? 'bg-success' : 'bg-primary'}`} style={{ color: 'var(--text-primary)', padding: '4px 12px', fontWeight: 900 }}>{ep.method}</span>
                                                 <code className="font-bold text-lg">{ep.path}</code>
                                             </div>
                                             <span className="text-xs text-tertiary">v1.2 Stable</span>

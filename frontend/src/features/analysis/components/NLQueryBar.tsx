@@ -397,7 +397,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                         padding: '10px 14px', textAlign: 'left',
                                         fontWeight: 800, fontSize: 10, textTransform: 'uppercase',
                                         letterSpacing: '0.08em', color: 'var(--text-tertiary)',
-                                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                        borderBottom: '1px solid var(--border-default)',
                                         background: 'var(--bg-surface)',
                                         position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap',
                                     }}>
@@ -441,7 +441,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                 {entry.data.length > 8 && (
                     <button onClick={() => toggleCard(`table-${entry.id}`)} style={{
                         width: '100%', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        background: 'var(--bg-surface)', border: 'none', borderTop: '1px solid rgba(255,255,255,0.04)',
+                        background: 'var(--bg-surface)', border: 'none', borderTop: '1px solid var(--border-default)',
                         color: 'var(--text-tertiary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'color 0.15s',
                     }}>
                         {isExpanded ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> Show all {entry.data.length} rows</>}
@@ -606,7 +606,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                             {/* Result header */}
                                             <div style={{
                                                 padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-                                                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                                borderBottom: '1px solid var(--border-default)',
                                                 background: 'var(--bg-surface)',
                                             }}>
                                                 <div style={{
@@ -656,7 +656,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                                 {/* SQL */}
                                                 <div style={{
                                                     padding: '10px 14px', borderRadius: 12,
-                                                    background: 'rgba(0,0,0,0.2)',
+                                                    background: 'var(--bg-surface)',
                                                     border: '1px solid var(--border-subtle)',
                                                     display: 'flex', alignItems: 'center', gap: 10,
                                                 }}>

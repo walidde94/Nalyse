@@ -427,14 +427,14 @@ export const WebhookSystemView = ({ token }: { token?: string }) => {
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                             <div>
                                                 <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Headers</div>
-                                                <pre style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px', margin: 0, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{`Content-Type: application/json
+                                                <pre style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'var(--bg-surface-hover)', padding: '16px', borderRadius: '10px', margin: 0, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{`Content-Type: application/json
 X-Nalyse-Event: analysis.completed
 X-Nalyse-Signature: sha256=a1b2c3...
 X-Nalyse-Delivery: wl-1720000000`}</pre>
                                             </div>
                                             <div>
                                                 <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Body (JSON)</div>
-                                                <pre style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px', margin: 0, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{`{
+                                                <pre style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'var(--bg-surface-hover)', padding: '16px', borderRadius: '10px', margin: 0, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{`{
   "event": "analysis.completed",
   "data": {
     "datasetId": "ds-abc-123",

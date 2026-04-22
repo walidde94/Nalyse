@@ -294,7 +294,7 @@ export const ArchitectPanel: React.FC = () => {
                             </span>
                         </div>
                         <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.6 }}>
+                            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
                                 This will restore all dashboard sections to their original positions and sizes. Custom arrangements will be lost.
                             </p>
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -340,7 +340,7 @@ export const ArchitectPanel: React.FC = () => {
                     max-width: calc(100% - 32px);
                 }
                 .acb-group { display: flex; align-items: center; gap: 2px; }
-                .acb-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.08); margin: 0 4px; flex-shrink: 0; }
+                .acb-divider { width: 1px; height: 20px; background: var(--bg-elevated); margin: 0 4px; flex-shrink: 0; }
                 .acb-center { display: flex; align-items: center; padding: 0 4px; }
 
                 .acb-toast {
@@ -362,7 +362,7 @@ export const ArchitectPanel: React.FC = () => {
                     transition: all 0.15s; font-size: 12px; font-weight: 700;
                     white-space: nowrap; position: relative;
                 }
-                .acb-btn:hover { background: rgba(255,255,255,0.08); color: white; }
+                .acb-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
                 .acb-btn:disabled { opacity: 0.25; pointer-events: none; }
                 .acb-btn-label { font-size: 11px; }
                 .acb-btn-warning { color: #f59e0b; }
@@ -370,7 +370,7 @@ export const ArchitectPanel: React.FC = () => {
                 .acb-btn-danger-subtle { color: rgba(248, 113, 113, 0.6); }
                 .acb-btn-danger-subtle:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; }
                 .acb-btn-done { 
-                    background: var(--primary); color: white; 
+                    background: var(--primary); color: var(--text-primary); 
                     box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3); 
                 }
                 .acb-btn-done:hover { 
@@ -388,7 +388,7 @@ export const ArchitectPanel: React.FC = () => {
                 /* Layout mode switcher */
                 .acb-mode-switch {
                     display: flex; gap: 2px; padding: 2px;
-                    background: rgba(255,255,255,0.04); border-radius: 8px;
+                    background: var(--bg-surface-hover); border-radius: 8px;
                 }
                 .acb-mode-btn {
                     display: flex; align-items: center; gap: 4px;
@@ -399,7 +399,7 @@ export const ArchitectPanel: React.FC = () => {
                 }
                 .acb-mode-btn:hover { color: rgba(255,255,255,0.7); }
                 .acb-mode-btn.active {
-                    background: rgba(255,255,255,0.1); color: white;
+                    background: var(--bg-elevated); color: var(--text-primary);
                     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
                 }
                 .acb-mode-label { }
@@ -420,8 +420,8 @@ export const ArchitectPanel: React.FC = () => {
                     font-size: 10px; font-weight: 800; font-family: var(--font-mono, monospace);
                     cursor: pointer; transition: all 0.15s;
                 }
-                .acb-width-btn:hover { background: rgba(255,255,255,0.08); color: white; }
-                .acb-width-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3); }
+                .acb-width-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+                .acb-width-btn.active { background: var(--primary); color: var(--text-primary); box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3); }
 
                 /* Status */
                 .acb-status { 
@@ -431,8 +431,8 @@ export const ArchitectPanel: React.FC = () => {
                 .acb-hint {
                     font-size: 9px; font-weight: 800; text-transform: uppercase;
                     letter-spacing: 0.1em; padding: 2px 8px; border-radius: 4px;
-                    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.25);
-                    border: 1px solid rgba(255,255,255,0.04);
+                    background: var(--bg-elevated); color: rgba(255,255,255,0.25);
+                    border: 1px solid var(--border-default);
                 }
 
                 /* Popups */
@@ -456,7 +456,7 @@ export const ArchitectPanel: React.FC = () => {
                     color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600;
                     cursor: pointer; transition: all 0.15s; text-align: left;
                 }
-                .acb-popup-item:hover { background: rgba(255,255,255,0.05); color: white; }
+                .acb-popup-item:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
 
                 /* Reset confirm actions */
                 .acb-popup-action {
@@ -466,10 +466,10 @@ export const ArchitectPanel: React.FC = () => {
                     justify-content: center; gap: 6px;
                 }
                 .acb-popup-action--cancel {
-                    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6);
+                    background: var(--bg-elevated); color: rgba(255,255,255,0.6);
                 }
                 .acb-popup-action--cancel:hover {
-                    background: rgba(255,255,255,0.1); color: white;
+                    background: var(--bg-elevated); color: var(--text-primary);
                 }
                 .acb-popup-action--danger {
                     background: rgba(239, 68, 68, 0.15); color: #f87171;

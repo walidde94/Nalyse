@@ -58,7 +58,7 @@ export const TimePicker = ({ onSelect, onClose }: TimePickerProps) => {
             <div
                 className="w-full md:w-[240px] flex flex-col border-b md:border-b-0 md:border-r"
                 style={{
-                    background: 'rgba(0,0,0,0.15)',
+                    background: 'var(--bg-surface)',
                     borderColor: 'var(--border-subtle)'
                 }}
             >

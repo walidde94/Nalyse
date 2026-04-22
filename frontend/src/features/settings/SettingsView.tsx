@@ -303,7 +303,7 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
                                                 style={{ width: '96px', height: '96px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 8px 24px rgba(99,102,241,0.3)' }}
                                                 onError={(e) => {
                                                     (e.target as HTMLImageElement).style.display = 'none';
-                                                    (e.target as HTMLImageElement).parentElement?.querySelector('.avatar-placeholder')?.setAttribute('style', 'display: flex; width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #ec4899); align-items: center; justify-content: center; font-size: 40px; font-weight: bold; color: white;');
+                                                    (e.target as HTMLImageElement).parentElement?.querySelector('.avatar-placeholder')?.setAttribute('style', 'display: flex; width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #ec4899); align-items: center; justify-content: center; font-size: 40px; font-weight: bold; color: var(--text-primary);');
                                                 }}
                                             />
                                         ) : null}
@@ -431,7 +431,7 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                                     </div>
                                     <div>
-                                        <h4 style={{ fontWeight: 500, color: 'white', marginBottom: '4px' }}>Keep your keys secure</h4>
+                                        <h4 style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '4px' }}>Keep your keys secure</h4>
                                         <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>API keys grant access to your account. Never share them publicly.</p>
                                     </div>
                                 </div>

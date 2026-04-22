@@ -197,7 +197,7 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
                                 </button>
                             </div>
 
-                            <div style={{ background: '#09090b', padding: '24px', borderRadius: '20px', border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden', minHeight: '400px' }}>
+                            <div style={{ background: 'var(--bg-main)', padding: '24px', borderRadius: '20px', border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden', minHeight: '400px' }}>
                                 {!forecastResult && !loading && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-disabled)', fontSize: '14px', fontWeight: 700 }}>Initialize parameters to generate model.</div>}
                                 {loading && <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#818cf8', gap: '16px' }}><Loader2 className="animate-spin" size={32} /> <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em' }}>PROCESSING NEURAL FORECAST...</span></div>}
 
@@ -219,7 +219,7 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
                                                     <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
                                                     <XAxis dataKey="date" stroke='var(--bg-elevated)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                                                     <YAxis stroke='var(--bg-elevated)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
-                                                    <RechartsTooltip contentStyle={{ background: 'rgba(0,0,0,0.8)', border: '1px solid var(--border-default)', borderRadius: '12px', backdropFilter: 'blur(10px)' }} itemStyle={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: 800 }} />
+                                                    <RechartsTooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: '12px', backdropFilter: 'blur(10px)' }} itemStyle={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: 800 }} />
                                                     <Area type="monotone" dataKey="value" stroke="#34d399" strokeWidth={3} fill="url(#histColor)" />
                                                     <Area type="monotone" dataKey="upper" stroke="#818cf8" strokeDasharray="3 3" fill="none" strokeWidth={1} opacity={0.5} />
                                                     <Area type="monotone" dataKey="lower" stroke="#818cf8" strokeDasharray="3 3" fill="none" strokeWidth={1} opacity={0.5} />
@@ -270,7 +270,7 @@ export default function AdvancedAnalytics({ data, columns, measures, dimensions 
                                 </button>
                             </div>
 
-                            <div style={{ background: '#09090b', padding: '32px', borderRadius: '20px', border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ background: 'var(--bg-main)', padding: '32px', borderRadius: '20px', border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
                                 {!abTestResult && !loading && <div style={{ color: 'var(--text-disabled)', fontSize: '14px', fontWeight: 700, margin: 'auto' }}>Awaiting Experiment Data.</div>}
                                 {loading && <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#34d399', gap: '16px', margin: 'auto' }}><Loader2 className="animate-spin" size={32} /> <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em' }}>CALCULATING P-VALUES...</span></div>}
 

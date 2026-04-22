@@ -49,7 +49,7 @@ export const ExecutionLogTab = ({ history, schedules, total, page, limit, onFilt
                 {history.map((run: any) => {
                     const isExpanded = expandedId === run.id;
                     return (
-                        <div key={run.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <div key={run.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
                             <div onClick={() => setExpandedId(isExpanded ? null : run.id)} style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 0.2s' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                                     <div style={{ width: 36, height: 36, borderRadius: 10, background: run.status === 'success' ? 'rgba(16,185,129,0.1)' : run.status === 'failed' ? 'rgba(239,68,68,0.1)' : 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

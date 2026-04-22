@@ -372,7 +372,7 @@ export const OnboardingTour = ({ onComplete }: { onComplete: () => void }) => {
 
         .btn-tour-primary {
           background: var(--primary);
-          color: white;
+          color: var(--text-primary);
           border: none;
           padding: 12px 24px;
           border-radius: 10px;
@@ -423,7 +423,7 @@ export const OnboardingTour = ({ onComplete }: { onComplete: () => void }) => {
         .text-success-custom { color: #10b981; }
 
         [data-theme='light'] .onboarding-overlay {
-          background: rgba(255, 255, 255, 0.4);
+          background: var(--text-muted);
         }
         
         [data-theme='light'] .onboarding-modal {

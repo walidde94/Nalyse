@@ -320,8 +320,8 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                         exit={{ width: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         style={{
-                            borderRight: '1px solid rgba(255,255,255,0.06)',
-                            background: 'rgba(0,0,0,0.3)',
+                            borderRight: '1px solid var(--border-default)',
+                            background: 'var(--bg-surface-hover)',
                             display: 'flex',
                             flexDirection: 'column',
                             overflow: 'hidden',
@@ -332,7 +332,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                         {/* Schema Header */}
                         <div style={{
                             padding: '16px',
-                            borderBottom: '1px solid rgba(255,255,255,0.06)',
+                            borderBottom: '1px solid var(--border-default)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between'
@@ -477,8 +477,8 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
                     padding: '10px 16px',
-                    borderBottom: '1px solid rgba(255,255,255,0.06)',
-                    background: 'rgba(0,0,0,0.2)',
+                    borderBottom: '1px solid var(--border-default)',
+                    background: 'var(--bg-surface)',
                     flexShrink: 0
                 }}>
                     {!schemaOpen && (
@@ -571,7 +571,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                         flex: 1,
                         position: 'relative',
                         height: '220px',
-                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                        borderBottom: '1px solid var(--border-default)',
                         background: '#1a1b26'
                     }}>
                         {/* Line Numbers */}
@@ -579,8 +579,8 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                             ref={lineCountRef}
                             style={{
                                 position: 'absolute', left: 0, top: 0, bottom: 0, width: '44px',
-                                borderRight: '1px solid rgba(255,255,255,0.06)',
-                                background: 'rgba(0,0,0,0.3)',
+                                borderRight: '1px solid var(--border-default)',
+                                background: 'var(--bg-surface-hover)',
                                 overflow: 'hidden', userSelect: 'none',
                                 padding: '16px 0', zIndex: 2
                             }}
@@ -606,7 +606,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 padding: '16px', margin: 0,
                                 fontFamily: "'JetBrains Mono', 'Fira Code', 'Menlo', monospace",
                                 fontSize: '13px', lineHeight: '20px',
-                                color: 'rgba(255,255,255,0.8)',
+                                color: 'var(--text-primary)',
                                 overflow: 'auto',
                                 pointerEvents: 'none',
                                 whiteSpace: 'pre-wrap',
@@ -651,16 +651,16 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 transition={{ duration: 0.25 }}
                                 style={{
                                     height: '220px',
-                                    borderLeft: '1px solid rgba(255,255,255,0.06)',
-                                    borderBottom: '1px solid rgba(255,255,255,0.06)',
-                                    background: 'rgba(0,0,0,0.3)',
+                                    borderLeft: '1px solid var(--border-default)',
+                                    borderBottom: '1px solid var(--border-default)',
+                                    background: 'var(--bg-surface-hover)',
                                     display: 'flex', flexDirection: 'column',
                                     overflow: 'hidden', flexShrink: 0
                                 }}
                             >
                                 <div style={{
                                     padding: '10px 12px',
-                                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                    borderBottom: '1px solid var(--border-default)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                                 }}>
                                     <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
@@ -733,7 +733,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
                     padding: '6px 16px',
-                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    borderBottom: '1px solid var(--border-default)',
                     background: queryError ? 'rgba(239, 68, 68, 0.05)' : executionTime != null ? 'rgba(52, 211, 153, 0.03)' : 'transparent',
                     flexShrink: 0
                 }}>
@@ -772,8 +772,8 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                             <div style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
                                 padding: '10px 16px',
-                                borderBottom: '1px solid rgba(255,255,255,0.06)',
-                                background: 'rgba(0,0,0,0.15)',
+                                borderBottom: '1px solid var(--border-default)',
+                                background: 'var(--bg-surface)',
                                 flexShrink: 0
                             }}>
                                 <Columns3 size={14} style={{ color: 'var(--text-muted)' }} />
@@ -859,7 +859,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                         letterSpacing: '0.1em',
                                                         color: sortColumn === col ? '#34d399' : 'var(--text-muted)',
                                                         background: 'var(--bg-elevated)',
-                                                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                                        borderBottom: '1px solid var(--border-default)',
                                                         whiteSpace: 'nowrap',
                                                         cursor: 'pointer',
                                                         userSelect: 'none',
@@ -897,7 +897,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                                 fontFamily: isNum ? "'JetBrains Mono', monospace" : 'inherit',
                                                                 color: val === null || val === '' ? 'var(--text-disabled)' :
                                                                     isNum ? '#61afef' : 'var(--text-secondary)',
-                                                                borderBottom: '1px solid rgba(255,255,255,0.02)',
+                                                                borderBottom: '1px solid var(--border-default)',
                                                                 maxWidth: '300px',
                                                                 overflow: 'hidden',
                                                                 textOverflow: 'ellipsis',
@@ -920,8 +920,8 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 <div style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                     padding: '8px 16px',
-                                    borderTop: '1px solid rgba(255,255,255,0.06)',
-                                    background: 'rgba(0,0,0,0.15)',
+                                    borderTop: '1px solid var(--border-default)',
+                                    background: 'var(--bg-surface)',
                                     flexShrink: 0
                                 }}>
                                     <button

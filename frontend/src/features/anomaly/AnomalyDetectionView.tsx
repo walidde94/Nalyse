@@ -57,7 +57,7 @@ const ScoreRing = ({ value, size = 80, stroke = 6 }: { value: number; size?: num
 const AnomalyTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-        <div style={{ background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)', padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)', minWidth: '180px', color: 'var(--text-primary)' }}>
+        <div style={{ background: 'var(--bg-card)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)', padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)', minWidth: '180px', color: 'var(--text-primary)' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', borderRadius: '14px 14px 0 0', background: 'linear-gradient(90deg, #ef4444, #f59e0b, #34d399)' }} />
             <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
             {payload.map((p: any, i: number) => (

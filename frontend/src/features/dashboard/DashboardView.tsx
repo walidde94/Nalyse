@@ -1586,7 +1586,7 @@ export const DashboardView = ({
                                                     <div key={row.label} style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: ri < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none', gap: 14 }}>
                                                         <div style={{ color: 'var(--text-disabled)', flexShrink: 0 }}>{row.icon}</div>
                                                         <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', minWidth: 80 }}>{row.label}</span>
-                                                        <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.8)', fontFamily: row.label === 'Node ID' ? 'var(--font-mono, monospace)' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
+                                                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: row.label === 'Node ID' ? 'var(--font-mono, monospace)' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -1616,14 +1616,14 @@ export const DashboardView = ({
                                                         </div>
                                                         <div style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-disabled)' }}>{previewData.metadata.format}</div>
                                                     </div>
-                                                    <div style={{ flex: 1, overflow: 'hidden', borderRadius: 16, border: '1px solid var(--border-default)', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                                    <div style={{ flex: 1, overflow: 'hidden', borderRadius: 16, border: '1px solid var(--border-default)', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                                                         <div className="flex-1 overflow-auto custom-scrollbar">
                                                             <table className="w-full text-left border-collapse min-w-max">
                                                                 <thead className="sticky top-0 z-20">
-                                                                    <tr style={{ background: 'rgba(15,15,25,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                                                                        <th style={{ padding: 14, width: 48, fontSize: 9, fontWeight: 900, color: 'var(--text-disabled)', position: 'sticky', left: 0, zIndex: 30, background: 'rgba(15,15,25,0.95)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>#</th>
+                                                                    <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-default)' }}>
+                                                                        <th style={{ padding: 14, width: 48, fontSize: 9, fontWeight: 900, color: 'var(--text-disabled)', position: 'sticky', left: 0, zIndex: 30, background: 'var(--bg-card)', borderRight: '1px solid var(--border-default)' }}>#</th>
                                                                         {previewData.columns.map((col: any) => (
-                                                                            <th key={col.name} style={{ padding: 14, borderRight: '1px solid rgba(255,255,255,0.03)', minWidth: 120 }}>
+                                                                            <th key={col.name} style={{ padding: 14, borderRight: '1px solid var(--border-default)', minWidth: 120 }}>
                                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                                                                                     <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>{col.name}</span>
                                                                                     <span style={{
@@ -1640,13 +1640,13 @@ export const DashboardView = ({
                                                                 </thead>
                                                                 <tbody>
                                                                     {previewData.rows.map((row: any, i: number) => (
-                                                                        <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.025)', transition: 'background 0.15s' }} className="hover:!bg-[rgba(255,255,255,0.02)]">
-                                                                            <td style={{ padding: '12px 14px', width: 48, fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono, monospace)', color: 'var(--text-disabled)', position: 'sticky', left: 0, zIndex: 10, background: 'rgba(10,10,20,0.8)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>{i + 1}</td>
+                                                                        <tr key={i} style={{ borderBottom: '1px solid var(--border-default)', transition: 'background 0.15s' }} className="hover:!bg-[rgba(255,255,255,0.02)]">
+                                                                            <td style={{ padding: '12px 14px', width: 48, fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono, monospace)', color: 'var(--text-disabled)', position: 'sticky', left: 0, zIndex: 10, background: 'rgba(10,10,20,0.8)', borderRight: '1px solid var(--border-default)' }}>{i + 1}</td>
                                                                             {previewData.columns.map((col: any) => {
                                                                                 const val = row[col.name];
                                                                                 const isNull = val === null || val === undefined || val === '';
                                                                                 return (
-                                                                                    <td key={col.name} style={{ padding: '12px 14px', fontSize: 11, fontWeight: 500, borderRight: '1px solid rgba(255,255,255,0.02)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                    <td key={col.name} style={{ padding: '12px 14px', fontSize: 11, fontWeight: 500, borderRight: '1px solid var(--border-default)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                                         {isNull ? (
                                                                                             <span style={{ color: 'var(--bg-elevated)', fontStyle: 'italic', fontWeight: 700, fontSize: 9, letterSpacing: '0.1em' }}>NULL</span>
                                                                                         ) : (
@@ -1673,7 +1673,7 @@ export const DashboardView = ({
                                 </div>
 
                                 {/* Footer — Cinematic Launch Button */}
-                                <div style={{ padding: '20px 28px 24px', borderTop: '1px solid rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.15)' }}>
+                                <div style={{ padding: '20px 28px 24px', borderTop: '1px solid var(--border-default)', background: 'var(--bg-surface)' }}>
                                     <motion.button
                                         whileHover={{ scale: 1.015, y: -1 }}
                                         whileTap={{ scale: 0.985 }}
@@ -1713,7 +1713,7 @@ export const DashboardView = ({
                             <motion.div 
                                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                 onClick={() => !isCleaningUp && setShowCleanupModal(false)}
-                                style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }} 
+                                style={{ position: 'absolute', inset: 0, background: 'var(--bg-card)', backdropFilter: 'blur(12px)' }} 
                             />
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9, y: 30 }}

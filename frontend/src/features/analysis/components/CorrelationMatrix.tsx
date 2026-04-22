@@ -36,7 +36,7 @@ const getCorrelationColor = (r: number): string => {
 const getTextColor = (r: number): string => {
     const abs = Math.abs(r);
     if (abs > 0.5) return '#fff';
-    if (abs > 0.3) return 'rgba(255,255,255,0.8)';
+    if (abs > 0.3) return 'var(--text-primary)';
     return 'var(--text-muted)';
 };
 
@@ -269,7 +269,7 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                     <div style={{
                         position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
                         padding: '8px 16px', borderRadius: '10px',
-                        background: 'rgba(0,0,0,0.9)', border: '1px solid var(--border-default)',
+                        background: 'var(--bg-card)', border: '1px solid var(--border-default)',
                         backdropFilter: 'blur(10px)', zIndex: 100,
                         display: 'flex', alignItems: 'center', gap: '12px',
                         fontSize: '11px', color: 'var(--text-secondary)'

@@ -480,7 +480,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                 )}
 
                                 {/* Neural Processing Terminal */}
-                                <div style={{ marginTop: '12px', background: '#0a0a0c', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '12px', overflow: 'hidden' }}>
+                                <div style={{ marginTop: '12px', background: 'var(--bg-card)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '12px', overflow: 'hidden' }}>
                                     <div style={{ padding: '8px 16px', background: 'rgba(52,211,153,0.05)', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid rgba(52,211,153,0.1)' }}>
                                         <Command size={12} style={{ color: '#34d399' }} />
                                         <span style={{ fontSize: '10px', color: '#34d399', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Neural Processing Terminal</span>
@@ -673,7 +673,7 @@ const S: Record<string, React.CSSProperties> = {
     pulseDot: { width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399', animation: 'pulse 2s infinite' },
     iconBtn: { width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' },
     securityBadge: { display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '6px', background: 'rgba(52,211,153,0.06)', color: '#34d399', fontSize: '10px', fontWeight: 700 },
-    tabBar: { display: 'flex', gap: '4px', padding: '0 28px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.2)' },
+    tabBar: { display: 'flex', gap: '4px', padding: '0 28px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' },
     tabBtn: { display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', border: 'none', background: 'transparent', color: 'var(--text-tertiary)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', borderBottom: '2px solid transparent', transition: 'all 0.2s' },
     tabBtnActive: { color: 'var(--primary)', borderBottomColor: 'var(--primary)' },
     tabBadge: { fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '8px', background: 'var(--primary-subtle)', color: 'var(--primary)' },

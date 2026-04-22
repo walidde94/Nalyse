@@ -472,7 +472,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
     };
 
     return (
-        <div style={{ position: 'fixed', inset: 0, background: '#09090b', zIndex: 1000, color: 'white' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--bg-main)', zIndex: 1000, color: 'var(--text-primary)' }}>
             {/* CSS for Smoothness */}
             <style>{`
                 @keyframes dash-flow {
@@ -497,7 +497,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
             {/* Header / Nav */}
             <div className="backdrop-blur" style={{
                 position: 'absolute', top: 0, left: 0, right: 0, height: '70px',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                borderBottom: '1px solid var(--border-default)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '0 24px', zIndex: 10
             }}>
@@ -530,7 +530,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                                 border: '1px solid var(--border-default)',
                                 borderRadius: '8px',
                                 padding: '8px 12px 8px 32px',
-                                color: 'white',
+                                color: 'var(--text-primary)',
                                 width: '200px',
                                 fontSize: '13px',
                                 outline: 'none'
@@ -538,7 +538,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                         />
                     </div>
 
-                    <button onClick={handleExport} className="hover-btn" style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '8px 12px', color: 'white', cursor: 'pointer', fontSize: '13px' }}>
+                    <button onClick={handleExport} className="hover-btn" style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '8px 12px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px' }}>
                         📥 Export SVG
                     </button>
 
@@ -567,7 +567,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                                 style={{
                                     padding: '8px', borderRadius: '6px', border: 'none',
                                     background: layoutType === l ? '#6366f1' : 'var(--bg-surface-hover)',
-                                    color: 'white', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
+                                    color: 'var(--text-primary)', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
                                     textTransform: 'capitalize'
                                 }}
                             >
@@ -580,7 +580,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                 <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa' }}>LINK THRESHOLD</span>
-                        <span style={{ fontSize: '12px', color: 'white' }}>{Math.round(linkStrengthThreshold * 100)}%</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{Math.round(linkStrengthThreshold * 100)}%</span>
                     </div>
                     <input type="range" min="0.05" max="0.9" step="0.05" value={linkStrengthThreshold} onChange={e => setLinkStrengthThreshold(parseFloat(e.target.value))} style={{ width: '100%', accentColor: '#6366f1' }} />
                 </div>
@@ -588,7 +588,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                 <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa' }}>ANIMATION SPEED</span>
-                        <span style={{ fontSize: '12px', color: 'white' }}>{animationSpeed}x</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{animationSpeed}x</span>
                     </div>
                     <input type="range" min="0.5" max="3" step="0.5" value={animationSpeed} onChange={e => setAnimationSpeed(parseFloat(e.target.value))} style={{ width: '100%', accentColor: '#ec4899' }} />
                 </div>
@@ -603,7 +603,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                             graphData.nodes.forEach(n => { n.x = undefined; n.y = undefined; });
                             setLayoutType('force');
                         }}
-                        style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'transparent', color: 'white', fontSize: '11px', cursor: 'pointer' }}
+                        style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'transparent', color: 'var(--text-primary)', fontSize: '11px', cursor: 'pointer' }}
                     >
                         Reset
                     </button>

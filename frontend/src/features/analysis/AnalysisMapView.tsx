@@ -123,15 +123,15 @@ export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
             <div className="card" style={{ flex: 1, padding: 0, overflow: 'hidden', border: 'none', borderRadius: '16px', position: 'relative' }}>
                 <style>{`
                     .leaflet-container { 
-                        background: #0f172a !important; 
+                        background: var(--bg-main) !important; 
                         width: 100%; 
                         height: 100%; 
                     }
                     .leaflet-popup-content-wrapper {
-                        background: #1e293b !important;
-                        color: #f8fafc !important;
+                        background: var(--bg-surface) !important;
+                        color: var(--text-primary) !important;
                         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
-                        border: 1px solid #334155;
+                        border: 1px solid var(--border-default);
                         border-radius: 12px !important;
                         padding: 0 !important;
                     }
@@ -139,8 +139,8 @@ export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
                         margin: 0 !important;
                     }
                     .leaflet-popup-tip {
-                        background: #1e293b !important;
-                        border: 1px solid #334155;
+                        background: var(--bg-surface) !important;
+                        border: 1px solid var(--border-default);
                     }
                     .leaflet-right .leaflet-control {
                         border: none !important;

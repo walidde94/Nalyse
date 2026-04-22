@@ -102,21 +102,21 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
     };
 
     return (
-        <div style={{ position: 'absolute', inset: 0, background: '#09090b', zIndex: 1000, color: 'white', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg-main)', zIndex: 1000, color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <style>{`
                 .leaflet-container { background: #050505 !important; }
                 .backdrop-blur { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
                 input[type=range] { accent-color: var(--primary); height: 4px; pointer-events: auto; }
-                .neo-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 11px; }
-                .neo-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); }
-                .neo-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+                .neo-btn { background: var(--bg-surface-hover); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 11px; }
+                .neo-btn:hover { background: var(--bg-elevated); border-color: var(--primary); }
+                .neo-btn.active { background: var(--primary); border-color: var(--primary); color: var(--text-primary); }
                 .neon-glow { filter: drop-shadow(0 0 8px var(--primary)) drop-shadow(0 0 15px var(--primary)); opacity: 0.9 !important; }
             `}</style>
 
             {/* Premium Header */}
             <div className="backdrop-blur" style={{
                 height: '70px',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                borderBottom: '1px solid var(--border-default)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -139,7 +139,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                     <input type="file" id="track-upload-main" style={{ display: 'none' }} accept=".json" onChange={handleFileUpload} />
                     <button
                         onClick={() => document.getElementById('track-upload-main')?.click()}
-                        style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '10px 20px', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '10px 20px', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
                         <Upload size={16} /> Upload Track JSON
                     </button>
@@ -155,7 +155,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
             {/* Main Full-Screen Map */}
             <div style={{ flex: 1, position: 'relative' }}>
                 {trackData.length === 0 ? (
-                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#09090b' }}>
+                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-main)' }}>
                         <div style={{ textAlign: 'center', opacity: 0.5, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div style={{ marginBottom: '20px', color: 'var(--primary)' }}>
                                 <Satellite size={64} />
@@ -287,7 +287,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                     {trackData.length > 0 && (
                         <div>
                             <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase' }}>Speed Intel</div>
-                            <div className="card" style={{ padding: '4px', height: '80px', background: 'rgba(0,0,0,0.2)' }}>
+                            <div className="card" style={{ padding: '4px', height: '80px', background: 'var(--bg-surface)' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={trackData.map((d, i) => ({ i, speed: d.speed }))}>
                                         <defs>
@@ -311,7 +311,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                 {trackData.length > 0 && (
                     <div className="backdrop-blur" style={{
                         position: 'absolute', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
-                        width: '70%', background: 'rgba(15, 17, 26, 0.95)', border: '1px solid var(--border-default)',
+                        width: '70%', background: 'var(--bg-card)', border: '1px solid var(--border-default)',
                         borderRadius: '20px', padding: '16px 32px', zIndex: 1000, boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>

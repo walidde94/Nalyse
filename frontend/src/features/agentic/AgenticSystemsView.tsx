@@ -567,7 +567,7 @@ export const AgenticSystemsView = () => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: white;
+                    color: var(--text-primary);
                     flex-shrink: 0;
                 }
 
@@ -690,7 +690,7 @@ export const AgenticSystemsView = () => {
 
                 .user .bubble-text {
                     background: var(--primary);
-                    color: white;
+                    color: var(--text-primary);
                     border-top-right-radius: 2px;
                 }
 
@@ -722,7 +722,7 @@ export const AgenticSystemsView = () => {
                     height: 38px;
                     border-radius: 50%;
                     background: var(--primary);
-                    color: white;
+                    color: var(--text-primary);
                     border: none;
                     display: flex;
                     align-items: center;
@@ -751,7 +751,7 @@ export const AgenticSystemsView = () => {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    background: #0d1117;
+                    background: var(--bg-main);
                     border: 1px solid #30363d;
                     color: #e6edf3;
                     border-radius: 16px;
@@ -820,7 +820,7 @@ export const AgenticSystemsView = () => {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    background: #0d1117;
+                    background: var(--bg-main);
                     border: 1px solid #30363d;
                     color: #e6edf3;
                     border-radius: 16px;

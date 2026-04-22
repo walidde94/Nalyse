@@ -559,7 +559,7 @@ export const ThemeStudio = ({ addToast }: { addToast: (msg: string, type?: 'succ
                 padding: '20px 24px 16px',
                 position: 'relative', zIndex: 1,
                 borderBottom: '1px solid var(--border-subtle)',
-                background: 'rgba(0,0,0,0.2)',
+                background: 'var(--bg-surface)',
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -802,7 +802,7 @@ export const ThemeStudio = ({ addToast }: { addToast: (msg: string, type?: 'succ
                         exit={{ opacity: 0 }}
                         style={{
                             position: 'absolute', inset: 0, zIndex: 100,
-                            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
+                            background: 'var(--bg-card)', backdropFilter: 'blur(10px)',
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             gap: '16px',
                         }}

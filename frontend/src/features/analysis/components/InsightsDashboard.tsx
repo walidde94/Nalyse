@@ -248,7 +248,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                 display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px',
                 padding: '12px 16px',
                 borderRadius: '12px',
-                background: 'rgba(0,0,0,0.2)',
+                background: 'var(--bg-surface)',
                 border: '1px solid var(--border-default)'
             }}>
                 {/* Category Filters (scrollable chips) */}
@@ -442,7 +442,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                             </div>
                                             <p style={{
                                                 fontSize: '13px', lineHeight: 1.5,
-                                                color: 'rgba(255,255,255,0.8)',
+                                                color: 'var(--text-primary)',
                                                 margin: 0,
                                                 overflow: isExpanded ? 'visible' : 'hidden',
                                                 textOverflow: isExpanded ? 'unset' : 'ellipsis',

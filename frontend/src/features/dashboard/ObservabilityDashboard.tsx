@@ -84,7 +84,7 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
         if (active && payload && payload.length) {
             return (
                 <div style={{
-                    background: 'rgba(15, 17, 26, 0.95)',
+                    background: 'var(--bg-card)',
                     border: '1px solid var(--border-subtle)',
                     padding: '12px 16px',
                     borderRadius: '12px',
@@ -110,8 +110,8 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
 
     const renderChart = (title: string, dataKeys: any[], unit: string) => (
         <div style={{
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
             borderRadius: '16px',
             padding: '24px',
             display: 'flex',
@@ -123,7 +123,7 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
                 <h3 style={{ 
                     fontSize: '11px', 
                     fontWeight: 900, 
-                    color: 'rgba(255, 255, 255, 0.4)', 
+                    color: 'var(--text-muted)', 
                     textTransform: 'uppercase', 
                     letterSpacing: '0.15em',
                     display: 'flex', 
@@ -156,7 +156,7 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
                             tickLine={false}
                             tickFormatter={(v) => `${v} ${unit}`}
                         />
-                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border-default)', strokeWidth: 1 }} />
                         <Legend 
                             wrapperStyle={{ fontSize: '12px', color: 'var(--text-secondary)' }}
                             iconType="circle"
@@ -189,7 +189,7 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
                 position: 'fixed',
                 inset: 0,
                 zIndex: 9999,
-                background: '#0a0a0f', // Very dark background like railway
+                background: 'var(--bg-main)',
                 display: 'flex',
                 flexDirection: 'column'
             }}
@@ -197,7 +197,7 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
             {/* Header */}
             <div style={{
                 height: '64px',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                borderBottom: '1px solid var(--border-default)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -209,7 +209,7 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
                 zIndex: 10
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'var(--bg-surface-hover)', borderRadius: '8px' }}>
                         <Activity size={16} style={{ color: '#10b981' }} />
                         <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>Production Observability</span>
                     </div>
@@ -227,10 +227,10 @@ export const ObservabilityDashboard = ({ onClose, token }: { onClose: () => void
                         {isLive ? <Pause size={14} /> : <Play size={14} />}
                         {isLive ? 'Pause Live Data' : 'Resume Live Data'}
                     </button>
-                    <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }} />
+                    <div style={{ width: '1px', height: '24px', background: 'var(--bg-elevated)' }} />
                     <button 
                         onClick={onClose}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
                     >
                         <X size={18} />
                     </button>

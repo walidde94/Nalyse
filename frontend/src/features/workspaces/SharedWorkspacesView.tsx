@@ -1885,7 +1885,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                                                 <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                                                     The system encountered an error fetching activity logs from the production gateway. This usually means the database metadata is still synchronizing. 
                                                     <br/><br/>
-                                                    <code style={{ fontSize: 10, background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: 4 }}>{activityError}</code>
+                                                    <code style={{ fontSize: 10, background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: 4 }}>{activityError}</code>
                                                 </p>
                                             </div>
                                         ) : wsActivity.length === 0 ? (
@@ -1999,7 +1999,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         style={{
                             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)',
+                            background: 'var(--bg-card)', backdropFilter: 'blur(16px)',
                             zIndex: 1000, display: 'flex', flexDirection: 'column',
                             padding: '32px 48px'
                         }}

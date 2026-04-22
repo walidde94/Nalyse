@@ -2642,7 +2642,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
             {activeTab === 'presentation' && (
                 <div className="fade-in" style={{
                     position: 'absolute', inset: 0, zIndex: 9000,
-                    background: '#09090b', color: 'white',
+                    background: 'var(--bg-main)', color: 'var(--text-primary)',
                     display: 'flex', flexDirection: 'column'
                 }}>
                     {/* Top Progress Bars */}
@@ -2679,13 +2679,13 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     }}>
                         <button
                             onClick={() => setIsPlaying(!isPlaying)}
-                            style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '10px 16px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
+                            style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '10px 16px', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
                         >
                             {isPlaying ? <span className="text-xl leading-none">⏸</span> : <span className="text-xl leading-none">▶</span>}
                             {isPlaying ? 'Pause' : 'Play'}
                         </button>
                         <button onClick={() => setActiveTab('overview')} style={{
-                            background: 'rgba(255,50,50,0.1)', border: '1px solid rgba(255,50,50,0.3)', borderRadius: '12px', padding: '10px 20px', color: '#ff8888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', backdropFilter: 'blur(10px)', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(255,0,0,0.1)'
+                            background: 'var(--danger-glow)', border: '1px solid var(--danger)', borderRadius: '12px', padding: '10px 20px', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', backdropFilter: 'blur(10px)', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(255,0,0,0.1)'
                         }}>
                             <span className="text-xl leading-none">✕</span> Exit Presentation
                         </button>

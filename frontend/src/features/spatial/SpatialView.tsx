@@ -202,7 +202,7 @@ export const SpatialView = ({ files, token }: Props) => {
                 <AnimatePresence>
                     {loading && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,14,0.7)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            style={{ position: 'absolute', inset: 0, background: 'var(--bg-card)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(192,132,252,0.15)', borderTop: '3px solid #c084fc' }} className="animate-spin" />
                             <div style={{ marginTop: '16px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c084fc' }}>Scanning Vectors</div>
                         </motion.div>
@@ -253,7 +253,7 @@ export const SpatialView = ({ files, token }: Props) => {
                 {/* Status Bar */}
                 <div style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px', zIndex: 500, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', pointerEvents: 'none' }}>
                     
-                    <div style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(12px)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '16px', pointerEvents: 'auto' }}>
+                    <div style={{ background: 'var(--bg-card)', backdropFilter: 'blur(12px)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '16px', pointerEvents: 'auto' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: mapData.length > 0 ? '#34d399' : '#f87171', boxShadow: `0 0 10px ${mapData.length > 0 ? '#34d399' : '#f87171'}` }} />
                             <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Nodes Active:</span>
@@ -261,7 +261,7 @@ export const SpatialView = ({ files, token }: Props) => {
                         </div>
                     </div>
 
-                    <div style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(12px)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '6px', display: 'flex', gap: '4px', pointerEvents: 'auto' }}>
+                    <div style={{ background: 'var(--bg-card)', backdropFilter: 'blur(12px)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '6px', display: 'flex', gap: '4px', pointerEvents: 'auto' }}>
                         <button className="btn btn-icon btn-ghost btn-sm" onClick={() => setZoom(z => Math.min(z + 1, 18))}><Maximize2 size={14} /></button>
                         <button className="btn btn-icon btn-ghost btn-sm" onClick={() => setCenter([20,0])}><Crosshair size={14} /></button>
                     </div>
@@ -284,17 +284,17 @@ export const SpatialView = ({ files, token }: Props) => {
                 .premium-popup .leaflet-popup-content-wrapper {
                     background: rgba(8,8,14,0.96) !important;
                     backdrop-filter: blur(24px);
-                    border: 1px solid rgba(255,255,255,0.06);
-                    color: white;
+                    border: 1px solid var(--border-default);
+                    color: var(--text-primary);
                     border-radius: 12px;
                     box-shadow: 0 24px 48px -8px rgba(0,0,0,0.7);
                 }
                 .premium-popup .leaflet-popup-tip {
                     background: rgba(8,8,14,0.96) !important;
-                    border: 1px solid rgba(255,255,255,0.06);
+                    border: 1px solid var(--border-default);
                 }
                 .leaflet-container {
-                    background: #08080E;
+                    background: var(--bg-app);
                 }
             `}</style>
         </div>

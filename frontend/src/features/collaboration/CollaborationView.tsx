@@ -149,7 +149,7 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                         <button key={t.id} onClick={() => setActiveSection(t.id as any)} style={{
                             display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '10px',
                             background: isActive ? 'var(--border-default)' : 'transparent',
-                            border: `1px solid ${isActive ? 'rgba(255,255,255,0.12)' : 'transparent'}`,
+                            border: `1px solid ${isActive ? 'var(--border-default)' : 'transparent'}`,
                             color: isActive ? '#fff' : 'var(--text-muted)',
                             fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
                         }}>

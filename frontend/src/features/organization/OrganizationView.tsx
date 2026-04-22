@@ -154,7 +154,7 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh, onSelect }:
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'var(--text-primary)', boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0 }}>
                             {(m.firstName?.charAt(0) || m.email.charAt(0)).toUpperCase()}
                         </div>
-                        <div style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderRadius: '50%', background: status.color, border: '2px solid #0d0d0d', boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none' }} />
+                        <div style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderRadius: '50%', background: status.color, border: '2px solid var(--bg-main)', boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none' }} />
                     </div>
                     <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{getUserName(m)}</div>
@@ -405,7 +405,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             {tab.count !== undefined && (
                                 <span style={{
                                     fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 6,
-                                    background: isActive ? 'rgba(255,255,255,0.12)' : 'var(--bg-surface-hover)',
+                                    background: isActive ? 'var(--bg-elevated)' : 'var(--bg-surface-hover)',
                                     color: isActive ? '#fff' : 'var(--text-muted)',
                                     minWidth: 16, textAlign: 'center'
                                 }}>
@@ -881,7 +881,7 @@ const MemberSidebar = ({ member, onClose, worksaces, auditLogs, token, onRefresh
             style={{
                 position: 'fixed', top: 0, right: 0, width: 420, height: '100%',
                 background: 'var(--bg-card)', backdropFilter: 'blur(32px)',
-                borderLeft: '1px solid rgba(255,255,255,0.08)', zIndex: 1000,
+                borderLeft: '1px solid var(--border-default)', zIndex: 1000,
                 boxShadow: '-20px 0 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column'
             }}
         >

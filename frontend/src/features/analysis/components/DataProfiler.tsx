@@ -441,7 +441,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                                         >
                                             <div style={{
                                                 padding: '0 20px 20px 20px',
-                                                borderTop: '1px solid rgba(255,255,255,0.04)'
+                                                borderTop: '1px solid var(--border-default)'
                                             }}>
                                                 <div style={{ display: 'flex', gap: '16px', marginTop: '16px', flexWrap: 'wrap' }}>
                                                     {/* Stats */}

@@ -145,7 +145,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                             justifyContent: 'center',
                             fontSize: '32px',
                             margin: '0 auto 16px',
-                            color: 'white',
+                            color: 'var(--text-primary)',
                             fontWeight: 'bold',
                             cursor: 'pointer',
                             position: 'relative',
@@ -173,7 +173,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: '12px',
-                            color: 'white'
+                            color: 'var(--text-primary)'
                         }}>
                             📷
                         </div>
@@ -292,7 +292,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                                     padding: '4px 10px',
                                     borderRadius: '8px',
                                     background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                                    color: 'white',
+                                    color: 'var(--text-primary)',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em',
                                     boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',

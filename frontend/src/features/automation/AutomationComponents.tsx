@@ -108,10 +108,10 @@ export const PriorityBadge = ({ priority }: { priority?: string }) => {
 
 /* ─── Shared Styles ─── */
 export const AUTOMATION_STYLES = `
-    .glass-panel { background: rgba(255,255,255,0.02); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-    .glass-button { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); transition: all 0.2s; cursor: pointer; }
-    .glass-button:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); border-color: rgba(255,255,255,0.2); }
-    .auto-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; borderRadius: 12px; color: var(--text-primary); outline: none; transition: all 0.2s; width: 100%; box-sizing: border-box; font-size: 13px; border-radius: 12px; }
+    .glass-panel { background: var(--bg-surface); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+    .glass-button { background: var(--bg-surface-hover); border: 1px solid var(--border-default); color: rgba(255,255,255,0.7); transition: all 0.2s; cursor: pointer; }
+    .glass-button:hover { background: var(--bg-elevated); color: var(--text-primary); border-color: rgba(255,255,255,0.2); }
+    .auto-input { background: var(--bg-surface-hover); border: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; borderRadius: 12px; color: var(--text-primary); outline: none; transition: all 0.2s; width: 100%; box-sizing: border-box; font-size: 13px; border-radius: 12px; }
     .auto-input:focus { border-color: #6366f1 !important; background: rgba(255,255,255,0.08) !important; box-shadow: 0 0 15px rgba(99,102,241,0.1); }
     .auto-tab { padding: 10px 20px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
     .template-card { transition: all 0.3s ease; cursor: pointer; position: relative; overflow: hidden; }

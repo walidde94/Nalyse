@@ -129,7 +129,7 @@ export const CommandPalette = ({ isOpen, onClose, commands }: { isOpen: boolean;
                                 {history.includes(cmd.id) && !search && (
                                     <span style={{ marginLeft: 'auto', fontSize: '10px', opacity: 0.5 }}>RECENT</span>
                                 )}
-                                {i === selectedIndex && <span style={{ marginLeft: 'auto', fontSize: '14px', background: 'rgba(0,0,0,0.2)', padding: '2px 8px', borderRadius: '4px' }}>⏎</span>}
+                                {i === selectedIndex && <span style={{ marginLeft: 'auto', fontSize: '14px', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px' }}>⏎</span>}
                             </div>
                         ))
                     )}

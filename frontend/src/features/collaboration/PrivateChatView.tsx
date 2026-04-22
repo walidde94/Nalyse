@@ -79,7 +79,7 @@ const neuralStyles = `
     .message-bubble-own {
         background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
         box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
-        color: white;
+        color: var(--text-primary);
     }
 
     .message-bubble-other {
@@ -109,7 +109,7 @@ const neuralStyles = `
     }
     .focus-glow:focus {
         border-color: var(--primary) !important;
-        background: rgba(255, 255, 255, 0.07) !important;
+        background: var(--bg-surface-hover) !important;
         box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 0 20px rgba(99, 102, 241, 0.1) !important;
     }
 
@@ -142,7 +142,7 @@ const neuralStyles = `
     }
 
     .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
     .emoji-item {
@@ -156,7 +156,7 @@ const neuralStyles = `
         justify-content: center;
     }
     .emoji-item:hover {
-        background: rgba(255,255,255,0.08);
+        background: var(--bg-elevated);
         transform: scale(1.3) rotate(5deg);
     }
 `;
@@ -218,7 +218,7 @@ const UserAvatar = ({ user, size = 40, status = 'online' }: { user: ChatParticip
                 position: 'absolute', bottom: -2, right: -2,
                 width: size * 0.25, height: size * 0.25, borderRadius: '50%',
                 background: status === 'online' ? '#22c55e' : '#64748b',
-                border: '2px solid #03040c',
+                border: '2px solid var(--bg-main)',
                 display: status === 'online' ? 'block' : 'none'
             }} />
         </div>
@@ -479,7 +479,7 @@ export const PrivateChatView: React.FC = () => {
                 flexDirection: 'column',
                 position: 'relative',
                 zIndex: 20,
-                borderRight: '1px solid rgba(255,255,255,0.05)'
+                borderRight: '1px solid var(--border-default)'
             }}>
                 <div style={{ padding: '30px 24px', borderBottom: '1px solid var(--border-default)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -1023,8 +1023,8 @@ export const PrivateChatView: React.FC = () => {
                                                     exit={{ opacity: 0, y: -15, scale: 0.9 }}
                                                     style={{
                                                         position: 'absolute', bottom: '110%', right: 0,
-                                                        width: 320, height: 240, background: 'rgba(15, 23, 42, 0.98)', borderRadius: 24,
-                                                        border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 15px 50px rgba(0,0,0,0.6)',
+                                                        width: 320, height: 240, background: 'var(--bg-card)', borderRadius: 24,
+                                                        border: '1px solid var(--border-default)', boxShadow: '0 15px 50px rgba(0,0,0,0.6)',
                                                         backdropFilter: 'blur(30px)',
                                                         zIndex: 100, padding: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column'
                                                     }}

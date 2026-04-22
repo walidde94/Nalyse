@@ -134,7 +134,7 @@ export const NeuralAuthBackground: React.FC = () => {
     }, [mouseX, mouseY]);
 
     return (
-        <div ref={containerRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', background: '#020617' }}>
+        <div ref={containerRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', background: 'var(--bg-main)' }}>
             {/* Base ambient gradient */}
             <div style={{
                 position: 'absolute',

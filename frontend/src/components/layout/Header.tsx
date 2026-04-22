@@ -440,7 +440,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                         <div style={{ fontSize: 13, fontWeight: 800, color: toastData.type === 'mention' ? '#fff' : 'var(--text-primary)' }}>
                                             {toastData.title}
                                         </div>
-                                        <div style={{ fontSize: 12, color: toastData.type === 'mention' ? 'rgba(255,255,255,0.8)' : 'var(--text-secondary)', maxWidth: 250, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <div style={{ fontSize: 12, color: toastData.type === 'mention' ? 'var(--text-primary)' : 'var(--text-secondary)', maxWidth: 250, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {toastData.message}
                                         </div>
                                     </div>

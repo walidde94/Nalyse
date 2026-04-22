@@ -266,13 +266,13 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                         width: '36px', height: '36px', borderRadius: '12px',
                         background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: 'white', boxShadow: '0 4px 12px -2px rgba(59,130,246,0.3)'
+                        color: 'var(--text-primary)', boxShadow: '0 4px 12px -2px rgba(59,130,246,0.3)'
                     }}>
                         <Globe2 size={18} />
                     </div>
                     <div>
                         <h3 style={{
-                            fontSize: '15px', fontWeight: 800, color: 'white',
+                            fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)',
                             letterSpacing: '-0.02em', margin: 0
                         }}>{title}</h3>
                         <p style={{
@@ -439,7 +439,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                                 style={{
                                                     fontSize: `${Math.max(8, 11 / position.zoom * 2)}px`,
                                                     fontWeight: 700,
-                                                    fill: 'rgba(255,255,255,0.8)',
+                                                    fill: 'var(--text-primary)',
                                                     paintOrder: 'stroke',
                                                     stroke: 'rgba(0,0,0,0.8)',
                                                     strokeWidth: 3,
@@ -472,7 +472,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                     top: tooltipPos.y - 10,
                                     pointerEvents: 'none',
                                     zIndex: 99999,
-                                    background: 'rgba(8, 12, 30, 0.95)',
+                                    background: 'var(--bg-card)',
                                     backdropFilter: 'blur(20px)',
                                     border: '1px solid var(--border-default)',
                                     borderRadius: '14px',
@@ -487,7 +487,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                         background: getHeatmapColor(hoveredMarker.value, minVal, maxVal),
                                         boxShadow: `0 0 8px ${getHeatmapColor(hoveredMarker.value, minVal, maxVal)}`
                                     }} />
-                                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'white', letterSpacing: '-0.01em' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                                         {hoveredMarker.name}
                                     </span>
                                 </div>
@@ -548,8 +548,8 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                 <div style={{
                     width: '260px',
                     flexShrink: 0,
-                    borderLeft: '1px solid rgba(255,255,255,0.05)',
-                    background: 'rgba(0,0,0,0.15)',
+                    borderLeft: '1px solid var(--border-default)',
+                    background: 'var(--bg-surface)',
                     overflow: 'auto',
                     display: 'flex',
                     flexDirection: 'column'
@@ -616,7 +616,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                     {/* Name & Value */}
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{
-                                            fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.8)',
+                                            fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)',
                                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                                         }}>
                                             {item.name}

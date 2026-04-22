@@ -214,7 +214,7 @@ export const AutomationView = () => {
                 <div style={{ display: 'flex', gap: 6, marginBottom: 28, background: 'var(--bg-surface)', padding: 5, borderRadius: 14, width: 'fit-content', border: '1px solid var(--border-default)', flexWrap: 'wrap' }}>
                     {TABS.map(tab => (
                         <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }} className="auto-tab"
-                            style={{ background: activeTab === tab.id ? 'rgba(99,102,241,0.15)' : 'transparent', color: activeTab === tab.id ? '#818cf8' : 'var(--text-muted)' }}>
+                            style={{ background: activeTab === tab.id ? 'rgba(99,102,241,0.15)' : 'transparent', color: activeTab === tab.id ? 'var(--primary-light)' : 'var(--text-muted)' }}>
                             {tab.icon} {tab.label}
                         </button>
                     ))}

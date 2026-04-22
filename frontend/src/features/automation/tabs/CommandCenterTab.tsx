@@ -61,7 +61,7 @@ export const CommandCenterTab = ({ stats, schedules, globalHistory, onTriggerAll
                                 <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
                                 <XAxis dataKey="time" stroke='var(--text-disabled)' tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} />
                                 <YAxis stroke='var(--text-disabled)' tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} />
-                                <Tooltip contentStyle={{ background: '#0f111a', border: '1px solid var(--border-default)', borderRadius: 10, fontSize: 11 }} />
+                                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 10, fontSize: 11 }} />
                                 <Area type="monotone" dataKey="success" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#cS)" />
                                 <Area type="monotone" dataKey="failed" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#cF)" />
                             </AreaChart>
@@ -84,7 +84,7 @@ export const CommandCenterTab = ({ stats, schedules, globalHistory, onTriggerAll
                         <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Recent Activity</div>
                         {recentRuns.length === 0 && <div style={{ fontSize: 12, color: 'var(--text-disabled)', textAlign: 'center', padding: 20 }}>No activity yet</div>}
                         {recentRuns.map((r: any) => (
-                            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-default)' }}>
                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: r.status === 'success' ? '#10b981' : r.status === 'failed' ? '#ef4444' : '#6366f1' }} />
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.schedule?.name || 'Run'}</div>

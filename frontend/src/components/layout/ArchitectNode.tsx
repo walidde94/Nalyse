@@ -164,7 +164,7 @@ export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({
                     color: rgba(255,255,255,0.4); cursor: grab;
                     transition: all 0.15s; flex-shrink: 0;
                 }
-                .anc-drag-handle:hover { background: rgba(255,255,255,0.1); color: white; }
+                .anc-drag-handle:hover { background: var(--bg-elevated); color: var(--text-primary); }
                 .anc-drag-handle:active { cursor: grabbing; }
 
                 .anc-label {
@@ -176,10 +176,10 @@ export const ArchitectNode = forwardRef<HTMLDivElement, ArchitectNodeProps>(({
                 .anc-actions { display: flex; gap: 4px; flex-shrink: 0; }
                 .anc-btn {
                     display: flex; align-items: center; gap: 4px;
-                    padding: 4px 8px; border-radius: 8px; border: none; background: rgba(255,255,255,0.06);
+                    padding: 4px 8px; border-radius: 8px; border: none; background: var(--bg-elevated);
                     color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.15s;
                 }
-                .anc-btn:hover { background: rgba(255,255,255,0.12); color: white; }
+                .anc-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
                 .anc-btn-danger:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
                 
                 /* Override react grid layout resize handle appearance */
