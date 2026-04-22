@@ -52,14 +52,14 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
 
     const toggleSelect = (id: string) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
-    const S: React.CSSProperties = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: 12, color: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box', fontSize: 13 };
-    const L: React.CSSProperties = { fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
+    const S: React.CSSProperties = { background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', padding: '12px 16px', borderRadius: 12, color: 'var(--text-primary)', outline: 'none', width: '100%', boxSizing: 'border-box', fontSize: 13 };
+    const L: React.CSSProperties = { fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Top bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{schedules.length} pipeline{schedules.length !== 1 ? 's' : ''}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{schedules.length} pipeline{schedules.length !== 1 ? 's' : ''}</div>
                 <button onClick={() => setIsCreating(true)} style={{ padding: '10px 22px', borderRadius: 12, background: '#6366f1', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Plus size={16} /> New Pipeline
                 </button>
@@ -76,17 +76,17 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                             <div style={{ display: 'flex', gap: 8 }}>
                                 {[1,2,3].map(s => (
                                     <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: wizardStep >= s ? '#6366f1' : 'rgba(255,255,255,0.05)', color: wizardStep >= s ? '#fff' : 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
+                                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: wizardStep >= s ? '#6366f1' : 'var(--bg-surface-hover)', color: wizardStep >= s ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
                                             {wizardStep > s ? <Check size={14} /> : s}
                                         </div>
-                                        <span style={{ fontSize: 11, fontWeight: 700, color: wizardStep >= s ? '#fff' : 'rgba(255,255,255,0.3)' }}>
+                                        <span style={{ fontSize: 11, fontWeight: 700, color: wizardStep >= s ? '#fff' : 'var(--text-muted)' }}>
                                             {s === 1 ? 'Identity' : s === 2 ? 'Sources' : 'Delivery'}
                                         </span>
-                                        {s < 3 && <div style={{ width: 30, height: 1, background: wizardStep > s ? '#6366f1' : 'rgba(255,255,255,0.1)' }} />}
+                                        {s < 3 && <div style={{ width: 30, height: 1, background: wizardStep > s ? '#6366f1' : 'var(--bg-elevated)' }} />}
                                     </div>
                                 ))}
                             </div>
-                            <button onClick={resetForm} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}><X size={20} /></button>
+                            <button onClick={resetForm} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
                         </div>
 
                         {wizardStep === 1 && (
@@ -96,11 +96,11 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                                 <div><div style={L}>Schedule</div><select style={S} value={form.cronExpression} onChange={e => setForm({...form, cronExpression: e.target.value})}>
                                     {CRON_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                                 </select>
-                                <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9, fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', marginBottom: 8 }}><Calendar size={10} /> Next 5 Run Predictions</div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                         {getNextRuns(form.cronExpression).map((d: Date, i: number) => (
-                                            <div key={i} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'flex', justifyContent: 'space-between' }}>
+                                            <div key={i} style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
                                                 <span>Run #{i+1}</span>
                                                 <span style={{ fontFamily: 'var(--font-mono)' }}>{d.toLocaleString()}</span>
                                             </div>
@@ -110,7 +110,7 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                                 </div>
                                 <div><div style={L}>Priority</div><div style={{ display: 'flex', gap: 8 }}>
                                     {['low','normal','high','critical'].map(p => (
-                                        <button key={p} onClick={() => setForm({...form, priority: p})} style={{ flex: 1, padding: 10, borderRadius: 10, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', background: form.priority === p ? '#6366f1' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer' }}>{p}</button>
+                                        <button key={p} onClick={() => setForm({...form, priority: p})} style={{ flex: 1, padding: 10, borderRadius: 10, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', background: form.priority === p ? '#6366f1' : 'var(--bg-surface-hover)', border: 'none', color: '#fff', cursor: 'pointer' }}>{p}</button>
                                     ))}
                                 </div></div>
                             </div>
@@ -132,7 +132,7 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                                         {MODULE_LIST.map(m => {
                                             const on = (form.modules as any)[m.key];
-                                            return <button key={m.key} onClick={() => setForm({...form, modules: {...form.modules, [m.key]: !on}})} style={{ padding: '10px 8px', borderRadius: 10, fontSize: 10, fontWeight: 800, background: on ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)', border: `1px solid ${on ? '#6366f1' : 'rgba(255,255,255,0.1)'}`, color: on ? '#818cf8' : 'rgba(255,255,255,0.4)', cursor: 'pointer', textAlign: 'left' }}>{m.icon} {m.label}</button>;
+                                            return <button key={m.key} onClick={() => setForm({...form, modules: {...form.modules, [m.key]: !on}})} style={{ padding: '10px 8px', borderRadius: 10, fontSize: 10, fontWeight: 800, background: on ? 'rgba(99,102,241,0.2)' : 'var(--bg-surface)', border: `1px solid ${on ? '#6366f1' : 'var(--bg-elevated)'}`, color: on ? '#818cf8' : 'var(--text-muted)', cursor: 'pointer', textAlign: 'left' }}>{m.icon} {m.label}</button>;
                                         })}
                                     </div>
                                 </div>
@@ -143,14 +143,14 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                                 <div><div style={L}>Delivery Endpoint *</div><input style={S} placeholder={form.deliveryChannel === 'email' ? 'exec@company.com' : 'https://...'} value={form.deliverTo} onChange={e => setForm({...form, deliverTo: e.target.value})} /></div>
                                 <div><div style={L}>Channel</div><div style={{ display: 'flex', gap: 8 }}>
-                                    <button onClick={() => setForm({...form, deliveryChannel: 'email'})} style={{ flex: 1, padding: 12, borderRadius: 12, background: form.deliveryChannel === 'email' ? '#6366f1' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', fontSize: 11, fontWeight: 700 }}><Mail size={14} /> Email</button>
-                                    <button onClick={() => setForm({...form, deliveryChannel: 'webhook'})} style={{ flex: 1, padding: 12, borderRadius: 12, background: form.deliveryChannel === 'webhook' ? '#10b981' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', fontSize: 11, fontWeight: 700 }}><Globe size={14} /> Webhook</button>
-                                    <button onClick={() => setForm({...form, deliveryChannel: 'slack'})} style={{ flex: 1, padding: 12, borderRadius: 12, background: form.deliveryChannel === 'slack' ? '#ec4899' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
+                                    <button onClick={() => setForm({...form, deliveryChannel: 'email'})} style={{ flex: 1, padding: 12, borderRadius: 12, background: form.deliveryChannel === 'email' ? '#6366f1' : 'var(--bg-surface-hover)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', fontSize: 11, fontWeight: 700 }}><Mail size={14} /> Email</button>
+                                    <button onClick={() => setForm({...form, deliveryChannel: 'webhook'})} style={{ flex: 1, padding: 12, borderRadius: 12, background: form.deliveryChannel === 'webhook' ? '#10b981' : 'var(--bg-surface-hover)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', fontSize: 11, fontWeight: 700 }}><Globe size={14} /> Webhook</button>
+                                    <button onClick={() => setForm({...form, deliveryChannel: 'slack'})} style={{ flex: 1, padding: 12, borderRadius: 12, background: form.deliveryChannel === 'slack' ? '#ec4899' : 'var(--bg-surface-hover)', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="8" x="2" y="2" rx="2"/><rect width="8" height="8" x="14" y="2" rx="2"/><rect width="8" height="8" x="2" y="14" rx="2"/><rect width="8" height="8" x="14" y="14" rx="2"/></svg> Slack
                                     </button>
                                 </div></div>
                                 <div style={{ gridColumn: '1 / -1' }}><div style={L}>Format</div><div style={{ display: 'flex', gap: 8 }}>
-                                    {['html','pdf','csv','json'].map(f => <button key={f} onClick={() => setForm({...form, format: f})} style={{ flex: 1, padding: 12, borderRadius: 12, background: form.format === f ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', textTransform: 'uppercase', fontWeight: 800, fontSize: 11 }}>{f}</button>)}
+                                    {['html','pdf','csv','json'].map(f => <button key={f} onClick={() => setForm({...form, format: f})} style={{ flex: 1, padding: 12, borderRadius: 12, background: form.format === f ? 'var(--text-disabled)' : 'var(--bg-surface-hover)', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', textTransform: 'uppercase', fontWeight: 800, fontSize: 11 }}>{f}</button>)}
                                 </div></div>
                             </div>
                         )}
@@ -175,8 +175,8 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                     const cfg = s.config || {};
                     const isSelected = selectedIds.has(s.id);
                     return (
-                        <div key={s.id} className="pipeline-card glass-panel" style={{ padding: 24, borderRadius: 20, border: `1px solid ${isSelected ? '#6366f1' : 'rgba(255,255,255,0.06)'}`, position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: s.isActive ? 'linear-gradient(90deg, #6366f1, #10b981)' : 'rgba(255,255,255,0.05)' }} />
+                        <div key={s.id} className="pipeline-card glass-panel" style={{ padding: 24, borderRadius: 20, border: `1px solid ${isSelected ? '#6366f1' : 'var(--border-default)'}`, position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: s.isActive ? 'linear-gradient(90deg, #6366f1, #10b981)' : 'var(--bg-surface-hover)' }} />
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                     <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(s.id)} style={{ accentColor: '#6366f1' }} />
@@ -184,8 +184,8 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                                         <FileText size={18} style={{ color: '#6366f1' }} />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{s.name}</div>
-                                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{s.name}</div>
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                                             {cfg.deliveryChannel === 'email' ? <Mail size={10} /> : <Globe size={10} />}
                                             {cfg.deliverTo || '—'}
                                         </div>
@@ -195,24 +195,24 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                             </div>
 
                             <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-                                <span style={{ padding: '3px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>{cronToHuman(s.cronExpression)}</span>
-                                <span style={{ padding: '3px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{cfg.format || 'PDF'}</span>
+                                <span style={{ padding: '3px 10px', borderRadius: 6, background: 'var(--bg-surface-hover)', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cronToHuman(s.cronExpression)}</span>
+                                <span style={{ padding: '3px 10px', borderRadius: 6, background: 'var(--bg-surface-hover)', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{cfg.format || 'PDF'}</span>
                                 <PriorityBadge priority={cfg.priority} />
                             </div>
 
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 16 }}>Last run: {s.lastRunAt ? new Date(s.lastRunAt).toLocaleString() : 'Never'}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>Last run: {s.lastRunAt ? new Date(s.lastRunAt).toLocaleString() : 'Never'}</div>
 
                             <div style={{ display: 'flex', gap: 6 }}>
                                 <button onClick={() => onTrigger(s.id)} title="Run Now" style={{ padding: 8, borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: 'none', color: '#10b981', cursor: 'pointer' }}><Play size={14} /></button>
-                                <button onClick={() => onToggle(s.id, s.isActive)} title={s.isActive ? 'Pause' : 'Activate'} style={{ padding: 8, borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer' }}>{s.isActive ? <Square size={14} /> : <Play size={14} />}</button>
-                                <button onClick={() => onDuplicate(s.id)} title="Duplicate" style={{ padding: 8, borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: 'none', color: '#818cf8', cursor: 'pointer' }}><Copy size={14} /></button>
+                                <button onClick={() => onToggle(s.id, s.isActive)} title={s.isActive ? 'Pause' : 'Activate'} style={{ padding: 8, borderRadius: 8, background: 'var(--bg-surface-hover)', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}>{s.isActive ? <Square size={14} /> : <Play size={14} />}</button>
+                                <button onClick={() => onDuplicate(s.id)} title="Duplicate" style={{ padding: 8, borderRadius: 8, background: 'var(--bg-surface-hover)', border: 'none', color: '#818cf8', cursor: 'pointer' }}><Copy size={14} /></button>
                                 <button onClick={() => onDelete(s.id)} title="Delete" style={{ padding: 8, borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={14} /></button>
                             </div>
                         </div>
                     );
                 })}
             </div>
-            {schedules.length === 0 && <div style={{ padding: 80, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 14, fontWeight: 600 }}>No pipelines configured yet. Create one to get started.</div>}
+            {schedules.length === 0 && <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-disabled)', fontSize: 14, fontWeight: 600 }}>No pipelines configured yet. Create one to get started.</div>}
         </motion.div>
     );
 };

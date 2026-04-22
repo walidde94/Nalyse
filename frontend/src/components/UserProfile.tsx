@@ -168,7 +168,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                             left: 0,
                             right: 0,
                             height: '24px',
-                            background: 'rgba(0,0,0,0.5)',
+                            background: 'var(--bg-elevated)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -277,7 +277,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                                     padding: '4px 10px',
                                     borderRadius: '8px',
                                     background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                                    color: '#000',
+                                    color: 'var(--text-inverse)',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em',
                                     boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)',
@@ -296,7 +296,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em',
                                     boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-                                    border: '1px solid rgba(255,255,255,0.1)'
+                                    border: '1px solid var(--border-default)'
                                 }}>
                                     Standard Tier
                                 </span>

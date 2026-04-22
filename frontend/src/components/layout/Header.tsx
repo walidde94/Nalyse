@@ -159,11 +159,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
-                background: isMidnight
-                    ? 'rgba(14, 10, 4, 0.6)'
-                    : isDark
-                        ? 'rgba(3, 7, 17, 0.5)'
-                        : 'rgba(255, 255, 255, 0.6)',
+                background: 'var(--bg-header)',
                 backdropFilter: isMidnight ? 'blur(24px) saturate(220%)' : 'blur(20px) saturate(180%)',
                 WebkitBackdropFilter: isMidnight ? 'blur(24px) saturate(220%)' : 'blur(20px) saturate(180%)',
                 borderBottom: `1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
@@ -175,7 +171,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         <button
                             className="mobile-only btn-ghost"
                             onClick={onMenuToggle}
-                            style={{ padding: '6px', color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(15,23,42,0.7)', background: 'transparent', border: 'none' }}
+                            style={{ padding: '6px', color: 'var(--text-secondary)', background: 'transparent', border: 'none' }}
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
@@ -189,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     fontSize: '15px',
                                     fontWeight: 800,
                                     fontFamily: 'var(--font-heading)',
-                                    color: isDark ? '#fff' : '#0f172a',
+                                    color: 'var(--text-primary)',
                                     letterSpacing: '-0.02em',
                                 }}>Nalyse</span>
 
@@ -224,19 +220,19 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             border: `1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
                             borderRadius: 'var(--bento-radius-sm)',
                             cursor: 'pointer',
-                            color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(15,23,42,0.35)',
+                            color: 'var(--text-muted)',
                             fontSize: '12.5px',
                             fontWeight: 500,
                             transition: 'all 0.25s ease',
                             boxShadow: 'var(--bento-inset)',
                         }}
                         onMouseEnter={(e) => {
-                            e.currentTarget.style.background = isDark ? 'var(--bento-glass-hover)' : 'rgba(0,0,0,0.03)';
+                            e.currentTarget.style.background = 'var(--bg-surface-hover)';
                             e.currentTarget.style.borderColor = 'var(--bento-border-hover)';
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.background = isDark ? 'var(--bento-glass)' : 'rgba(0,0,0,0.02)';
-                            e.currentTarget.style.borderColor = isDark ? 'var(--bento-border)' : 'rgba(0,0,0,0.04)';
+                            e.currentTarget.style.background = 'var(--bg-surface)';
+                            e.currentTarget.style.borderColor = 'var(--border-default)';
                         }}
                     >
                         <Search size={14} style={{ opacity: 0.5, flexShrink: 0 }} />
@@ -246,10 +242,10 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             fontWeight: 700,
                             fontFamily: 'var(--font-mono)',
                             padding: '2px 5px',
-                            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                            background: 'var(--border-subtle)',
                             borderRadius: '4px',
-                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                            color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)',
+                            border: `1px solid ${'var(--border-subtle)'}`,
+                            color: 'var(--text-muted)',
                             lineHeight: 1,
                         }}>⌘K</kbd>
                     </button>
@@ -267,12 +263,10 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             gap: '8px',
                             background: isMidnight 
                                 ? 'rgba(var(--primary-rgb), 0.08)' 
-                                : isDark 
-                                    ? 'rgba(255,255,255,0.03)' 
-                                    : 'rgba(0,0,0,0.03)',
+                                : 'var(--bento-glass)',
                             padding: '4px 12px',
                             borderRadius: '99px',
-                            border: `1px solid ${isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                            border: `1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--border-subtle)'}`,
                             marginRight: '12px',
                             transition: 'all 0.3s ease',
                             cursor: 'default'
@@ -290,7 +284,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             <span style={{ 
                                 fontSize: '11px', 
                                 fontWeight: 700, 
-                                color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(15,23,42,0.8)',
+                                color: 'var(--text-primary)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '6px'
@@ -301,7 +295,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                         fontSize: '9px', 
                                         fontWeight: 800,
                                         padding: '1px 6px',
-                                        background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                                        background: 'var(--bg-surface-hover)',
                                         borderRadius: '4px',
                                         color: 'var(--primary)',
                                         textTransform: 'uppercase',
@@ -318,9 +312,9 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     <div className="desktop-only" style={{
                         display: 'flex',
                         padding: '2px',
-                        background: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.5)',
+                        background: 'var(--bg-surface)',
                         borderRadius: '8px',
-                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
+                        border: `1px solid ${'var(--bento-border)'}`,
                         marginRight: '4px',
                     }}>
                         {['en', 'de'].map((lang) => (
@@ -333,8 +327,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     padding: '3px 7px',
                                     borderRadius: '6px',
                                     transition: 'all 0.25s ease',
-                                    background: language === lang ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
-                                    color: language === lang ? (isDark ? '#fff' : '#0f172a') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)'),
+                                    background: language === lang ? ('var(--bg-surface-hover)') : 'transparent',
+                                    color: language === lang ? ('var(--text-primary)') : ('var(--text-muted)'),
                                     border: 'none',
                                     cursor: 'pointer',
                                     letterSpacing: '0.06em',
@@ -364,7 +358,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     height: '12px',
                                     borderRadius: '6px',
                                     background: 'var(--primary)',
-                                    color: '#fff',
+                                    color: 'var(--text-primary)',
                                     fontSize: '8px',
                                     fontWeight: 900,
                                     display: 'flex',
@@ -475,7 +469,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 overflowY: 'auto'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                    <h3 style={{ fontSize: '12px', fontWeight: 700, margin: 0, color: isDark ? '#fff' : '#0f172a', letterSpacing: '-0.01em' }}>Notifications</h3>
+                                    <h3 style={{ fontSize: '12px', fontWeight: 700, margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Notifications</h3>
                                     {unreadCount > 0 && (
                                         <button 
                                             onClick={() => setNotifications(prev => prev.map(n => ({...n, read: true})))}
@@ -521,13 +515,13 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, width: '100%' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: n.read ? 600 : 700, color: isDark ? '#fff' : '#0f172a' }}>{n.title}</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: n.read ? 600 : 700, color: 'var(--text-primary)' }}>{n.title}</span>
                                                         {!n.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#38bdf8', marginTop: 4, flexShrink: 0 }} />}
                                                     </div>
-                                                    <span style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)', lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {n.message}
                                                     </span>
-                                                    <span style={{ fontSize: '9px', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)', fontWeight: 600, marginTop: '2px' }}>
+                                                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '2px' }}>
                                                         {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                 </div>
@@ -575,7 +569,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         <Compass size={15} className={isArchitectMode ? 'animate-spin' : ''} style={{ animationDuration: '10s' }} />
                     </button>
 
-                    <div style={{ width: '1px', height: '20px', background: isMidnight ? 'var(--primary-subtle)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', margin: '0 2px' }} />
+                    <div style={{ width: '1px', height: '20px', background: isMidnight ? 'var(--primary-subtle)' : 'var(--border-subtle)', margin: '0 2px' }} />
 
                     {/* Profile */}
                     <div style={{ position: 'relative' }}>
@@ -593,7 +587,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 transition: 'all 0.2s ease',
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)';
+                                e.currentTarget.style.background = 'var(--bento-border)';
                             }}
                             onMouseLeave={(e) => {
                                 e.currentTarget.style.background = 'transparent';
@@ -605,19 +599,19 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 borderRadius: '50%',
                                 background: isPro
                                     ? 'linear-gradient(135deg, #4f46e5 0%, #ec4899 100%)'
-                                    : (isDark ? 'linear-gradient(135deg, #334155 0%, #1e293b 100%)' : 'linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%)'),
-                                border: isPro ? '2px solid transparent' : `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                                    : ('var(--bg-surface)'),
+                                border: isPro ? '2px solid transparent' : `1px solid ${'var(--border-subtle)'}`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: isDark ? '#fff' : '#0f172a',
+                                color: 'var(--text-primary)',
                                 fontWeight: 800,
                                 fontSize: '11px',
                                 overflow: 'hidden',
                                 position: 'relative',
                             }}>
                                 <div style={{
-                                    position: 'absolute', inset: isPro ? '2px' : '0', background: isDark ? '#09090b' : '#ffffff', borderRadius: '50%',
+                                    position: 'absolute', inset: isPro ? '2px' : '0', background: 'var(--bg-main)', borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1
                                 }}>
                                     {user?.avatarUrl ? (
@@ -628,7 +622,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 </div>
                             </div>
                             <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                <span style={{ fontSize: '12px', fontWeight: 700, color: isDark ? '#fff' : '#0f172a', lineHeight: 1.1 }}>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1 }}>
                                     {user?.firstName || 'User'}
                                 </span>
                                 {isPro && (
@@ -647,7 +641,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                                 className="desktop-only"
                                 style={{
-                                    color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)',
+                                    color: 'var(--text-muted)',
                                     transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)',
                                     transition: 'transform 0.3s ease',
                                 }}>
@@ -679,8 +673,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     borderRadius: '10px',
                                     marginBottom: '8px',
                                 }}>
-                                    <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#fff' : '#0f172a' }}>{user?.firstName} {user?.lastName}</div>
-                                    <div style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(15,23,42,0.4)', marginTop: '2px' }}>{user?.email || '—'}</div>
+                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{user?.firstName} {user?.lastName}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{user?.email || '—'}</div>
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -695,7 +689,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                                 display: 'flex', alignItems: 'center', gap: '10px',
                                                 padding: '8px 10px', borderRadius: '8px',
                                                 background: 'transparent', border: 'none',
-                                                color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(15,23,42,0.7)',
+                                                color: 'var(--text-secondary)',
                                                 width: '100%', cursor: 'pointer',
                                                 transition: 'all 0.2s ease',
                                                 textAlign: 'left', fontSize: '12.5px', fontWeight: 600,
@@ -779,7 +773,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     justify-content: center;
                     background: ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-glass)'};
                     border: 1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'};
-                    color: ${isMidnight ? 'var(--primary)' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'};
+                    color: ${isMidnight ? 'var(--primary)' : 'var(--text-secondary)'};
                     transition: all 0.25s ease;
                     cursor: pointer;
                     position: relative;
@@ -787,7 +781,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 .hdr-icon-btn:hover {
                     background: ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-glass-hover)'};
                     border-color: ${isMidnight ? 'var(--primary-glow)' : 'var(--bento-border-hover)'};
-                    color: ${isMidnight ? 'var(--primary)' : isDark ? '#fff' : '#0f172a'};
+                    color: ${isMidnight ? 'var(--primary)' : 'var(--text-primary)'};
                     transform: translateY(-1px);
                 }
             `}</style>

@@ -45,7 +45,7 @@ const ScoreRing = ({ value, size = 88, stroke = 7, invert = false }: { value: nu
         : (value >= 80 ? '#34d399' : value >= 50 ? '#fbbf24' : '#f87171');
     return (
         <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke='var(--border-default)' strokeWidth={stroke} />
             <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
                 strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: offset }}
                 transition={{ duration: 1.2, ease: 'easeOut' }} strokeLinecap="round" />
@@ -61,9 +61,9 @@ const ScoreRing = ({ value, size = 88, stroke = 7, invert = false }: { value: nu
 const FinTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-        <div style={{ background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.06)', padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)', minWidth: '180px', color: '#fff' }}>
+        <div style={{ background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)', padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)', minWidth: '180px', color: 'var(--text-primary)' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', borderRadius: '14px 14px 0 0', background: 'linear-gradient(90deg, #818cf8, #34d399)' }} />
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
             {payload.map((p: any, i: number) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', marginBottom: '3px' }}>
                     <span style={{ fontSize: '11px', color: p.color || '#94a3b8', fontWeight: 600 }}>{p.name}</span>
@@ -324,7 +324,7 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                                                 <span style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: RISK_COLORS[ratio.status] }}>{ratio.name.includes('Margin') ? `${(ratio.value * 100).toFixed(1)}%` : fmtRatio(ratio.value)}</span>
                                                 <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Benchmark: {ratio.name.includes('Margin') ? `${(ratio.benchmark * 100).toFixed(0)}%` : fmtRatio(ratio.benchmark)}</span>
                                             </div>
-                                            <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                            <div style={{ height: '3px', borderRadius: '2px', background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                 <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (ratio.value / (ratio.benchmark * 2)) * 100)}%` }}
                                                     transition={{ duration: 0.8, delay: i * 0.05 }}
                                                     style={{ height: '100%', borderRadius: '2px', background: RISK_COLORS[ratio.status] }} />
@@ -353,9 +353,9 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                                             <linearGradient id="fcGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#818cf8" stopOpacity={0.2} /><stop offset="95%" stopColor="#818cf8" stopOpacity={0} /></linearGradient>
                                             <linearGradient id="fcWarn" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#ef4444" stopOpacity={0.1} /><stop offset="95%" stopColor="#ef4444" stopOpacity={0} /></linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCurrency(v)} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                        <XAxis dataKey="name" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                        <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCurrency(v)} />
                                         <Tooltip content={<FinTooltip />} />
                                         <Area type="monotone" dataKey="upper" name="Upper Bound" stroke="none" fill="rgba(99,102,241,0.08)" />
                                         <Area type="monotone" dataKey="lower" name="Lower Bound" stroke="none" fill="rgba(99,102,241,0.04)" />
@@ -373,9 +373,9 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                                 </h3>
                                 <ResponsiveContainer width="100%" height={300}>
                                     <BarChart data={result.periods.map(p => ({ name: p.period, Revenue: Math.round(p.revenue), Costs: Math.round(p.totalCosts), 'Net Income': Math.round(p.netIncome) }))} margin={{ top: 5, right: 16, left: 8, bottom: 36 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 9 }} angle={-30} textAnchor="end" height={45} axisLine={false} tickLine={false} />
-                                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCurrency(v)} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                        <XAxis dataKey="name" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 9 }} angle={-30} textAnchor="end" height={45} axisLine={false} tickLine={false} />
+                                        <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCurrency(v)} />
                                         <Tooltip content={<FinTooltip />} />
                                         <Bar dataKey="Revenue" fill="#818cf8" radius={[4, 4, 0, 0]} opacity={0.8} />
                                         <Bar dataKey="Costs" fill="#f87171" radius={[4, 4, 0, 0]} opacity={0.6} />
@@ -409,7 +409,7 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                                                         <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: comp.score > 60 ? '#ef4444' : comp.score > 30 ? '#fbbf24' : '#34d399' }}>{comp.score}</span>
                                                     </div>
                                                 </div>
-                                                <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                                <div style={{ height: '4px', borderRadius: '2px', background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                     <motion.div initial={{ width: 0 }} animate={{ width: `${comp.score}%` }}
                                                         transition={{ duration: 0.8, delay: i * 0.08 }}
                                                         style={{ height: '100%', borderRadius: '2px', background: comp.score > 60 ? '#ef4444' : comp.score > 30 ? '#fbbf24' : '#34d399' }} />
@@ -426,8 +426,8 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                                     </h3>
                                     <ResponsiveContainer width="100%" height={300}>
                                         <RadarChart data={riskRadarData}>
-                                            <PolarGrid stroke="rgba(255,255,255,0.06)" />
-                                            <PolarAngleAxis dataKey="metric" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 600 }} />
+                                            <PolarGrid stroke='var(--border-default)' />
+                                            <PolarAngleAxis dataKey="metric" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }} />
                                             <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
                                             <Radar name="Risk Score" dataKey="value" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={2} />
                                             <Tooltip content={<FinTooltip />} />
@@ -472,9 +472,9 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                                 </h3>
                                 <ResponsiveContainer width="100%" height={380}>
                                     <ComposedChart data={stressChartData} margin={{ top: 8, right: 16, left: 8, bottom: 36 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCurrency(v)} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                        <XAxis dataKey="name" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                        <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCurrency(v)} />
                                         <Tooltip content={<FinTooltip />} />
                                         {result.stressResults.map(sr => (
                                             <Line key={sr.scenario.id} type="monotone" dataKey={sr.scenario.name} stroke={sr.scenario.color} strokeWidth={selectedScenario === result.stressResults.indexOf(sr) ? 3 : 1.5} dot={false} strokeDasharray={sr.scenario.id === 'base' ? '0' : '6 3'} opacity={selectedScenario === result.stressResults.indexOf(sr) ? 1 : 0.5} />

@@ -180,7 +180,7 @@ run_analysis()
             <div className="grid gap-6 h-full" style={{ gridTemplateColumns: 'minmax(0, 1fr) 350px', flex: 1 }}>
                 {/* Editor Section */}
                 <div className="flex flex-col gap-4">
-                    <div className="card h-full flex flex-col p-0 overflow-hidden relative" style={{ background: '#0a0d17', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="card h-full flex flex-col p-0 overflow-hidden relative" style={{ background: '#0a0d17', borderRadius: '20px', border: '1px solid var(--border-default)' }}>
                         <div className="absolute inset-0 glass-noise opacity-10 pointer-events-none" />
 
                         <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
@@ -213,7 +213,7 @@ run_analysis()
                 {/* Sidebar: Console & Results */}
                 <div className="flex flex-col gap-6">
                     {/* Console Output */}
-                    <div className="card flex-col p-0 overflow-hidden" style={{ minHeight: '300px', flex: 1, background: '#020617', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px shadow-2xl' }}>
+                    <div className="card flex-col p-0 overflow-hidden" style={{ minHeight: '300px', flex: 1, background: '#020617', border: '1px solid var(--border-default)', borderRadius: '20px shadow-2xl' }}>
                         <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2 bg-white/[0.02]">
                             <Terminal size={14} className="text-success" />
                             <span className="label-premium opacity-60">Intelligence Console</span>

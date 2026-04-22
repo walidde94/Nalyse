@@ -339,13 +339,13 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <Database size={14} style={{ color: '#34d399' }} />
-                                <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.5)' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
                                     Schema
                                 </span>
                             </div>
                             <button
                                 onClick={() => setSchemaOpen(false)}
-                                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', padding: '4px' }}
+                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
                             >
                                 <X size={14} />
                             </button>
@@ -355,10 +355,10 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                         <div style={{ padding: '8px 12px' }}>
                             <div style={{
                                 display: 'flex', alignItems: 'center', gap: '6px',
-                                background: 'rgba(255,255,255,0.04)', borderRadius: '8px',
-                                padding: '6px 10px', border: '1px solid rgba(255,255,255,0.06)'
+                                background: 'var(--bg-surface-hover)', borderRadius: '8px',
+                                padding: '6px 10px', border: '1px solid var(--border-default)'
                             }}>
-                                <Search size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                                <Search size={12} style={{ color: 'var(--text-muted)' }} />
                                 <input
                                     type="text"
                                     placeholder="Filter columns..."
@@ -366,7 +366,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                     onChange={e => setColumnSearch(e.target.value)}
                                     style={{
                                         background: 'transparent', border: 'none', outline: 'none',
-                                        color: '#fff', fontSize: '11px', width: '100%',
+                                        color: 'var(--text-primary)', fontSize: '11px', width: '100%',
                                         fontFamily: 'monospace'
                                     }}
                                 />
@@ -391,7 +391,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                     {expandedTable ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                                     <Table2 size={12} />
                                     <span>{TABLE_NAME}</span>
-                                    <span style={{ marginLeft: 'auto', fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>
+                                    <span style={{ marginLeft: 'auto', fontSize: '9px', color: 'var(--text-muted)', fontWeight: 400 }}>
                                         {data.length} rows
                                     </span>
                                 </button>
@@ -424,7 +424,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                     style={{
                                                         width: '100%', display: 'flex', alignItems: 'center', gap: '6px',
                                                         padding: '4px 8px', background: 'none', border: 'none',
-                                                        color: 'rgba(255,255,255,0.6)', cursor: 'pointer', borderRadius: '4px',
+                                                        color: 'var(--text-secondary)', cursor: 'pointer', borderRadius: '4px',
                                                         fontSize: '11px', fontFamily: 'monospace', textAlign: 'left'
                                                     }}
                                                     className="hover:bg-white/5 hover:text-white group"
@@ -439,7 +439,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                         {col.icon}
                                                     </span>
                                                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{col.name}</span>
-                                                    <span style={{ marginLeft: 'auto', fontSize: '9px', color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>
+                                                    <span style={{ marginLeft: 'auto', fontSize: '9px', color: 'var(--text-disabled)', flexShrink: 0 }}>
                                                         {col.type}
                                                     </span>
                                                 </button>
@@ -457,7 +457,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 background: 'rgba(52, 211, 153, 0.05)',
                                 border: '1px solid rgba(52, 211, 153, 0.1)',
                                 fontSize: '10px',
-                                color: 'rgba(255,255,255,0.4)',
+                                color: 'var(--text-muted)',
                                 lineHeight: 1.5
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px', color: '#34d399', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '9px' }}>
@@ -486,9 +486,9 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                             onClick={() => setSchemaOpen(true)}
                             style={{
                                 padding: '6px 10px', borderRadius: '8px',
-                                background: 'rgba(255,255,255,0.04)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                                background: 'var(--bg-surface-hover)',
+                                border: '1px solid var(--border-default)',
+                                color: 'var(--text-muted)', cursor: 'pointer',
                                 fontSize: '10px', fontWeight: 700, display: 'flex',
                                 alignItems: 'center', gap: '4px'
                             }}
@@ -504,7 +504,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                             padding: '6px 16px', borderRadius: '8px',
                             background: isRunning ? 'rgba(52, 211, 153, 0.1)' : 'linear-gradient(135deg, #34d399, #059669)',
                             border: 'none',
-                            color: '#fff', cursor: isRunning ? 'wait' : 'pointer',
+                            color: 'var(--text-primary)', cursor: isRunning ? 'wait' : 'pointer',
                             fontSize: '11px', fontWeight: 800, display: 'flex',
                             alignItems: 'center', gap: '6px',
                             textTransform: 'uppercase', letterSpacing: '0.05em',
@@ -516,7 +516,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                         {isRunning ? 'Running...' : 'Execute'}
                     </button>
 
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                         ⌘+Enter
                     </span>
 
@@ -524,7 +524,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
 
                     {/* Preset Queries */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginRight: '4px' }}>
+                        <span style={{ fontSize: '9px', color: 'var(--text-disabled)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginRight: '4px' }}>
                             Templates:
                         </span>
                         {presets.map((p, i) => (
@@ -533,9 +533,9 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 onClick={() => setQueryText(p.query)}
                                 style={{
                                     padding: '3px 8px', borderRadius: '6px',
-                                    background: 'rgba(255,255,255,0.04)',
-                                    border: '1px solid rgba(255,255,255,0.06)',
-                                    color: 'rgba(255,255,255,0.45)', cursor: 'pointer',
+                                    background: 'var(--bg-surface-hover)',
+                                    border: '1px solid var(--border-default)',
+                                    color: 'var(--text-muted)', cursor: 'pointer',
                                     fontSize: '10px', fontWeight: 600,
                                     transition: 'all 0.2s'
                                 }}
@@ -547,15 +547,15 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                         ))}
                     </div>
 
-                    <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.08)' }} />
+                    <div style={{ width: '1px', height: '20px', background: 'var(--border-default)' }} />
 
                     <button
                         onClick={() => setShowHistory(!showHistory)}
                         style={{
                             padding: '6px 10px', borderRadius: '8px',
-                            background: showHistory ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.04)',
-                            border: `1px solid ${showHistory ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255,255,255,0.06)'}`,
-                            color: showHistory ? '#818cf8' : 'rgba(255,255,255,0.5)',
+                            background: showHistory ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-surface-hover)',
+                            border: `1px solid ${showHistory ? 'rgba(99, 102, 241, 0.3)' : 'var(--border-default)'}`,
+                            color: showHistory ? '#818cf8' : 'var(--text-muted)',
                             cursor: 'pointer', fontSize: '10px', fontWeight: 700,
                             display: 'flex', alignItems: 'center', gap: '4px'
                         }}
@@ -590,7 +590,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                     height: '20px', lineHeight: '20px',
                                     textAlign: 'right', paddingRight: '10px',
                                     fontSize: '11px', fontFamily: 'monospace',
-                                    color: 'rgba(255,255,255,0.15)'
+                                    color: 'var(--text-disabled)'
                                 }}>
                                     {i + 1}
                                 </div>
@@ -663,13 +663,13 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                     borderBottom: '1px solid rgba(255,255,255,0.06)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                                 }}>
-                                    <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.4)' }}>
+                                    <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
                                         Query History
                                     </span>
                                     {history.length > 0 && (
                                         <button
                                             onClick={() => setHistory([])}
-                                            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '3px' }}
+                                            style={{ background: 'none', border: 'none', color: 'var(--text-disabled)', cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '3px' }}
                                         >
                                             <Trash2 size={10} /> Clear
                                         </button>
@@ -677,7 +677,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 </div>
                                 <div style={{ flex: 1, overflow: 'auto' }}>
                                     {history.length === 0 ? (
-                                        <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>
+                                        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-disabled)', fontSize: '11px' }}>
                                             No queries yet. Execute a query to see history.
                                         </div>
                                     ) : (
@@ -687,7 +687,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                 onClick={() => setQueryText(h.query)}
                                                 style={{
                                                     padding: '8px 12px',
-                                                    borderBottom: '1px solid rgba(255,255,255,0.03)',
+                                                    borderBottom: '1px solid var(--border-subtle)',
                                                     cursor: 'pointer',
                                                     display: 'flex', flexDirection: 'column', gap: '3px',
                                                     transition: 'background 0.15s'
@@ -702,7 +702,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                     )}
                                                     <span style={{
                                                         fontSize: '10px', fontFamily: 'monospace',
-                                                        color: 'rgba(255,255,255,0.6)',
+                                                        color: 'var(--text-secondary)',
                                                         overflow: 'hidden', textOverflow: 'ellipsis',
                                                         whiteSpace: 'nowrap', flex: 1
                                                     }}>
@@ -710,12 +710,12 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                     </span>
                                                     <button
                                                         onClick={e => { e.stopPropagation(); toggleBookmark(h.id); }}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: h.bookmarked ? '#e5c07b' : 'rgba(255,255,255,0.15)', padding: '2px' }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: h.bookmarked ? '#e5c07b' : 'var(--text-disabled)', padding: '2px' }}
                                                     >
                                                         {h.bookmarked ? <BookmarkCheck size={10} /> : <Bookmark size={10} />}
                                                     </button>
                                                 </div>
-                                                <div style={{ display: 'flex', gap: '8px', fontSize: '9px', color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace' }}>
+                                                <div style={{ display: 'flex', gap: '8px', fontSize: '9px', color: 'var(--text-disabled)', fontFamily: 'monospace' }}>
                                                     <span>{h.timestamp.toLocaleTimeString()}</span>
                                                     <span>{h.duration.toFixed(0)}ms</span>
                                                     <span>{h.rowCount} rows</span>
@@ -751,14 +751,14 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 Query completed successfully
                             </span>
                             <div style={{ flex: 1 }} />
-                            <div style={{ display: 'flex', gap: '16px', fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>
+                            <div style={{ display: 'flex', gap: '16px', fontSize: '10px', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
                                 <span>⏱ {executionTime.toFixed(1)}ms</span>
                                 <span>📊 {processedResults.length.toLocaleString()} rows</span>
                                 <span>📋 {queryResult.length > 0 ? Object.keys(queryResult[0]).length : 0} columns</span>
                             </div>
                         </>
                     ) : (
-                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                             Ready — Write your SQL and press Execute or ⌘+Enter
                         </span>
                     )}
@@ -776,8 +776,8 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 background: 'rgba(0,0,0,0.15)',
                                 flexShrink: 0
                             }}>
-                                <Columns3 size={14} style={{ color: 'rgba(255,255,255,0.3)' }} />
-                                <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <Columns3 size={14} style={{ color: 'var(--text-muted)' }} />
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     Result Set
                                 </span>
 
@@ -786,10 +786,10 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                 {/* Result search */}
                                 <div style={{
                                     display: 'flex', alignItems: 'center', gap: '4px',
-                                    background: 'rgba(255,255,255,0.04)', borderRadius: '6px',
-                                    padding: '4px 8px', border: '1px solid rgba(255,255,255,0.06)'
+                                    background: 'var(--bg-surface-hover)', borderRadius: '6px',
+                                    padding: '4px 8px', border: '1px solid var(--border-default)'
                                 }}>
-                                    <Search size={11} style={{ color: 'rgba(255,255,255,0.25)' }} />
+                                    <Search size={11} style={{ color: 'var(--text-disabled)' }} />
                                     <input
                                         type="text"
                                         placeholder="Filter results..."
@@ -797,7 +797,7 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                         onChange={e => setResultSearch(e.target.value)}
                                         style={{
                                             background: 'transparent', border: 'none', outline: 'none',
-                                            color: '#fff', fontSize: '11px', width: '140px',
+                                            color: 'var(--text-primary)', fontSize: '11px', width: '140px',
                                             fontFamily: 'monospace'
                                         }}
                                     />
@@ -808,9 +808,9 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                     onClick={copyResults}
                                     style={{
                                         padding: '4px 8px', borderRadius: '6px',
-                                        background: 'rgba(255,255,255,0.04)',
-                                        border: '1px solid rgba(255,255,255,0.06)',
-                                        color: 'rgba(255,255,255,0.4)', cursor: 'pointer',
+                                        background: 'var(--bg-surface-hover)',
+                                        border: '1px solid var(--border-default)',
+                                        color: 'var(--text-muted)', cursor: 'pointer',
                                         fontSize: '10px', display: 'flex', alignItems: 'center', gap: '3px'
                                     }}
                                     className="hover:bg-white/10"
@@ -822,9 +822,9 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                     onClick={exportCSV}
                                     style={{
                                         padding: '4px 8px', borderRadius: '6px',
-                                        background: 'rgba(255,255,255,0.04)',
-                                        border: '1px solid rgba(255,255,255,0.06)',
-                                        color: 'rgba(255,255,255,0.4)', cursor: 'pointer',
+                                        background: 'var(--bg-surface-hover)',
+                                        border: '1px solid var(--border-default)',
+                                        color: 'var(--text-muted)', cursor: 'pointer',
                                         fontSize: '10px', display: 'flex', alignItems: 'center', gap: '3px'
                                     }}
                                     className="hover:bg-white/10"
@@ -857,8 +857,8 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                         fontWeight: 800,
                                                         textTransform: 'uppercase',
                                                         letterSpacing: '0.1em',
-                                                        color: sortColumn === col ? '#34d399' : 'rgba(255,255,255,0.35)',
-                                                        background: 'rgba(0,0,0,0.5)',
+                                                        color: sortColumn === col ? '#34d399' : 'var(--text-muted)',
+                                                        background: 'var(--bg-elevated)',
                                                         borderBottom: '1px solid rgba(255,255,255,0.06)',
                                                         whiteSpace: 'nowrap',
                                                         cursor: 'pointer',
@@ -895,8 +895,8 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                                                 padding: '6px 16px',
                                                                 fontSize: '12px',
                                                                 fontFamily: isNum ? "'JetBrains Mono', monospace" : 'inherit',
-                                                                color: val === null || val === '' ? 'rgba(255,255,255,0.15)' :
-                                                                    isNum ? '#61afef' : 'rgba(255,255,255,0.7)',
+                                                                color: val === null || val === '' ? 'var(--text-disabled)' :
+                                                                    isNum ? '#61afef' : 'var(--text-secondary)',
                                                                 borderBottom: '1px solid rgba(255,255,255,0.02)',
                                                                 maxWidth: '300px',
                                                                 overflow: 'hidden',
@@ -929,16 +929,16 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                         disabled={resultPage === 0}
                                         style={{
                                             padding: '4px 10px', borderRadius: '6px',
-                                            background: 'rgba(255,255,255,0.04)',
-                                            border: '1px solid rgba(255,255,255,0.06)',
-                                            color: resultPage === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)',
+                                            background: 'var(--bg-surface-hover)',
+                                            border: '1px solid var(--border-default)',
+                                            color: resultPage === 0 ? 'var(--text-disabled)' : 'var(--text-muted)',
                                             cursor: resultPage === 0 ? 'default' : 'pointer',
                                             fontSize: '10px', fontWeight: 700
                                         }}
                                     >
                                         Previous
                                     </button>
-                                    <span style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>
+                                    <span style={{ fontSize: '10px', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
                                         Page {resultPage + 1} of {totalPages}
                                     </span>
                                     <button
@@ -946,9 +946,9 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                                         disabled={resultPage >= totalPages - 1}
                                         style={{
                                             padding: '4px 10px', borderRadius: '6px',
-                                            background: 'rgba(255,255,255,0.04)',
-                                            border: '1px solid rgba(255,255,255,0.06)',
-                                            color: resultPage >= totalPages - 1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)',
+                                            background: 'var(--bg-surface-hover)',
+                                            border: '1px solid var(--border-default)',
+                                            color: resultPage >= totalPages - 1 ? 'var(--text-disabled)' : 'var(--text-muted)',
                                             cursor: resultPage >= totalPages - 1 ? 'default' : 'pointer',
                                             fontSize: '10px', fontWeight: 700
                                         }}
@@ -968,14 +968,14 @@ export const SQLStudio = ({ data, columns, dimensions, measures, tableName }: SQ
                             <div style={{
                                 width: '64px', height: '64px', borderRadius: '16px',
                                 background: 'linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(99, 102, 241, 0.1))',
-                                border: '1px solid rgba(255,255,255,0.08)',
+                                border: '1px solid var(--border-default)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center'
                             }}>
                                 <Database size={28} />
                             </div>
                             <div style={{ textAlign: 'center' }}>
                                 <p style={{ fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>No Results Yet</p>
-                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+                                <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                                     Write a SQL query above and click Execute to see results
                                 </p>
                             </div>

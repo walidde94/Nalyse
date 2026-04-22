@@ -507,7 +507,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                     </div>
                     <div>
                         <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Data Connection Graph</h1>
-                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{graphData.nodes.length} columns, {graphData.links.length} relationships</div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{graphData.nodes.length} columns, {graphData.links.length} relationships</div>
                     </div>
                 </div>
 
@@ -515,7 +515,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
 
                     {/* Search */}
                     <div style={{ position: 'relative' }}>
-                        <Search size={14} style={{ position: 'absolute', left: 10, top: 10, color: 'rgba(255,255,255,0.4)' }} />
+                        <Search size={14} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--text-muted)' }} />
                         <input
                             value={searchTerm}
                             onChange={(e) => {
@@ -526,8 +526,8 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                             }}
                             placeholder="Find column..."
                             style={{
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.1)',
+                                background: 'var(--bg-surface-hover)',
+                                border: '1px solid var(--border-default)',
                                 borderRadius: '8px',
                                 padding: '8px 12px 8px 32px',
                                 color: 'white',
@@ -538,7 +538,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                         />
                     </div>
 
-                    <button onClick={handleExport} className="hover-btn" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', color: 'white', cursor: 'pointer', fontSize: '13px' }}>
+                    <button onClick={handleExport} className="hover-btn" style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '8px 12px', color: 'white', cursor: 'pointer', fontSize: '13px' }}>
                         📥 Export SVG
                     </button>
 
@@ -554,7 +554,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
             {/* Controls Panel */}
             <div className="backdrop-blur" style={{
                 position: 'absolute', top: '90px', right: '24px', width: '280px',
-                background: 'rgba(20, 20, 30, 0.85)', border: '1px solid rgba(255,255,255,0.1)',
+                background: 'rgba(20, 20, 30, 0.85)', border: '1px solid var(--border-default)',
                 borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px'
             }}>
                 <div>
@@ -566,7 +566,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                                 onClick={() => setLayoutType(l)}
                                 style={{
                                     padding: '8px', borderRadius: '6px', border: 'none',
-                                    background: layoutType === l ? '#6366f1' : 'rgba(255,255,255,0.05)',
+                                    background: layoutType === l ? '#6366f1' : 'var(--bg-surface-hover)',
                                     color: 'white', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
                                     textTransform: 'capitalize'
                                 }}
@@ -594,7 +594,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '8px', flex: 1 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', cursor: 'pointer', background: 'var(--bg-surface-hover)', padding: '6px 10px', borderRadius: '8px', flex: 1 }}>
                         <input type="checkbox" checked={showLabels} onChange={e => setShowLabels(e.target.checked)} style={{ accentColor: '#6366f1' }} />
                         Labels
                     </label>
@@ -603,7 +603,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                             graphData.nodes.forEach(n => { n.x = undefined; n.y = undefined; });
                             setLayoutType('force');
                         }}
-                        style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'white', fontSize: '11px', cursor: 'pointer' }}
+                        style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'transparent', color: 'white', fontSize: '11px', cursor: 'pointer' }}
                     >
                         Reset
                     </button>
@@ -614,7 +614,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
             {(selectedNode || hoveredNode) && (
                 <div className="backdrop-blur" style={{
                     position: 'absolute', bottom: '24px', left: '24px', width: '320px',
-                    background: 'rgba(20, 20, 30, 0.85)', border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(20, 20, 30, 0.85)', border: '1px solid var(--border-default)',
                     borderRadius: '16px', padding: '24px', transform: 'translateY(0)', transition: 'transform 0.3s'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
@@ -624,11 +624,11 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                     <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>{(selectedNode || hoveredNode)?.label}</div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
+                        <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '8px' }}>
                             <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Uniqueness</div>
                             <div style={{ fontSize: '16px', fontWeight: 600 }}>{(selectedNode || hoveredNode)?.value}</div>
                         </div>
-                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
+                        <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '8px' }}>
                             <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Connections</div>
                             <div style={{ fontSize: '16px', fontWeight: 600, color: '#ec4899' }}>
                                 {graphData.links.filter(l => l.source === (selectedNode || hoveredNode) || l.target === (selectedNode || hoveredNode)).length}
@@ -639,7 +639,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
             )}
 
             {/* Legend (Minimal) */}
-            <div style={{ position: 'absolute', bottom: '24px', right: '24px', display: 'flex', gap: '16px', fontSize: '12px', background: 'rgba(0,0,0,0.5)', padding: '8px 16px', borderRadius: '20px', backdropFilter: 'blur(4px)' }}>
+            <div style={{ position: 'absolute', bottom: '24px', right: '24px', display: 'flex', gap: '16px', fontSize: '12px', background: 'var(--bg-elevated)', padding: '8px 16px', borderRadius: '20px', backdropFilter: 'blur(4px)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }} /> Measure</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} /> Dimension</div>
             </div>

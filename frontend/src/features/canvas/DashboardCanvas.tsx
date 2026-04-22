@@ -988,7 +988,7 @@ export const DashboardCanvas: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         style={{
-                            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                            position: 'fixed', inset: 0, background: 'var(--bg-elevated)',
                             backdropFilter: 'blur(4px)', zIndex: 1000,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}
@@ -1228,7 +1228,7 @@ const SaveDialog: React.FC<{
                 <motion.div
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     style={{
-                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                        position: 'fixed', inset: 0, background: 'var(--bg-elevated)',
                         backdropFilter: 'blur(4px)', zIndex: 100000,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
@@ -1270,7 +1270,7 @@ const SaveDialog: React.FC<{
                             }}>Cancel</button>
                             <button type="button" onClick={onSave} disabled={!name.trim() || isSaving} style={{
                                 background: 'var(--primary)', border: 'none',
-                                padding: '8px 20px', borderRadius: '8px', color: '#fff',
+                                padding: '8px 20px', borderRadius: '8px', color: 'var(--text-primary)',
                                 fontSize: '12px', fontWeight: 700, cursor: !name.trim() || isSaving ? 'not-allowed' : 'pointer',
                                 opacity: name.trim() && !isSaving ? 1 : 0.4,
                                 display: 'inline-flex', alignItems: 'center', gap: 8,

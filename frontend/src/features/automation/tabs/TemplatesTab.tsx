@@ -45,8 +45,8 @@ export const TemplatesTab = ({ onDeployed }: { onDeployed: () => void }) => {
                     {categories.map(c => (
                         <button key={c} onClick={() => setFilter(c)} style={{
                             padding: '7px 16px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700,
-                            background: filter === c ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
-                            color: filter === c ? '#818cf8' : 'rgba(255,255,255,0.4)', cursor: 'pointer', textTransform: 'capitalize'
+                            background: filter === c ? 'rgba(99,102,241,0.15)' : 'var(--bg-surface-hover)',
+                            color: filter === c ? '#818cf8' : 'var(--text-muted)', cursor: 'pointer', textTransform: 'capitalize'
                         }}>{c}</button>
                     ))}
                 </div>
@@ -57,7 +57,7 @@ export const TemplatesTab = ({ onDeployed }: { onDeployed: () => void }) => {
                     const isDone = deployed.has(tpl.id);
                     return (
                         <motion.div key={tpl.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                            className="template-card glass-panel" style={{ padding: 28, borderRadius: 24, border: '1px solid rgba(255,255,255,0.06)' }}>
+                            className="template-card glass-panel" style={{ padding: 28, borderRadius: 24, border: '1px solid var(--border-default)' }}>
                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: tpl.color }} />
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
@@ -67,12 +67,12 @@ export const TemplatesTab = ({ onDeployed }: { onDeployed: () => void }) => {
                                 <span style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', color: tpl.color, padding: '3px 10px', borderRadius: 6, background: `${tpl.color}15` }}>{tpl.category}</span>
                             </div>
 
-                            <h4 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>{tpl.name}</h4>
-                            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 20px', lineHeight: 1.6 }}>{tpl.description}</p>
+                            <h4 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>{tpl.name}</h4>
+                            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 20px', lineHeight: 1.6 }}>{tpl.description}</p>
 
                             <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
-                                <span style={{ padding: '3px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{tpl.format}</span>
-                                <span style={{ padding: '3px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>{tpl.cronExpression}</span>
+                                <span style={{ padding: '3px 8px', borderRadius: 4, background: 'var(--bg-surface-hover)', fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tpl.format}</span>
+                                <span style={{ padding: '3px 8px', borderRadius: 4, background: 'var(--bg-surface-hover)', fontSize: 9, fontWeight: 700, color: 'var(--text-muted)' }}>{tpl.cronExpression}</span>
                                 <span style={{ padding: '3px 8px', borderRadius: 4, background: `${tpl.color}15`, fontSize: 9, fontWeight: 700, color: tpl.color, textTransform: 'uppercase' }}>{tpl.priority}</span>
                             </div>
 
@@ -94,7 +94,7 @@ export const TemplatesTab = ({ onDeployed }: { onDeployed: () => void }) => {
                     );
                 })}
             </div>
-            {filtered.length === 0 && <div style={{ padding: 60, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No templates in this category.</div>}
+            {filtered.length === 0 && <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-disabled)', fontSize: 13 }}>No templates in this category.</div>}
         </motion.div>
     );
 };

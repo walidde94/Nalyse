@@ -31,7 +31,22 @@ interface Props {
 const MapUpdater = ({ center, zoom }: { center: [number, number], zoom: number }) => {
     const map = useMap();
     useEffect(() => {
-        map.flyTo(center, zoom, { duration: 1.5 });
+        if (!map) return;
+        
+        // Force Leaflet to recalculate container size
+        map.invalidateSize();
+        
+        const timeout = setTimeout(() => {
+            try {
+                if (center && !isNaN(center[0]) && !isNaN(center[1])) {
+                    map.flyTo(center, zoom, { duration: 1.5 });
+                }
+            } catch (e) {
+                console.warn('Leaflet flyTo skipped:', e);
+            }
+        }, 200);
+
+        return () => clearTimeout(timeout);
     }, [center, zoom, map]);
     return null;
 };
@@ -238,7 +253,7 @@ export const SpatialView = ({ files, token }: Props) => {
                 {/* Status Bar */}
                 <div style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px', zIndex: 500, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', pointerEvents: 'none' }}>
                     
-                    <div style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '16px', pointerEvents: 'auto' }}>
+                    <div style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(12px)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '16px', pointerEvents: 'auto' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: mapData.length > 0 ? '#34d399' : '#f87171', boxShadow: `0 0 10px ${mapData.length > 0 ? '#34d399' : '#f87171'}` }} />
                             <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Nodes Active:</span>
@@ -246,7 +261,7 @@ export const SpatialView = ({ files, token }: Props) => {
                         </div>
                     </div>
 
-                    <div style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '6px', display: 'flex', gap: '4px', pointerEvents: 'auto' }}>
+                    <div style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(12px)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '6px', display: 'flex', gap: '4px', pointerEvents: 'auto' }}>
                         <button className="btn btn-icon btn-ghost btn-sm" onClick={() => setZoom(z => Math.min(z + 1, 18))}><Maximize2 size={14} /></button>
                         <button className="btn btn-icon btn-ghost btn-sm" onClick={() => setCenter([20,0])}><Crosshair size={14} /></button>
                     </div>

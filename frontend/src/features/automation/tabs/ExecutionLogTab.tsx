@@ -22,15 +22,15 @@ export const ExecutionLogTab = ({ history, schedules, total, page, limit, onFilt
         onFilterChange({ status: s, scheduleId: sc, page: 1 });
     };
 
-    const S: React.CSSProperties = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 14px', borderRadius: 10, color: '#fff', outline: 'none', fontSize: 12 };
+    const S: React.CSSProperties = { background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', padding: '8px 14px', borderRadius: 10, color: 'var(--text-primary)', outline: 'none', fontSize: 12 };
     const totalPages = Math.ceil(total / limit);
 
     return (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Filters */}
-            <div className="glass-panel" style={{ padding: 20, borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="glass-panel" style={{ padding: 20, borderRadius: 18, border: '1px solid var(--border-default)', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <History size={16} style={{ color: '#f59e0b' }} />
-                <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Filter:</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Filter:</span>
                 <select style={S} value={statusFilter} onChange={e => handleFilter(e.target.value, undefined)}>
                     <option value="all">All Status</option>
                     <option value="success">Success</option>
@@ -41,11 +41,11 @@ export const ExecutionLogTab = ({ history, schedules, total, page, limit, onFilt
                     <option value="">All Pipelines</option>
                     {schedules.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
-                <div style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{total} execution{total !== 1 ? 's' : ''}</div>
+                <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{total} execution{total !== 1 ? 's' : ''}</div>
             </div>
 
             {/* Log entries */}
-            <div className="glass-panel" style={{ borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+            <div className="glass-panel" style={{ borderRadius: 18, border: '1px solid var(--border-default)', overflow: 'hidden' }}>
                 {history.map((run: any) => {
                     const isExpanded = expandedId === run.id;
                     return (
@@ -56,24 +56,24 @@ export const ExecutionLogTab = ({ history, schedules, total, page, limit, onFilt
                                         <RunStatusIcon status={run.status} />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{run.schedule?.name || 'Unknown'}</div>
-                                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{new Date(run.startedAt).toLocaleString()}</div>
+                                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{run.schedule?.name || 'Unknown'}</div>
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{new Date(run.startedAt).toLocaleString()}</div>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                    {run.durationMs && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-mono)' }}>{run.durationMs}ms</span>}
+                                    {run.durationMs && <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{run.durationMs}ms</span>}
                                     <StatusBadge status={run.status} />
-                                    {isExpanded ? <ChevronUp size={16} style={{ color: 'rgba(255,255,255,0.3)' }} /> : <ChevronDown size={16} style={{ color: 'rgba(255,255,255,0.3)' }} />}
+                                    {isExpanded ? <ChevronUp size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} />}
                                 </div>
                             </div>
                             <AnimatePresence>
                                 {isExpanded && (
                                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                                         <div style={{ padding: '0 24px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-                                            <div><div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 4 }}>Started</div><div style={{ fontSize: 12, color: '#fff', fontFamily: 'var(--font-mono)' }}>{new Date(run.startedAt).toLocaleString()}</div></div>
-                                            <div><div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 4 }}>Completed</div><div style={{ fontSize: 12, color: '#fff', fontFamily: 'var(--font-mono)' }}>{run.completedAt ? new Date(run.completedAt).toLocaleString() : '—'}</div></div>
-                                            <div><div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 4 }}>Duration</div><div style={{ fontSize: 12, color: '#fff', fontFamily: 'var(--font-mono)' }}>{run.durationMs ? `${run.durationMs}ms` : '—'}</div></div>
-                                            {run.errorMessage && <div style={{ gridColumn: '1 / -1', padding: 12, borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}><div style={{ fontSize: 9, fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', marginBottom: 4 }}>Error</div><div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>{run.errorMessage}</div></div>}
+                                            <div><div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Started</div><div style={{ fontSize: 12, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{new Date(run.startedAt).toLocaleString()}</div></div>
+                                            <div><div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Completed</div><div style={{ fontSize: 12, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{run.completedAt ? new Date(run.completedAt).toLocaleString() : '—'}</div></div>
+                                            <div><div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Duration</div><div style={{ fontSize: 12, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{run.durationMs ? `${run.durationMs}ms` : '—'}</div></div>
+                                            {run.errorMessage && <div style={{ gridColumn: '1 / -1', padding: 12, borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}><div style={{ fontSize: 9, fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', marginBottom: 4 }}>Error</div><div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{run.errorMessage}</div></div>}
                                             <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8 }}>
                                                 {run.status === 'success' && run.outputUrl && (
                                                     <>
@@ -92,7 +92,7 @@ export const ExecutionLogTab = ({ history, schedules, total, page, limit, onFilt
                         </div>
                     );
                 })}
-                {history.length === 0 && <div style={{ padding: 60, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No executions match your filters.</div>}
+                {history.length === 0 && <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-disabled)', fontSize: 13 }}>No executions match your filters.</div>}
             </div>
 
             {/* Pagination */}
@@ -100,7 +100,7 @@ export const ExecutionLogTab = ({ history, schedules, total, page, limit, onFilt
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
                     {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
                         <button key={p} onClick={() => onFilterChange({ status: statusFilter, scheduleId: scheduleFilter, page: p })}
-                            style={{ width: 32, height: 32, borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, background: page === p ? '#6366f1' : 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer' }}>{p}</button>
+                            style={{ width: 32, height: 32, borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, background: page === p ? '#6366f1' : 'var(--bg-surface-hover)', color: '#fff', cursor: 'pointer' }}>{p}</button>
                     ))}
                 </div>
             )}

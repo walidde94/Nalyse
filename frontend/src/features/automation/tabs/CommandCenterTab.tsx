@@ -41,8 +41,8 @@ export const CommandCenterTab = ({ stats, schedules, globalHistory, onTriggerAll
 
             {/* Chart + Ring + Feed */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
-                <div className="glass-panel" style={{ padding: 28, borderRadius: 24, border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <h3 style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div className="glass-panel" style={{ padding: 28, borderRadius: 24, border: '1px solid var(--border-default)' }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
                         <LineChart size={18} style={{ color: '#10b981' }} /> Delivery Performance
                     </h3>
                     <div style={{ height: 280 }}>
@@ -58,10 +58,10 @@ export const CommandCenterTab = ({ stats, schedules, globalHistory, onTriggerAll
                                         <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                <XAxis dataKey="time" stroke="rgba(255,255,255,0.2)" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} />
-                                <YAxis stroke="rgba(255,255,255,0.2)" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} />
-                                <Tooltip contentStyle={{ background: '#0f111a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 11 }} />
+                                <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
+                                <XAxis dataKey="time" stroke='var(--text-disabled)' tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} />
+                                <YAxis stroke='var(--text-disabled)' tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} />
+                                <Tooltip contentStyle={{ background: '#0f111a', border: '1px solid var(--border-default)', borderRadius: 10, fontSize: 11 }} />
                                 <Area type="monotone" dataKey="success" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#cS)" />
                                 <Area type="monotone" dataKey="failed" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#cF)" />
                             </AreaChart>
@@ -70,7 +70,7 @@ export const CommandCenterTab = ({ stats, schedules, globalHistory, onTriggerAll
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                    <div className="glass-panel" style={{ padding: 28, borderRadius: 24, border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="glass-panel" style={{ padding: 28, borderRadius: 24, border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         <ScoreRing value={parseFloat(stats?.successRate || '100')} label="Reliability" size={140} stroke={10} />
                         <div style={{ marginTop: 20, textAlign: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', padding: '5px 12px', background: 'rgba(52,211,153,0.1)', borderRadius: 16 }}>
@@ -80,15 +80,15 @@ export const CommandCenterTab = ({ stats, schedules, globalHistory, onTriggerAll
                         </div>
                     </div>
 
-                    <div className="glass-panel" style={{ padding: 20, borderRadius: 24, border: '1px solid rgba(255,255,255,0.06)', flex: 1 }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Recent Activity</div>
-                        {recentRuns.length === 0 && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: 20 }}>No activity yet</div>}
+                    <div className="glass-panel" style={{ padding: 20, borderRadius: 24, border: '1px solid var(--border-default)', flex: 1 }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Recent Activity</div>
+                        {recentRuns.length === 0 && <div style={{ fontSize: 12, color: 'var(--text-disabled)', textAlign: 'center', padding: 20 }}>No activity yet</div>}
                         {recentRuns.map((r: any) => (
                             <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: r.status === 'success' ? '#10b981' : r.status === 'failed' ? '#ef4444' : '#6366f1' }} />
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: 11, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.schedule?.name || 'Run'}</div>
-                                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{new Date(r.startedAt).toLocaleTimeString()}</div>
+                                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.schedule?.name || 'Run'}</div>
+                                    <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{new Date(r.startedAt).toLocaleTimeString()}</div>
                                 </div>
                             </div>
                         ))}

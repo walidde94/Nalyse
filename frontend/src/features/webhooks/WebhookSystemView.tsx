@@ -292,7 +292,7 @@ export const WebhookSystemView = ({ token }: { token?: string }) => {
                             {/* ═══ WEBHOOKS ═══ */}
                             {activeTab === 'webhooks' && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    {webhooks.length === 0 && <div style={{ textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.3)' }}><Webhook size={40} style={{ marginBottom: '12px', opacity: 0.3 }} /><p>No webhook endpoints configured yet.</p></div>}
+                                    {webhooks.length === 0 && <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}><Webhook size={40} style={{ marginBottom: '12px', opacity: 0.3 }} /><p>No webhook endpoints configured yet.</p></div>}
                                     {webhooks.map((wh, i) => (
                                         <motion.div key={wh.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '24px', position: 'relative', overflow: 'hidden' }}>
@@ -370,7 +370,7 @@ export const WebhookSystemView = ({ token }: { token?: string }) => {
                                             <button onClick={() => revokeApiKey(k.key)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', padding: '6px', borderRadius: '6px', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={13} /></button>
                                         </div>
                                     ))}
-                                    {apiKeys.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.3)' }}><Key size={32} style={{ marginBottom: '8px', opacity: 0.3 }} /><p style={{ fontSize: '13px' }}>No API keys. Generate one to start integrating.</p></div>}
+                                    {apiKeys.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}><Key size={32} style={{ marginBottom: '8px', opacity: 0.3 }} /><p style={{ fontSize: '13px' }}>No API keys. Generate one to start integrating.</p></div>}
                                 </div>
                             )}
 
@@ -402,7 +402,7 @@ export const WebhookSystemView = ({ token }: { token?: string }) => {
                                             )}
                                         </motion.div>
                                     ))}
-                                    {logs.length === 0 && <div style={{ textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.3)' }}>No delivery logs yet.</div>}
+                                    {logs.length === 0 && <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>No delivery logs yet.</div>}
                                 </div>
                             )}
 
@@ -412,8 +412,8 @@ export const WebhookSystemView = ({ token }: { token?: string }) => {
                                     {/* Quick Start */}
                                     <div style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: '14px', padding: '24px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 800, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}><Zap size={16} color="#3b82f6" /> Quick Start — Receive Your First Webhook</h3>
-                                        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8 }}>
-                                            <p style={{ margin: '0 0 8px' }}>1. Create a webhook endpoint above pointing to your server (e.g. <code style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>https://yourapp.com/webhooks/nalyse</code>)</p>
+                                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+                                            <p style={{ margin: '0 0 8px' }}>1. Create a webhook endpoint above pointing to your server (e.g. <code style={{ background: 'var(--bg-surface-hover)', padding: '2px 6px', borderRadius: '4px' }}>https://yourapp.com/webhooks/nalyse</code>)</p>
                                             <p style={{ margin: '0 0 8px' }}>2. Select which events you want to subscribe to</p>
                                             <p style={{ margin: '0 0 8px' }}>3. Copy the generated <strong>signing secret</strong> and store it in your environment variables</p>
                                             <p style={{ margin: 0 }}>4. Use the verification code below to validate incoming webhook signatures</p>
@@ -421,20 +421,20 @@ export const WebhookSystemView = ({ token }: { token?: string }) => {
                                     </div>
 
                                     {/* Payload Format */}
-                                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '24px' }}>
+                                    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '14px', padding: '24px' }}>
                                         <h3 style={{ fontSize: '14px', fontWeight: 800, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Code2 size={16} color="#a855f7" /> Webhook Payload Format</h3>
-                                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>Every delivery includes these headers and JSON body:</p>
+                                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>Every delivery includes these headers and JSON body:</p>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                             <div>
-                                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px' }}>Headers</div>
-                                                <pre style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px', margin: 0, color: 'rgba(255,255,255,0.7)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{`Content-Type: application/json
+                                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Headers</div>
+                                                <pre style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px', margin: 0, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{`Content-Type: application/json
 X-Nalyse-Event: analysis.completed
 X-Nalyse-Signature: sha256=a1b2c3...
 X-Nalyse-Delivery: wl-1720000000`}</pre>
                                             </div>
                                             <div>
-                                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px' }}>Body (JSON)</div>
-                                                <pre style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px', margin: 0, color: 'rgba(255,255,255,0.7)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{`{
+                                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Body (JSON)</div>
+                                                <pre style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px', margin: 0, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{`{
   "event": "analysis.completed",
   "data": {
     "datasetId": "ds-abc-123",

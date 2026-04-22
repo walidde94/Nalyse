@@ -356,7 +356,7 @@ export const LensVisualizer: React.FC = () => {
             <div style={{ display: 'flex', flex: 1, gap: '24px', overflow: 'hidden' }}>
                 {/* Sidebar: Available Fields */}
                 <div style={{ width: '280px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', borderRadius: '18px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
+                    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Data Registry</div>
                             <select 

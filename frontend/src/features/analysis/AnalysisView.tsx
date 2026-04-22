@@ -1263,9 +1263,9 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                             <stop offset="95%" stopColor={color} stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis dataKey="name" stroke="transparent" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} dy={10} />
-                                    <YAxis stroke="transparent" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
+                                    <XAxis dataKey="name" stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} dy={10} />
+                                    <YAxis stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                                     <Tooltip content={<CustomTooltip />} />
                                     <Area type="monotone" dataKey="value" stroke={color} strokeWidth={3} fill={currentType === 'line' ? 'none' : `url(#gradStatic)`} />
                                 </AreaChart>
@@ -1278,17 +1278,17 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 </PieChart>
                             ) : currentType === 'scatter' ? (
                                 <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis type="number" dataKey="x" stroke="transparent" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
-                                    <YAxis type="number" dataKey="y" stroke="transparent" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
+                                    <XAxis type="number" dataKey="x" stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                                    <YAxis type="number" dataKey="y" stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                                     <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip />} />
                                     <Scatter name="Data" data={displayData.map((d: any) => ({ ...d, x: d.value, y: d.value }))} fill={color} />
                                 </ScatterChart>
                             ) : (
                                 <BarChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis dataKey="name" stroke="transparent" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} dy={10} />
-                                    <YAxis stroke="transparent" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
+                                    <XAxis dataKey="name" stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} dy={10} />
+                                    <YAxis stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                                     <Tooltip content={<CustomTooltip />} />
                                     <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} />
                                 </BarChart>
@@ -1728,7 +1728,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                             title={isSidebarCollapsed ? tab.label : ''}
                                             onMouseEnter={(e) => {
                                                 if (!isActive) {
-                                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                                                    e.currentTarget.style.background = 'var(--bg-surface)';
                                                     e.currentTarget.style.color = 'var(--text-primary)';
                                                 }
                                             }}
@@ -1827,11 +1827,11 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 onClick={onClose}
                                 className="btn btn-ghost hover-lift active-press flex items-center gap-2 mr-0 group/back"
                                 style={{
-                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    border: '1px solid var(--border-default)',
                                     borderRadius: '12px',
                                     padding: '0 16px',
                                     height: '34px',
-                                    background: 'rgba(255,255,255,0.02)'
+                                    background: 'var(--bg-surface)'
                                 }}
                             >
                                 <ArrowLeft size={16} className="group-hover/back:-translate-x-1 transition-transform" />
@@ -1916,7 +1916,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 {Object.values(commentCounts).reduce((a, b) => a + b, 0) > 0 && (
                                     <span style={{
                                         position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18,
-                                        borderRadius: 9, background: '#818cf8', color: '#fff', fontSize: 10,
+                                        borderRadius: 9, background: '#818cf8', color: 'var(--text-primary)', fontSize: 10,
                                         fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         padding: '0 5px', boxShadow: '0 2px 8px rgba(129,140,248,0.4)',
                                     }}>
@@ -1981,7 +1981,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                         {activeTab === 'overview' && (
                             <div className="flex-col gap-6 fade-in">
                                 <div className="hidden-on-screen" style={{ display: 'none', marginBottom: '20px' }}>
-                                    <h1 style={{ fontSize: '24px', color: '#fff' }}>Nalyse Intelligence Report</h1>
+                                    <h1 style={{ fontSize: '24px', color: 'var(--text-primary)' }}>Nalyse Intelligence Report</h1>
                                     <p style={{ color: '#ccc' }}>Generated on {new Date().toLocaleString()}</p>
                                 </div>
 
@@ -2658,7 +2658,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             >
                                 <div style={{
                                     width: '100%', height: '4px', borderRadius: '2px',
-                                    background: 'rgba(255,255,255,0.15)',
+                                    background: 'var(--text-disabled)',
                                     overflow: 'hidden'
                                 }}>
                                     <div style={{
@@ -2679,7 +2679,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     }}>
                         <button
                             onClick={() => setIsPlaying(!isPlaying)}
-                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px 16px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
+                            style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '10px 16px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
                         >
                             {isPlaying ? <span className="text-xl leading-none">⏸</span> : <span className="text-xl leading-none">▶</span>}
                             {isPlaying ? 'Pause' : 'Play'}
@@ -2763,10 +2763,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                         <stop offset="95%" stopColor={color} stopOpacity={0} />
                                                     </linearGradient>
                                                 </defs>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-elevated)' vertical={false} />
                                                 <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dy={10} />
                                                 <YAxis stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dx={-10} />
-                                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.2)' }} />
+                                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--text-disabled)' }} />
                                                 {currentType === 'line' ?
                                                     <Area type="monotone" dataKey="value" stroke={color} strokeWidth={4} fill="none" /> :
                                                     <Area type="monotone" dataKey="value" stroke={color} strokeWidth={4} fill={`url(#grad-exp-${index})`} />
@@ -2790,7 +2790,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                             </PieChart>
                                         ) : currentType === 'scatter' ? (
                                             <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                                <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-elevated)' />
                                                 <XAxis dataKey="name" name="X" stroke="var(--text-secondary)" fontSize={14} />
                                                 <YAxis dataKey="value" name="Y" stroke="var(--text-secondary)" fontSize={14} />
                                                 <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip />} />
@@ -2798,10 +2798,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                             </ScatterChart>
                                         ) : (
                                             <BarChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-elevated)' vertical={false} />
                                                 <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dy={10} />
                                                 <YAxis stroke="var(--text-secondary)" fontSize={14} tickLine={false} axisLine={false} dx={-10} />
-                                                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                                                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-surface-hover)' }} />
                                                 <Bar
                                                     dataKey="value"
                                                     fill={color}

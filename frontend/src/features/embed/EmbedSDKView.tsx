@@ -127,7 +127,7 @@ function App() {
                     );
                 })}
 
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '4px' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px', background: 'var(--bg-surface)', borderRadius: '8px', padding: '4px' }}>
                     <button onClick={() => setTheme('dark')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer', background: theme === 'dark' ? '#6366f1' : 'transparent', color: '#fff' }}>Dark</button>
                     <button onClick={() => setTheme('light')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer', background: theme === 'light' ? '#6366f1' : 'transparent', color: '#fff' }}>Light</button>
                 </div>
@@ -163,9 +163,9 @@ function App() {
                                     ].map(d => (
                                         <button key={d.id} onClick={() => setPreviewDevice(d.id as any)} style={{
                                             display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
-                                            background: previewDevice === d.id ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.03)',
-                                            border: `1px solid ${previewDevice === d.id ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255,255,255,0.08)'}`,
-                                            color: previewDevice === d.id ? '#818cf8' : 'rgba(255,255,255,0.5)', cursor: 'pointer'
+                                            background: previewDevice === d.id ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-surface)',
+                                            border: `1px solid ${previewDevice === d.id ? 'rgba(99, 102, 241, 0.3)' : 'var(--border-default)'}`,
+                                            color: previewDevice === d.id ? '#818cf8' : 'var(--text-muted)', cursor: 'pointer'
                                         }}>
                                             {d.icon} {d.label}
                                         </button>
@@ -177,7 +177,7 @@ function App() {
                                         width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '375px',
                                         transition: 'width 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                                         background: theme === 'dark' ? '#0f172a' : '#f8fafc',
-                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        border: '1px solid var(--border-default)',
                                         borderRadius: '20px', padding: '24px', minHeight: '400px',
                                         position: 'relative', overflow: 'hidden'
                                     }}>
@@ -186,20 +186,20 @@ function App() {
                                             <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }} />
                                             <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }} />
                                             <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }} />
-                                            <div style={{ flex: 1, height: '24px', background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: '4px', marginLeft: '8px', display: 'flex', alignItems: 'center', paddingLeft: '8px' }}>
-                                                <span style={{ fontSize: '10px', color: theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', fontFamily: 'var(--font-mono)' }}>your-app.com/analytics</span>
+                                            <div style={{ flex: 1, height: '24px', background: theme === 'dark' ? 'var(--bg-surface-hover)' : 'rgba(0,0,0,0.05)', borderRadius: '4px', marginLeft: '8px', display: 'flex', alignItems: 'center', paddingLeft: '8px' }}>
+                                                <span style={{ fontSize: '10px', color: theme === 'dark' ? 'var(--text-muted)' : 'rgba(0,0,0,0.3)', fontFamily: 'var(--font-mono)' }}>your-app.com/analytics</span>
                                             </div>
                                         </div>
 
                                         {/* Simulated Embedded Widget */}
-                                        <div style={{ background: theme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: `1px solid ${theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, borderRadius: '12px', padding: '24px', height: '320px', display: 'flex', flexDirection: 'column' }}>
+                                        <div style={{ background: theme === 'dark' ? 'var(--bg-surface)' : 'rgba(0,0,0,0.03)', border: `1px solid ${theme === 'dark' ? 'var(--border-default)' : 'rgba(0,0,0,0.08)'}`, borderRadius: '12px', padding: '24px', height: '320px', display: 'flex', flexDirection: 'column' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <div style={{ width: '20px', height: '20px', background: '#6366f1', borderRadius: '4px' }} />
                                                     <span style={{ fontSize: '14px', fontWeight: 800, color: theme === 'dark' ? '#fff' : '#1e293b' }}>Nalyse Embed</span>
                                                     <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', textTransform: 'uppercase' }}>{embedType}</span>
                                                 </div>
-                                                <span style={{ fontSize: '10px', color: theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>Powered by Nalyse</span>
+                                                <span style={{ fontSize: '10px', color: theme === 'dark' ? 'var(--text-muted)' : 'rgba(0,0,0,0.3)' }}>Powered by Nalyse</span>
                                             </div>
 
                                             {embedType === 'chart' && (
@@ -213,8 +213,8 @@ function App() {
                                             {embedType === 'dashboard' && (
                                                 <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                                     {[1, 2, 3, 4].map(i => (
-                                                        <div key={i} style={{ background: theme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', borderRadius: '8px', padding: '16px' }}>
-                                                            <div style={{ width: '40%', height: '8px', background: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', borderRadius: '4px', marginBottom: '12px' }} />
+                                                        <div key={i} style={{ background: theme === 'dark' ? 'var(--bg-surface)' : 'rgba(0,0,0,0.03)', borderRadius: '8px', padding: '16px' }}>
+                                                            <div style={{ width: '40%', height: '8px', background: theme === 'dark' ? 'var(--bg-elevated)' : 'rgba(0,0,0,0.1)', borderRadius: '4px', marginBottom: '12px' }} />
                                                             <div style={{ fontSize: '24px', fontWeight: 900, color: '#6366f1', fontFamily: 'var(--font-mono)' }}>{Math.floor(Math.random() * 900) + 100}</div>
                                                         </div>
                                                     ))}
@@ -226,7 +226,7 @@ function App() {
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
                                                         <TrendingUp size={16} color="#10b981" />
                                                         <span style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>+12.8%</span>
-                                                        <span style={{ fontSize: '12px', color: theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>vs last quarter</span>
+                                                        <span style={{ fontSize: '12px', color: theme === 'dark' ? 'var(--text-muted)' : 'rgba(0,0,0,0.4)' }}>vs last quarter</span>
                                                     </div>
                                                 </div>
                                             )}
@@ -269,7 +269,7 @@ function App() {
                                             <Sparkles size={16} color="#818cf8" />
                                             <span style={{ fontSize: '13px', fontWeight: 800, color: '#818cf8' }}>Pro Feature</span>
                                         </div>
-                                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
+                                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                                             Enterprise SDK users get access to SSO-based embed authentication, custom CSS injection, and white-label branding removal.
                                         </p>
                                     </div>
@@ -309,7 +309,7 @@ const SettingRow = ({ label, value, type }: { label: string; value: string; type
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{label}</span>
         {type === 'toggle' ? (
-            <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: value === 'true' ? '#6366f1' : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
+            <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: value === 'true' ? '#6366f1' : 'var(--bg-elevated)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
                 <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: value === 'true' ? '18px' : '2px', transition: 'left 0.2s' }} />
             </div>
         ) : type === 'color' ? (

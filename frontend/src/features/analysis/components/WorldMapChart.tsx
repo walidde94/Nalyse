@@ -257,8 +257,8 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                background: 'rgba(255,255,255,0.01)',
+                borderBottom: '1px solid var(--border-default)',
+                background: 'var(--bg-surface)',
                 flexShrink: 0
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -276,7 +276,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                             letterSpacing: '-0.02em', margin: 0
                         }}>{title}</h3>
                         <p style={{
-                            fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.3)',
+                            fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)',
                             textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0
                         }}>
                             {mapData.length} locations • {formatValue(totalVal)} total
@@ -291,7 +291,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                     <MapButton onClick={() => setShowHeatmap(!showHeatmap)} active={showHeatmap} title="Toggle Heatmap">
                         <Layers size={14} />
                     </MapButton>
-                    <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+                    <div style={{ width: '1px', height: '20px', background: 'var(--border-default)', margin: '0 4px' }} />
                     <MapButton onClick={handleZoomIn} title="Zoom In"><ZoomIn size={14} /></MapButton>
                     <MapButton onClick={handleZoomOut} title="Zoom Out"><ZoomOut size={14} /></MapButton>
                     <MapButton onClick={handleReset} title="Reset View"><RotateCcw size={14} /></MapButton>
@@ -356,7 +356,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                                 key={geo.rsmKey}
                                                 geography={geo}
                                                 fill={isHovered || isSelected ? '#4f7cff' : fill}
-                                                stroke="rgba(255,255,255,0.08)"
+                                                stroke='var(--border-default)'
                                                 strokeWidth={0.4}
                                                 style={{
                                                     default: { outline: 'none', transition: 'fill 0.3s ease' },
@@ -422,7 +422,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                         <circle
                                             r={isHovered ? size + 2 : size}
                                             fill={getHeatmapColor(point.value, minVal, maxVal)}
-                                            stroke="rgba(255,255,255,0.5)"
+                                            stroke='var(--text-muted)'
                                             strokeWidth={isHovered ? 1.5 : 0.5}
                                             opacity={0.85}
                                             style={{
@@ -474,7 +474,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                     zIndex: 99999,
                                     background: 'rgba(8, 12, 30, 0.95)',
                                     backdropFilter: 'blur(20px)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    border: '1px solid var(--border-default)',
                                     borderRadius: '14px',
                                     padding: '14px 18px',
                                     boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6)',
@@ -499,7 +499,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                     {formatValue(hoveredMarker.value)}
                                 </div>
                                 <div style={{
-                                    fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.25)',
+                                    fontSize: '9px', fontWeight: 700, color: 'var(--text-disabled)',
                                     textTransform: 'uppercase', letterSpacing: '0.15em', marginTop: '4px'
                                 }}>
                                     {totalVal > 0 ? `${((hoveredMarker.value / totalVal) * 100).toFixed(1)}% of total` : '—'}
@@ -512,9 +512,9 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                     <div style={{
                         position: 'absolute', bottom: '12px', left: '12px',
                         padding: '4px 10px', borderRadius: '8px',
-                        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.3)',
+                        background: 'var(--bg-elevated)', backdropFilter: 'blur(10px)',
+                        border: '1px solid var(--border-default)',
+                        fontSize: '9px', fontWeight: 800, color: 'var(--text-muted)',
                         fontFamily: 'var(--font-mono, monospace)',
                         textTransform: 'uppercase', letterSpacing: '0.15em'
                     }}>
@@ -527,17 +527,17 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                             position: 'absolute', bottom: '12px', right: '12px',
                             display: 'flex', alignItems: 'center', gap: '8px',
                             padding: '8px 14px', borderRadius: '10px',
-                            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255,255,255,0.06)'
+                            background: 'var(--bg-elevated)', backdropFilter: 'blur(10px)',
+                            border: '1px solid var(--border-default)'
                         }}>
-                            <span style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                            <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                 {formatValue(minVal)}
                             </span>
                             <div style={{
                                 width: '100px', height: '6px', borderRadius: '3px',
                                 background: `linear-gradient(90deg, ${HEATMAP_COLORS[0]}, ${HEATMAP_COLORS[4]}, ${HEATMAP_COLORS[8]}, ${HEATMAP_COLORS[12]}, ${HEATMAP_COLORS[15]})`
                             }} />
-                            <span style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                            <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                 {formatValue(maxVal)}
                             </span>
                         </div>
@@ -557,11 +557,11 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                     {/* Sidebar Header */}
                     <div style={{
                         padding: '16px',
-                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        borderBottom: '1px solid var(--border-default)',
                         display: 'flex', alignItems: 'center', gap: '8px'
                     }}>
                         <TrendingUp size={14} style={{ color: '#3b82f6' }} />
-                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
                             Top Regions
                         </span>
                     </div>
@@ -596,7 +596,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                         alignItems: 'center',
                                         gap: '10px'
                                     }}
-                                    whileHover={{ background: 'rgba(255,255,255,0.03)' }}
+                                    whileHover={{ background: 'var(--bg-surface)' }}
                                 >
                                     {/* Rank */}
                                     <div style={{
@@ -606,8 +606,8 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                         background: idx === 0 ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' :
                                             idx === 1 ? 'linear-gradient(135deg, #94a3b8, #64748b)' :
                                                 idx === 2 ? 'linear-gradient(135deg, #b45309, #92400e)' :
-                                                    'rgba(255,255,255,0.05)',
-                                        color: idx < 3 ? 'white' : 'rgba(255,255,255,0.3)',
+                                                    'var(--bg-surface-hover)',
+                                        color: idx < 3 ? 'white' : 'var(--text-muted)',
                                         border: idx >= 3 ? '1px solid rgba(255,255,255,0.06)' : 'none'
                                     }}>
                                         {idx + 1}
@@ -627,7 +627,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                             {/* Progress bar */}
                                             <div style={{
                                                 flex: 1, height: '3px', borderRadius: '2px',
-                                                background: 'rgba(255,255,255,0.04)'
+                                                background: 'var(--bg-surface-hover)'
                                             }}>
                                                 <motion.div
                                                     initial={{ width: 0 }}
@@ -640,7 +640,7 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                                                 />
                                             </div>
                                             <span style={{
-                                                fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.3)',
+                                                fontSize: '9px', fontWeight: 800, color: 'var(--text-muted)',
                                                 fontFamily: 'var(--font-mono, monospace)',
                                                 flexShrink: 0
                                             }}>
@@ -665,31 +665,31 @@ export const WorldMapChart: React.FC<WorldMapChartProps> = ({
                     {/* Sidebar Footer Stats */}
                     <div style={{
                         padding: '12px 16px',
-                        borderTop: '1px solid rgba(255,255,255,0.05)',
+                        borderTop: '1px solid var(--border-default)',
                         display: 'grid', gridTemplateColumns: '1fr 1fr',
                         gap: '8px'
                     }}>
                         <div style={{
                             padding: '8px', borderRadius: '8px',
-                            background: 'rgba(255,255,255,0.02)',
-                            border: '1px solid rgba(255,255,255,0.04)'
+                            background: 'var(--bg-surface)',
+                            border: '1px solid var(--border-subtle)'
                         }}>
                             <div style={{ fontSize: '14px', fontWeight: 900, color: '#3b82f6', fontFamily: 'var(--font-mono, monospace)' }}>
                                 {mapData.length}
                             </div>
-                            <div style={{ fontSize: '8px', fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                            <div style={{ fontSize: '8px', fontWeight: 800, color: 'var(--text-disabled)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                 Locations
                             </div>
                         </div>
                         <div style={{
                             padding: '8px', borderRadius: '8px',
-                            background: 'rgba(255,255,255,0.02)',
-                            border: '1px solid rgba(255,255,255,0.04)'
+                            background: 'var(--bg-surface)',
+                            border: '1px solid var(--border-subtle)'
                         }}>
                             <div style={{ fontSize: '14px', fontWeight: 900, color: '#8b5cf6', fontFamily: 'var(--font-mono, monospace)' }}>
                                 {formatValue(totalVal)}
                             </div>
-                            <div style={{ fontSize: '8px', fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                            <div style={{ fontSize: '8px', fontWeight: 800, color: 'var(--text-disabled)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                 Total
                             </div>
                         </div>
@@ -713,19 +713,19 @@ const MapButton: React.FC<{
         style={{
             width: '32px', height: '32px', borderRadius: '9px', border: 'none',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: active ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
-            color: active ? '#3b82f6' : 'rgba(255,255,255,0.35)',
+            background: active ? 'rgba(59,130,246,0.15)' : 'var(--bg-surface)',
+            color: active ? '#3b82f6' : 'var(--text-muted)',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             outline: 'none'
         }}
         onMouseEnter={(e) => {
-            e.currentTarget.style.background = active ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.06)';
-            e.currentTarget.style.color = active ? '#60a5fa' : 'rgba(255,255,255,0.6)';
+            e.currentTarget.style.background = active ? 'rgba(59,130,246,0.2)' : 'var(--border-default)';
+            e.currentTarget.style.color = active ? '#60a5fa' : 'var(--text-secondary)';
         }}
         onMouseLeave={(e) => {
-            e.currentTarget.style.background = active ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)';
-            e.currentTarget.style.color = active ? '#3b82f6' : 'rgba(255,255,255,0.35)';
+            e.currentTarget.style.background = active ? 'rgba(59,130,246,0.15)' : 'var(--bg-surface)';
+            e.currentTarget.style.color = active ? '#3b82f6' : 'var(--text-muted)';
         }}
     >
         {children}

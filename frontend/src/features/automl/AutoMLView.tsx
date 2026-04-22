@@ -18,20 +18,20 @@ const ScatterTooltip = ({ active, payload }: any) => {
     const data = payload[0].payload;
     return (
         <div style={{
-            background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)',
             padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)',
-            minWidth: '180px', color: '#fff'
+            minWidth: '180px', color: 'var(--text-primary)'
         }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', borderRadius: '14px 14px 0 0', background: data.color }} />
             <p style={{ color: data.color, fontSize: '11px', fontWeight: 800, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Cluster {data.cluster + 1}
             </p>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', marginBottom: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Feature X ({data.xLabel}):</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>Feature X ({data.xLabel}):</span>
                 <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{data.x.toFixed(2)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', marginBottom: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Feature Y ({data.yLabel}):</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>Feature Y ({data.yLabel}):</span>
                 <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{data.y.toFixed(2)}</span>
             </div>
         </div>
@@ -248,9 +248,9 @@ export const AutoMLView = ({ files, token }: Props) => {
                         <div style={{ height: '500px', padding: '20px 40px 20px 20px' }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <ScatterChart>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                    <XAxis type="number" dataKey="x" name={featureX} stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} />
-                                    <YAxis type="number" dataKey="y" name={featureY} stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' />
+                                    <XAxis type="number" dataKey="x" name={featureX} stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+                                    <YAxis type="number" dataKey="y" name={featureY} stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
                                     <ZAxis type="number" range={[50, 50]} />
                                     <Tooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: '3 3' }} />
                                     

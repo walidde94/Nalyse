@@ -45,15 +45,15 @@ const ForecastTooltip = ({ active, payload, label }: any) => {
     return (
         <div style={{
             background: 'rgba(10,10,20,0.96)', backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14,
+            border: '1px solid var(--border-default)', borderRadius: 14,
             padding: '14px 18px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
             minWidth: 180,
         }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             {payload.map((p: any, i: number) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 3 }}>
                     <span style={{ fontSize: 11, color: p.color, fontWeight: 600 }}>{p.name}</span>
-                    <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 800, color: '#fff' }}>
+                    <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--text-primary)' }}>
                         {typeof p.value === 'number' ? p.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
                     </span>
                 </div>
@@ -236,7 +236,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                         style={{
                             padding: '10px 28px', borderRadius: 12, border: 'none',
                             background: 'linear-gradient(135deg, #34d399, #3b82f6)',
-                            color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                            color: 'var(--text-primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                             opacity: !selectedMetric ? 0.4 : 1,
                             display: 'flex', alignItems: 'center', gap: 8,
                             boxShadow: '0 4px 20px rgba(52,211,153,0.25)',
@@ -342,9 +342,9 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                                         <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                                <XAxis dataKey="period" stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 9 }} angle={-35} textAnchor="end" height={50} interval={Math.max(0, Math.floor(chartData.length / 15))} />
-                                <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
+                                <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
+                                <XAxis dataKey="period" stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 9 }} angle={-35} textAnchor="end" height={50} interval={Math.max(0, Math.floor(chartData.length / 15))} />
+                                <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
                                 <Tooltip content={<ForecastTooltip />} />
                                 {/* Confidence band */}
                                 <Area type="monotone" dataKey="upperBound" name="Upper Bound" stroke="none" fill="url(#fg-conf)" strokeWidth={0} dot={false} />

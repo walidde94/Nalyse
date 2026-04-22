@@ -88,7 +88,7 @@ export const CommandPalette = ({ isOpen, onClose, commands }: { isOpen: boolean;
                         value={search}
                         onChange={e => { setSearch(e.target.value); setSelectedIndex(0); }}
                     />
-                    <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>ESC</kbd>
+                    <kbd style={{ background: 'var(--bg-elevated)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>ESC</kbd>
                 </div>
                 <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                     {filteredCommands.length === 0 ? (
@@ -109,7 +109,7 @@ export const CommandPalette = ({ isOpen, onClose, commands }: { isOpen: boolean;
                             >
                                 <span style={{
                                     fontSize: '20px',
-                                    background: i === selectedIndex ? 'rgba(255,255,255,0.2)' : 'var(--bg-secondary)',
+                                    background: i === selectedIndex ? 'var(--text-disabled)' : 'var(--bg-secondary)',
                                     padding: '8px',
                                     borderRadius: '10px',
                                     display: 'flex'
@@ -118,7 +118,7 @@ export const CommandPalette = ({ isOpen, onClose, commands }: { isOpen: boolean;
                                     <span style={{ fontWeight: 600, fontSize: '15px' }}>{cmd.label}</span>
                                     {cmd.category && (
                                         <span className="badge" style={{
-                                            background: i === selectedIndex ? 'rgba(255,255,255,0.15)' : 'var(--bg-surface)',
+                                            background: i === selectedIndex ? 'var(--text-disabled)' : 'var(--bg-surface)',
                                             color: i === selectedIndex ? 'white' : 'var(--text-secondary)',
                                             width: 'fit-content'
                                         }}>

@@ -27,14 +27,14 @@ export const ScoreRing = ({ value, label, size = 100, stroke = 8 }: { value: num
     return (
         <div style={{ position: 'relative', width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', position: 'absolute' }}>
-                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={stroke} />
+                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke='var(--bg-surface-hover)' strokeWidth={stroke} />
                 <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
                     strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: offset }}
                     transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }} strokeLinecap="round" />
             </svg>
             <div style={{ textAlign: 'center', zIndex: 1 }}>
-                <div style={{ fontSize: size * 0.22, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{value}%</div>
-                <div style={{ fontSize: size * 0.09, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>{label}</div>
+                <div style={{ fontSize: size * 0.22, fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{value}%</div>
+                <div style={{ fontSize: size * 0.09, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>{label}</div>
             </div>
         </div>
     );
@@ -60,15 +60,15 @@ export const StatusBadge = ({ status }: { status: string }) => {
 
 /* ─── Stat Card ─── */
 export const StatCard = ({ label, value, trend, up, data, color }: { label: string; value: string; trend: string; up: boolean; data: number[]; color: string }) => (
-    <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', border: '1px solid var(--border-default)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</span>
             <div style={{ fontSize: 11, fontWeight: 800, color: up ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: 3 }}>
                 {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />} {trend}
             </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#fff', fontFamily: 'var(--font-mono)' }}>{value}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{value}</div>
             <Spark data={data} color={color} />
         </div>
     </div>
@@ -110,8 +110,8 @@ export const PriorityBadge = ({ priority }: { priority?: string }) => {
 export const AUTOMATION_STYLES = `
     .glass-panel { background: rgba(255,255,255,0.02); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
     .glass-button { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); transition: all 0.2s; cursor: pointer; }
-    .glass-button:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
-    .auto-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; borderRadius: 12px; color: #fff; outline: none; transition: all 0.2s; width: 100%; box-sizing: border-box; font-size: 13px; border-radius: 12px; }
+    .glass-button:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); border-color: rgba(255,255,255,0.2); }
+    .auto-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; borderRadius: 12px; color: var(--text-primary); outline: none; transition: all 0.2s; width: 100%; box-sizing: border-box; font-size: 13px; border-radius: 12px; }
     .auto-input:focus { border-color: #6366f1 !important; background: rgba(255,255,255,0.08) !important; box-shadow: 0 0 15px rgba(99,102,241,0.1); }
     .auto-tab { padding: 10px 20px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
     .template-card { transition: all 0.3s ease; cursor: pointer; position: relative; overflow: hidden; }

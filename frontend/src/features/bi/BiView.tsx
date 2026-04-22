@@ -346,7 +346,7 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                         onClick={onClose} 
                         style={{ 
                             padding: '10px 20px', borderRadius: '12px', background: accentColor, 
-                            border: 'none', color: '#fff', fontSize: '12px', fontWeight: 700, 
+                            border: 'none', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700, 
                             cursor: 'pointer', boxShadow: `0 4px 20px ${accentColor}40`, transition: 'all 0.2s'
                         }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.1)'}
@@ -427,10 +427,10 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                                 <ResponsiveContainer width="100%" height="100%">
                                     {chart.type === 'bar' ? (
                                         <BarChart data={chart.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="4 4" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                            <XAxis dataKey={chart.x} stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
-                                            <YAxis stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
+                                            <CartesianGrid strokeDasharray="4 4" stroke='var(--bg-surface-hover)' vertical={false} />
+                                            <XAxis dataKey={chart.x} stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                                            <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-surface)' }} />
                                             <Bar dataKey={chart.y} fill={chart.color} radius={[6, 6, 0, 0]} barSize={32}>
                                                 {chart.data.map((entry: any, index: number) => (
                                                     <Cell key={`cell-${index}`} fill={chart.data.length > 5 ? COLORS[index % COLORS.length] : chart.color} />
@@ -445,9 +445,9 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                                                     <stop offset="95%" stopColor={chart.color} stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="4 4" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                            <XAxis dataKey={chart.x} stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
-                                            <YAxis stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                            <CartesianGrid strokeDasharray="4 4" stroke='var(--bg-surface-hover)' vertical={false} />
+                                            <XAxis dataKey={chart.x} stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                                            <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
                                             <Tooltip content={<CustomTooltip />} />
                                             <Area type="monotone" dataKey={chart.y} stroke={chart.color} strokeWidth={3} fill={`url(#grad-${i})`} activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }} />
                                         </AreaChart>
@@ -474,7 +474,7 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     overflow: 'hidden', display: 'flex', flexDirection: 'column',
                     backdropFilter: 'var(--bento-blur)', transition: 'border-color 0.25s',
                 }}>
-                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)' }}>
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <Zap size={16} style={{ color: 'var(--text-muted)' }} />
                             <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Source Metadata & Audit Log</h3>
@@ -486,7 +486,7 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                     <div style={{ overflowX: 'auto', padding: '0' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
-                                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                <tr style={{ background: 'var(--bg-surface)' }}>
                                     {data.length > 0 && Object.keys(data[0]).map((k, idx) => (
                                         <th key={idx} style={{ 
                                             padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', 
@@ -500,7 +500,7 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                             </thead>
                             <tbody>
                                 {data.slice(0, 8).map((row: any, i: number) => (
-                                    <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.01)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                    <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-surface)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                         {Object.values(row).map((v: any, j: number) => (
                                             <td key={j} style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                                                 {v}
@@ -511,7 +511,7 @@ export const BiView = ({ data, useCase, onClose }: BiViewProps) => {
                             </tbody>
                         </table>
                         {data.length > 8 && (
-                            <div style={{ padding: '16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.01)' }}>
+                            <div style={{ padding: '16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', background: 'var(--bg-surface)' }}>
                                 + {data.length - 8} contextual rows hidden for brevity
                             </div>
                         )}

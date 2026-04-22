@@ -180,7 +180,7 @@ const ColorWheel = ({ value, onChange, size = 200 }: { value: string; onChange: 
         ctx.arc(cx, cy, 18, 0, Math.PI * 2);
         ctx.fillStyle = value;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.strokeStyle = 'var(--text-muted)';
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -314,7 +314,7 @@ const HarmonySuggestions = ({ primary, onSelect }: { primary: string; onSelect: 
                         {h.colors.map((c, i) => (
                             <div key={i} style={{
                                 width: '16px', height: '16px', borderRadius: '4px',
-                                background: c, border: '1px solid rgba(255,255,255,0.1)',
+                                background: c, border: '1px solid var(--border-default)',
                                 boxShadow: `0 0 6px ${c}40`,
                             }} />
                         ))}
@@ -814,7 +814,7 @@ export const ThemeStudio = ({ addToast }: { addToast: (msg: string, type?: 'succ
                             exit={{ scale: 0.8, y: 20 }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div style={{ textAlign: 'center', marginBottom: '12px', fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '12px', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
                                 Pick {wheelTarget === 'primary' ? 'Primary' : 'Accent'} Color
                             </div>
                             <ColorWheel
@@ -838,7 +838,7 @@ export const ThemeStudio = ({ addToast }: { addToast: (msg: string, type?: 'succ
                             style={{
                                 padding: '8px 24px', borderRadius: '10px', fontSize: '12px', fontWeight: 700,
                                 background: `linear-gradient(135deg, ${primary}, ${accent})`,
-                                border: 'none', color: '#fff', cursor: 'pointer',
+                                border: 'none', color: 'var(--text-primary)', cursor: 'pointer',
                                 boxShadow: `0 0 20px ${primary}40`,
                             }}
                         >Done</motion.button>

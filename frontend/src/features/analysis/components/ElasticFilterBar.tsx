@@ -170,7 +170,7 @@ export const ElasticFilterBar = ({
                 }
                 .efb-count {
                     background: var(--primary);
-                    color: #fff;
+                    color: var(--text-primary);
                     font-size: 9px;
                     font-weight: 900;
                     padding: 1px 6px;

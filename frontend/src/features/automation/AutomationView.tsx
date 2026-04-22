@@ -193,28 +193,28 @@ export const AutomationView = () => {
                 <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg, #6366f1, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px -6px rgba(99,102,241,0.4)' }}>
-                            <Zap size={26} style={{ color: '#fff' }} />
+                            <Zap size={26} style={{ color: 'var(--text-primary)' }} />
                         </div>
                         <div>
-                            <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Automated Reporting</h1>
+                            <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Automated Reporting</h1>
                             <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '3px 0 0', fontWeight: 500 }}>AI Orchestration for Enterprise Data Distribution</p>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                         <div style={{ position: 'relative' }}>
                             <input type="text" placeholder={`Search ${activeTab}...`} value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                                style={{ width: 220, padding: '10px 16px 10px 38px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: 12, outline: 'none' }} />
-                            <div style={{ position: 'absolute', left: 14, top: 11, color: 'rgba(255,255,255,0.2)' }}><Search size={14} /></div>
+                                style={{ width: 220, padding: '10px 16px 10px 38px', borderRadius: 12, background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }} />
+                            <div style={{ position: 'absolute', left: 14, top: 11, color: 'var(--text-disabled)' }}><Search size={14} /></div>
                         </div>
                         <button className="glass-button" style={{ padding: '9px 18px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700 }} onClick={() => fetchData()}><RefreshCw size={14} /> Sync</button>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div style={{ display: 'flex', gap: 6, marginBottom: 28, background: 'rgba(255,255,255,0.03)', padding: 5, borderRadius: 14, width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 28, background: 'var(--bg-surface)', padding: 5, borderRadius: 14, width: 'fit-content', border: '1px solid var(--border-default)', flexWrap: 'wrap' }}>
                     {TABS.map(tab => (
                         <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }} className="auto-tab"
-                            style={{ background: activeTab === tab.id ? 'rgba(99,102,241,0.15)' : 'transparent', color: activeTab === tab.id ? '#818cf8' : 'rgba(255,255,255,0.4)' }}>
+                            style={{ background: activeTab === tab.id ? 'rgba(99,102,241,0.15)' : 'transparent', color: activeTab === tab.id ? '#818cf8' : 'var(--text-muted)' }}>
                             {tab.icon} {tab.label}
                         </button>
                     ))}

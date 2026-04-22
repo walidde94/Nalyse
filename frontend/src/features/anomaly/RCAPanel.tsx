@@ -71,7 +71,7 @@ const ConfidenceBar = ({ value }: { value: number }) => {
     const color = value >= 80 ? '#34d399' : value >= 60 ? '#fbbf24' : value >= 40 ? '#f97316' : '#ef4444';
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--border-default)', overflow: 'hidden' }}>
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${value}%` }}
@@ -187,7 +187,7 @@ export const RCAPanel = ({ anomaly, kpiSummary, allKpis, surroundingData, datase
                 <div style={{
                     display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8,
                     marginTop: 14, padding: '10px 12px', borderRadius: 12,
-                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+                    background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
                 }}>
                     {[
                         { label: 'Value', val: anomaly.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) },
@@ -417,7 +417,7 @@ export const RCAPanel = ({ anomaly, kpiSummary, allKpis, surroundingData, datase
                                             }}>{ra.priority.replace('_', ' ')}</span>
                                             <span style={{
                                                 padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700,
-                                                background: 'rgba(255,255,255,0.04)', color: 'var(--text-tertiary)',
+                                                background: 'var(--bg-surface-hover)', color: 'var(--text-tertiary)',
                                                 textTransform: 'uppercase', letterSpacing: '0.06em',
                                             }}>{ra.effort}</span>
                                         </div>

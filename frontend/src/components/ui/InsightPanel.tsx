@@ -122,7 +122,7 @@ export const InsightPanel = ({ data, context, compact = false, maxInsights = 6 }
           padding: '16px 20px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           borderBottom: '1px solid var(--border-subtle)',
-          background: 'rgba(255,255,255,0.01)',
+          background: 'var(--bg-surface)',
           cursor: 'pointer'
         }}
         onClick={() => setExpanded(!expanded)}

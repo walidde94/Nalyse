@@ -76,7 +76,7 @@ const StudioTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
         <div style={{ background: 'rgba(10,10,18,0.95)', border: '1px solid rgba(99,102,241,0.3)', padding: '10px 14px', borderRadius: '10px', backdropFilter: 'blur(12px)', fontSize: '12px' }}>
-            <div style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px', fontSize: '10px' }}>{label}</div>
+            <div style={{ color: 'var(--text-muted)', marginBottom: '4px', fontSize: '10px' }}>{label}</div>
             {payload.map((p: any, i: number) => (
                 <div key={i} style={{ color: p.color || '#34d399', fontWeight: 700 }}>
                     {typeof p.value === 'number' ? p.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : p.value}
@@ -105,9 +105,9 @@ const RenderChart = ({ widget, height = 220 }: { widget: ChartWidget; height?: n
                 </PieChart>
             ) : type === 'scatter' ? (
                 <RechartsScatter data={data}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                    <XAxis dataKey="x" stroke="rgba(255,255,255,0.2)" fontSize={10} />
-                    <YAxis dataKey="y" stroke="rgba(255,255,255,0.2)" fontSize={10} />
+                    <CartesianGrid strokeDasharray="3 3" stroke='var(--border-default)' />
+                    <XAxis dataKey="x" stroke='var(--text-disabled)' fontSize={10} />
+                    <YAxis dataKey="y" stroke='var(--text-disabled)' fontSize={10} />
                     <Tooltip content={<StudioTooltip />} />
                     <Scatter dataKey="y" fill="#818cf8" fillOpacity={0.7} />
                 </RechartsScatter>
@@ -119,17 +119,17 @@ const RenderChart = ({ widget, height = 220 }: { widget: ChartWidget; height?: n
                             <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" fontSize={9} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                    <YAxis stroke="rgba(255,255,255,0.2)" fontSize={9} axisLine={false} tickLine={false} width={45} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : String(v)} />
+                    <CartesianGrid strokeDasharray="3 3" stroke='var(--border-default)' vertical={false} />
+                    <XAxis dataKey="name" stroke='var(--text-disabled)' fontSize={9} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis stroke='var(--text-disabled)' fontSize={9} axisLine={false} tickLine={false} width={45} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : String(v)} />
                     <Tooltip content={<StudioTooltip />} />
                     <Area type="monotone" dataKey="value" stroke="#34d399" strokeWidth={2.5} fill={`url(#grad-${widget.id})`} />
                 </AreaChart>
             ) : (
                 <BarChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" fontSize={9} axisLine={false} tickLine={false} interval={0} angle={data.length > 6 ? -35 : 0} textAnchor={data.length > 6 ? 'end' : 'middle'} height={data.length > 6 ? 60 : 30} />
-                    <YAxis stroke="rgba(255,255,255,0.2)" fontSize={9} axisLine={false} tickLine={false} width={45} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : String(v)} />
+                    <CartesianGrid strokeDasharray="3 3" stroke='var(--border-default)' vertical={false} />
+                    <XAxis dataKey="name" stroke='var(--text-disabled)' fontSize={9} axisLine={false} tickLine={false} interval={0} angle={data.length > 6 ? -35 : 0} textAnchor={data.length > 6 ? 'end' : 'middle'} height={data.length > 6 ? 60 : 30} />
+                    <YAxis stroke='var(--text-disabled)' fontSize={9} axisLine={false} tickLine={false} width={45} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : String(v)} />
                     <Tooltip content={<StudioTooltip />} />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={Math.min(40, Math.max(12, 300 / data.length))}>
                         {data.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} fillOpacity={0.85} />)}
@@ -486,7 +486,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                         <span style={{ fontSize: '10px', color: '#34d399', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Neural Processing Terminal</span>
                                         <span style={{ fontSize: '10px', opacity: 0.5, marginLeft: 'auto', fontFamily: 'monospace' }}>latency: {(activeAnalysis.processingTimeMs || 0)}ms</span>
                                     </div>
-                                    <div style={{ padding: '16px', fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
+                                    <div style={{ padding: '16px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <span style={{ color: '#34d399', opacity: 0.5 }}>[SYS]</span>
                                             <span style={{ color: '#fbbf24' }}>Initializing Nalyse Stream Analysis Pipeline v3.0...</span>
@@ -564,7 +564,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                         <div key={col.name} style={S.schemaCard}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <span style={{ ...S.typeChip, background: col.type === 'number' || col.type === 'currency' ? 'rgba(52,211,153,0.15)' : col.type === 'date' ? 'rgba(56,189,248,0.15)' : col.type === 'category' ? 'rgba(129,140,248,0.15)' : 'rgba(255,255,255,0.05)' }}>
+                                                    <span style={{ ...S.typeChip, background: col.type === 'number' || col.type === 'currency' ? 'rgba(52,211,153,0.15)' : col.type === 'date' ? 'rgba(56,189,248,0.15)' : col.type === 'category' ? 'rgba(129,140,248,0.15)' : 'var(--bg-surface-hover)' }}>
                                                         {TYPE_ICONS[col.type] || <Type size={12} />}
                                                     </span>
                                                     <span style={{ fontSize: '12px', fontWeight: 700 }}>{col.name}</span>
@@ -590,7 +590,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                                 </div>
                                             )}
                                             {col.stats && (col.type === 'number' || col.type === 'currency' || col.type === 'percent') && (
-                                                <div style={{ display: 'flex', gap: '8px', fontSize: '10px', marginTop: '8px', padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px' }}>
+                                                <div style={{ display: 'flex', gap: '8px', fontSize: '10px', marginTop: '8px', padding: '6px 8px', background: 'var(--bg-surface)', borderRadius: '6px' }}>
                                                     {col.stats.min !== undefined && <span style={{ opacity: 0.5 }}>min: <b>{Number(col.stats.min).toLocaleString()}</b></span>}
                                                     {col.stats.max !== undefined && <span style={{ opacity: 0.5 }}>max: <b>{Number(col.stats.max).toLocaleString()}</b></span>}
                                                     {col.stats.mean !== undefined && <span style={{ opacity: 0.5 }}>μ: <b>{Number(col.stats.mean).toFixed(2)}</b></span>}
@@ -599,7 +599,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                             {col.stats?.topValues && col.stats.topValues.length > 0 && (col.type === 'category' || col.type === 'text') && (
                                                 <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px', marginTop: '8px' }}>
                                                     {col.stats.topValues.slice(0, 5).map((tv: any, i: number) => (
-                                                        <span key={i} style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', fontWeight: 600 }}>
+                                                        <span key={i} style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', background: 'var(--bg-surface-hover)', fontWeight: 600 }}>
                                                             {String(tv.value).substring(0, 15)} ({tv.count})
                                                         </span>
                                                     ))}
@@ -636,7 +636,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                                 {severityIcon(ins.severity)}
                                                 <div style={{ flex: 1 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                                        <span style={{ ...S.insightType, background: ins.type === 'anomaly' ? 'rgba(239,68,68,0.15)' : ins.type === 'correlation' ? 'rgba(129,140,248,0.15)' : ins.type === 'trend' ? 'rgba(52,211,153,0.15)' : ins.type === 'risk' ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.05)' }}>
+                                                        <span style={{ ...S.insightType, background: ins.type === 'anomaly' ? 'rgba(239,68,68,0.15)' : ins.type === 'correlation' ? 'rgba(129,140,248,0.15)' : ins.type === 'trend' ? 'rgba(52,211,153,0.15)' : ins.type === 'risk' ? 'rgba(251,191,36,0.15)' : 'var(--bg-surface-hover)' }}>
                                                             {ins.type}
                                                         </span>
                                                         <span style={{ fontSize: '9px', opacity: 0.3, fontWeight: 700 }}>{(ins.confidence * 100).toFixed(0)}% confidence</span>
@@ -682,25 +682,25 @@ const S: Record<string, React.CSSProperties> = {
     emptyIcon: { width: '80px', height: '80px', borderRadius: '24px', background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(52,211,153,0.1))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' },
     explorerGrid: { display: 'flex', flexDirection: 'column', gap: '20px' },
     metricsRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' },
-    metricCard: { padding: '16px 18px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '4px' },
-    nlqBar: { display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-default)' },
+    metricCard: { padding: '16px 18px', borderRadius: '14px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '4px' },
+    nlqBar: { display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderRadius: '14px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)' },
     nlqInput: { flex: 1, background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' },
     nlqBtn: { width: '32px', height: '32px', borderRadius: '8px', background: 'var(--primary)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
     chartGrid2: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' },
-    chartCard: { padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-subtle)', transition: 'border-color 0.2s' },
+    chartCard: { padding: '16px', borderRadius: '14px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', transition: 'border-color 0.2s' },
     chartHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
-    miniBtn: { width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: 'rgba(255,255,255,0.04)', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '10px', fontWeight: 700, padding: '0 6px' },
+    miniBtn: { width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: 'var(--bg-surface-hover)', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '10px', fontWeight: 700, padding: '0 6px' },
     summaryCard: { padding: '20px', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(99,102,241,0.04), rgba(52,211,153,0.03))', border: '1px solid rgba(99,102,241,0.1)' },
-    adviceItem: { display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)' },
-    findingRow: { display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.015)', border: '1px solid var(--border-subtle)' },
+    adviceItem: { display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 10px', borderRadius: '8px', background: 'var(--bg-surface)' },
+    findingRow: { display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)' },
     schemaHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     schemaSearchInput: { background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '6px 10px 6px 30px', fontSize: '12px', color: 'var(--text-primary)', outline: 'none', width: '200px' },
     schemaGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' },
-    schemaCard: { padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-subtle)' },
+    schemaCard: { padding: '14px', borderRadius: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' },
     typeChip: { width: '24px', height: '24px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-    typeBadge: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', textTransform: 'capitalize' as const },
+    typeBadge: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', textTransform: 'capitalize' as const },
     filterChip: { padding: '4px 12px', borderRadius: '20px', border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' as const, display: 'flex', alignItems: 'center', gap: '4px' },
     filterChipActive: { borderColor: 'var(--primary)', background: 'var(--primary-subtle)', color: 'var(--primary)' },
-    insightCard: { padding: '14px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.015)', border: '1px solid var(--border-subtle)', transition: 'border-color 0.2s' },
+    insightCard: { padding: '14px 16px', borderRadius: '12px', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', transition: 'border-color 0.2s' },
     insightType: { fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' as const, letterSpacing: '0.05em' },
 };

@@ -22,12 +22,12 @@ const ForecastTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
         <div style={{
-            background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)',
             padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)',
-            minWidth: '200px', color: '#fff'
+            minWidth: '200px', color: 'var(--text-primary)'
         }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', borderRadius: '14px 14px 0 0', background: 'linear-gradient(90deg, #818cf8, #34d399)' }} />
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
             {payload.map((p: any, i: number) => {
                 // If it's the bounding area, don't show it in tooltip
                 if (p.dataKey === 'confidenceBounds') return null;
@@ -301,9 +301,9 @@ export const ForecastingView = ({ files, token }: Props) => {
                         <div style={{ height: '450px', padding: '20px' }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <ComposedChart data={forecastData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis dataKey="period" stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} />
-                                    <YAxis stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
+                                    <XAxis dataKey="period" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+                                    <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
                                     <Tooltip content={<ForecastTooltip />} />
                                     <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600, paddingTop: '10px' }} />
                                     

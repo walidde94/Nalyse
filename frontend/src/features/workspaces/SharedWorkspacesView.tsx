@@ -158,7 +158,7 @@ const UserAvatar = ({ user, size = 40, showStatus = false, isOnline = false }: {
                     width: size, height: size, borderRadius: size * 0.3,
                     background: `linear-gradient(135deg, ${colors[idx]}cc, ${colors[idx]}88)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: size * 0.35, fontWeight: 800, color: '#fff',
+                    fontSize: size * 0.35, fontWeight: 800, color: 'var(--text-primary)',
                     letterSpacing: '-0.02em', boxShadow: `0 4px 12px ${colors[idx]}33`
                 }}>
                     {getInitials(user)}
@@ -228,7 +228,7 @@ const ShareFileModal = ({ workspaceId, workspaceName, token, onClose, onShared }
             onClick={onClose}
             style={{
                 position: 'fixed', inset: 0, zIndex: 9999,
-                background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
+                background: 'var(--bg-card)', backdropFilter: 'blur(12px)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24
             }}
         >
@@ -319,7 +319,7 @@ const ShareFileModal = ({ workspaceId, workspaceName, token, onClose, onShared }
                                         disabled={sharing === f.id}
                                         style={{
                                             background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                                            color: '#fff', border: 'none', borderRadius: 10,
+                                            color: 'var(--text-primary)', border: 'none', borderRadius: 10,
                                             padding: '8px 16px', fontSize: 12, fontWeight: 700,
                                             cursor: 'pointer', flexShrink: 0, opacity: sharing === f.id ? 0.5 : 1,
                                             transition: 'all 0.2s'
@@ -701,7 +701,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                         position: 'sticky', bottom: 10, left: 0, right: 0, margin: '0 auto',
                                         width: 'max-content', zIndex: 100,
                                         background: 'linear-gradient(135deg, #818cf8, #6366f1)',
-                                        color: '#fff', padding: '10px 18px', borderRadius: 20,
+                                        color: 'var(--text-primary)', padding: '10px 18px', borderRadius: 20,
                                         fontSize: 12, fontWeight: 800, cursor: 'pointer',
                                         boxShadow: '0 10px 25px -5px rgba(99,102,241,0.5)',
                                         display: 'flex', alignItems: 'center', gap: 8,
@@ -899,7 +899,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>
                                     <Reply size={14} color="#a78bfa" />
-                                    Replying to <span style={{ color: '#fff' }}>{getUserName(replyingTo.author)}</span>
+                                    Replying to <span style={{ color: 'var(--text-primary)' }}>{getUserName(replyingTo.author)}</span>
                                 </div>
                                 <button onClick={() => setReplyingTo(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 2 }}>
                                     <X size={14} />
@@ -924,7 +924,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                         Attach a file
                                     </div>
                                     {filteredFiles.length === 0 ? (
-                                        <div style={{ padding: '12px 10px', fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                                        <div style={{ padding: '12px 10px', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>
                                             No files match your search. Share files in this workspace first!
                                         </div>
                                     ) : (
@@ -944,8 +944,8 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                                     <File size={14} />
                                                 </div>
                                                 <div>
-                                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{f.originalName || f.filename}</div>
-                                                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{formatBytes(f.size)}</div>
+                                                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{f.originalName || f.filename}</div>
+                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatBytes(f.size)}</div>
                                                 </div>
                                             </div>
                                         ))
@@ -961,13 +961,13 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
                                     style={{
                                         position: 'absolute', bottom: '100%', left: '24px', right: '24px',
-                                        background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)',
+                                        background: 'var(--bg-main)', border: '1px solid var(--border-default)',
                                         borderRadius: 14, padding: 6, marginBottom: replyingTo ? 44 : 6,
                                         boxShadow: '0 12px 40px -8px rgba(0,0,0,0.6)',
                                         zIndex: 50, maxHeight: 200, overflowY: 'auto'
                                     }}
                                 >
-                                    <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.4)', padding: '4px 10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', padding: '4px 10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                                         Mention a member
                                     </div>
                                     {mentionUsers.map((u, i) => (
@@ -984,7 +984,7 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                         >
                                             <UserAvatar user={u} size={28} />
                                             <div>
-                                                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{getUserName(u)}</div>
+                                                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{getUserName(u)}</div>
                                             </div>
                                         </div>
                                     ))}
@@ -1022,8 +1022,8 @@ const DiscussionTab = ({ workspaceId, token, messages, sharedFiles, sharedAnalys
                                 onClick={handleSend} disabled={!inputValue.trim() || sending}
                                 style={{
                                     height: 42, width: 42, borderRadius: '12px',
-                                    background: inputValue.trim() ? '#818cf8' : 'rgba(255,255,255,0.05)',
-                                    color: '#fff', border: 'none', cursor: inputValue.trim() ? 'pointer' : 'default',
+                                    background: inputValue.trim() ? '#818cf8' : 'var(--bg-surface-hover)',
+                                    color: 'var(--text-primary)', border: 'none', cursor: inputValue.trim() ? 'pointer' : 'default',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.3s',
                                     opacity: inputValue.trim() && !sending ? 1 : 0.5,
                                     boxShadow: inputValue.trim() ? '0 4px 14px rgba(129, 140, 248, 0.4)' : 'none'
@@ -1367,7 +1367,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                                 <Globe size={18} color="#34d399" />
                                 <code style={{ fontSize: 13, color: '#34d399', fontFamily: 'var(--font-mono)' }}>{shareLink}</code>
                             </div>
-                            <button onClick={copyLink} style={{ background: copied ? '#10b981' : 'rgba(255,255,255,0.1)', border: 'none', padding: '8px 16px', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s' }}>
+                            <button onClick={copyLink} style={{ background: copied ? '#10b981' : 'var(--bg-elevated)', border: 'none', padding: '8px 16px', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s' }}>
                                 {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
                             </button>
                         </motion.div>
@@ -1405,7 +1405,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                                 {ws.name}
                                 <span style={{
                                     fontSize: 11, padding: '2px 8px', borderRadius: 20,
-                                    background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--bg-app)',
+                                    background: isActive ? 'var(--text-disabled)' : 'var(--bg-app)',
                                     fontWeight: 700
                                 }}>
                                     {memberCount}
@@ -1448,7 +1448,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                                         >
                                             <Icon size={14} /> {t.label}
                                             <span style={{ 
-                                                background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--bg-app)', 
+                                                background: isActive ? 'var(--text-disabled)' : 'var(--bg-app)', 
                                                 padding: '1px 6px', borderRadius: 8, fontSize: 10, fontWeight: 800, 
                                                 color: isActive ? '#fff' : 'var(--text-muted)' 
                                             }}>
@@ -1650,7 +1650,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                                                     onClick={() => setShowShareModal(true)}
                                                     style={{
                                                         background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                                                        color: '#fff', border: 'none', borderRadius: 12,
+                                                        color: 'var(--text-primary)', border: 'none', borderRadius: 12,
                                                         padding: '10px 20px', fontSize: 13, fontWeight: 700,
                                                         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
                                                         boxShadow: '0 6px 20px -6px var(--primary-glow)'
@@ -1967,7 +1967,7 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                             disabled={isCreating}
                             style={{
                                 background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                                color: '#fff', border: 'none', borderRadius: 14,
+                                color: 'var(--text-primary)', border: 'none', borderRadius: 14,
                                 padding: '14px 28px', fontSize: 14, fontWeight: 800,
                                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10,
                                 boxShadow: '0 10px 30px -8px var(--primary-glow)'
@@ -2010,31 +2010,31 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                                     <BarChart2 color="#fff" size={28} />
                                 </div>
                                 <div>
-                                    <h2 style={{ margin: 0, color: '#fff', fontSize: 28, fontWeight: 900, letterSpacing: '-0.02em' }}>Canvas Overview</h2>
-                                    <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.6)', fontSize: 15, fontWeight: 500 }}>{overlayFile.originalName || overlayFile.filename}</p>
+                                    <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: 28, fontWeight: 900, letterSpacing: '-0.02em' }}>Canvas Overview</h2>
+                                    <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 500 }}>{overlayFile.originalName || overlayFile.filename}</p>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: 12 }}>
                                 <button onClick={() => { onOpenFile?.(overlayFile); setOverlayFile(null); }} style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 20px -8px var(--primary-glow)' }}>
                                     Open Full Analysis
                                 </button>
-                                <button onClick={() => setOverlayFile(null)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', ...({ '&:hover': { background: 'rgba(255,255,255,0.2)' }} as any) }}>
+                                <button onClick={() => setOverlayFile(null)} style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: 'none', width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', ...({ '&:hover': { background: 'var(--text-disabled)' }} as any) }}>
                                     <X size={20} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Embedded Visualization Area */}
-                        <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', borderRadius: 32, padding: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)' }}>
+                        <div style={{ flex: 1, background: 'var(--bg-surface)', borderRadius: 32, padding: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-default)', boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)' }}>
                             <div style={{ textAlign: 'center', maxWidth: 500 }}>
                                 <div style={{ display: 'inline-flex', padding: 24, borderRadius: '50%', background: 'rgba(139,92,246,0.15)', marginBottom: 24, border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 0 40px rgba(139,92,246,0.2)' }}>
                                     <LineChart size={56} color="#a78bfa" />
                                 </div>
-                                <h3 style={{ color: '#fff', fontSize: 24, fontWeight: 800, marginBottom: 12, letterSpacing: '-0.02em' }}>Data Models Synced</h3>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, lineHeight: 1.6, fontWeight: 500 }}>
-                                    The underlying data structure for <b style={{color: '#fff'}}>{overlayFile.originalName || overlayFile.filename}</b> has been indexed into the workspace vector space.
+                                <h3 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 800, marginBottom: 12, letterSpacing: '-0.02em' }}>Data Models Synced</h3>
+                                <p style={{ color: 'var(--text-muted)', fontSize: 16, lineHeight: 1.6, fontWeight: 500 }}>
+                                    The underlying data structure for <b style={{color: 'var(--text-primary)'}}>{overlayFile.originalName || overlayFile.filename}</b> has been indexed into the workspace vector space.
                                     <br /><br />
-                                    Users can query this dataset using <code style={{background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 8, color: '#34d399', fontSize: 14}}>/analyze #[{overlayFile.originalName || overlayFile.filename}]</code>.
+                                    Users can query this dataset using <code style={{background: 'var(--bg-elevated)', padding: '4px 8px', borderRadius: 8, color: '#34d399', fontSize: 14}}>/analyze #[{overlayFile.originalName || overlayFile.filename}]</code>.
                                 </p>
                             </div>
                         </div>

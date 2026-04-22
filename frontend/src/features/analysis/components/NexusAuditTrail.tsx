@@ -628,7 +628,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: #fff;
+                    color: var(--text-primary);
                     box-shadow: 0 4px 20px -4px var(--primary-glow);
                 }
                 .nxt-title {
@@ -680,7 +680,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     transition: all 0.2s;
                 }
                 .nxt-action-btn:hover { background: var(--primary-subtle); color: var(--primary); border-color: var(--primary); }
-                .nxt-action-btn.nxt-active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 0 16px var(--primary-glow); }
+                .nxt-action-btn.nxt-active { background: var(--primary); color: var(--text-primary); border-color: var(--primary); box-shadow: 0 0 16px var(--primary-glow); }
 
                 /* ── Search ── */
                 .nxt-search-wrap { overflow: hidden; }

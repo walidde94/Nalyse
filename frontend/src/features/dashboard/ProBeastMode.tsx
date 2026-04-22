@@ -118,7 +118,7 @@ const PowerRing = ({ value, max, label, color, icon, suffix, unlimited }: {
     return (
         <div className="power-ring-wrap">
             <svg width="76" height="76" viewBox="0 0 76 76">
-                <circle cx="38" cy="38" r={radius} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={stroke} />
+                <circle cx="38" cy="38" r={radius} fill="none" stroke='var(--bg-surface-hover)' strokeWidth={stroke} />
                 <motion.circle
                     cx="38" cy="38" r={radius}
                     fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"

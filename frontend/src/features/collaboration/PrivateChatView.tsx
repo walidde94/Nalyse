@@ -37,7 +37,7 @@ const neuralStyles = `
     .neural-bg {
         position: fixed;
         inset: 0;
-        background: #020308;
+        background: var(--bg-app);
         overflow: hidden;
         z-index: 0;
     }
@@ -64,10 +64,10 @@ const neuralStyles = `
     }
 
     .glass-panel-premium {
-        background: rgba(8, 12, 22, 0.75);
+        background: var(--bg-surface);
         backdrop-filter: blur(50px) saturate(200%);
         -webkit-backdrop-filter: blur(50px) saturate(200%);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border-default);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
 
@@ -83,11 +83,11 @@ const neuralStyles = `
     }
 
     .message-bubble-other {
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--bg-surface-hover);
         backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border-default);
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        color: #fff;
+        color: var(--text-primary);
     }
 
     .neural-status-indicator {
@@ -201,15 +201,15 @@ const UserAvatar = ({ user, size = 40, status = 'online' }: { user: ChatParticip
     return (
         <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
             {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '14px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                <img src={user.avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '14px', objectFit: 'cover', border: '1px solid var(--border-default)' }} />
             ) : (
                 <div style={{
                     width: size, height: size, borderRadius: '14px',
                     background: `linear-gradient(135deg, ${colors[idx]}dd, ${colors[idx]}88)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: size * 0.38, fontWeight: 800, color: '#fff',
+                    fontSize: size * 0.38, fontWeight: 800, color: 'var(--text-primary)',
                     boxShadow: `0 8px 16px ${colors[idx]}22`,
-                    border: '1px solid rgba(255,255,255,0.1)'
+                    border: '1px solid var(--border-default)'
                 }}>
                     {getInitials(user)}
                 </div>
@@ -481,7 +481,7 @@ export const PrivateChatView: React.FC = () => {
                 zIndex: 20,
                 borderRight: '1px solid rgba(255,255,255,0.05)'
             }}>
-                <div style={{ padding: '30px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ padding: '30px 24px', borderBottom: '1px solid var(--border-default)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <motion.div 
@@ -491,7 +491,7 @@ export const PrivateChatView: React.FC = () => {
                                 <MessageSquare size={20} color="#fff" />
                             </motion.div>
                             <div>
-                                <h2 style={{ fontSize: 19, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>Neural Link</h2>
+                                <h2 style={{ fontSize: 19, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Neural Link</h2>
                                 <div style={{ fontSize: 10, color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>Quantum Core v3</div>
                             </div>
                         </div>
@@ -506,7 +506,7 @@ export const PrivateChatView: React.FC = () => {
                     </div>
                     
                     <div style={{ position: 'relative' }}>
-                        <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                        <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         <input
                             type="text"
                             placeholder="Identify connection..."
@@ -514,8 +514,8 @@ export const PrivateChatView: React.FC = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
                                 width: '100%', padding: '14px 16px 14px 46px', borderRadius: 16,
-                                background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)',
-                                color: '#fff', fontSize: 14, outline: 'none',
+                                background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)',
+                                color: 'var(--text-primary)', fontSize: 14, outline: 'none',
                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                             }}
                             className="focus-glow"
@@ -531,12 +531,12 @@ export const PrivateChatView: React.FC = () => {
                                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                                 style={{ width: 32, height: 32, border: '3px solid rgba(99, 102, 241, 0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}
                             />
-                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Scanning Network...</div>
+                            <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Scanning Network...</div>
                         </div>
                     ) : searchTerm && searchTerm.length >= 2 ? (
                         searchResults.length > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <div style={{ padding: '0 16px 12px', fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Found Connections</div>
+                                <div style={{ padding: '0 16px 12px', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Found Connections</div>
                                 {searchResults.map(u => (
                                     <motion.button
                                         key={u.id}
@@ -551,16 +551,16 @@ export const PrivateChatView: React.FC = () => {
                                     >
                                         <UserAvatar user={u} size={40} />
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{getUserName(u)}</div>
-                                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.email}</div>
+                                            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{getUserName(u)}</div>
+                                            <div style={{ fontSize: 12, color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.email}</div>
                                         </div>
                                     </motion.button>
                                 ))}
                             </div>
                         ) : (
                             <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>No users found for "{searchTerm}"</div>
-                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 8 }}>Verify identity and try again</div>
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>No users found for "{searchTerm}"</div>
+                                <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginTop: 8 }}>Verify identity and try again</div>
                             </div>
                         )
                     ) : (
@@ -592,12 +592,12 @@ export const PrivateChatView: React.FC = () => {
                                                     <span style={{ fontSize: 15, fontWeight: 800, color: isActive ? 'var(--primary)' : '#fff' }}>
                                                         {getUserName(other)}
                                                     </span>
-                                                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+                                                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
                                                         {timeAgo(conv.updatedAt)}
                                                     </span>
                                                 </div>
                                                 <div style={{ 
-                                                    fontSize: 13, color: isActive ? 'rgba(99, 102, 241, 0.8)' : 'rgba(255,255,255,0.5)', 
+                                                    fontSize: 13, color: isActive ? 'rgba(99, 102, 241, 0.8)' : 'var(--text-muted)', 
                                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                                     fontWeight: (lastMsg && !isActive) ? 600 : 400
                                                 }}>
@@ -615,7 +615,7 @@ export const PrivateChatView: React.FC = () => {
                                 })
                             ) : (
                                 <div style={{ padding: '40px 20px', textAlign: 'center', opacity: 0.5 }}>
-                                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>No active tunnels</div>
+                                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No active tunnels</div>
                                 </div>
                             )}
                         </div>
@@ -635,12 +635,12 @@ export const PrivateChatView: React.FC = () => {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             zIndex: 10,
-                            borderBottom: '1px solid rgba(255,255,255,0.05)'
+                            borderBottom: '1px solid var(--border-default)'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                                 <UserAvatar user={otherMember!} size={46} />
                                 <div>
-                                    <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>{getUserName(otherMember)}</div>
+                                    <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{getUserName(otherMember)}</div>
                                     <div style={{ fontSize: 11, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>
                                         <div className="neural-status-indicator" style={{ width: 6, height: 6 }} />
                                         Neural Tunnel Active
@@ -652,25 +652,25 @@ export const PrivateChatView: React.FC = () => {
                                     <motion.div 
                                         initial={{ width: 0, opacity: 0 }}
                                         animate={{ width: 240, opacity: 1 }}
-                                        style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', padding: '8px 14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)' }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-surface-hover)', padding: '8px 14px', borderRadius: 14, border: '1px solid var(--border-default)' }}
                                     >
-                                        <Search size={16} color="rgba(255,255,255,0.5)" />
+                                        <Search size={16} color='var(--text-muted)' />
                                         <input 
                                             type="text" 
                                             placeholder="Query history..."
                                             value={msgSearchQuery}
                                             onChange={(e) => setMsgSearchQuery(e.target.value)}
                                             autoFocus
-                                            style={{ background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: 14, width: '100%' }}
+                                            style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 14, width: '100%' }}
                                         />
-                                        <button onClick={() => { setIsMsgSearchVisible(false); setMsgSearchQuery(''); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }}><X size={16} /></button>
+                                        <button onClick={() => { setIsMsgSearchVisible(false); setMsgSearchQuery(''); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={16} /></button>
                                     </motion.div>
                                 ) : (
-                                    <button className="icon-btn-subtle" onClick={() => setIsMsgSearchVisible(true)} style={{ color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.05)', width: 40, height: 40, borderRadius: 12 }}><Search size={20} /></button>
+                                    <button className="icon-btn-subtle" onClick={() => setIsMsgSearchVisible(true)} style={{ color: 'var(--text-secondary)', background: 'var(--bg-surface-hover)', width: 40, height: 40, borderRadius: 12 }}><Search size={20} /></button>
                                 )}
                                 
                                 <div style={{ position: 'relative' }}>
-                                    <button className="icon-btn-subtle" onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} style={{ color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.05)', width: 40, height: 40, borderRadius: 12 }}><MoreHorizontal size={20} /></button>
+                                    <button className="icon-btn-subtle" onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} style={{ color: 'var(--text-secondary)', background: 'var(--bg-surface-hover)', width: 40, height: 40, borderRadius: 12 }}><MoreHorizontal size={20} /></button>
                                     <AnimatePresence>
                                         {isMoreMenuOpen && (
                                             <motion.div
@@ -679,15 +679,15 @@ export const PrivateChatView: React.FC = () => {
                                                 exit={{ opacity: 0, y: 15, scale: 0.95 }}
                                                 style={{
                                                     position: 'absolute', top: '100%', right: 0, marginTop: 12,
-                                                    width: 200, background: 'rgba(15, 23, 42, 0.95)', borderRadius: 18,
-                                                    border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                                                    width: 200, background: 'var(--bg-card)', borderRadius: 18,
+                                                    border: '1px solid var(--border-default)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
                                                     backdropFilter: 'blur(20px)',
                                                     zIndex: 100, overflow: 'hidden', padding: '6px'
                                                 }}
                                             >
-                                                <button className="more-menu-item" style={{ padding: '12px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, width: '100%', border: 'none', background: 'transparent', color: '#fff', cursor: 'pointer', borderRadius: 12 }} onClick={() => setIsMoreMenuOpen(false)}><Bell size={16} /> Mute Channel</button>
-                                                <button className="more-menu-item" style={{ padding: '12px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, width: '100%', border: 'none', background: 'transparent', color: '#fff', cursor: 'pointer', borderRadius: 12 }} onClick={() => setIsMoreMenuOpen(false)}><Download size={16} /> Archive Logs</button>
-                                                <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '4px 8px' }}></div>
+                                                <button className="more-menu-item" style={{ padding: '12px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, width: '100%', border: 'none', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: 12 }} onClick={() => setIsMoreMenuOpen(false)}><Bell size={16} /> Mute Channel</button>
+                                                <button className="more-menu-item" style={{ padding: '12px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, width: '100%', border: 'none', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: 12 }} onClick={() => setIsMoreMenuOpen(false)}><Download size={16} /> Archive Logs</button>
+                                                <div style={{ height: 1, background: 'var(--bg-surface-hover)', margin: '4px 8px' }}></div>
                                                 <button className="more-menu-item danger" style={{ padding: '12px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, width: '100%', border: 'none', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', borderRadius: 12 }} onClick={() => { setActiveMessages([]); setIsMoreMenuOpen(false); }}><Eraser size={16} /> Wipe Terminal</button>
                                             </motion.div>
                                         )}
@@ -738,7 +738,7 @@ export const PrivateChatView: React.FC = () => {
                                                             : (isLastInGroup ? '22px 22px 22px 6px' : '22px 22px 22px 22px'),
                                                         background: isMe 
                                                             ? 'linear-gradient(135deg, var(--primary), #4f46e5)' 
-                                                            : 'rgba(255, 255, 255, 0.03)',
+                                                            : 'var(--bg-surface)',
                                                         color: isMe ? '#fff' : 'var(--text-primary)',
                                                         border: isMe ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
                                                         boxShadow: isMe 
@@ -755,7 +755,7 @@ export const PrivateChatView: React.FC = () => {
                                                     {msg.replyTo && (
                                                         <div style={{
                                                             padding: '6px 10px',
-                                                            background: isMe ? 'rgba(255,255,255,0.15)' : 'var(--bg-secondary)',
+                                                            background: isMe ? 'var(--text-disabled)' : 'var(--bg-secondary)',
                                                             borderRadius: 8,
                                                             borderLeft: `3px solid ${isMe ? '#fff' : 'var(--primary)'}`,
                                                             marginBottom: 4,
@@ -912,11 +912,11 @@ export const PrivateChatView: React.FC = () => {
                                             value={editContent} 
                                             onChange={(e) => setEditContent(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleEditMessage(editingMessage)}
-                                            style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', outline: 'none', fontSize: 15 }}
+                                            style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', fontSize: 15 }}
                                             autoFocus
                                         />
                                     </div>
-                                    <button onClick={() => setEditingMessage(null)} style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={18} /></button>
+                                    <button onClick={() => setEditingMessage(null)} style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'var(--bg-surface-hover)', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
                                     <button onClick={() => handleEditMessage(editingMessage)} style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'var(--primary)', color: '#fff', cursor: 'pointer' }}><Check size={18} /></button>
                                 </motion.div>
                             ) : (
@@ -926,10 +926,10 @@ export const PrivateChatView: React.FC = () => {
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 16,
-                                        background: 'rgba(255, 255, 255, 0.04)',
+                                        background: 'var(--bg-surface-hover)',
                                         padding: '10px 14px',
                                         borderRadius: 24,
-                                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                                        border: '1px solid var(--border-default)',
                                         boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
                                         backdropFilter: 'blur(30px)'
                                     }}
@@ -947,7 +947,7 @@ export const PrivateChatView: React.FC = () => {
                                         whileTap={{ scale: 0.9 }}
                                         type="button" 
                                         onClick={() => fileInputRef.current?.click()}
-                                        style={{ width: 44, height: 44, borderRadius: 18, border: 'none', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        style={{ width: 44, height: 44, borderRadius: 18, border: 'none', background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                         disabled={uploadingImage}
                                     >
                                         {uploadingImage ? <Loader2 size={20} className="animate-spin" /> : <ImageIcon size={22} />}
@@ -979,13 +979,13 @@ export const PrivateChatView: React.FC = () => {
                                                     <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                                         Targeting: {replyingTo.sender.displayName}
                                                     </div>
-                                                    <div style={{ color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '13px', marginTop: 2 }}>
+                                                    <div style={{ color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '13px', marginTop: 2 }}>
                                                         {replyingTo.content || 'Media Stream'}
                                                     </div>
                                                 </div>
                                                 <button 
                                                     onClick={() => setReplyingTo(null)}
-                                                    style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 6 }}
+                                                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 6 }}
                                                 >
                                                     <X size={16} />
                                                 </button>
@@ -1003,7 +1003,7 @@ export const PrivateChatView: React.FC = () => {
                                             background: 'transparent',
                                             border: 'none',
                                             padding: '16px 8px',
-                                            color: '#fff',
+                                            color: 'var(--text-primary)',
                                             fontSize: 15,
                                             outline: 'none',
                                             fontWeight: 500
@@ -1012,7 +1012,7 @@ export const PrivateChatView: React.FC = () => {
                                 </div>
                                     
                                     <div style={{ position: 'relative' }}>
-                                        <button type="button" style={{ color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-lift" onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}>
+                                        <button type="button" style={{ color: 'var(--text-secondary)', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: 12, width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="hover-lift" onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}>
                                             <Smile size={22} />
                                         </button>
                                         <AnimatePresence>
@@ -1072,7 +1072,7 @@ export const PrivateChatView: React.FC = () => {
                 ) : (
                     <div style={{ 
                         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 40, position: 'relative'
+                        color: 'var(--text-muted)', textAlign: 'center', padding: 40, position: 'relative'
                     }}>
                         <motion.div 
                             animate={{ 
@@ -1089,7 +1089,7 @@ export const PrivateChatView: React.FC = () => {
                         >
                             <MessageSquare size={54} />
                         </motion.div>
-                        <h3 style={{ fontSize: 24, fontWeight: 900, color: '#fff', marginBottom: 12, letterSpacing: '-0.02em' }}>Neural Link Standby</h3>
+                        <h3 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 12, letterSpacing: '-0.02em' }}>Neural Link Standby</h3>
                         <p style={{ maxWidth: 320, lineHeight: 1.7, fontSize: 15, fontWeight: 500 }}>
                             Select a neural pathway from the list or initiate a new connection to begin secure data transmission.
                         </p>

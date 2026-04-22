@@ -105,13 +105,13 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
                 <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '12px', margin: 0, letterSpacing: '-0.03em' }}>
+                    <h1 style={{ fontSize: '28px', fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '12px', margin: 0, letterSpacing: '-0.03em' }}>
                         <div style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #34d399, #3b82f6)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px -6px rgba(52, 211, 153, 0.5)' }}>
                             <Users size={22} color="#fff" />
                         </div>
                         Collaborative Workspace
                     </h1>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '8px', fontWeight: 500, marginLeft: '52px' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: 500, marginLeft: '52px' }}>
                         Real-time team collaboration, shared dashboards, and threaded discussions.
                     </p>
                 </div>
@@ -130,7 +130,7 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                             <Globe size={18} color="#34d399" />
                             <code style={{ fontSize: '13px', color: '#34d399', fontFamily: 'var(--font-mono)' }}>{shareLink}</code>
                         </div>
-                        <button onClick={copyLink} style={{ background: copied ? '#10b981' : 'rgba(255,255,255,0.1)', border: 'none', padding: '8px 16px', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
+                        <button onClick={copyLink} style={{ background: copied ? '#10b981' : 'var(--bg-elevated)', border: 'none', padding: '8px 16px', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
                             {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
                         </button>
                     </motion.div>
@@ -148,13 +148,13 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                     return (
                         <button key={t.id} onClick={() => setActiveSection(t.id as any)} style={{
                             display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '10px',
-                            background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                            background: isActive ? 'var(--border-default)' : 'transparent',
                             border: `1px solid ${isActive ? 'rgba(255,255,255,0.12)' : 'transparent'}`,
-                            color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                            color: isActive ? '#fff' : 'var(--text-muted)',
                             fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
                         }}>
                             {t.icon} {t.label}
-                            <span style={{ background: isActive ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, color: isActive ? '#34d399' : 'rgba(255,255,255,0.4)' }}>{t.count}</span>
+                            <span style={{ background: isActive ? 'rgba(52, 211, 153, 0.2)' : 'var(--bg-surface-hover)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, color: isActive ? '#34d399' : 'var(--text-muted)' }}>{t.count}</span>
                         </button>
                     );
                 })}
@@ -166,7 +166,7 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                     {loading ? (
                         <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
                             <Loader2 className="animate-spin" size={32} color="#34d399" />
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loading Collaboration Data...</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loading Collaboration Data...</span>
                         </motion.div>
                     ) : (
                         <motion.div key={activeSection} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
@@ -176,7 +176,7 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '20px' }}>
                                     {dashboards.map((d, i) => (
                                         <motion.div key={d.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                                            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '24px', position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.3s' }}
+                                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '20px', padding: '24px', position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.3s' }}
                                             className="hover:border-white/15"
                                         >
                                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: d.status === 'live' ? 'linear-gradient(90deg, #34d399, #3b82f6)' : 'linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))' }} />
@@ -184,14 +184,14 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                                                 <div>
                                                     <h3 style={{ fontSize: '16px', fontWeight: 800, margin: '0 0 4px 0' }}>{d.name}</h3>
-                                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>by {d.owner}</span>
+                                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>by {d.owner}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                     <span style={{
                                                         fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
                                                         padding: '4px 8px', borderRadius: '4px',
-                                                        background: d.status === 'live' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255,255,255,0.05)',
-                                                        color: d.status === 'live' ? '#34d399' : 'rgba(255,255,255,0.5)'
+                                                        background: d.status === 'live' ? 'rgba(52, 211, 153, 0.15)' : 'var(--bg-surface-hover)',
+                                                        color: d.status === 'live' ? '#34d399' : 'var(--text-muted)'
                                                     }}>
                                                         {d.status === 'live' && '● '}{d.status}
                                                     </span>
@@ -199,22 +199,22 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                                             </div>
 
                                             <div style={{ display: 'flex', gap: '20px', marginBottom: '16px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
                                                     <Eye size={13} /> {d.viewers} viewers
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
                                                     <Clock size={13} /> {timeAgo(d.lastEdited)}
                                                 </div>
                                             </div>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px', borderTop: '1px solid var(--border-default)' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '-4px' }}>
                                                     {d.sharedWith.map((name: string, j: number) => (
-                                                        <div key={j} title={name} style={{ width: '28px', height: '28px', borderRadius: '50%', background: `hsl(${name.length * 40}, 60%, 50%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 900, color: '#fff', border: '2px solid #0f172a', marginLeft: j > 0 ? '-8px' : '0', position: 'relative', zIndex: d.sharedWith.length - j }}>
+                                                        <div key={j} title={name} style={{ width: '28px', height: '28px', borderRadius: '50%', background: `hsl(${name.length * 40}, 60%, 50%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 900, color: 'var(--text-primary)', border: '2px solid #0f172a', marginLeft: j > 0 ? '-8px' : '0', position: 'relative', zIndex: d.sharedWith.length - j }}>
                                                             {name.charAt(0)}
                                                         </div>
                                                     ))}
-                                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginLeft: '8px' }}>+{d.sharedWith.length} collaborators</span>
+                                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '8px' }}>+{d.sharedWith.length} collaborators</span>
                                                 </div>
                                                 <button style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                     Open <ExternalLink size={12} />
@@ -231,20 +231,20 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         {activity.map((a, i) => (
                                             <motion.div key={a.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                                                style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', transition: 'background 0.2s' }}
                                                 className="hover:bg-white/5"
                                             >
-                                                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                     {actionIcon(a.type)}
                                                 </div>
                                                 <div style={{ flex: 1 }}>
                                                     <span style={{ fontSize: '13px' }}>
-                                                        <strong style={{ color: '#fff' }}>{a.user}</strong>{' '}
-                                                        <span style={{ color: 'rgba(255,255,255,0.5)' }}>{a.action}</span>{' '}
+                                                        <strong style={{ color: 'var(--text-primary)' }}>{a.user}</strong>{' '}
+                                                        <span style={{ color: 'var(--text-muted)' }}>{a.action}</span>{' '}
                                                         <strong style={{ color: '#818cf8' }}>{a.target}</strong>
                                                     </span>
                                                 </div>
-                                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{timeAgo(a.time)}</span>
+                                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{timeAgo(a.time)}</span>
                                             </motion.div>
                                         ))}
                                     </div>
@@ -255,12 +255,12 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                             {activeSection === 'threads' && (
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '24px' }}>
                                     {/* Comment Thread */}
-                                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                                        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <MessageSquare size={16} color="#818cf8" /> Thread: Q4 Revenue Overview
                                             </h3>
-                                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{comments.length} messages</span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{comments.length} messages</span>
                                         </div>
 
                                         <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '400px', overflowY: 'auto' }}>
@@ -273,14 +273,14 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                                                     </div>
                                                     <div style={{ flex: 1 }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{c.userName}</span>
-                                                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>{timeAgo(c.timestamp)}</span>
+                                                            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{c.userName}</span>
+                                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{timeAgo(c.timestamp)}</span>
                                                         </div>
-                                                        <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>{c.text}</p>
+                                                        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{c.text}</p>
                                                         {c.reactions && Object.keys(c.reactions).length > 0 && (
                                                             <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
                                                                 {Object.entries(c.reactions).map(([emoji, count]) => (
-                                                                    <span key={emoji} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                                                    <span key={emoji} style={{ background: 'var(--bg-surface-hover)', padding: '2px 8px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-default)' }}>
                                                                         {emoji} {count as number}
                                                                     </span>
                                                                 ))}
@@ -291,16 +291,16 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                                             ))}
                                         </div>
 
-                                        <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '12px' }}>
+                                        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-default)', display: 'flex', gap: '12px' }}>
                                             <input
                                                 ref={commentInputRef}
                                                 value={newComment}
                                                 onChange={e => setNewComment(e.target.value)}
                                                 onKeyDown={e => e.key === 'Enter' && sendComment()}
                                                 placeholder="Type a message... use @ to mention"
-                                                style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '10px', color: '#fff', fontSize: '13px', outline: 'none' }}
+                                                style={{ flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '12px 16px', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' }}
                                             />
-                                            <button onClick={sendComment} disabled={!newComment.trim()} style={{ background: newComment.trim() ? '#818cf8' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px', transition: 'all 0.2s', opacity: newComment.trim() ? 1 : 0.5 }}>
+                                            <button onClick={sendComment} disabled={!newComment.trim()} style={{ background: newComment.trim() ? '#818cf8' : 'var(--bg-surface-hover)', color: 'var(--text-primary)', border: 'none', padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px', transition: 'all 0.2s', opacity: newComment.trim() ? 1 : 0.5 }}>
                                                 <Send size={16} />
                                             </button>
                                         </div>
@@ -308,8 +308,8 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
 
                                     {/* Sidebar: Participants & Info */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '20px' }}>
-                                            <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Active Participants</h4>
+                                        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '16px', padding: '20px' }}>
+                                            <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Active Participants</h4>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                 {['Alice Chen', 'Bob Smith', 'Nalyse AI'].map((name, i) => (
                                                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -325,19 +325,19 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                                             </div>
                                         </div>
 
-                                        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '20px' }}>
-                                            <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Thread Stats</h4>
+                                        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '16px', padding: '20px' }}>
+                                            <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Thread Stats</h4>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Total Messages</span>
+                                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Messages</span>
                                                     <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{comments.length}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Total Reactions</span>
+                                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Reactions</span>
                                                     <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{comments.reduce((a: number, c: any) => a + (Object.values(c.reactions || {}) as number[]).reduce((b: number, v: number) => b + v, 0), 0)}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Mentions</span>
+                                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Mentions</span>
                                                     <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{comments.filter((c: any) => c.text.includes('@')).length}</span>
                                                 </div>
                                             </div>
@@ -348,7 +348,7 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                                                 <Sparkles size={16} color="#818cf8" />
                                                 <span style={{ fontSize: '13px', fontWeight: 800, color: '#818cf8' }}>AI Suggestion</span>
                                             </div>
-                                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
+                                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                                                 Based on the thread activity, the APAC revenue anomaly discussed earlier correlates with the new enterprise contract. Consider creating a follow-up dashboard to track contract impact.
                                             </p>
                                         </div>

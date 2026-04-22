@@ -150,7 +150,7 @@ const ObjectiveBadge = ({ objective }: { objective: string }) => {
             display: 'inline-flex', alignItems: 'center', gap: '6px',
             padding: '4px 10px', borderRadius: '20px',
             background: gradient, fontSize: '10px', fontWeight: 800,
-            textTransform: 'uppercase', letterSpacing: '0.08em', color: '#fff',
+            textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-primary)',
             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
         }}>
             <Icon size={10} />
@@ -791,7 +791,7 @@ export const ProjectsView = ({ token }: { token: string }) => {
                     width: 40px; height: 40px; border-radius: 12px;
                     background: linear-gradient(135deg, var(--primary), var(--accent));
                     display: flex; align-items: center; justify-content: center;
-                    color: #fff; box-shadow: 0 4px 20px -4px var(--primary-glow);
+                    color: var(--text-primary); box-shadow: 0 4px 20px -4px var(--primary-glow);
                     animation: sb-hero-pulse 3s ease-in-out infinite;
                 }
                 @keyframes sb-hero-pulse {

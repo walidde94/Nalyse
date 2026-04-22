@@ -62,7 +62,7 @@ export const TimePicker = ({ onSelect, onClose }: TimePickerProps) => {
                     borderColor: 'var(--border-subtle)'
                 }}
             >
-                <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
+                <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-surface)' }}>
                     <Clock size={14} className="text-primary opacity-60" />
                     <span className="label-premium">Quick Select</span>
                 </div>

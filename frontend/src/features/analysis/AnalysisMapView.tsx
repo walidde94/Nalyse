@@ -101,7 +101,7 @@ export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
         return {
             radius,
             fillColor: '#34d399', // Emerald 400
-            color: '#fff',
+            color: 'var(--text-primary)',
             weight: 1,
             opacity: 0.8,
             fillOpacity: 0.5

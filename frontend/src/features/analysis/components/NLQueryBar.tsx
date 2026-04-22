@@ -72,15 +72,15 @@ const ChartTooltip = ({ active, payload, label }: any) => {
     return (
         <div style={{
             background: 'rgba(10,10,20,0.95)', backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14,
+            border: '1px solid var(--border-default)', borderRadius: 14,
             padding: '12px 16px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
         }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{label}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</div>
             {payload.map((p: any, i: number) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
-                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>{p.name || p.dataKey}:</span>
-                    <span style={{ fontWeight: 800, color: '#fff', fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>{p.name || p.dataKey}:</span>
+                    <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                         {typeof p.value === 'number' ? p.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : p.value}
                     </span>
                 </div>
@@ -95,14 +95,14 @@ const ResultSkeleton = () => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(99,102,241,0.1)' }} />
             <div style={{ flex: 1 }}>
-                <div style={{ width: '40%', height: 14, borderRadius: 6, background: 'rgba(255,255,255,0.06)', marginBottom: 6 }} />
-                <div style={{ width: '25%', height: 10, borderRadius: 6, background: 'rgba(255,255,255,0.04)' }} />
+                <div style={{ width: '40%', height: 14, borderRadius: 6, background: 'var(--border-default)', marginBottom: 6 }} />
+                <div style={{ width: '25%', height: 10, borderRadius: 6, background: 'var(--bg-surface-hover)' }} />
             </div>
         </div>
-        <div style={{ width: '100%', height: 220, borderRadius: 16, background: 'rgba(255,255,255,0.03)' }} />
+        <div style={{ width: '100%', height: 220, borderRadius: 16, background: 'var(--bg-surface)' }} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ height: 80, borderRadius: 12, background: 'rgba(255,255,255,0.03)' }} />
-            <div style={{ height: 80, borderRadius: 12, background: 'rgba(255,255,255,0.03)' }} />
+            <div style={{ height: 80, borderRadius: 12, background: 'var(--bg-surface)' }} />
+            <div style={{ height: 80, borderRadius: 12, background: 'var(--bg-surface)' }} />
         </div>
     </div>
 );
@@ -296,8 +296,8 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
             return (
                 <div style={{
                     borderRadius: 18, overflow: 'hidden',
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.05)',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-default)',
                     width: '100%',
                     height: '400px',
                     minHeight: '400px'
@@ -310,8 +310,8 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
         return (
             <div style={{
                 borderRadius: 18, overflow: 'hidden',
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.05)',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-default)',
                 padding: '16px 12px 4px',
                 width: '100%',
                 height: '280px',
@@ -335,9 +335,9 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                         </PieChart>
                     ) : chartType === 'scatter' ? (
                         <ScatterChart margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
-                            <YAxis dataKey={yKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
+                            <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' />
+                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                            <YAxis dataKey={yKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                             <ZAxis range={[40, 200]} />
                             <Tooltip content={<ChartTooltip />} />
                             <Scatter data={displayData} fill="#6366f1" fillOpacity={0.7} />
@@ -350,9 +350,9 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                     <stop offset="95%" stopColor={g1} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
-                            <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
+                            <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
+                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                            <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
                             <Tooltip content={<ChartTooltip />} />
                             <Area type="monotone" dataKey={yKey} stroke={g1} strokeWidth={3} fill={`url(#${gradId})`} dot={{ fill: g1, r: 3, strokeWidth: 0 }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
                         </AreaChart>
@@ -364,10 +364,10 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                     <stop offset="100%" stopColor={g2} stopOpacity={0.5} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} angle={-35} textAnchor="end" height={50} interval={0} />
-                            <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
-                            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                            <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
+                            <XAxis dataKey={xKey} stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} angle={-35} textAnchor="end" height={50} interval={0} />
+                            <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
+                            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--bg-surface)' }} />
                             <Bar dataKey={yKey} fill={`url(#${gradId})`} radius={[6, 6, 0, 0]} barSize={displayData.length > 20 ? 14 : 28} />
                         </BarChart>
                     )}
@@ -386,7 +386,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
         return (
             <div style={{
                 borderRadius: 14, overflow: 'hidden',
-                border: '1px solid rgba(255,255,255,0.06)',
+                border: '1px solid var(--border-default)',
             }}>
                 <div style={{ overflowX: 'auto', maxHeight: isExpanded ? 500 : 280 }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -398,7 +398,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                         fontWeight: 800, fontSize: 10, textTransform: 'uppercase',
                                         letterSpacing: '0.08em', color: 'var(--text-tertiary)',
                                         borderBottom: '1px solid rgba(255,255,255,0.06)',
-                                        background: 'rgba(255,255,255,0.02)',
+                                        background: 'var(--bg-surface)',
                                         position: 'sticky', top: 0, zIndex: 1, whiteSpace: 'nowrap',
                                     }}>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -420,7 +420,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                     {cols.map(c => (
                                         <td key={c} style={{
                                             padding: '8px 14px',
-                                            borderBottom: '1px solid rgba(255,255,255,0.03)',
+                                            borderBottom: '1px solid var(--border-subtle)',
                                             color: 'var(--text-primary)',
                                             fontFamily: typeof row[c] === 'number' ? 'var(--font-mono)' : 'inherit',
                                             fontWeight: typeof row[c] === 'number' ? 600 : 400,
@@ -441,7 +441,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                 {entry.data.length > 8 && (
                     <button onClick={() => toggleCard(`table-${entry.id}`)} style={{
                         width: '100%', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        background: 'rgba(255,255,255,0.02)', border: 'none', borderTop: '1px solid rgba(255,255,255,0.04)',
+                        background: 'var(--bg-surface)', border: 'none', borderTop: '1px solid rgba(255,255,255,0.04)',
                         color: 'var(--text-tertiary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'color 0.15s',
                     }}>
                         {isExpanded ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> Show all {entry.data.length} rows</>}
@@ -566,7 +566,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                     maxWidth: '75%', padding: '12px 18px',
                                     borderRadius: '18px 18px 4px 18px',
                                     background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                    color: '#fff', fontSize: 14, fontWeight: 600, lineHeight: 1.5,
+                                    color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, lineHeight: 1.5,
                                     boxShadow: '0 4px 16px rgba(99,102,241,0.3)',
                                 }}>
                                     {entry.query}
@@ -607,7 +607,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                             <div style={{
                                                 padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
                                                 borderBottom: '1px solid rgba(255,255,255,0.04)',
-                                                background: 'rgba(255,255,255,0.01)',
+                                                background: 'var(--bg-surface)',
                                             }}>
                                                 <div style={{
                                                     display: 'flex', alignItems: 'center', gap: 5,
@@ -657,7 +657,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                                 <div style={{
                                                     padding: '10px 14px', borderRadius: 12,
                                                     background: 'rgba(0,0,0,0.2)',
-                                                    border: '1px solid rgba(255,255,255,0.04)',
+                                                    border: '1px solid var(--border-subtle)',
                                                     display: 'flex', alignItems: 'center', gap: 10,
                                                 }}>
                                                     <code style={{ flex: 1, fontSize: 11, color: '#34d399', fontFamily: 'var(--font-mono)', overflowX: 'auto', whiteSpace: 'nowrap' }}>
@@ -743,7 +743,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                         style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: 36, height: 36, borderRadius: 12, flexShrink: 0,
-                            background: query.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.04)',
+                            background: query.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'var(--bg-surface-hover)',
                             color: query.trim() ? '#fff' : 'var(--text-tertiary)',
                             border: 'none', cursor: query.trim() ? 'pointer' : 'not-allowed',
                             transition: 'all 0.2s',
@@ -757,9 +757,9 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                     </button>
                 </form>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '0 4px', fontSize: 11, color: 'var(--text-tertiary)' }}>
-                    <kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>Enter</kbd>
+                    <kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>Enter</kbd>
                     <span>Send</span>
-                    <kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>Shift+Enter</kbd>
+                    <kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>Shift+Enter</kbd>
                     <span>New line</span>
                     {conversation.length > 0 && (
                         <button onClick={() => setConversation([])} style={{

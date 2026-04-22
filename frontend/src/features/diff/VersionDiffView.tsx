@@ -41,9 +41,9 @@ const Sparkline = ({ data, color, w = 60, h = 24 }: { data: number[]; color: str
 const DiffTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-        <div style={{ background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.06)', padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)', minWidth: '200px', color: '#fff' }}>
+        <div style={{ background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)', padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)', minWidth: '200px', color: 'var(--text-primary)' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', borderRadius: '14px 14px 0 0', background: 'linear-gradient(90deg, #818cf8, #34d399)' }} />
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
             {payload.map((p: any, i: number) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', marginBottom: '3px' }}>
                     <span style={{ fontSize: '11px', color: p.color, fontWeight: 600 }}>{p.name}</span>
@@ -62,7 +62,7 @@ const ScoreRing = ({ value, size = 80, stroke = 6 }: { value: number; size?: num
     const color = value >= 70 ? '#34d399' : value >= 40 ? '#fbbf24' : '#f87171';
     return (
         <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke='var(--border-default)' strokeWidth={stroke} />
             <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
                 strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: offset }}
                 transition={{ duration: 1.2, ease: 'easeOut' }} strokeLinecap="round" />
@@ -314,7 +314,7 @@ export const VersionDiffView = ({ files, token }: Props) => {
                                             </div>
                                         </div>
                                         {/* Progress bar */}
-                                        <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.04)', marginBottom: '8px', overflow: 'hidden' }}>
+                                        <div style={{ height: '4px', borderRadius: '2px', background: 'var(--bg-surface-hover)', marginBottom: '8px', overflow: 'hidden' }}>
                                             <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, Math.abs(m.changePercent))}%` }}
                                                 transition={{ duration: 0.8, delay: i * 0.05 }}
                                                 style={{ height: '100%', borderRadius: '2px', background: m.direction === 'up' ? 'var(--success)' : m.direction === 'down' ? 'var(--danger)' : NEUTRAL_COLOR }} />
@@ -366,9 +366,9 @@ export const VersionDiffView = ({ files, token }: Props) => {
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     {activeChartView === 'delta' ? (
                                                         <BarChart data={chart.mergedData} margin={{ top: 8, right: 16, left: 8, bottom: 36 }}>
-                                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                                            <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 600 }} angle={-35} textAnchor="end" height={45} axisLine={false} tickLine={false} />
-                                                            <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                                            <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                                            <XAxis dataKey="name" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }} angle={-35} textAnchor="end" height={45} axisLine={false} tickLine={false} />
+                                                            <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
                                                             <Tooltip content={<DiffTooltip />} />
                                                             <Bar dataKey="delta" name="Delta (B−A)" radius={[4, 4, 0, 0]}>
                                                                 {chart.mergedData.map((d: any, i: number) => <Cell key={i} fill={d.delta >= 0 ? COMPARISON_COLOR : NEGATIVE_COLOR} fillOpacity={0.8} />)}
@@ -376,9 +376,9 @@ export const VersionDiffView = ({ files, token }: Props) => {
                                                         </BarChart>
                                                     ) : (
                                                         <BarChart data={chart.mergedData} margin={{ top: 8, right: 16, left: 8, bottom: 36 }}>
-                                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                                            <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 600 }} angle={-35} textAnchor="end" height={45} axisLine={false} tickLine={false} />
-                                                            <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)} />
+                                                            <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                                            <XAxis dataKey="name" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }} angle={-35} textAnchor="end" height={45} axisLine={false} tickLine={false} />
+                                                            <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)} />
                                                             <Tooltip content={<DiffTooltip />} /><Legend wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} />
                                                             <Bar dataKey="baseline" fill={BASELINE_COLOR} fillOpacity={activeChartView === 'side-by-side' ? 0.5 : 0.7} radius={[4, 4, 0, 0]} name="Baseline (A)" />
                                                             <Bar dataKey="comparison" fill={COMPARISON_COLOR} fillOpacity={activeChartView === 'side-by-side' ? 0.5 : 0.7} radius={[4, 4, 0, 0]} name="Comparison (B)" />
@@ -445,8 +445,8 @@ export const VersionDiffView = ({ files, token }: Props) => {
                                 </h3>
                                 <ResponsiveContainer width="100%" height={360}>
                                     <RadarChart data={radarData}>
-                                        <PolarGrid stroke="rgba(255,255,255,0.06)" />
-                                        <PolarAngleAxis dataKey="metric" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 600 }} />
+                                        <PolarGrid stroke='var(--border-default)' />
+                                        <PolarAngleAxis dataKey="metric" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }} />
                                         <PolarRadiusAxis tick={false} axisLine={false} />
                                         <Radar name="Baseline (A)" dataKey="baseline" stroke={BASELINE_COLOR} fill={BASELINE_COLOR} fillOpacity={0.15} strokeWidth={2} />
                                         <Radar name="Comparison (B)" dataKey="comparison" stroke={COMPARISON_COLOR} fill={COMPARISON_COLOR} fillOpacity={0.15} strokeWidth={2} />

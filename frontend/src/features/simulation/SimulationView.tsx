@@ -42,7 +42,7 @@ const ScoreRing = ({ value, size = 80, stroke = 6 }: { value: number; size?: num
     const color = value >= 70 ? '#34d399' : value >= 40 ? '#fbbf24' : '#f87171';
     return (
         <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke='var(--border-default)' strokeWidth={stroke} />
             <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
                 strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: offset }}
                 transition={{ duration: 1.2, ease: 'easeOut' }} strokeLinecap="round" />
@@ -57,9 +57,9 @@ const ScoreRing = ({ value, size = 80, stroke = 6 }: { value: number; size?: num
 const SimTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-        <div style={{ background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.06)', padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)', minWidth: '180px', color: '#fff' }}>
+        <div style={{ background: 'rgba(8,8,14,0.96)', backdropFilter: 'blur(24px)', border: '1px solid var(--border-default)', padding: '14px 18px', borderRadius: '14px', boxShadow: '0 24px 48px -8px rgba(0,0,0,0.7)', minWidth: '180px', color: 'var(--text-primary)' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', borderRadius: '14px 14px 0 0', background: 'linear-gradient(90deg, #818cf8, #34d399)' }} />
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</p>
             {payload.map((p: any, i: number) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', marginBottom: '3px' }}>
                     <span style={{ fontSize: '11px', color: p.color || '#94a3b8', fontWeight: 600 }}>{p.name}</span>
@@ -307,7 +307,7 @@ export const SimulationView = ({ files, token }: Props) => {
                                         </div>
                                         <input type="range" min={p.min} max={p.max} step={p.step} value={p.val}
                                             onChange={e => p.set(parseFloat(e.target.value))}
-                                            style={{ width: '100%', height: '4px', borderRadius: '2px', appearance: 'none', background: 'rgba(255,255,255,0.06)', cursor: 'pointer', accentColor: '#818cf8' }} />
+                                            style={{ width: '100%', height: '4px', borderRadius: '2px', appearance: 'none', background: 'var(--border-default)', cursor: 'pointer', accentColor: '#818cf8' }} />
                                     </div>
                                 ))}
                             </div>
@@ -405,7 +405,7 @@ export const SimulationView = ({ files, token }: Props) => {
                                                 <div style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{p.netMargin.toFixed(1)}%</div>
                                             </div>
                                         </div>
-                                        <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                        <div style={{ height: '3px', borderRadius: '2px', background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                             <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, p.capacityUtilization)}%` }}
                                                 transition={{ duration: 0.8, delay: i * 0.04 }}
                                                 style={{ height: '100%', borderRadius: '2px', background: p.capacityUtilization > 85 ? '#f87171' : p.capacityUtilization > 60 ? '#fbbf24' : '#34d399' }} />
@@ -432,9 +432,9 @@ export const SimulationView = ({ files, token }: Props) => {
                                 <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart3 size={16} style={{ color: '#818cf8' }} /> Product Revenue, Cost & Profit Breakdown</h3>
                                 <ResponsiveContainer width="100%" height={360}>
                                     <BarChart data={profitHeatmap.slice(0, 20)} margin={{ top: 8, right: 16, left: 8, bottom: 44 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 9 }} angle={-35} textAnchor="end" height={50} axisLine={false} tickLine={false} />
-                                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                        <XAxis dataKey="name" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 9 }} angle={-35} textAnchor="end" height={50} axisLine={false} tickLine={false} />
+                                        <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
                                         <Tooltip content={<SimTooltip />} />
                                         <Bar dataKey="Revenue" fill="#818cf8" radius={[4, 4, 0, 0]} opacity={0.8} />
                                         <Bar dataKey="Cost" fill="#f87171" radius={[4, 4, 0, 0]} opacity={0.6} />
@@ -475,9 +475,9 @@ export const SimulationView = ({ files, token }: Props) => {
                                 <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><GitCompareArrows size={16} style={{ color: '#fbbf24' }} /> Scenario Profit Comparison</h3>
                                 <ResponsiveContainer width="100%" height={360}>
                                     <BarChart data={scenarioCompare} margin={{ top: 8, right: 16, left: 8, bottom: 36 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                        <XAxis dataKey="name" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                        <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
                                         <Tooltip content={<SimTooltip />} />
                                         <Bar dataKey="Profit" radius={[4, 4, 0, 0]}>{scenarioCompare.map((d, i) => <Cell key={i} fill={d.color} opacity={0.8} />)}</Bar>
                                         <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} />
@@ -513,9 +513,9 @@ export const SimulationView = ({ files, token }: Props) => {
                                     <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Activity size={16} style={{ color: '#818cf8' }} /> Profit Distribution (5K Simulations)</h3>
                                     <ResponsiveContainer width="100%" height={300}>
                                         <BarChart data={result.monteCarlo.distribution} margin={{ top: 8, right: 16, left: 8, bottom: 4 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                            <XAxis dataKey="bucket" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 8 }} axisLine={false} tickLine={false} interval={4} />
-                                            <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                            <XAxis dataKey="bucket" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-disabled)', fontSize: 8 }} axisLine={false} tickLine={false} interval={4} />
+                                            <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
                                             <Tooltip content={<SimTooltip />} />
                                             <Bar dataKey="count" name="Frequency" radius={[3, 3, 0, 0]}>{result.monteCarlo.distribution.map((d, i) => <Cell key={i} fill={d.cumulative < 5 ? '#f87171' : d.cumulative < 25 ? '#fb923c' : d.cumulative < 75 ? '#818cf8' : '#34d399'} opacity={0.7} />)}</Bar>
                                         </BarChart>
@@ -525,8 +525,8 @@ export const SimulationView = ({ files, token }: Props) => {
                                     <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Shield size={16} style={{ color: '#fbbf24' }} /> Multi-Dimensional Health</h3>
                                     <ResponsiveContainer width="100%" height={300}>
                                         <RadarChart data={radarData}>
-                                            <PolarGrid stroke="rgba(255,255,255,0.06)" />
-                                            <PolarAngleAxis dataKey="metric" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 600 }} />
+                                            <PolarGrid stroke='var(--border-default)' />
+                                            <PolarAngleAxis dataKey="metric" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }} />
                                             <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
                                             <Radar name="Score" dataKey="value" stroke="#818cf8" fill="#818cf8" fillOpacity={0.15} strokeWidth={2} />
                                             <Tooltip content={<SimTooltip />} />
@@ -547,9 +547,9 @@ export const SimulationView = ({ files, token }: Props) => {
                                         <defs>
                                             <linearGradient id="simFcBand" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#818cf8" stopOpacity={0.12} /><stop offset="95%" stopColor="#818cf8" stopOpacity={0} /></linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                        <YAxis stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
+                                        <XAxis dataKey="name" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                        <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
                                         <Tooltip content={<SimTooltip />} />
                                         <Area type="monotone" dataKey="Upper" stroke="none" fill="rgba(129,140,248,0.08)" />
                                         <Area type="monotone" dataKey="Lower" stroke="none" fill="rgba(129,140,248,0.04)" />
@@ -570,9 +570,9 @@ export const SimulationView = ({ files, token }: Props) => {
                                 <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Gauge size={16} style={{ color: '#fb923c' }} /> Sensitivity Analysis (Tornado Chart)</h3>
                                 <ResponsiveContainer width="100%" height={320}>
                                     <BarChart data={sensitivityChart} layout="vertical" margin={{ top: 8, right: 16, left: 90, bottom: 8 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
-                                        <XAxis type="number" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
-                                        <YAxis type="category" dataKey="factor" stroke="rgba(255,255,255,0.15)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} width={85} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' horizontal={false} />
+                                        <XAxis type="number" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
+                                        <YAxis type="category" dataKey="factor" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} width={85} />
                                         <Tooltip content={<SimTooltip />} />
                                         <Bar dataKey="low" name="Low Scenario" fill="#f87171" opacity={0.7} radius={[4, 0, 0, 4]} />
                                         <Bar dataKey="high" name="High Scenario" fill="#34d399" opacity={0.7} radius={[0, 4, 4, 0]} />
@@ -593,7 +593,7 @@ export const SimulationView = ({ files, token }: Props) => {
                                             <span>Base: {fmtCurrency(s.baseProfit)}</span>
                                             <span style={{ color: '#34d399' }}>High: {fmtCurrency(s.highProfit)}</span>
                                         </div>
-                                        <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.04)', marginTop: '8px', overflow: 'hidden' }}>
+                                        <div style={{ height: '4px', borderRadius: '2px', background: 'var(--bg-surface-hover)', marginTop: '8px', overflow: 'hidden' }}>
                                             <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, Math.abs(s.elasticity) * 100)}%` }}
                                                 transition={{ duration: 0.8, delay: i * 0.06 }}
                                                 style={{ height: '100%', borderRadius: '2px', background: 'linear-gradient(90deg, #f87171, #fbbf24, #34d399)' }} />

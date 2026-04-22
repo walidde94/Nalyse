@@ -72,7 +72,7 @@ const StatCard = ({ icon: Icon, label, value, sub, color, delay = 0 }: {
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay }}
         style={{
-            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+            background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
             borderRadius: 16, padding: '20px 24px', position: 'relative', overflow: 'hidden',
         }}
     >
@@ -81,10 +81,10 @@ const StatCard = ({ icon: Icon, label, value, sub, color, delay = 0 }: {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon size={18} color={color} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
         </div>
-        <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', position: 'relative' }}>{value}</div>
-        {sub && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4, fontWeight: 500 }}>{sub}</div>}
+        <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', position: 'relative' }}>{value}</div>
+        {sub && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>{sub}</div>}
     </motion.div>
 );
 
@@ -144,21 +144,21 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh, onSelect }:
         <motion.tr
             initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
             onClick={() => onSelect(m)}
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.015)')}
+            style={{ borderBottom: '1px solid var(--border-subtle)', cursor: 'pointer' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-surface)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
             <td style={{ padding: '14px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ position: 'relative' }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#fff', boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'var(--text-primary)', boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0 }}>
                             {(m.firstName?.charAt(0) || m.email.charAt(0)).toUpperCase()}
                         </div>
                         <div style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderRadius: '50%', background: status.color, border: '2px solid #0d0d0d', boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none' }} />
                     </div>
                     <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{getUserName(m)}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{m.email}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{getUserName(m)}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{m.email}</div>
                     </div>
                 </div>
             </td>
@@ -176,15 +176,15 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh, onSelect }:
             </td>
             <td style={{ padding: '14px 24px' }}>
                 <div style={{ display: 'flex', gap: 14 }}>
-                    <span title="Files (owned + shared)" style={{ fontSize: 12, color: fileCount > 0 ? '#a78bfa' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: fileCount > 0 ? 700 : 500 }}><FileText size={12} /> {fileCount}</span>
-                    <span title="Analyses run" style={{ fontSize: 12, color: analysisCount > 0 ? '#3b82f6' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: analysisCount > 0 ? 700 : 500 }}><BarChart3 size={12} /> {analysisCount}</span>
-                    <span title="Messages" style={{ fontSize: 12, color: msgCount > 0 ? '#10b981' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: msgCount > 0 ? 700 : 500 }}><MessageCircle size={12} /> {msgCount}</span>
-                    <span title="Workspaces" style={{ fontSize: 12, color: wsCount > 0 ? '#f59e0b' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: wsCount > 0 ? 700 : 500 }}><Globe size={12} /> {wsCount}</span>
+                    <span title="Files (owned + shared)" style={{ fontSize: 12, color: fileCount > 0 ? '#a78bfa' : 'var(--text-disabled)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: fileCount > 0 ? 700 : 500 }}><FileText size={12} /> {fileCount}</span>
+                    <span title="Analyses run" style={{ fontSize: 12, color: analysisCount > 0 ? '#3b82f6' : 'var(--text-disabled)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: analysisCount > 0 ? 700 : 500 }}><BarChart3 size={12} /> {analysisCount}</span>
+                    <span title="Messages" style={{ fontSize: 12, color: msgCount > 0 ? '#10b981' : 'var(--text-disabled)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: msgCount > 0 ? 700 : 500 }}><MessageCircle size={12} /> {msgCount}</span>
+                    <span title="Workspaces" style={{ fontSize: 12, color: wsCount > 0 ? '#f59e0b' : 'var(--text-disabled)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: wsCount > 0 ? 700 : 500 }}><Globe size={12} /> {wsCount}</span>
                 </div>
             </td>
-            <td style={{ padding: '14px 24px', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{timeAgo(m.lastLoginAt)}</td>
+            <td style={{ padding: '14px 24px', fontSize: 12, color: 'var(--text-muted)' }}>{timeAgo(m.lastLoginAt)}</td>
             <td style={{ padding: '14px 24px', textAlign: 'right' }}>
-                <button style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '6px 8px', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+                <button style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '6px 8px', color: 'var(--text-muted)', cursor: 'pointer' }}>
                     <MoreVertical size={14} />
                 </button>
             </td>
@@ -354,7 +354,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             <Building2 size={22} color="#fff" />
                         </div>
                         <div>
-                            <h1 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: 10 }}>
                                 {orgData?.name || 'Organization'}
                                 <span style={{
                                     fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 6,
@@ -365,7 +365,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                     {orgData?.plan || 'free'}
                                 </span>
                             </h1>
-                            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0, fontWeight: 500 }}>
+                            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>
                                 Enterprise data governance, access controls & organizational intelligence
                             </p>
                         </div>
@@ -374,8 +374,8 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                 <button
                     onClick={fetchGovernanceData}
                     style={{
-                        background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: 10, padding: '10px 16px', color: 'rgba(255,255,255,0.6)',
+                        background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)',
+                        borderRadius: 10, padding: '10px 16px', color: 'var(--text-secondary)',
                         fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                     }}
                 >
@@ -383,7 +383,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                 </button>
             </motion.div>
 
-            <div style={{ display: 'flex', gap: 4, marginBottom: 28, position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.02)', borderRadius: 14, padding: 4, border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 28, position: 'relative', zIndex: 1, background: 'var(--bg-surface)', borderRadius: 14, padding: 4, border: '1px solid var(--border-subtle)' }}>
                 {tabs.map(tab => {
                     const isActive = activeTab === tab.id;
                     const TabIcon = tab.icon;
@@ -393,9 +393,9 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             onClick={() => setActiveTab(tab.id)}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10,
-                                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                                background: isActive ? 'var(--border-default)' : 'transparent',
                                 border: 'none',
-                                color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                                color: isActive ? '#fff' : 'var(--text-muted)',
                                 fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
                                 flex: 1, justifyContent: 'center',
                             }}
@@ -405,8 +405,8 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             {tab.count !== undefined && (
                                 <span style={{
                                     fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 6,
-                                    background: isActive ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
-                                    color: isActive ? '#fff' : 'rgba(255,255,255,0.3)',
+                                    background: isActive ? 'rgba(255,255,255,0.12)' : 'var(--bg-surface-hover)',
+                                    color: isActive ? '#fff' : 'var(--text-muted)',
                                     minWidth: 16, textAlign: 'center'
                                 }}>
                                     {tab.count}
@@ -424,18 +424,18 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             style={{ height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}
                         >
                             <Loader2 className="animate-spin" size={28} color="#8b5cf6" />
-                            <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                 Loading governance data...
                             </span>
                         </motion.div>
                     ) : error ? (
                         <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            style={{ textAlign: 'center', padding: 80, color: 'rgba(255,255,255,0.4)' }}
+                            style={{ textAlign: 'center', padding: 80, color: 'var(--text-muted)' }}
                         >
                             <AlertTriangle size={40} style={{ opacity: 0.3, marginBottom: 16 }} />
                             <div style={{ fontSize: 14, fontWeight: 700 }}>Failed to load governance data</div>
                             <div style={{ fontSize: 12, marginTop: 4 }}>{error}</div>
-                            <button onClick={fetchGovernanceData} style={{ marginTop: 20, background: '#8b5cf6', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
+                            <button onClick={fetchGovernanceData} style={{ marginTop: 20, background: '#8b5cf6', color: 'var(--text-primary)', border: 'none', padding: '10px 24px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
                                 Retry
                             </button>
                         </motion.div>
@@ -452,8 +452,8 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                     </div>
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                                        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 24 }}>
-                                            <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8, color: '#fff' }}>
+                                        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 24 }}>
+                                            <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)' }}>
                                                 <Shield size={16} color="#8b5cf6" /> Role Distribution
                                             </h3>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -465,11 +465,11 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                                                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: rt.color }} />
-                                                                    <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', textTransform: 'capitalize' }}>{role}</span>
+                                                                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'capitalize' }}>{role}</span>
                                                                 </div>
-                                                                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>{count} · {pct}%</span>
+                                                                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>{count} · {pct}%</span>
                                                             </div>
-                                                            <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                                            <div style={{ height: 6, borderRadius: 3, background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                                 <motion.div
                                                                     initial={{ width: 0 }} animate={{ width: `${pct}%` }}
                                                                     transition={{ duration: 0.8, delay: 0.2 }}
@@ -481,16 +481,16 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                 })}
                                             </div>
 
-                                            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border-default)' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                                    <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
                                                         <HardDrive size={13} /> Storage Usage
                                                     </span>
                                                     <span style={{ fontSize: 12, fontWeight: 700, color: storagePct > 80 ? '#ef4444' : '#10b981' }}>
                                                         {formatBytes(stats.totalStorage || '0')} / {formatBytes(orgData?.storageLimit || '0')}
                                                     </span>
                                                 </div>
-                                                <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                                <div style={{ height: 8, borderRadius: 4, background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                     <motion.div
                                                         initial={{ width: 0 }} animate={{ width: `${Math.min(storagePct, 100)}%` }}
                                                         transition={{ duration: 1, delay: 0.3 }}
@@ -505,8 +505,8 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             </div>
                                         </div>
 
-                                        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column' }}>
-                                            <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: '#fff' }}>
+                                        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column' }}>
+                                            <h3 style={{ fontSize: 14, fontWeight: 800, margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)' }}>
                                                 <Activity size={16} color="#10b981" /> Recent Activity
                                             </h3>
                                             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -519,21 +519,21 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                                 <LogIcon size={13} color={config.color} />
                                                             </div>
                                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>
-                                                                    <strong style={{ color: '#fff' }}>{getUserName(log.user)}</strong>{' '}
+                                                                <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                                                    <strong style={{ color: 'var(--text-primary)' }}>{getUserName(log.user)}</strong>{' '}
                                                                     {config.label}
                                                                     {log.workspace && (
-                                                                        <span style={{ color: 'rgba(255,255,255,0.35)' }}> in {log.workspace.name}</span>
+                                                                        <span style={{ color: 'var(--text-muted)' }}> in {log.workspace.name}</span>
                                                                     )}
                                                                 </div>
-                                                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
+                                                                <div style={{ fontSize: 10, color: 'var(--text-disabled)', marginTop: 2 }}>
                                                                     {timeAgo(log.createdAt)}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     );
                                                 }) : (
-                                                    <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.2)' }}>
+                                                    <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-disabled)' }}>
                                                         <Activity size={32} style={{ opacity: 0.2, marginBottom: 8 }} />
                                                         <div style={{ fontSize: 12 }}>No activity recorded yet</div>
                                                     </div>
@@ -549,16 +549,16 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             </h3>
                                             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                                 {invitations.map(inv => (
-                                                    <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+                                                    <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border-default)' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                                             <Mail size={13} color="#f59e0b" />
-                                                            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{inv.email}</span>
+                                                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{inv.email}</span>
                                                         </div>
                                                         <div style={{ fontSize: 10, fontWeight: 800, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>{inv.role}</div>
-                                                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>Expires {timeAgo(inv.expiresAt)}</div>
+                                                        <div style={{ fontSize: 10, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Expires {timeAgo(inv.expiresAt)}</div>
                                                         {currentUserRole === 'admin' && (
                                                             <div style={{ display: 'flex', gap: 4, marginLeft: 4, paddingLeft: 8, borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-                                                                <button onClick={() => handleResendInvite(inv.id)} disabled={acting} title="Resend Invite" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', padding: 4, cursor: 'pointer' }}><RefreshCw size={12} /></button>
+                                                                <button onClick={() => handleResendInvite(inv.id)} disabled={acting} title="Resend Invite" style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: 4, cursor: 'pointer' }}><RefreshCw size={12} /></button>
                                                                 <button onClick={() => handleRevokeInvite(inv.id)} disabled={acting} title="Revoke Invite" style={{ background: 'none', border: 'none', color: '#ef4444', padding: 4, cursor: 'pointer' }}><XCircle size={12} /></button>
                                                             </div>
                                                         )}
@@ -571,27 +571,27 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             )}
 
                             {activeTab === 'members' && (
-                                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, overflow: 'hidden' }}>
-                                    <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 16, overflow: 'hidden' }}>
+                                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ position: 'relative', width: 320 }}>
-                                            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                                            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                             <input
                                                 type="text"
                                                 placeholder="Search by name, email, or role..."
                                                 value={searchQuery}
                                                 onChange={e => setSearchQuery(e.target.value)}
-                                                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', padding: '9px 16px 9px 36px', borderRadius: 10, color: '#fff', fontSize: 13, width: '100%', outline: 'none' }}
+                                                style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', padding: '9px 16px 9px 36px', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, width: '100%', outline: 'none' }}
                                             />
                                         </div>
                                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                                            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>
+                                            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
                                                 {filteredMembers.length} of {members.length}
                                             </span>
                                             {currentUserRole === 'admin' && (
                                                 <button
                                                     onClick={() => setInviteModalOpen(true)}
                                                     style={{
-                                                        background: '#fff', color: '#000', border: 'none', borderRadius: 8, padding: '8px 16px',
+                                                        background: '#fff', color: 'var(--text-inverse)', border: 'none', borderRadius: 8, padding: '8px 16px',
                                                         fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                                                         boxShadow: '0 4px 12px rgba(255,255,255,0.1)'
                                                     }}
@@ -604,12 +604,12 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                     <div style={{ overflowX: 'auto' }}>
                                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead>
-                                                <tr style={{ background: 'rgba(255,255,255,0.015)', textAlign: 'left' }}>
-                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Identity</th>
-                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Role</th>
-                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Status</th>
-                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Assets</th>
-                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Last Seen</th>
+                                                <tr style={{ background: 'var(--bg-surface-hover)', textAlign: 'left' }}>
+                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Identity</th>
+                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Role</th>
+                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Status</th>
+                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Assets</th>
+                                                    <th style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Last Seen</th>
                                                     <th style={{ padding: '14px 24px' }}></th>
                                                 </tr>
                                             </thead>
@@ -618,7 +618,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                     <MemberRow key={m.id} m={m} idx={i} isAdmin={currentUserRole === 'admin'} token={token} activeUsers={activeUsers} onRefresh={fetchGovernanceData} onSelect={setSelectedMember} />
                                                 )) : (
                                                     <tr>
-                                                        <td colSpan={6} style={{ padding: 64, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>
+                                                        <td colSpan={6} style={{ padding: 64, textAlign: 'center', color: 'var(--text-disabled)' }}>
                                                             <Users size={40} style={{ opacity: 0.15, marginBottom: 12 }} />
                                                             <div style={{ fontSize: 13, fontWeight: 600 }}>
                                                                 {searchQuery ? 'No members match your search' : 'No members in this organization'}
@@ -640,7 +640,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.3, delay: i * 0.05 }}
                                             style={{
-                                                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                                                background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
                                                 borderRadius: 16, padding: 24, position: 'relative', overflow: 'hidden',
                                             }}
                                         >
@@ -650,7 +650,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                     <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(59,130,246,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                         <Globe size={18} color="#3b82f6" />
                                                     </div>
-                                                    <h3 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#fff' }}>{ws.name}</h3>
+                                                    <h3 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>{ws.name}</h3>
                                                 </div>
                                             </div>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
@@ -659,19 +659,19 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                     { icon: FileText, label: 'Files', value: ws._count?.files || 0 },
                                                     { icon: MessageCircle, label: 'Messages', value: ws._count?.messages || 0 },
                                                 ].map(stat => (
-                                                    <div key={stat.label} style={{ textAlign: 'center', padding: '12px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
-                                                        <stat.icon size={14} style={{ color: 'rgba(255,255,255,0.3)', marginBottom: 4 }} />
-                                                        <div style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{stat.value}</div>
-                                                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{stat.label}</div>
+                                                    <div key={stat.label} style={{ textAlign: 'center', padding: '12px 8px', background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+                                                        <stat.icon size={14} style={{ color: 'var(--text-muted)', marginBottom: 4 }} />
+                                                        <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>{stat.value}</div>
+                                                        <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>{stat.label}</div>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 14 }}>
+                                            <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginTop: 14 }}>
                                                 Created {timeAgo(ws.createdAt)}
                                             </div>
                                         </motion.div>
                                     )) : (
-                                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 80, color: 'rgba(255,255,255,0.25)' }}>
+                                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 80, color: 'var(--text-disabled)' }}>
                                             <Globe size={48} style={{ opacity: 0.1, marginBottom: 12 }} />
                                             <div style={{ fontSize: 14, fontWeight: 600 }}>No workspaces yet</div>
                                         </div>
@@ -680,12 +680,12 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             )}
 
                             {activeTab === 'audit' && (
-                                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, overflow: 'hidden' }}>
-                                    <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <h3 style={{ fontSize: 14, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: '#fff' }}>
+                                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 16, overflow: 'hidden' }}>
+                                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-default)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ fontSize: 14, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)' }}>
                                             <ShieldAlert size={16} color="#3b82f6" /> Security Audit Trail
                                         </h3>
-                                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
+                                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700 }}>
                                             {auditLogs.length} events
                                         </span>
                                     </div>
@@ -701,28 +701,28 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                     style={{
                                                         display: 'grid', gridTemplateColumns: '120px 200px 1fr 100px',
                                                         alignItems: 'center', padding: '14px 24px', gap: 16,
-                                                        borderBottom: '1px solid rgba(255,255,255,0.03)',
+                                                        borderBottom: '1px solid var(--border-subtle)',
                                                     }}
-                                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.015)')}
+                                                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-surface)')}
                                                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                                                 >
-                                                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-mono, monospace)' }}>
+                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono, monospace)' }}>
                                                         {new Date(log.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 1 }}>
+                                                        <div style={{ fontSize: 10, color: 'var(--text-disabled)', marginTop: 1 }}>
                                                             {new Date(log.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                         </div>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                        <div style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                            <Users size={12} color="rgba(255,255,255,0.5)" />
+                                                        <div style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--bg-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <Users size={12} color='var(--text-muted)' />
                                                         </div>
-                                                        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{getUserName(log.user)}</span>
+                                                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{getUserName(log.user)}</span>
                                                     </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
                                                         <LogIcon size={13} color={config.color} />
                                                         {config.label}
                                                         {log.workspace && (
-                                                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginLeft: 4 }}>in {log.workspace.name}</span>
+                                                            <span style={{ fontSize: 11, color: 'var(--text-disabled)', marginLeft: 4 }}>in {log.workspace.name}</span>
                                                         )}
                                                     </div>
                                                     <div style={{ textAlign: 'right' }}>
@@ -737,10 +737,10 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                 </motion.div>
                                             );
                                         }) : (
-                                            <div style={{ textAlign: 'center', padding: 80, color: 'rgba(255,255,255,0.2)' }}>
+                                            <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-disabled)' }}>
                                                 <ShieldAlert size={40} style={{ opacity: 0.1, marginBottom: 12 }} />
                                                 <div style={{ fontSize: 13, fontWeight: 600 }}>No audit events recorded yet</div>
-                                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', marginTop: 4 }}>Actions in workspaces will appear here automatically</div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginTop: 4 }}>Actions in workspaces will appear here automatically</div>
                                             </div>
                                         )}
                                     </div>
@@ -759,17 +759,17 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
                             onClick={() => setInviteModalOpen(false)}
-                            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+                            style={{ position: 'absolute', inset: 0, background: 'var(--bg-card)', backdropFilter: 'blur(8px)' }}
                         />
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                             style={{
-                                position: 'relative', width: 440, background: '#121212', borderRadius: 24, padding: 32,
-                                border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 32px 64px rgba(0,0,0,0.5)'
+                                position: 'relative', width: 440, background: 'var(--bg-main)', borderRadius: 24, padding: 32,
+                                border: '1px solid var(--border-default)', boxShadow: '0 32px 64px rgba(0,0,0,0.5)'
                             }}
                         >
-                            <button onClick={() => setInviteModalOpen(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+                            <button onClick={() => setInviteModalOpen(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                                 <XCircle size={20} />
                             </button>
                             
@@ -778,26 +778,26 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                     <Mail size={24} color="#fff" />
                                 </div>
                                 <div>
-                                    <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Invite Member</h2>
-                                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '4px 0 0' }}>Send an email invitation to join {orgData?.name}</p>
+                                    <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Invite Member</h2>
+                                    <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '4px 0 0' }}>Send an email invitation to join {orgData?.name}</p>
                                 </div>
                             </div>
 
                             <form onSubmit={handleInvite}>
                                 <div style={{ marginBottom: 20 }}>
-                                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Email Address</label>
+                                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>Email Address</label>
                                     <input
                                         type="email" required autoFocus
                                         value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
                                         placeholder="colleague@company.com"
-                                        style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: 12, color: '#fff', fontSize: 14, outline: 'none', transition: 'border-color 0.2s' }}
+                                        style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '12px 16px', borderRadius: 12, color: 'var(--text-primary)', fontSize: 14, outline: 'none', transition: 'border-color 0.2s' }}
                                         onFocus={e => e.currentTarget.style.borderColor = '#6366f1'}
-                                        onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                        onBlur={e => e.currentTarget.style.borderColor = 'var(--bg-elevated)'}
                                     />
                                 </div>
 
                                 <div style={{ marginBottom: 32 }}>
-                                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Role</label>
+                                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>Role</label>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                         {[
                                             { id: 'admin', label: 'Admin', desc: 'Full access' },
@@ -810,11 +810,11 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                 style={{
                                                     padding: 12, borderRadius: 12, cursor: 'pointer',
                                                     border: inviteRole === r.id ? '1px solid #6366f1' : '1px solid rgba(255,255,255,0.08)',
-                                                    background: inviteRole === r.id ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.02)'
+                                                    background: inviteRole === r.id ? 'rgba(99,102,241,0.1)' : 'var(--bg-surface)'
                                                 }}
                                             >
-                                                <div style={{ fontSize: 13, fontWeight: 700, color: inviteRole === r.id ? '#fff' : 'rgba(255,255,255,0.7)' }}>{r.label}</div>
-                                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{r.desc}</div>
+                                                <div style={{ fontSize: 13, fontWeight: 700, color: inviteRole === r.id ? '#fff' : 'var(--text-secondary)' }}>{r.label}</div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{r.desc}</div>
                                             </div>
                                         ))}
                                     </div>
@@ -823,7 +823,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                 <button
                                     type="submit" disabled={inviting || !inviteEmail}
                                     style={{
-                                        width: '100%', padding: '14px', background: '#fff', color: '#000', border: 'none', borderRadius: 12,
+                                        width: '100%', padding: '14px', background: '#fff', color: 'var(--text-inverse)', border: 'none', borderRadius: 12,
                                         fontSize: 14, fontWeight: 800, cursor: (inviting || !inviteEmail) ? 'not-allowed' : 'pointer',
                                         opacity: (inviting || !inviteEmail) ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
                                     }}
@@ -880,7 +880,7 @@ const MemberSidebar = ({ member, onClose, worksaces, auditLogs, token, onRefresh
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             style={{
                 position: 'fixed', top: 0, right: 0, width: 420, height: '100%',
-                background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(32px)',
+                background: 'var(--bg-card)', backdropFilter: 'blur(32px)',
                 borderLeft: '1px solid rgba(255,255,255,0.08)', zIndex: 1000,
                 boxShadow: '-20px 0 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column'
             }}
@@ -889,14 +889,14 @@ const MemberSidebar = ({ member, onClose, worksaces, auditLogs, token, onRefresh
             <div style={{ padding: 24, paddingBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ display: 'flex', gap: 16 }}>
                     <div style={{ position: 'relative' }}>
-                        <div style={{ width: 64, height: 64, borderRadius: 20, background: 'linear-gradient(135deg, #334155, #1e293b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div style={{ width: 64, height: 64, borderRadius: 20, background: 'linear-gradient(135deg, #334155, #1e293b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', border: '1px solid var(--border-default)' }}>
                             {member.avatarUrl ? <img src={member.avatarUrl} style={{ width: '100%', height: '100%', borderRadius: 'inherit' }} /> : getUserName(member)[0]}
                         </div>
                         <div style={{ position: 'absolute', bottom: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: isOnline ? '#10b981' : '#64748b', border: '3px solid #0f172a' }} />
                     </div>
                     <div>
-                        <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>{getUserName(member)}</h2>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>{getUserName(member)}</h2>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                             <Mail size={12} /> {member.email}
                         </div>
                         <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: theme.bg, color: theme.color, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -904,7 +904,7 @@ const MemberSidebar = ({ member, onClose, worksaces, auditLogs, token, onRefresh
                         </div>
                     </div>
                 </div>
-                <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--bg-surface-hover)', border: 'none', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <ArrowUpRight size={16} />
                 </button>
             </div>
@@ -912,19 +912,19 @@ const MemberSidebar = ({ member, onClose, worksaces, auditLogs, token, onRefresh
             <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '0 24px 32px' }}>
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-                    <div style={{ padding: 16, borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{member.assets?.ownedFiles || 0}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Assets Created</div>
+                    <div style={{ padding: 16, borderRadius: 16, background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)' }}>{member.assets?.ownedFiles || 0}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Assets Created</div>
                     </div>
-                    <div style={{ padding: 16, borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{member.assets?.auditActions || 0}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Total Actions</div>
+                    <div style={{ padding: 16, borderRadius: 16, background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)' }}>{member.assets?.auditActions || 0}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Actions</div>
                     </div>
                 </div>
 
                 {/* Workspace Access */}
                 <div style={{ marginTop: 32 }}>
-                    <h3 style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Layers size={14} /> Workspace Access
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -934,16 +934,16 @@ const MemberSidebar = ({ member, onClose, worksaces, auditLogs, token, onRefresh
                                 <div key={ws.id}
                                     onClick={() => (adminRole === 'admin' || adminRole === 'owner') && toggleWorkspace(ws.id)}
                                     style={{
-                                        padding: '12px 16px', borderRadius: 12, background: hasAccess ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.02)',
-                                        border: '1px solid', borderColor: hasAccess ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.04)',
+                                        padding: '12px 16px', borderRadius: 12, background: hasAccess ? 'rgba(59,130,246,0.08)' : 'var(--bg-surface)',
+                                        border: '1px solid', borderColor: hasAccess ? 'rgba(59,130,246,0.2)' : 'var(--bg-surface-hover)',
                                         display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: (adminRole === 'admin' || adminRole === 'owner') ? 'pointer' : 'default', transition: 'all 0.2s'
                                     }}
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: hasAccess ? '#3b82f6' : 'rgba(255,255,255,0.1)' }} />
-                                        <span style={{ fontSize: 13, fontWeight: 700, color: hasAccess ? '#fff' : 'rgba(255,255,255,0.4)' }}>{ws.name}</span>
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: hasAccess ? '#3b82f6' : 'var(--bg-elevated)' }} />
+                                        <span style={{ fontSize: 13, fontWeight: 700, color: hasAccess ? '#fff' : 'var(--text-muted)' }}>{ws.name}</span>
                                     </div>
-                                    {hasAccess ? <CheckCircle2 size={14} color="#3b82f6" /> : syncing ? <Loader2 className="animate-spin" size={14} color="rgba(255,255,255,0.1)" /> : null}
+                                    {hasAccess ? <CheckCircle2 size={14} color="#3b82f6" /> : syncing ? <Loader2 className="animate-spin" size={14} color='var(--bg-elevated)' /> : null}
                                 </div>
                             );
                         })}
@@ -952,26 +952,26 @@ const MemberSidebar = ({ member, onClose, worksaces, auditLogs, token, onRefresh
 
                 {/* Activity */}
                 <div style={{ marginTop: 32 }}>
-                    <h3 style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <h3 style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Activity size={14} /> Personal Activity
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {userActions.length > 0 ? userActions.slice(0, 10).map((log: any) => (
                             <div key={log.id} style={{ display: 'flex', gap: 12 }}>
-                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', width: 60, flexShrink: 0, marginTop: 2 }}>{timeAgo(log.createdAt)}</div>
-                                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.4 }}>
+                                <div style={{ fontSize: 10, color: 'var(--text-disabled)', width: 60, flexShrink: 0, marginTop: 2 }}>{timeAgo(log.createdAt)}</div>
+                                <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
                                     {ACTION_LABELS[log.action]?.label || log.action}
-                                    {log.workspace && <span style={{ color: 'rgba(255,255,255,0.3)' }}> in {log.workspace.name}</span>}
+                                    {log.workspace && <span style={{ color: 'var(--text-muted)' }}> in {log.workspace.name}</span>}
                                 </div>
                             </div>
-                        )) : <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>No activity found.</div>}
+                        )) : <div style={{ fontSize: 12, color: 'var(--text-disabled)' }}>No activity found.</div>}
                     </div>
                 </div>
             </div>
             
             {/* Footer Actions */}
             {(adminRole === 'admin' || adminRole === 'owner') && (
-                <div style={{ padding: 24, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: 12 }}>
+                <div style={{ padding: 24, borderTop: '1px solid var(--border-default)', display: 'flex', gap: 12 }}>
                      <button style={{ flex: 1, padding: '12px', borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
                         Remove Member
                      </button>

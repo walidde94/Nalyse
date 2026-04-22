@@ -137,13 +137,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                         style={{ textAlign: 'center', maxWidth: 420 }}
                     >
                         <h1 style={{
-                            fontSize: 44, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', lineHeight: 1.1, margin: 0,
+                            fontSize: 44, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1.1, margin: 0,
                             background: 'linear-gradient(135deg, #fff 30%, #6366f1 60%, #10b981)',
                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         }}>
                             Nalyse
                         </h1>
-                        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)', fontWeight: 500, marginTop: 12, lineHeight: 1.6, letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: 15, color: 'var(--text-muted)', fontWeight: 500, marginTop: 12, lineHeight: 1.6, letterSpacing: '0.01em' }}>
                             Enterprise data intelligence platform.<br />
                             Transform raw data into actionable insights.
                         </p>
@@ -164,9 +164,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                             <div key={i} style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em',
-                                color: 'rgba(255,255,255,0.25)',
+                                color: 'var(--text-disabled)',
                                 padding: '6px 12px', borderRadius: 20,
-                                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+                                background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
                             }}>
                                 {badge.icon} {badge.label}
                             </div>
@@ -206,7 +206,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                             <div style={{
                                 padding: '40px 36px', borderRadius: 24,
                                 background: 'linear-gradient(160deg, rgba(18,18,30,0.8), rgba(12,12,22,0.9))',
-                                border: '1px solid rgba(255,255,255,0.06)',
+                                border: '1px solid var(--border-default)',
                                 boxShadow: '0 20px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03)',
                                 backdropFilter: 'blur(20px)',
                             }}>
@@ -216,10 +216,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px rgba(99,102,241,0.5)' }} />
                                         <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6366f1' }}>Secure Access</span>
                                     </div>
-                                    <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.2 }}>
+                                    <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.2 }}>
                                         Welcome back
                                     </h2>
-                                    <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', marginTop: 8, fontWeight: 500 }}>
+                                    <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 8, fontWeight: 500 }}>
                                         Sign in to your account to continue
                                     </p>
                                 </div>
@@ -228,18 +228,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                                     {/* Email field */}
                                     <div style={{ position: 'relative' }}>
-                                        <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>
+                                        <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: 8 }}>
                                             Email Address
                                         </label>
                                         <div style={{
                                             display: 'flex', alignItems: 'center', gap: 12,
                                             padding: '0 16px', height: 52, borderRadius: 14,
-                                            background: 'rgba(255,255,255,0.03)',
-                                            border: `1px solid ${focusedField === 'email' ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                                            background: 'var(--bg-surface)',
+                                            border: `1px solid ${focusedField === 'email' ? 'rgba(99,102,241,0.4)' : 'var(--border-default)'}`,
                                             boxShadow: focusedField === 'email' ? '0 0 0 3px rgba(99,102,241,0.08), 0 0 20px -8px rgba(99,102,241,0.15)' : 'none',
                                             transition: 'all 0.3s',
                                         }}>
-                                            <Mail size={16} style={{ color: focusedField === 'email' ? '#6366f1' : 'rgba(255,255,255,0.2)', transition: 'color 0.3s', flexShrink: 0 }} />
+                                            <Mail size={16} style={{ color: focusedField === 'email' ? '#6366f1' : 'var(--text-disabled)', transition: 'color 0.3s', flexShrink: 0 }} />
                                             <input
                                                 ref={emailRef}
                                                 type="email"
@@ -249,7 +249,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                                 onBlur={() => setFocusedField(null)}
                                                 onKeyDown={handleKeyDown}
                                                 placeholder="you@company.com"
-                                                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, letterSpacing: '0.01em', textAlign: 'left', padding: 0, margin: 0 }}
+                                                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 14, fontWeight: 500, letterSpacing: '0.01em', textAlign: 'left', padding: 0, margin: 0 }}
                                             />
                                             {email && email.includes('@') && (
                                                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
@@ -261,18 +261,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
 
                                     {/* Password field */}
                                     <div style={{ position: 'relative' }}>
-                                        <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>
+                                        <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: 8 }}>
                                             Password
                                         </label>
                                         <div style={{
                                             display: 'flex', alignItems: 'center', gap: 12,
                                             padding: '0 16px', height: 52, borderRadius: 14,
-                                            background: 'rgba(255,255,255,0.03)',
-                                            border: `1px solid ${focusedField === 'password' ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                                            background: 'var(--bg-surface)',
+                                            border: `1px solid ${focusedField === 'password' ? 'rgba(99,102,241,0.4)' : 'var(--border-default)'}`,
                                             boxShadow: focusedField === 'password' ? '0 0 0 3px rgba(99,102,241,0.08), 0 0 20px -8px rgba(99,102,241,0.15)' : 'none',
                                             transition: 'all 0.3s',
                                         }}>
-                                            <Lock size={16} style={{ color: focusedField === 'password' ? '#6366f1' : 'rgba(255,255,255,0.2)', transition: 'color 0.3s', flexShrink: 0 }} />
+                                            <Lock size={16} style={{ color: focusedField === 'password' ? '#6366f1' : 'var(--text-disabled)', transition: 'color 0.3s', flexShrink: 0 }} />
                                             <input
                                                 ref={passwordRef}
                                                 type={showPassword ? 'text' : 'password'}
@@ -282,10 +282,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                                 onBlur={() => setFocusedField(null)}
                                                 onKeyDown={handleKeyDown}
                                                 placeholder="Enter your password"
-                                                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
+                                                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
                                             />
                                             <button type="button" onClick={() => setShowPassword(!showPassword)}
-                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.2)', padding: 4, display: 'flex', transition: 'color 0.2s' }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-disabled)', padding: 4, display: 'flex', transition: 'color 0.2s' }}
                                             >
                                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                             </button>
@@ -312,7 +312,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                             width: '100%', height: 52, borderRadius: 14, border: 'none', cursor: 'pointer',
                                             background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%)',
                                             backgroundSize: '200% 100%', animation: 'shimmerBg 4s ease infinite',
-                                            color: '#fff', fontSize: 14, fontWeight: 800, letterSpacing: '0.04em',
+                                            color: 'var(--text-primary)', fontSize: 14, fontWeight: 800, letterSpacing: '0.04em',
                                             boxShadow: '0 8px 25px -8px rgba(99,102,241,0.4), 0 2px 6px rgba(0,0,0,0.2)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                                             position: 'relative', overflow: 'hidden', marginTop: 4,
@@ -326,9 +326,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
 
                                 {/* Divider */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '24px 0' }}>
-                                    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-                                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.15)' }}>or</span>
-                                    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                                    <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
+                                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-disabled)' }}>or</span>
+                                    <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
                                 </div>
 
                                 {/* Switch to register */}
@@ -336,13 +336,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                     onClick={onSwitchToRegister}
                                     style={{
                                         width: '100%', height: 48, borderRadius: 14, cursor: 'pointer',
-                                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-                                        color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600,
+                                        background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+                                        color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                                         transition: 'all 0.3s',
                                     }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#fff'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-default)'; e.currentTarget.style.color = '#fff'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                                 >
                                     Create a new account
                                     <ArrowRight size={14} />
@@ -351,8 +351,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
 
                             {/* Bottom info */}
                             <div style={{ marginTop: 24, textAlign: 'center' }}>
-                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', fontWeight: 500 }}>
-                                    Protected by enterprise-grade security · <span style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-mono, monospace)' }}>v3.0.2</span>
+                                <p style={{ fontSize: 11, color: 'var(--text-disabled)', fontWeight: 500 }}>
+                                    Protected by enterprise-grade security · <span style={{ color: 'var(--text-disabled)', fontFamily: 'var(--font-mono, monospace)' }}>v3.0.2</span>
                                 </p>
                             </div>
                         </motion.div>
@@ -370,7 +370,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                 {step === 1 ? (
                                     <>
                                         <motion.svg width="120" height="120" viewBox="0 0 120 120" style={{ position: 'absolute' }}>
-                                            <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
+                                            <circle cx="60" cy="60" r="56" fill="none" stroke='var(--border-default)' strokeWidth="2" />
                                             <motion.circle cx="60" cy="60" r="56" fill="none" stroke="url(#procGrad)" strokeWidth="2.5" strokeLinecap="round"
                                                 initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
                                                 transition={{ duration: 1.5, ease: "linear", repeat: Infinity }}
@@ -392,7 +392,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                 <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: step === 2 ? '#10b981' : '#6366f1', marginBottom: 8 }}>
                                     {step === 1 ? 'Authenticating...' : 'Access Granted'}
                                 </div>
-                                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
                                     {step === 1 ? 'Verifying your credentials' : 'Redirecting to dashboard...'}
                                 </div>
                             </div>

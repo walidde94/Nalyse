@@ -80,7 +80,7 @@ export const DiscoverHistogram = ({ data, dateColumn }: DiscoverHistogramProps) 
                         </linearGradient>
                     </defs>
                     <Tooltip
-                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                        cursor={{ fill: 'var(--bg-surface-hover)' }}
                         content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                                 return (

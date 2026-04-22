@@ -301,7 +301,7 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     <div style={{ flex: 1, minHeight: '350px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface)' vertical={false} />
                                 <XAxis 
                                     dataKey="label" 
                                     stroke="var(--text-muted)" 

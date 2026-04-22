@@ -92,7 +92,7 @@ export const PerformanceGauge = ({ value = 94, label = 'System Health', onClick 
                 <circle
                     cx="70" cy="70" r={radius}
                     fill="none"
-                    stroke="rgba(255,255,255,0.04)"
+                    stroke='var(--bg-surface-hover)'
                     strokeWidth={stroke}
                 />
                 {/* Animated progress */}
@@ -381,7 +381,7 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
                     >
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', paddingTop: '20px' }}>
                             {/* Visual track line */}
-                            <div style={{ position: 'absolute', left: 15, top: 20, bottom: 0, width: 2, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+                            <div style={{ position: 'absolute', left: 15, top: 20, bottom: 0, width: 2, background: 'var(--bg-surface)', borderRadius: 2 }} />
 
                             {events.map((event, i) => {
                                 const tokens = getEventTokens(event.type);
@@ -401,9 +401,9 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
                                             }} />
                                         </div>
                                         
-                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(255,255,255,0.015)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s', cursor: 'pointer' }}
-                                             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                                             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.015)'}
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'var(--bg-surface-hover)', borderRadius: '12px', border: '1px solid var(--border-subtle)', transition: 'background 0.2s', cursor: 'pointer' }}
+                                             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface)'}
+                                             onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-surface)'}
                                         >
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

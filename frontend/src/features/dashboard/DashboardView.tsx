@@ -19,6 +19,7 @@ import { AmbientStatusStrip, IntelligenceTimeline, PerformanceGauge, LiveClock }
 import { NeuralDropZone } from './NeuralDropZone';
 import { ArchitectNode } from '../../components/layout/ArchitectNode';
 import { DiagnosticOverlay } from '../../components/layout/DiagnosticOverlay';
+import { ObservabilityDashboard } from './ObservabilityDashboard';
 import { Responsive as ResponsiveGrid, WidthProvider } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 
@@ -54,7 +55,7 @@ const RadialGauge = ({ value = 0, size = 120, label, color = '#6366f1' }: any) =
                         <stop offset="100%" stopColor={`${color}80`} />
                     </linearGradient>
                 </defs>
-                <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={6} />
+                <circle cx={size/2} cy={size/2} r={r} fill="none" stroke='var(--bg-surface-hover)' strokeWidth={6} />
                 <motion.circle
                     cx={size/2} cy={size/2} r={r} fill="none"
                     stroke={`url(#${gradId})`} strokeWidth={6}
@@ -245,7 +246,7 @@ const DataRibbon = ({ items }: { items: { label: string; value: string; color: s
     <div style={{
         overflow: 'hidden', width: '100%', padding: '8px 0',
         borderTop: `1px solid ${BENTO.border}`, borderBottom: `1px solid ${BENTO.border}`,
-        background: 'rgba(255,255,255,0.01)',
+        background: 'var(--bg-surface)',
     }}>
         <motion.div
             animate={{ x: ['0%', '-50%'] }}
@@ -293,7 +294,7 @@ const BentoCardHeader = ({ icon: Icon, title, badge }: any) => (
             {Icon && <Icon size={15} style={{ color: 'var(--primary)' }} />}
             <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{title}</span>
         </div>
-        {badge && <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', padding: '3px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>{badge}</span>}
+        {badge && <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', padding: '3px 8px', borderRadius: '6px', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)' }}>{badge}</span>}
     </div>
 );
 
@@ -543,7 +544,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             justifyContent: 'center',
                             gap: '12px',
                             borderRadius: '24px',
-                            border: '1px solid rgba(255,255,255,0.1)',
+                            border: '1px solid var(--border-default)',
                             background: 'linear-gradient(135deg, var(--primary) 0%, #a855f7 50%, #d946ef 100%)',
                             backgroundSize: '200% auto',
                             boxShadow: '0 10px 40px -10px rgba(168, 85, 247, 0.8), inset 0 2px 0 rgba(255,255,255,0.2)',
@@ -557,7 +558,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
 
                         <span style={{
                             position: 'relative',
-                            color: '#fff',
+                            color: 'var(--text-primary)',
                             fontSize: '15px',
                             fontWeight: 900,
                             textTransform: 'uppercase',
@@ -570,7 +571,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             <Sparkles size={16} className="text-white/80" />
                             Upgrade Now
                         </span>
-                        <ArrowRight size={20} className="relative group-hover:translate-x-2 transition-transform duration-300" style={{ color: '#fff' }} />
+                        <ArrowRight size={20} className="relative group-hover:translate-x-2 transition-transform duration-300" style={{ color: 'var(--text-primary)' }} />
                     </motion.button>
                 </div>
             </div>
@@ -1082,7 +1083,7 @@ export const DashboardView = ({
                                                         <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalStorage}<span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-tertiary)' }}> / {maxStorageMB} MB</span></span>
                                                         <span style={{ fontSize: '13px', fontWeight: 700, color: totalStorageNum > maxStorageMB * 0.9 ? '#ef4444' : 'var(--text-tertiary)' }}>{Math.round((totalStorageNum / maxStorageMB) * 100)}%</span>
                                                     </div>
-                                                    <div style={{ height: 8, borderRadius: 99, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                                    <div style={{ height: 8, borderRadius: 99, background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                         <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (totalStorageNum / maxStorageMB) * 100)}%` }} transition={{ duration: 1.4, ease: 'easeOut' }}
                                                             style={{ height: '100%', borderRadius: 99, background: totalStorageNum > maxStorageMB * 0.9 ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, #6366f1, #a78bfa)' }} />
                                                     </div>
@@ -1124,7 +1125,7 @@ export const DashboardView = ({
                                                 <div style={{
                                                     width: '48px', height: '48px', borderRadius: '16px',
                                                     background: 'linear-gradient(135deg, var(--primary) 0%, #a855f7 100%)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)'
                                                 }}>
                                                     <CloudUpload size={24} strokeWidth={2.5} />
                                                 </div>
@@ -1167,9 +1168,9 @@ export const DashboardView = ({
                                             <div className="flex flex-wrap gap-4 items-center w-full xl:w-auto">
                                                 <div className="relative flex-1 xl:w-72 xl:flex-none">
                                                     <Search size={15} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                                                    <input type="text" placeholder="Search datasets..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', height: '42px', padding: '0 16px 0 40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: '13px' }} />
+                                                    <input type="text" placeholder="Search datasets..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', height: '42px', padding: '0 16px 0 40px', borderRadius: '12px', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: '13px' }} />
                                                 </div>
-                                                <div style={{ display: 'flex', padding: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
+                                                <div style={{ display: 'flex', padding: '4px', background: 'var(--bg-surface-hover)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
                                                     <button onClick={() => setViewMode('list')} style={{
                                                         padding: '7px 14px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: viewMode === 'list' ? 'var(--primary)' : 'transparent',
@@ -1181,7 +1182,7 @@ export const DashboardView = ({
                                                         color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)',
                                                     }}>Grid</button>
                                                 </div>
-                                                <div style={{ display: 'flex', padding: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
+                                                <div style={{ display: 'flex', padding: '4px', background: 'var(--bg-surface-hover)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
                                                     <button onClick={() => setDatasetTab('active')} style={{
                                                         padding: '7px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: datasetTab === 'active' ? 'var(--primary)' : 'transparent',
@@ -1191,7 +1192,7 @@ export const DashboardView = ({
                                                     </button>
                                                     <button onClick={() => setDatasetTab('archived')} style={{
                                                         padding: '7px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-                                                        background: datasetTab === 'archived' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                                                        background: datasetTab === 'archived' ? 'var(--bg-elevated)' : 'transparent',
                                                         color: datasetTab === 'archived' ? '#fff' : 'var(--text-secondary)',
                                                     }}>
                                                         Archived{archivedFilesCount > 0 && <span style={{ marginLeft: '6px', opacity: 0.6 }}>({archivedFilesCount})</span>}
@@ -1210,7 +1211,7 @@ export const DashboardView = ({
                                                             <Trash2 size={15} /> Delete Selected
                                                         </motion.button>
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setSelectedFiles(new Set())} style={{
-                                                            background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
+                                                            background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                                                         }}>
                                                             <X size={15} /> Clear
@@ -1223,20 +1224,20 @@ export const DashboardView = ({
                                                             filteredFiles.forEach((f: any) => newSet.add(f.id));
                                                             setSelectedFiles(newSet);
                                                         }} style={{
-                                                            background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
+                                                            background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                                                         }}>
                                                             <CheckCircle2 size={15} /> Select All
                                                         </motion.button>
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSystemCleanup} title="Delete all archived & old unprocessed items" style={{
-                                                            background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
+                                                            background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                                                         }}>
                                                             <Activity size={15} /> Clean Up
                                                         </motion.button>
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => document.getElementById('file-input')?.click()} disabled={isOverLimit} style={{
                                                             background: 'var(--primary)',
-                                                            color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px',
+                                                            color: 'var(--text-primary)', border: 'none', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer',
                                                             opacity: isOverLimit ? 0.5 : 1,
                                                             display: 'flex', alignItems: 'center', gap: '6px',
@@ -1406,77 +1407,7 @@ export const DashboardView = ({
             {createPortal(
                 <AnimatePresence>
                     {showTelemetry && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-max flex items-center justify-center p-4 backdrop-blur-xl bg-black/80"
-                            onClick={() => setShowTelemetry(false)}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.95, opacity: 0, y: 10 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.95, opacity: 0 }}
-                                onClick={e => e.stopPropagation()}
-                                style={{
-                                    width: '260px',
-                                    backgroundColor: 'var(--bg-card, #ffffff)',
-                                    backdropFilter: 'blur(20px)',
-                                    border: '1px solid var(--border-subtle, rgba(255,255,255,0.06))',
-                                    borderRadius: '20px',
-                                    boxShadow: '0 25px 60px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.02)',
-                                    position: 'relative',
-                                    zIndex: 1000,
-                                    overflow: 'hidden'
-                                }}
-                            >
-                                {/* Modal Header - Ultra Compact */}
-                                <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle, rgba(255,255,255,0.04))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.01)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <Activity size={14} style={{ color: 'var(--primary, #3b82f6)' }} />
-                                        <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-primary, #000)', textTransform: 'uppercase', letterSpacing: '0.15em', fontStyle: 'italic' }}>Neural Telemetry</span>
-                                    </div>
-                                    <div style={{ marginLeft: 'auto' }}>
-                                        <button onClick={() => setShowTelemetry(false)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-secondary, rgba(0,0,0,0.3))' }}>
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    {/* Metrics Grid */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                        {[
-                                            { label: 'Latency', value: `${telemetryData.latency}ms`, color: '#10b981' },
-                                            { label: 'Ops/s', value: telemetryData.throughput, color: '#3b82f6' },
-                                            { label: 'Memory', value: `${telemetryData.memory.toFixed(1)}G`, color: '#8b5cf6' },
-                                            { label: 'Load', value: `${telemetryData.cpu}%`, color: '#f59e0b' }
-                                        ].map(m => (
-                                            <div key={m.label} style={{ background: 'var(--bg-main, rgba(0,0,0,0.02))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.04))', borderRadius: '12px', padding: '10px' }}>
-                                                <span style={{ display: 'block', fontSize: '8px', fontWeight: 800, color: 'var(--text-secondary, rgba(0,0,0,0.3))', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2px' }}>{m.label}</span>
-                                                <span style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text-primary, #000)', fontStyle: 'italic' }}>{m.value}</span>
-                                                <div style={{ height: '1.5px', width: '100%', background: 'rgba(0,0,0,0.05)', marginTop: '6px', borderRadius: '4px', overflow: 'hidden' }}>
-                                                    <motion.div initial={{ width: 0 }} animate={{ width: '60%' }} style={{ height: '100%', background: m.color }} />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* System Log */}
-                                    <div style={{ background: 'var(--bg-main, rgba(0,0,0,0.05))', border: '1px solid var(--border-subtle, rgba(0,0,0,0.03))', borderRadius: '10px', padding: '10px', height: '100px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '9px', lineHeight: '1.5' }}>
-                                        <div style={{ color: '#10b981', opacity: 0.8 }}>[SYS] Pulse synced</div>
-                                        <div style={{ color: 'var(--text-secondary, rgba(0,0,0,0.4))' }}>[INF] Cluster active</div>
-                                        <div style={{ color: '#10b981', opacity: 0.8 }}>[NEU] Sector-8 ready</div>
-                                        <div style={{ color: 'var(--text-secondary, rgba(0,0,0,0.2))' }}>[SYS] Node-01 heartbeat...</div>
-                                    </div>
-                                </div>
-
-                                <div style={{ padding: '8px 16px', background: 'rgba(0,0,0,0.01)', borderTop: '1px solid var(--border-subtle, rgba(0,0,0,0.03))', display: 'flex', justifyContent: 'space-between', fontSize: '7px', fontWeight: 900, color: 'var(--text-secondary, rgba(0,0,0,0.2))', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                                    <span>PRIMARY-NODE</span>
-                                    <span>SSL: ACTIVE</span>
-                                </div>
-                            </motion.div>
-                        </motion.div>
+                        <ObservabilityDashboard onClose={() => setShowTelemetry(false)} token={token} />
                     )}
                 </AnimatePresence>,
                 document.body
@@ -1516,7 +1447,7 @@ export const DashboardView = ({
                                 style={{
                                     maxHeight: '88vh',
                                     background: 'linear-gradient(170deg, rgba(15,15,25,0.97) 0%, rgba(8,8,18,0.99) 100%)',
-                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    border: '1px solid var(--border-default)',
                                     boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 0 80px -20px ${accentGlow}, 0 40px 100px -30px rgba(0,0,0,0.7)`,
                                 }}
                             >
@@ -1533,7 +1464,7 @@ export const DashboardView = ({
                                         whileHover={{ scale: 1.15, rotate: 90 }} 
                                         whileTap={{ scale: 0.9 }} 
                                         onClick={() => setViewingMeta(null)}
-                                        style={{ position: 'absolute', top: 20, right: 20, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', zIndex: 10, transition: 'color 0.2s' }}
+                                        style={{ position: 'absolute', top: 20, right: 20, width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', cursor: 'pointer', zIndex: 10, transition: 'color 0.2s' }}
                                     >
                                         <X size={16} />
                                     </motion.button>
@@ -1570,10 +1501,10 @@ export const DashboardView = ({
                                                         </span>
                                                     )}
                                                 </div>
-                                                <h3 style={{ fontSize: 22, fontWeight: 900, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, letterSpacing: '-0.02em' }} title={displayName}>
+                                                <h3 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, letterSpacing: '-0.02em' }} title={displayName}>
                                                     {displayName}
                                                 </h3>
-                                                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600, marginTop: 2, display: 'block' }}>
+                                                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginTop: 2, display: 'block' }}>
                                                     Ingested {fileAge === 0 ? 'today' : fileAge === 1 ? 'yesterday' : `${fileAge} days ago`} · ID: {viewingMeta.id?.slice(0, 8)}…
                                                 </span>
                                             </motion.div>
@@ -1582,16 +1513,16 @@ export const DashboardView = ({
                                 </div>
 
                                 {/* Tabs — Pill Style */}
-                                <div style={{ padding: '0 32px', display: 'flex', gap: 4, background: 'rgba(255,255,255,0.015)' }}>
+                                <div style={{ padding: '0 32px', display: 'flex', gap: 4, background: 'var(--bg-surface-hover)' }}>
                                     {(['properties', 'preview'] as const).map((tab) => (
                                         <button
                                             key={tab}
                                             onClick={() => setActiveTab(tab)}
                                             style={{
                                                 padding: '12px 20px', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em',
-                                                background: activeTab === tab ? 'rgba(255,255,255,0.06)' : 'transparent',
+                                                background: activeTab === tab ? 'var(--border-default)' : 'transparent',
                                                 border: 'none', borderBottom: activeTab === tab ? `2px solid ${accentColor}` : '2px solid transparent',
-                                                color: activeTab === tab ? '#fff' : 'rgba(255,255,255,0.35)',
+                                                color: activeTab === tab ? '#fff' : 'var(--text-muted)',
                                                 cursor: 'pointer', transition: 'all 0.25s', display: 'flex', alignItems: 'center', gap: 8,
                                                 borderRadius: '8px 8px 0 0'
                                             }}
@@ -1622,8 +1553,8 @@ export const DashboardView = ({
                                                         transition={{ delay: 0.1 + si * 0.06 }}
                                                         style={{
                                                             padding: 20, borderRadius: 16,
-                                                            background: 'rgba(255,255,255,0.02)',
-                                                            border: '1px solid rgba(255,255,255,0.05)',
+                                                            background: 'var(--bg-surface)',
+                                                            border: '1px solid var(--border-default)',
                                                             position: 'relative', overflow: 'hidden',
                                                             transition: 'all 0.3s',
                                                             cursor: 'default'
@@ -1632,20 +1563,20 @@ export const DashboardView = ({
                                                     >
                                                         <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: `${stat.color}06`, pointerEvents: 'none' }} />
                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                                                            <span style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(255,255,255,0.35)' }}>{stat.label}</span>
+                                                            <span style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--text-muted)' }}>{stat.label}</span>
                                                             <div style={{ color: stat.color, opacity: 0.6 }}>{stat.icon}</div>
                                                         </div>
                                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                                                            <span style={{ fontSize: 26, fontWeight: 900, color: '#fff', fontFamily: 'var(--font-mono, monospace)', letterSpacing: '-0.03em', lineHeight: 1 }}>{stat.value}</span>
-                                                            {stat.unit && <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>{stat.unit}</span>}
+                                                            <span style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', fontFamily: 'var(--font-mono, monospace)', letterSpacing: '-0.03em', lineHeight: 1 }}>{stat.value}</span>
+                                                            {stat.unit && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{stat.unit}</span>}
                                                         </div>
-                                                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 600, marginTop: 6, display: 'block' }}>{stat.sub}</span>
+                                                        <span style={{ fontSize: 10, color: 'var(--text-disabled)', fontWeight: 600, marginTop: 6, display: 'block' }}>{stat.sub}</span>
                                                     </motion.div>
                                                 ))}
                                             </div>
 
                                             {/* Metadata Rows */}
-                                            <div style={{ borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', background: 'rgba(255,255,255,0.015)' }}>
+                                            <div style={{ borderRadius: 16, border: '1px solid var(--border-default)', overflow: 'hidden', background: 'var(--bg-surface-hover)' }}>
                                                 {[
                                                     { label: 'Group', value: getGroupName(viewingMeta.groupId), icon: <Folder size={14} /> },
                                                     { label: 'Created', value: new Date(viewingMeta.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), icon: <Clock size={14} /> },
@@ -1653,8 +1584,8 @@ export const DashboardView = ({
                                                     { label: 'Node ID', value: viewingMeta.id || '—', icon: <Target size={14} /> },
                                                 ].map((row, ri) => (
                                                     <div key={row.label} style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: ri < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none', gap: 14 }}>
-                                                        <div style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>{row.icon}</div>
-                                                        <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', minWidth: 80 }}>{row.label}</span>
+                                                        <div style={{ color: 'var(--text-disabled)', flexShrink: 0 }}>{row.icon}</div>
+                                                        <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', minWidth: 80 }}>{row.label}</span>
                                                         <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.8)', fontFamily: row.label === 'Node ID' ? 'var(--font-mono, monospace)' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
                                                     </div>
                                                 ))}
@@ -1670,7 +1601,7 @@ export const DashboardView = ({
                                                     </div>
                                                     <div className="text-center">
                                                         <span style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: accentColor }} className="animate-pulse block mb-1">Analyzing Schema</span>
-                                                        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Inference engine: ACTIVE</span>
+                                                        <span style={{ fontSize: 9, color: 'var(--text-disabled)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Inference engine: ACTIVE</span>
                                                     </div>
                                                 </div>
                                             ) : (previewData && previewData.rows && previewData.rows.length > 0) ? (
@@ -1683,24 +1614,24 @@ export const DashboardView = ({
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)' }}>
                                                             <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6366f1' }}>{previewData.columns.length} Fields</span>
                                                         </div>
-                                                        <div style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.2)' }}>{previewData.metadata.format}</div>
+                                                        <div style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-disabled)' }}>{previewData.metadata.format}</div>
                                                     </div>
-                                                    <div style={{ flex: 1, overflow: 'hidden', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                                    <div style={{ flex: 1, overflow: 'hidden', borderRadius: 16, border: '1px solid var(--border-default)', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                                                         <div className="flex-1 overflow-auto custom-scrollbar">
                                                             <table className="w-full text-left border-collapse min-w-max">
                                                                 <thead className="sticky top-0 z-20">
                                                                     <tr style={{ background: 'rgba(15,15,25,0.95)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                                                                        <th style={{ padding: 14, width: 48, fontSize: 9, fontWeight: 900, color: 'rgba(255,255,255,0.2)', position: 'sticky', left: 0, zIndex: 30, background: 'rgba(15,15,25,0.95)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>#</th>
+                                                                        <th style={{ padding: 14, width: 48, fontSize: 9, fontWeight: 900, color: 'var(--text-disabled)', position: 'sticky', left: 0, zIndex: 30, background: 'rgba(15,15,25,0.95)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>#</th>
                                                                         {previewData.columns.map((col: any) => (
                                                                             <th key={col.name} style={{ padding: 14, borderRight: '1px solid rgba(255,255,255,0.03)', minWidth: 120 }}>
                                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                                                                                    <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.7)' }}>{col.name}</span>
+                                                                                    <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>{col.name}</span>
                                                                                     <span style={{
                                                                                         fontSize: 8, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em',
                                                                                         padding: '2px 8px', borderRadius: 5, width: 'fit-content',
-                                                                                        background: col.type.toLowerCase() === 'numeric' ? 'rgba(16,185,129,0.08)' : col.type.toLowerCase() === 'date' ? 'rgba(192,132,252,0.08)' : 'rgba(255,255,255,0.03)',
-                                                                                        color: col.type.toLowerCase() === 'numeric' ? '#10b981' : col.type.toLowerCase() === 'date' ? '#c084fc' : 'rgba(255,255,255,0.3)',
-                                                                                        border: `1px solid ${col.type.toLowerCase() === 'numeric' ? 'rgba(16,185,129,0.15)' : col.type.toLowerCase() === 'date' ? 'rgba(192,132,252,0.15)' : 'rgba(255,255,255,0.05)'}`
+                                                                                        background: col.type.toLowerCase() === 'numeric' ? 'rgba(16,185,129,0.08)' : col.type.toLowerCase() === 'date' ? 'rgba(192,132,252,0.08)' : 'var(--bg-surface)',
+                                                                                        color: col.type.toLowerCase() === 'numeric' ? '#10b981' : col.type.toLowerCase() === 'date' ? '#c084fc' : 'var(--text-muted)',
+                                                                                        border: `1px solid ${col.type.toLowerCase() === 'numeric' ? 'rgba(16,185,129,0.15)' : col.type.toLowerCase() === 'date' ? 'rgba(192,132,252,0.15)' : 'var(--bg-surface-hover)'}`
                                                                                     }}>{col.type}</span>
                                                                                 </div>
                                                                             </th>
@@ -1710,16 +1641,16 @@ export const DashboardView = ({
                                                                 <tbody>
                                                                     {previewData.rows.map((row: any, i: number) => (
                                                                         <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.025)', transition: 'background 0.15s' }} className="hover:!bg-[rgba(255,255,255,0.02)]">
-                                                                            <td style={{ padding: '12px 14px', width: 48, fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono, monospace)', color: 'rgba(255,255,255,0.15)', position: 'sticky', left: 0, zIndex: 10, background: 'rgba(10,10,20,0.8)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>{i + 1}</td>
+                                                                            <td style={{ padding: '12px 14px', width: 48, fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono, monospace)', color: 'var(--text-disabled)', position: 'sticky', left: 0, zIndex: 10, background: 'rgba(10,10,20,0.8)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>{i + 1}</td>
                                                                             {previewData.columns.map((col: any) => {
                                                                                 const val = row[col.name];
                                                                                 const isNull = val === null || val === undefined || val === '';
                                                                                 return (
                                                                                     <td key={col.name} style={{ padding: '12px 14px', fontSize: 11, fontWeight: 500, borderRight: '1px solid rgba(255,255,255,0.02)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                                         {isNull ? (
-                                                                                            <span style={{ color: 'rgba(255,255,255,0.1)', fontStyle: 'italic', fontWeight: 700, fontSize: 9, letterSpacing: '0.1em' }}>NULL</span>
+                                                                                            <span style={{ color: 'var(--bg-elevated)', fontStyle: 'italic', fontWeight: 700, fontSize: 9, letterSpacing: '0.1em' }}>NULL</span>
                                                                                         ) : (
-                                                                                            <span style={{ color: col.type.toLowerCase() === 'numeric' ? '#10b981' : 'rgba(255,255,255,0.7)', fontFamily: col.type.toLowerCase() === 'numeric' ? 'var(--font-mono, monospace)' : 'inherit', fontSize: col.type.toLowerCase() === 'numeric' ? 12 : 11 }}>{String(val)}</span>
+                                                                                            <span style={{ color: col.type.toLowerCase() === 'numeric' ? '#10b981' : 'var(--text-secondary)', fontFamily: col.type.toLowerCase() === 'numeric' ? 'var(--font-mono, monospace)' : 'inherit', fontSize: col.type.toLowerCase() === 'numeric' ? 12 : 11 }}>{String(val)}</span>
                                                                                         )}
                                                                                     </td>
                                                                                 );
@@ -1732,9 +1663,9 @@ export const DashboardView = ({
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '60px 0', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)' }}>
-                                                    <Table size={32} style={{ opacity: 0.12, color: '#fff' }} />
-                                                    <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.2)' }}>No readable sectors found</span>
+                                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '60px 0', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.06)', background: 'var(--bg-surface)' }}>
+                                                    <Table size={32} style={{ opacity: 0.12, color: 'var(--text-primary)' }} />
+                                                    <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-disabled)' }}>No readable sectors found</span>
                                                 </div>
                                             )}
                                         </div>
@@ -1751,7 +1682,7 @@ export const DashboardView = ({
                                             width: '100%', height: 52, borderRadius: 14, border: 'none', cursor: 'pointer',
                                             background: `linear-gradient(135deg, ${accentColor} 0%, #c084fc 50%, ${accentColor} 100%)`,
                                             backgroundSize: '200% 100%',
-                                            color: '#fff', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.25em',
+                                            color: 'var(--text-primary)', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.25em',
                                             boxShadow: `0 8px 30px -8px ${accentGlow}, 0 2px 8px rgba(0,0,0,0.3)`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                                             position: 'relative', overflow: 'hidden',
@@ -1802,7 +1733,7 @@ export const DashboardView = ({
                                         <HardDrive size={32} />
                                     </div>
                                     <div>
-                                        <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', marginBottom: '8px', letterSpacing: '-0.02em' }}>Robust System Purge</h2>
+                                        <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>Robust System Purge</h2>
                                         <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                                             Are you sure you want to optimize your environment? The following items will be permanently removed:
                                         </p>
@@ -1814,7 +1745,7 @@ export const DashboardView = ({
                                                 <Archive size={14} style={{ color: 'var(--text-tertiary)' }} />
                                                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Archived Files</span>
                                             </div>
-                                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{cleanupSummary.archived}</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{cleanupSummary.archived}</span>
                                         </div>
                                         <div style={{ height: '1px', background: 'var(--border-subtle)' }} />
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1822,7 +1753,7 @@ export const DashboardView = ({
                                                 <Clock size={14} style={{ color: 'var(--text-tertiary)' }} />
                                                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Stagnant Uploads (&gt;1h)</span>
                                             </div>
-                                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{cleanupSummary.stagnant}</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{cleanupSummary.stagnant}</span>
                                         </div>
                                     </div>
 
@@ -1843,7 +1774,7 @@ export const DashboardView = ({
                                             onClick={confirmSystemCleanup}
                                             style={{ 
                                                 flex: 1.5, padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg, #ef4444, #b91c1c)', 
-                                                border: 'none', color: '#fff', fontSize: '13px', fontWeight: 800, cursor: 'pointer',
+                                                border: 'none', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 800, cursor: 'pointer',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                                 boxShadow: '0 8px 16px -4px rgba(239,68,68,0.3)'
                                             }}
@@ -1955,7 +1886,7 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                                 style={{
                                     width: 32, height: 32, borderRadius: 10, border: 'none', cursor: 'pointer',
                                     background: f.isFavorite ? 'rgba(251,191,36,0.1)' : 'transparent',
-                                    color: f.isFavorite ? '#fbbf24' : 'rgba(255,255,255,0.15)',
+                                    color: f.isFavorite ? '#fbbf24' : 'var(--text-disabled)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     transition: 'all 0.2s'
                                 }}
@@ -1966,9 +1897,9 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
 
                         {/* Title + Status */}
                         <div style={{ padding: '14px 18px 0', flex: 1 }}>
-                            <h4 style={{ fontSize: 14, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3, letterSpacing: '-0.01em' }} title={displayName}>{displayName}</h4>
+                            <h4 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3, letterSpacing: '-0.01em' }} title={displayName}>{displayName}</h4>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                                <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono, monospace)' }}>{(f.size / 1024).toFixed(1)} KB</span>
+                                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'var(--font-mono, monospace)' }}>{(f.size / 1024).toFixed(1)} KB</span>
                                 <span style={{
                                     display: 'inline-flex', alignItems: 'center', gap: 4,
                                     fontSize: 8, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em',
@@ -1994,7 +1925,7 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                                     background: f.isProcessed
                                         ? 'linear-gradient(135deg, #10b981, #059669)'
                                         : `linear-gradient(135deg, ${accent}, #c084fc)`,
-                                    color: '#fff', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em',
+                                    color: 'var(--text-primary)', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em',
                                     boxShadow: f.isProcessed
                                         ? '0 4px 15px -5px rgba(16,185,129,0.4)'
                                         : `0 4px 15px -5px ${accentGlow}`,
@@ -2011,9 +1942,9 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                                 whileTap={{ scale: 0.92 }}
                                 onClick={(e) => { e.stopPropagation(); onArchiveFile(f.id); }}
                                 style={{
-                                    width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)',
-                                    background: f.isArchived ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.03)', cursor: 'pointer',
-                                    color: f.isArchived ? 'var(--primary)' : 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    width: 38, height: 38, borderRadius: 10, border: '1px solid var(--border-default)',
+                                    background: f.isArchived ? 'rgba(99,102,241,0.1)' : 'var(--bg-surface)', cursor: 'pointer',
+                                    color: f.isArchived ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     transition: 'all 0.2s'
                                 }}
                                 title={f.isArchived ? "Restore dataset" : "Archive dataset"}
@@ -2025,8 +1956,8 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                                 whileTap={{ scale: 0.92 }}
                                 onClick={(e) => { e.stopPropagation(); onViewMeta(f); }}
                                 style={{
-                                    width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)',
-                                    background: 'rgba(255,255,255,0.03)', cursor: 'pointer',
+                                    width: 38, height: 38, borderRadius: 10, border: '1px solid var(--border-default)',
+                                    background: 'var(--bg-surface)', cursor: 'pointer',
                                     color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     transition: 'border-color 0.2s, background 0.2s'
                                 }}
@@ -2246,7 +2177,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                             <div style={{
                                                 display: 'flex', alignItems: 'center', gap: '6px',
                                                 padding: '8px 12px', borderRadius: '10px',
-                                                background: f.workspaceId ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.03)',
+                                                background: f.workspaceId ? 'rgba(99,102,241,0.06)' : 'var(--bg-surface)',
                                                 border: `1px solid ${f.workspaceId ? 'rgba(99,102,241,0.2)' : 'var(--border-subtle)'}`,
                                                 color: f.workspaceId ? 'var(--primary)' : 'var(--text-muted)',
                                                 fontSize: '11px', fontWeight: 700, transition: 'all 0.2s',
@@ -2292,9 +2223,9 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                     height: '36px',
                                                     padding: '0 12px',
                                                     borderRadius: '10px',
-                                                    background: f.isArchived ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.03)',
+                                                    background: f.isArchived ? 'rgba(99,102,241,0.1)' : 'var(--bg-surface)',
                                                     border: '1px solid var(--border-subtle)',
-                                                    color: f.isArchived ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
+                                                    color: f.isArchived ? 'var(--primary)' : 'var(--text-muted)',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: '6px',
@@ -2346,7 +2277,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                         ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                                                         : 'linear-gradient(135deg, var(--primary) 0%, #c026d3 100%)',
                                                     border: 'none',
-                                                    color: '#fff',
+                                                    color: 'var(--text-primary)',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: '6px',

@@ -129,7 +129,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                     </div>
                     <div>
                         <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Road Intelligence Studio</h1>
-                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                             {trackData.length > 0 ? `${trackData.length} track points analyzed` : 'Waiting for track data...'}
                         </div>
                     </div>
@@ -139,7 +139,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                     <input type="file" id="track-upload-main" style={{ display: 'none' }} accept=".json" onChange={handleFileUpload} />
                     <button
                         onClick={() => document.getElementById('track-upload-main')?.click()}
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px 20px', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '10px 20px', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
                         <Upload size={16} /> Upload Track JSON
                     </button>
@@ -224,12 +224,12 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                 {/* Floating Controls View (Like Graph View) */}
                 <div className="backdrop-blur" style={{
                     position: 'absolute', top: '24px', right: '24px', width: '280px',
-                    background: 'rgba(20, 20, 30, 0.85)', border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(20, 20, 30, 0.85)', border: '1px solid var(--border-default)',
                     borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px',
                     zIndex: 1000
                 }}>
                     <div>
-                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textTransform: 'uppercase' }}>Visual Matrix</div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase' }}>Visual Matrix</div>
                         <div className="flex-col gap-4">
                             <div className="flex-col gap-2">
                                 <label style={{ fontSize: '11px', opacity: 0.6 }}>BASE TILE STYLE</label>
@@ -263,18 +263,18 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
 
                     {trackData.length > 0 && (
                         <div>
-                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textTransform: 'uppercase' }}>Route Dynamics</div>
+                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase' }}>Route Dynamics</div>
                             <div className="flex-col gap-3">
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>TOP VELOCITY</div>
+                                <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '8px' }}>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>TOP VELOCITY</div>
                                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#ef4444' }}>{Math.max(...trackData.map(p => p.speed || 0))} <small>km/h</small></div>
                                 </div>
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>EST. DISTANCE</div>
+                                <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '8px' }}>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>EST. DISTANCE</div>
                                     <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--primary)' }}>{(trackData.length * 0.12).toFixed(2)} km</div>
                                 </div>
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>AVG SPEED</div>
+                                <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '8px' }}>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>AVG SPEED</div>
                                     <div style={{ fontSize: '18px', fontWeight: 700 }}>
                                         {(trackData.reduce((acc, p) => acc + (p.speed || 0), 0) / trackData.length).toFixed(1)} <small>km/h</small>
                                     </div>
@@ -286,7 +286,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                     {/* Mini Speed Chart integration */}
                     {trackData.length > 0 && (
                         <div>
-                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textTransform: 'uppercase' }}>Speed Intel</div>
+                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase' }}>Speed Intel</div>
                             <div className="card" style={{ padding: '4px', height: '80px', background: 'rgba(0,0,0,0.2)' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={trackData.map((d, i) => ({ i, speed: d.speed }))}>
@@ -311,7 +311,7 @@ const RoadGraphView = ({ onClose }: { onClose: () => void }) => {
                 {trackData.length > 0 && (
                     <div className="backdrop-blur" style={{
                         position: 'absolute', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
-                        width: '70%', background: 'rgba(15, 17, 26, 0.95)', border: '1px solid rgba(255,255,255,0.1)',
+                        width: '70%', background: 'rgba(15, 17, 26, 0.95)', border: '1px solid var(--border-default)',
                         borderRadius: '20px', padding: '16px 32px', zIndex: 1000, boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>

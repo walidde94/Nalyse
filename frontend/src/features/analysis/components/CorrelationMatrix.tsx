@@ -37,7 +37,7 @@ const getTextColor = (r: number): string => {
     const abs = Math.abs(r);
     if (abs > 0.5) return '#fff';
     if (abs > 0.3) return 'rgba(255,255,255,0.8)';
-    return 'rgba(255,255,255,0.4)';
+    return 'var(--text-muted)';
 };
 
 export const CorrelationMatrix = ({ data, measures }: Props) => {
@@ -92,7 +92,7 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
             animate={{ opacity: 1, y: 0 }}
             style={{
                 background: 'linear-gradient(135deg, rgba(18,18,24,0.9) 0%, rgba(8,8,12,0.95) 100%)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                border: '1px solid var(--border-default)',
                 borderRadius: '20px', overflow: 'hidden', position: 'relative'
             }}
         >
@@ -110,10 +110,10 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                         <Grid3X3 size={22} color="#34d399" />
                     </div>
                     <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', margin: 0 }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>
                             Correlation Matrix
                         </h3>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '2px 0 0 0' }}>
+                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
                             Pearson correlation coefficients · {labels.length} measures
                         </p>
                     </div>
@@ -127,7 +127,7 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                         {labels.map((label, i) => (
                             <div key={i} style={{
                                 fontSize: '9px', fontWeight: 800, textTransform: 'uppercase',
-                                letterSpacing: '0.05em', color: 'rgba(255,255,255,0.4)',
+                                letterSpacing: '0.05em', color: 'var(--text-muted)',
                                 textAlign: 'center', padding: '8px 4px',
                                 transform: 'rotate(-35deg)', transformOrigin: 'bottom left',
                                 whiteSpace: 'nowrap', height: '60px',
@@ -141,7 +141,7 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                         {labels.map((rowLabel, i) => (
                             <>
                                 <div key={`label-${i}`} style={{
-                                    fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.5)',
+                                    fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)',
                                     display: 'flex', alignItems: 'center', paddingRight: '8px',
                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                                 }}>
@@ -162,7 +162,7 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                                             whileHover={{ scale: 1.1, zIndex: 10 }}
                                             style={{
                                                 background: isDiag
-                                                    ? 'rgba(255,255,255,0.08)'
+                                                    ? 'var(--border-default)'
                                                     : isHovered
                                                         ? `${getCorrelationColor(r)}`
                                                         : getCorrelationColor(r),
@@ -181,7 +181,7 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                                             <span style={{
                                                 fontSize: isDiag ? '10px' : '11px',
                                                 fontFamily: 'monospace', fontWeight: 800,
-                                                color: isDiag ? 'rgba(255,255,255,0.2)' : getTextColor(r)
+                                                color: isDiag ? 'var(--text-disabled)' : getTextColor(r)
                                             }}>
                                                 {r.toFixed(2)}
                                             </span>
@@ -197,16 +197,16 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
                     marginTop: '16px', padding: '10px 14px', borderRadius: '10px',
-                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)'
+                    background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <div style={{ width: '16px', height: '8px', borderRadius: '2px', background: 'rgba(248,113,113,0.6)' }} />
-                        <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>Negative</span>
+                        <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Negative</span>
                     </div>
                     <div style={{ flex: 1, height: '8px', borderRadius: '4px', background: 'linear-gradient(90deg, rgba(248,113,113,0.5), rgba(255,255,255,0.05), rgba(52,211,153,0.5))' }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <div style={{ width: '16px', height: '8px', borderRadius: '2px', background: 'rgba(52,211,153,0.6)' }} />
-                        <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>Positive</span>
+                        <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Positive</span>
                     </div>
                 </div>
 
@@ -215,7 +215,7 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                     <div style={{ marginTop: '16px' }}>
                         <h4 style={{
                             fontSize: '10px', fontWeight: 800, textTransform: 'uppercase',
-                            letterSpacing: '0.1em', color: 'rgba(255,255,255,0.3)', marginBottom: '10px',
+                            letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '10px',
                             display: 'flex', alignItems: 'center', gap: '6px'
                         }}>
                             <Info size={12} />
@@ -231,7 +231,7 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '10px',
                                         padding: '8px 12px', borderRadius: '10px',
-                                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)'
+                                        background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)'
                                     }}
                                 >
                                     <div style={{
@@ -239,10 +239,10 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                                         background: c.r > 0 ? '#34d399' : '#f87171',
                                         boxShadow: `0 0 8px ${c.r > 0 ? 'rgba(52,211,153,0.4)' : 'rgba(248,113,113,0.4)'}`
                                     }} />
-                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', flex: 1 }}>
-                                        <span style={{ color: '#fff', fontWeight: 700 }}>{c.from}</span>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', flex: 1 }}>
+                                        <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{c.from}</span>
                                         {' ↔ '}
-                                        <span style={{ color: '#fff', fontWeight: 700 }}>{c.to}</span>
+                                        <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{c.to}</span>
                                     </span>
                                     <span style={{
                                         fontSize: '11px', fontFamily: 'monospace', fontWeight: 900,
@@ -269,14 +269,14 @@ export const CorrelationMatrix = ({ data, measures }: Props) => {
                     <div style={{
                         position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
                         padding: '8px 16px', borderRadius: '10px',
-                        background: 'rgba(0,0,0,0.9)', border: '1px solid rgba(255,255,255,0.1)',
+                        background: 'rgba(0,0,0,0.9)', border: '1px solid var(--border-default)',
                         backdropFilter: 'blur(10px)', zIndex: 100,
                         display: 'flex', alignItems: 'center', gap: '12px',
-                        fontSize: '11px', color: 'rgba(255,255,255,0.6)'
+                        fontSize: '11px', color: 'var(--text-secondary)'
                     }}>
-                        <span style={{ fontWeight: 700, color: '#fff' }}>{labels[hoverCell.row]}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{labels[hoverCell.row]}</span>
                         <span>↔</span>
-                        <span style={{ fontWeight: 700, color: '#fff' }}>{labels[hoverCell.col]}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{labels[hoverCell.col]}</span>
                         <span style={{
                             fontFamily: 'monospace', fontWeight: 900, fontSize: '13px',
                             color: matrix[hoverCell.row][hoverCell.col] > 0 ? '#34d399' : '#f87171'

@@ -344,13 +344,13 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                                     onClick={() => fileInputRef.current?.click()}
                                     style={{ 
                                         width: '100%', height: '56px', borderRadius: '14px', 
-                                        background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border-default)', 
+                                        background: 'var(--bg-surface)', border: '1px dashed var(--border-default)', 
                                         color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                                         cursor: 'pointer', transition: 'all 0.2s'
                                     }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'var(--text-tertiary)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-default)'; e.currentTarget.style.borderColor = 'var(--text-tertiary)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--border-default)'; }}
                                 >
                                     <Upload size={18} style={{ color: 'var(--text-tertiary)' }} /> Upload External CSV / JSON
                                 </motion.button>

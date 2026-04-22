@@ -179,13 +179,13 @@ const TypeIcon = ({ type }: { type: ColumnProfile['type'] }) => {
     );
 };
 
-const StatPill = ({ label, value, color = 'rgba(255,255,255,0.6)' }: { label: string; value: string; color?: string }) => (
+const StatPill = ({ label, value, color = 'var(--text-secondary)' }: { label: string; value: string; color?: string }) => (
     <div style={{
         display: 'flex', flexDirection: 'column', gap: '2px',
         padding: '6px 10px', borderRadius: '8px',
-        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
+        background: 'var(--bg-surface)', border: '1px solid var(--border-default)'
     }}>
-        <span style={{ fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.3)' }}>{label}</span>
+        <span style={{ fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>{label}</span>
         <span style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'monospace', color }}>{value}</span>
     </div>
 );
@@ -241,7 +241,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
             {/* Overall Health Header */}
             <div style={{
                 background: 'linear-gradient(135deg, rgba(18,18,24,0.9) 0%, rgba(8,8,12,0.95) 100%)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                border: '1px solid var(--border-default)',
                 borderRadius: '20px', padding: '24px 28px', marginBottom: '16px',
                 position: 'relative', overflow: 'hidden'
             }}>
@@ -258,10 +258,10 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                             <Sparkles size={24} color="#818cf8" />
                         </div>
                         <div>
-                            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.2 }}>
+                            <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.2 }}>
                                 Data Profiler
                             </h3>
-                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: '4px 0 0 0' }}>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                                 {profiles.length} columns · {data.length.toLocaleString()} rows · Deep structural analysis
                             </p>
                         </div>
@@ -286,7 +286,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                         {/* Overall health ring */}
                         <div style={{ position: 'relative', width: '52px', height: '52px' }}>
                             <svg width="52" height="52" viewBox="0 0 52 52">
-                                <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+                                <circle cx="26" cy="26" r="22" fill="none" stroke='var(--border-default)' strokeWidth="4" />
                                 <motion.circle
                                     cx="26" cy="26" r="22" fill="none"
                                     stroke={overallHealth >= 80 ? '#34d399' : overallHealth >= 60 ? '#fbbf24' : '#f87171'}
@@ -300,7 +300,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                             </svg>
                             <div style={{
                                 position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontFamily: 'monospace', fontSize: '13px', fontWeight: 900, color: '#fff'
+                                fontFamily: 'monospace', fontSize: '13px', fontWeight: 900, color: 'var(--text-primary)'
                             }}>
                                 {overallHealth}
                             </div>
@@ -316,9 +316,9 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '200px',
                     padding: '8px 14px', borderRadius: '12px',
-                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
+                    background: 'var(--bg-surface)', border: '1px solid var(--border-default)'
                 }}>
-                    <Search size={14} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                    <Search size={14} style={{ color: 'var(--text-muted)' }} />
                     <input
                         type="text"
                         placeholder="Search columns..."
@@ -326,12 +326,12 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                         onChange={e => setSearchTerm(e.target.value)}
                         style={{
                             background: 'transparent', border: 'none', outline: 'none',
-                            color: '#fff', fontSize: '12px', fontWeight: 600, width: '100%'
+                            color: 'var(--text-primary)', fontSize: '12px', fontWeight: 600, width: '100%'
                         }}
                     />
                 </div>
 
-                <div style={{ display: 'flex', gap: '4px', padding: '4px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', gap: '4px', padding: '4px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
                     {(['name', 'quality', 'nulls', 'type'] as const).map(s => (
                         <button
                             key={s}
@@ -340,7 +340,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                                 padding: '5px 10px', borderRadius: '7px', border: 'none', cursor: 'pointer',
                                 fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
                                 background: sortBy === s ? 'rgba(129,140,248,0.2)' : 'transparent',
-                                color: sortBy === s ? '#818cf8' : 'rgba(255,255,255,0.4)',
+                                color: sortBy === s ? '#818cf8' : 'var(--text-muted)',
                                 transition: 'all 0.2s'
                             }}
                         >
@@ -354,11 +354,11 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                     style={{
                         display: 'flex', alignItems: 'center', gap: '6px',
                         padding: '6px 12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                        background: showNullsOnly ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.03)',
-                        color: showNullsOnly ? '#f87171' : 'rgba(255,255,255,0.4)',
+                        background: showNullsOnly ? 'rgba(248,113,113,0.15)' : 'var(--bg-surface)',
+                        color: showNullsOnly ? '#f87171' : 'var(--text-muted)',
                         fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
                         borderWidth: '1px', borderStyle: 'solid',
-                        borderColor: showNullsOnly ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.06)',
+                        borderColor: showNullsOnly ? 'rgba(248,113,113,0.3)' : 'var(--border-default)',
                         transition: 'all 0.2s'
                     }}
                 >
@@ -384,7 +384,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                                 transition={{ delay: idx * 0.02 }}
                                 style={{
                                     background: 'linear-gradient(135deg, rgba(18,18,24,0.85) 0%, rgba(8,8,12,0.95) 100%)',
-                                    border: `1px solid ${isExpanded ? `${typeColor}30` : 'rgba(255,255,255,0.06)'}`,
+                                    border: `1px solid ${isExpanded ? `${typeColor}30` : 'var(--border-default)'}`,
                                     borderRadius: '16px', overflow: 'hidden',
                                     transition: 'border-color 0.3s ease'
                                 }}
@@ -397,21 +397,21 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                                         padding: '14px 20px', cursor: 'pointer',
                                         transition: 'background 0.2s'
                                     }}
-                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-surface)')}
                                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                                 >
                                     <TypeIcon type={profile.type} />
 
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>{profile.name}</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{profile.name}</span>
                                             <span style={{ fontSize: '9px', fontWeight: 700, color: typeColor, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{profile.type}</span>
                                         </div>
                                         <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
+                                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                                                 <span style={{ fontFamily: 'monospace', color: '#818cf8' }}>{profile.distinctCount}</span> distinct
                                             </span>
-                                            <span style={{ fontSize: '10px', color: profile.nullCount > 0 ? 'rgba(248,113,113,0.8)' : 'rgba(255,255,255,0.4)' }}>
+                                            <span style={{ fontSize: '10px', color: profile.nullCount > 0 ? 'rgba(248,113,113,0.8)' : 'var(--text-muted)' }}>
                                                 <span style={{ fontFamily: 'monospace' }}>{profile.nullPercent.toFixed(1)}%</span> null
                                             </span>
                                         </div>
@@ -425,7 +425,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                                     <QualityBadge score={profile.qualityScore} />
 
                                     <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
-                                        <ChevronRight size={16} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                                        <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
                                     </motion.div>
                                 </div>
 
@@ -447,7 +447,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                                                     {/* Stats */}
                                                     {profile.stats && (
                                                         <div style={{ flex: 1, minWidth: '200px' }}>
-                                                            <h4 style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.3)', marginBottom: '10px' }}>
+                                                            <h4 style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '10px' }}>
                                                                 Statistical Summary
                                                             </h4>
                                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: '6px' }}>
@@ -476,25 +476,25 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
 
                                                     {/* Distribution Histogram (expanded) */}
                                                     <div style={{ flex: 1, minWidth: '200px' }}>
-                                                        <h4 style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.3)', marginBottom: '10px' }}>
+                                                        <h4 style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '10px' }}>
                                                             {profile.type === 'numeric' ? 'Value Distribution' : 'Top Values'}
                                                         </h4>
                                                         {profile.type === 'numeric' ? (
-                                                            <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                                            <div style={{ padding: '12px', borderRadius: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
                                                                 <MiniHistogram data={profile.histogram} color={typeColor} height={60} />
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                                                                    <span style={{ fontSize: '9px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)' }}>{profile.stats?.min.toFixed(1)}</span>
-                                                                    <span style={{ fontSize: '9px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)' }}>{profile.stats?.max.toFixed(1)}</span>
+                                                                    <span style={{ fontSize: '9px', fontFamily: 'monospace', color: 'var(--text-muted)' }}>{profile.stats?.min.toFixed(1)}</span>
+                                                                    <span style={{ fontSize: '9px', fontFamily: 'monospace', color: 'var(--text-muted)' }}>{profile.stats?.max.toFixed(1)}</span>
                                                                 </div>
                                                             </div>
                                                         ) : (
                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                                 {profile.topValues.map((tv, i) => (
                                                                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                        <span style={{ fontSize: '11px', color: '#fff', fontWeight: 600, minWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                        <span style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: 600, minWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                             {tv.value}
                                                                         </span>
-                                                                        <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                                                        <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                                             <motion.div
                                                                                 initial={{ width: 0 }}
                                                                                 animate={{ width: `${tv.percent}%` }}
@@ -502,7 +502,7 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                                                                                 style={{ height: '100%', borderRadius: '3px', background: `linear-gradient(90deg, ${typeColor}60, ${typeColor})` }}
                                                                             />
                                                                         </div>
-                                                                        <span style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', minWidth: '40px', textAlign: 'right' }}>
+                                                                        <span style={{ fontSize: '10px', fontFamily: 'monospace', color: 'var(--text-muted)', minWidth: '40px', textAlign: 'right' }}>
                                                                             {tv.count}
                                                                         </span>
                                                                     </div>
@@ -513,20 +513,20 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
 
                                                     {/* Null & Quality */}
                                                     <div style={{ minWidth: '160px' }}>
-                                                        <h4 style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.3)', marginBottom: '10px' }}>
+                                                        <h4 style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '10px' }}>
                                                             Completeness
                                                         </h4>
                                                         <div style={{
                                                             padding: '14px', borderRadius: '12px',
-                                                            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+                                                            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
                                                             display: 'flex', flexDirection: 'column', gap: '10px'
                                                         }}>
                                                             <div>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>Filled</span>
+                                                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Filled</span>
                                                                     <span style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 700, color: '#34d399' }}>{(100 - profile.nullPercent).toFixed(1)}%</span>
                                                                 </div>
-                                                                <div style={{ height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                                                <div style={{ height: '6px', borderRadius: '3px', background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                                     <motion.div
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${100 - profile.nullPercent}%` }}
@@ -536,13 +536,13 @@ export const DataProfiler = ({ data, columns: propColumns }: Props) => {
                                                                 </div>
                                                             </div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>Nulls</span>
-                                                                <span style={{ fontSize: '10px', fontFamily: 'monospace', color: profile.nullCount > 0 ? '#f87171' : 'rgba(255,255,255,0.3)' }}>
+                                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Nulls</span>
+                                                                <span style={{ fontSize: '10px', fontFamily: 'monospace', color: profile.nullCount > 0 ? '#f87171' : 'var(--text-muted)' }}>
                                                                     {profile.nullCount.toLocaleString()}
                                                                 </span>
                                                             </div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>Distinct</span>
+                                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Distinct</span>
                                                                 <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#818cf8' }}>
                                                                     {profile.distinctCount.toLocaleString()} ({profile.distinctPercent.toFixed(1)}%)
                                                                 </span>

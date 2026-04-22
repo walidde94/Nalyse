@@ -65,7 +65,7 @@ const PasswordStrength = ({ password }: { password: string }) => {
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ marginTop: 8 }}>
             <div style={{ display: 'flex', gap: 3, marginBottom: 4 }}>
                 {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= strength ? colors[strength] : 'rgba(255,255,255,0.06)', transition: 'all 0.3s' }} />
+                    <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= strength ? colors[strength] : 'var(--border-default)', transition: 'all 0.3s' }} />
                 ))}
             </div>
             <span style={{ fontSize: 10, fontWeight: 700, color: colors[strength], textTransform: 'uppercase', letterSpacing: '0.1em' }}>{labels[strength]}</span>
@@ -75,18 +75,18 @@ const PasswordStrength = ({ password }: { password: string }) => {
 
 const InputField = ({ icon: Icon, label, name, type = 'text', placeholder, value, onChange, inputRef, showToggle, toggleValue, onToggle, focusedField, setFocusedField, handleKeyDown, setError }: any) => (
     <div>
-        <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>
+        <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: 8 }}>
             {label}
         </label>
         <div style={{
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '0 16px', height: 50, borderRadius: 14,
-            background: 'rgba(255,255,255,0.03)',
-            border: `1px solid ${focusedField === name ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.06)'}`,
+            background: 'var(--bg-surface)',
+            border: `1px solid ${focusedField === name ? 'rgba(16,185,129,0.4)' : 'var(--border-default)'}`,
             boxShadow: focusedField === name ? '0 0 0 3px rgba(16,185,129,0.08), 0 0 20px -8px rgba(16,185,129,0.15)' : 'none',
             transition: 'all 0.3s',
         }}>
-            <Icon size={16} style={{ color: focusedField === name ? '#10b981' : 'rgba(255,255,255,0.2)', transition: 'color 0.3s', flexShrink: 0 }} />
+            <Icon size={16} style={{ color: focusedField === name ? '#10b981' : 'var(--text-disabled)', transition: 'color 0.3s', flexShrink: 0 }} />
             <input
                 ref={inputRef}
                 type={showToggle ? (toggleValue ? 'text' : 'password') : type}
@@ -96,11 +96,11 @@ const InputField = ({ icon: Icon, label, name, type = 'text', placeholder, value
                 onBlur={() => setFocusedField(null)}
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
-                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
+                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
             />
             {showToggle && (
                 <button type="button" onClick={onToggle}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.2)', padding: 4, display: 'flex' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-disabled)', padding: 4, display: 'flex' }}
                 >
                     {toggleValue ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -205,13 +205,13 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
 
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.8 }} style={{ textAlign: 'center', maxWidth: 380 }}>
                         <h1 style={{
-                            fontSize: 42, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', lineHeight: 1.1, margin: 0,
+                            fontSize: 42, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1.1, margin: 0,
                             background: 'linear-gradient(135deg, #fff 30%, #10b981 60%, #6366f1)',
                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         }}>
                             Get Started
                         </h1>
-                        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)', fontWeight: 500, marginTop: 12, lineHeight: 1.6 }}>
+                        <p style={{ fontSize: 15, color: 'var(--text-muted)', fontWeight: 500, marginTop: 12, lineHeight: 1.6 }}>
                             Join thousands of data teams using Nalyse to power their analytics.
                         </p>
                     </motion.div>
@@ -225,9 +225,9 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                             <div key={i} style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-                                color: 'rgba(255,255,255,0.25)',
+                                color: 'var(--text-disabled)',
                                 padding: '6px 12px', borderRadius: 20,
-                                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+                                background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
                             }}>
                                 {badge.icon} {badge.label}
                             </div>
@@ -264,21 +264,21 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                 {currentStep > 0 && (
                                     <motion.button initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                                         onClick={() => setCurrentStep(currentStep - 1)}
-                                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', transition: 'all 0.2s', flexShrink: 0 }}
+                                        style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', transition: 'all 0.2s', flexShrink: 0 }}
                                     >
                                         <ArrowLeft size={16} />
                                     </motion.button>
                                 )}
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)' }}>
+                                        <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
                                             Step {currentStep + 1} of {totalSteps}
                                         </span>
                                         <span style={{ fontSize: 10, fontWeight: 800, color: '#10b981', fontFamily: 'var(--font-mono, monospace)' }}>
                                             {Math.round(progress)}%
                                         </span>
                                     </div>
-                                    <div style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                                    <div style={{ height: 3, borderRadius: 2, background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                         <motion.div
                                             animate={{ width: `${progress}%` }}
                                             transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -292,7 +292,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                             <div style={{
                                 padding: '36px 32px', borderRadius: 24,
                                 background: 'linear-gradient(160deg, rgba(18,18,30,0.8), rgba(12,12,22,0.9))',
-                                border: '1px solid rgba(255,255,255,0.06)',
+                                border: '1px solid var(--border-default)',
                                 boxShadow: '0 20px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03)',
                                 backdropFilter: 'blur(20px)',
                             }}>
@@ -305,8 +305,8 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px rgba(16,185,129,0.5)' }} />
                                                 <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#10b981' }}>Create Account</span>
                                             </div>
-                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', margin: 0 }}>Your information</h2>
-                                            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 6, fontWeight: 500 }}>Let's start with the basics</p>
+                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>Your information</h2>
+                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>Let's start with the basics</p>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                             <InputField {...commonProps} icon={Mail} label="Email Address" name="email" type="email" placeholder="you@company.com" value={formData.email} onChange={(v: string) => setFormData({ ...formData, email: v })} inputRef={emailRef} />
@@ -330,19 +330,19 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px rgba(99,102,241,0.5)' }} />
                                                 <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6366f1' }}>Organization</span>
                                             </div>
-                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', margin: 0 }}>Your workspace</h2>
-                                            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 6, fontWeight: 500 }}>This will be your team's shared environment</p>
+                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>Your workspace</h2>
+                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>This will be your team's shared environment</p>
                                         </div>
                                         <InputField {...commonProps} icon={Building2} label="Organization Name" name="org" placeholder="Acme Corporation" value={formData.organizationName} onChange={(v: string) => setFormData({ ...formData, organizationName: v })} inputRef={orgRef} />
                                         
                                         {/* Enrolled summary */}
-                                        <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 12, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 12 }}>
                                             <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', flexShrink: 0 }}>
                                                 <Mail size={16} />
                                             </div>
                                             <div>
-                                                <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{formData.firstName} {formData.lastName}</div>
-                                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>{formData.email}</div>
+                                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>{formData.firstName} {formData.lastName}</div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{formData.email}</div>
                                             </div>
                                         </div>
                                     </>
@@ -356,8 +356,8 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c084fc', boxShadow: '0 0 10px rgba(192,132,252,0.5)' }} />
                                                 <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#c084fc' }}>Security</span>
                                             </div>
-                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', margin: 0 }}>Secure your account</h2>
-                                            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 6, fontWeight: 500 }}>Choose a strong password to protect your data</p>
+                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>Secure your account</h2>
+                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>Choose a strong password to protect your data</p>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                             <div>
@@ -403,7 +403,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                             ? 'linear-gradient(135deg, #10b981 0%, #059669 50%, #10b981 100%)'
                                             : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%)',
                                         backgroundSize: '200% 100%', animation: 'shimmerBg 4s ease infinite',
-                                        color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: '0.04em',
+                                        color: 'var(--text-primary)', fontSize: 13, fontWeight: 800, letterSpacing: '0.04em',
                                         boxShadow: currentStep === 2
                                             ? '0 8px 25px -8px rgba(16,185,129,0.4)'
                                             : '0 8px 25px -8px rgba(99,102,241,0.4)',
@@ -421,7 +421,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
 
                             {/* Switch to login */}
                             <div style={{ marginTop: 20, textAlign: 'center' }}>
-                                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
+                                <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
                                     Already have an account?{' '}
                                     <button onClick={onSwitchToLogin}
                                         style={{ background: 'none', border: 'none', color: '#6366f1', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: 13 }}
@@ -445,7 +445,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                 {currentStep === 3 ? (
                                     <>
                                         <motion.svg width="120" height="120" viewBox="0 0 120 120" style={{ position: 'absolute' }}>
-                                            <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
+                                            <circle cx="60" cy="60" r="56" fill="none" stroke='var(--border-default)' strokeWidth="2" />
                                             <motion.circle cx="60" cy="60" r="56" fill="none" stroke="url(#regGrad)" strokeWidth="2.5" strokeLinecap="round"
                                                 initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
                                                 transition={{ duration: 1.5, ease: "linear", repeat: Infinity }}
@@ -467,7 +467,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                 <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: currentStep === 4 ? '#10b981' : '#6366f1', marginBottom: 8 }}>
                                     {currentStep === 3 ? 'Provisioning...' : 'Account Created'}
                                 </div>
-                                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
                                     {currentStep === 3 ? 'Setting up your workspace' : 'Welcome aboard! Redirecting...'}
                                 </div>
                             </div>

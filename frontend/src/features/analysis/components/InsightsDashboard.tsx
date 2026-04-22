@@ -159,7 +159,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
             }}>
                 <Brain size={48} />
                 <h3 style={{ fontSize: '18px', fontWeight: 700 }}>No Insights Generated</h3>
-                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                     The AI engine hasn't detected any notable insights in this dataset yet.
                 </p>
             </div>
@@ -228,14 +228,14 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                             }} />
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                                 <span style={{ color: stat.color, opacity: 0.6 }}>{stat.icon}</span>
-                                <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
                                     {stat.label}
                                 </span>
                             </div>
                             <div style={{ fontSize: '24px', fontWeight: 800, color: stat.color, fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
                                 {stat.value}
                             </div>
-                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
                                 {stat.sub}
                             </div>
                         </motion.div>
@@ -249,7 +249,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                 padding: '12px 16px',
                 borderRadius: '12px',
                 background: 'rgba(0,0,0,0.2)',
-                border: '1px solid rgba(255,255,255,0.06)'
+                border: '1px solid var(--border-default)'
             }}>
                 {/* Category Filters (scrollable chips) */}
                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', flex: 1, minWidth: '200px' }}>
@@ -266,8 +266,8 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                 style={{
                                     padding: '4px 10px', borderRadius: '8px',
                                     background: isActive ? `${cfg.color}20` : 'transparent',
-                                    border: `1px solid ${isActive ? `${cfg.color}40` : 'rgba(255,255,255,0.06)'}`,
-                                    color: isActive ? cfg.color : 'rgba(255,255,255,0.4)',
+                                    border: `1px solid ${isActive ? `${cfg.color}40` : 'var(--border-default)'}`,
+                                    color: isActive ? cfg.color : 'var(--text-muted)',
                                     cursor: 'pointer',
                                     fontSize: '10px', fontWeight: 700,
                                     display: 'flex', alignItems: 'center', gap: '4px',
@@ -279,7 +279,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                 {cfg.label}
                                 <span style={{
                                     fontSize: '9px', padding: '1px 4px', borderRadius: '4px',
-                                    background: isActive ? `${cfg.color}30` : 'rgba(255,255,255,0.06)',
+                                    background: isActive ? `${cfg.color}30` : 'var(--border-default)',
                                     fontFamily: 'monospace'
                                 }}>
                                     {cat === 'all' ? insights.length : count}
@@ -289,15 +289,15 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                     })}
                 </div>
 
-                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.08)' }} />
+                <div style={{ width: '1px', height: '20px', background: 'var(--border-default)' }} />
 
                 {/* Search */}
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '4px',
-                    background: 'rgba(255,255,255,0.04)', borderRadius: '8px',
-                    padding: '4px 8px', border: '1px solid rgba(255,255,255,0.06)'
+                    background: 'var(--bg-surface-hover)', borderRadius: '8px',
+                    padding: '4px 8px', border: '1px solid var(--border-default)'
                 }}>
-                    <Search size={12} style={{ color: 'rgba(255,255,255,0.25)' }} />
+                    <Search size={12} style={{ color: 'var(--text-disabled)' }} />
                     <input
                         type="text"
                         placeholder="Search insights..."
@@ -305,14 +305,14 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                         onChange={e => setSearchTerm(e.target.value)}
                         style={{
                             background: 'transparent', border: 'none', outline: 'none',
-                            color: '#fff', fontSize: '11px', width: '130px'
+                            color: 'var(--text-primary)', fontSize: '11px', width: '130px'
                         }}
                     />
                 </div>
 
                 {/* Confidence slider */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.3)' }}>
+                    <span style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
                         Min {minConfidence}%
                     </span>
                     <input
@@ -331,9 +331,9 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                     onClick={() => setSortMode(m => m === 'confidence' ? 'type' : 'confidence')}
                     style={{
                         padding: '4px 8px', borderRadius: '6px',
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        color: 'rgba(255,255,255,0.4)', cursor: 'pointer',
+                        background: 'var(--bg-surface-hover)',
+                        border: '1px solid var(--border-default)',
+                        color: 'var(--text-muted)', cursor: 'pointer',
                         fontSize: '10px', fontWeight: 700,
                         display: 'flex', alignItems: 'center', gap: '3px'
                     }}
@@ -347,9 +347,9 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                     onClick={() => setShowPinnedOnly(!showPinnedOnly)}
                     style={{
                         padding: '4px 8px', borderRadius: '6px',
-                        background: showPinnedOnly ? 'rgba(245, 158, 11, 0.1)' : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${showPinnedOnly ? 'rgba(245, 158, 11, 0.3)' : 'rgba(255,255,255,0.06)'}`,
-                        color: showPinnedOnly ? '#f59e0b' : 'rgba(255,255,255,0.4)',
+                        background: showPinnedOnly ? 'rgba(245, 158, 11, 0.1)' : 'var(--bg-surface-hover)',
+                        border: `1px solid ${showPinnedOnly ? 'rgba(245, 158, 11, 0.3)' : 'var(--border-default)'}`,
+                        color: showPinnedOnly ? '#f59e0b' : 'var(--text-muted)',
                         cursor: 'pointer', fontSize: '10px', fontWeight: 700,
                         display: 'flex', alignItems: 'center', gap: '3px'
                     }}
@@ -368,7 +368,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                             animate={{ opacity: 1 }}
                             style={{
                                 padding: '48px', textAlign: 'center',
-                                color: 'rgba(255,255,255,0.3)', fontSize: '13px'
+                                color: 'var(--text-muted)', fontSize: '13px'
                             }}
                         >
                             No insights match your current filters. Try adjusting the criteria.
@@ -457,7 +457,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                             {/* Confidence ring */}
                                             <div style={{ position: 'relative', width: '40px', height: '40px' }}>
                                                 <svg width="40" height="40" viewBox="0 0 40 40">
-                                                    <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+                                                    <circle cx="20" cy="20" r="16" fill="none" stroke='var(--border-default)' strokeWidth="3" />
                                                     <circle
                                                         cx="20" cy="20" r="16" fill="none"
                                                         stroke={cfg.color}
@@ -484,9 +484,9 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                                     onClick={e => { e.stopPropagation(); onPinInsight(insight); }}
                                                     style={{
                                                         padding: '6px', borderRadius: '8px',
-                                                        background: pinned ? 'rgba(245, 158, 11, 0.1)' : 'rgba(255,255,255,0.04)',
-                                                        border: `1px solid ${pinned ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.06)'}`,
-                                                        color: pinned ? '#f59e0b' : 'rgba(255,255,255,0.3)',
+                                                        background: pinned ? 'rgba(245, 158, 11, 0.1)' : 'var(--bg-surface-hover)',
+                                                        border: `1px solid ${pinned ? 'rgba(245, 158, 11, 0.2)' : 'var(--border-default)'}`,
+                                                        color: pinned ? '#f59e0b' : 'var(--text-muted)',
                                                         cursor: 'pointer', display: 'flex',
                                                         transition: 'all 0.2s'
                                                     }}
@@ -500,7 +500,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                             <ChevronDown
                                                 size={14}
                                                 style={{
-                                                    color: 'rgba(255,255,255,0.2)',
+                                                    color: 'var(--text-disabled)',
                                                     transform: isExpanded ? 'rotate(180deg)' : 'none',
                                                     transition: 'transform 0.2s'
                                                 }}
@@ -524,7 +524,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                                     {/* Full description */}
                                                     <p style={{
                                                         fontSize: '13px', lineHeight: 1.6,
-                                                        color: 'rgba(255,255,255,0.7)', margin: 0
+                                                        color: 'var(--text-secondary)', margin: 0
                                                     }}>
                                                         {(insight.description || '').replace(/\*\*/g, '').replace(/^💡\s*/, '').replace(/^📈\s*/, '')}
                                                     </p>
@@ -541,8 +541,8 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                                         </span>
                                                         <span style={{
                                                             fontSize: '9px', padding: '3px 8px', borderRadius: '6px',
-                                                            background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)',
-                                                            border: '1px solid rgba(255,255,255,0.06)',
+                                                            background: 'var(--bg-surface-hover)', color: 'var(--text-muted)',
+                                                            border: '1px solid var(--border-default)',
                                                             fontWeight: 700, fontFamily: 'monospace'
                                                         }}>
                                                             Confidence: {confidenceLabel} ({(confidence * 100).toFixed(0)}%)
@@ -584,7 +584,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
             {/* Results Footer */}
             <div style={{
                 textAlign: 'center', fontSize: '10px',
-                color: 'rgba(255,255,255,0.2)', fontFamily: 'monospace',
+                color: 'var(--text-disabled)', fontFamily: 'monospace',
                 padding: '8px'
             }}>
                 Showing {filteredInsights.length} of {insights.length} insights

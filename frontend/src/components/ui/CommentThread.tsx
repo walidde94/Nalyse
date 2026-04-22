@@ -111,14 +111,14 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
           padding: isReply ? '10px 12px' : '14px 16px',
           marginLeft: isReply ? 28 : 0,
           borderRadius: 12,
-          background: c.isResolved ? 'rgba(52,211,153,0.05)' : 'rgba(255,255,255,0.02)',
-          border: `1px solid ${c.isResolved ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.05)'}`,
+          background: c.isResolved ? 'rgba(52,211,153,0.05)' : 'var(--bg-surface)',
+          border: `1px solid ${c.isResolved ? 'rgba(52,211,153,0.15)' : 'var(--bg-surface-hover)'}`,
           position: 'relative',
         }}
       >
         {isReply && <div style={{
           position: 'absolute', left: -16, top: 18, width: 12, height: 1,
-          background: 'rgba(255,255,255,0.08)'
+          background: 'var(--border-default)'
         }} />}
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <div style={{
@@ -158,7 +158,7 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
                     alignItems: 'center', gap: 4, color: 'var(--text-tertiary)',
                     transition: 'all 0.2s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--primary)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface-hover)'; e.currentTarget.style.color = 'var(--primary)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-tertiary)'; }}
                 >
                   <Reply size={12} /> Reply
@@ -171,7 +171,7 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
                   alignItems: 'center', gap: 4, color: 'var(--text-tertiary)',
                   transition: 'all 0.2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#34d399'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface-hover)'; e.currentTarget.style.color = '#34d399'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-tertiary)'; }}
               >
                 <Check size={12} /> {c.isResolved ? 'Unresolve' : 'Resolve'}
@@ -223,7 +223,7 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
           <div style={{
             padding: '20px 20px 16px', display: 'flex', alignItems: 'center',
             justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)',
-            background: 'rgba(255,255,255,0.01)',
+            background: 'var(--bg-surface)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{
@@ -243,13 +243,13 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
               </div>
             </div>
             <button onClick={onClose} style={{
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+              background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)',
               borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center',
               justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)',
               transition: 'all 0.2s',
             }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#ef4444'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface-hover)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
               <X size={16} />
             </button>
@@ -305,12 +305,12 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
           {/* Input */}
           <div style={{
             padding: 16, borderTop: '1px solid var(--border-subtle)',
-            background: 'rgba(255,255,255,0.01)',
+            background: 'var(--bg-surface)',
           }}>
             <div style={{
               display: 'flex', gap: 8, alignItems: 'flex-end',
-              background: 'rgba(255,255,255,0.03)', borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.06)', padding: '4px 4px 4px 12px',
+              background: 'var(--bg-surface)', borderRadius: 12,
+              border: '1px solid var(--border-default)', padding: '4px 4px 4px 12px',
               transition: 'border-color 0.2s',
             }}>
               <textarea
@@ -331,7 +331,7 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
                 disabled={!input.trim() || loading}
                 style={{
                   width: 34, height: 34, borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: input.trim() ? 'linear-gradient(135deg, #818cf8, #6366f1)' : 'rgba(255,255,255,0.04)',
+                  background: input.trim() ? 'linear-gradient(135deg, #818cf8, #6366f1)' : 'var(--bg-surface-hover)',
                   color: input.trim() ? '#fff' : 'var(--text-tertiary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s', flexShrink: 0, opacity: loading ? 0.5 : 1,
@@ -353,20 +353,20 @@ export const CommentBadge = ({ count, onClick }: { count?: number; onClick: () =
     onClick={onClick}
     title="Comments"
     style={{
-      background: count ? 'rgba(129,140,248,0.12)' : 'rgba(255,255,255,0.04)',
-      border: `1px solid ${count ? 'rgba(129,140,248,0.25)' : 'rgba(255,255,255,0.06)'}`,
+      background: count ? 'rgba(129,140,248,0.12)' : 'var(--bg-surface-hover)',
+      border: `1px solid ${count ? 'rgba(129,140,248,0.25)' : 'var(--border-default)'}`,
       borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center',
       justifyContent: 'center', cursor: 'pointer', position: 'relative',
       color: count ? '#818cf8' : 'var(--text-secondary)', transition: 'all 0.2s',
     }}
     onMouseEnter={e => { e.currentTarget.style.background = 'rgba(129,140,248,0.15)'; e.currentTarget.style.color = '#818cf8'; e.currentTarget.style.transform = 'scale(1.1)'; }}
-    onMouseLeave={e => { e.currentTarget.style.background = count ? 'rgba(129,140,248,0.12)' : 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = count ? '#818cf8' : 'var(--text-secondary)'; e.currentTarget.style.transform = 'scale(1)'; }}
+    onMouseLeave={e => { e.currentTarget.style.background = count ? 'rgba(129,140,248,0.12)' : 'var(--bg-surface-hover)'; e.currentTarget.style.color = count ? '#818cf8' : 'var(--text-secondary)'; e.currentTarget.style.transform = 'scale(1)'; }}
   >
     <MessageCircle size={14} />
     {(count ?? 0) > 0 && (
       <span style={{
         position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16,
-        borderRadius: 8, background: '#818cf8', color: '#fff', fontSize: 9,
+        borderRadius: 8, background: '#818cf8', color: 'var(--text-primary)', fontSize: 9,
         fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '0 4px', boxShadow: '0 2px 8px rgba(129,140,248,0.4)',
       }}>

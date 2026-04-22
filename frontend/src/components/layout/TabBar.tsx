@@ -224,7 +224,7 @@ export const TabBar = ({
                                         flexShrink: 0,
                                     }}
                                     onMouseEnter={(e) => {
-                                        (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
+                                        (e.target as HTMLElement).style.background = 'var(--border-default)';
                                         (e.target as HTMLElement).style.opacity = '1';
                                     }}
                                     onMouseLeave={(e) => {

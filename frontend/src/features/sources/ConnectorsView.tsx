@@ -71,7 +71,7 @@ const ConnectorCard = ({ source, onEdit, onDelete, onGoLive }: { source: RemoteS
                             background: meta.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center',
                             boxShadow: `0 8px 20px -4px ${meta.color}40`,
                         }}>
-                            <Icon size={22} style={{ color: '#fff' }} />
+                            <Icon size={22} style={{ color: 'var(--text-primary)' }} />
                         </div>
                         <div>
                             <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: meta.color, marginBottom: '2px' }}>
@@ -114,7 +114,7 @@ const ConnectorCard = ({ source, onEdit, onDelete, onGoLive }: { source: RemoteS
                         onClick={(e) => { e.stopPropagation(); onGoLive(); }}
                         style={{
                             padding: '8px 20px', borderRadius: '10px', border: 'none',
-                            background: meta.gradient, color: '#fff', fontSize: '12px', fontWeight: 800,
+                            background: meta.gradient, color: 'var(--text-primary)', fontSize: '12px', fontWeight: 800,
                             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
                             boxShadow: `0 4px 16px -2px ${meta.color}40`,
                             textTransform: 'uppercase', letterSpacing: '0.06em'
@@ -397,7 +397,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             boxShadow: '0 12px 24px -4px rgba(59,130,246,0.4)',
                         }}>
-                            <Cable size={26} style={{ color: '#fff' }} />
+                            <Cable size={26} style={{ color: 'var(--text-primary)' }} />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -511,7 +511,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                                     width: '40px', height: '40px', borderRadius: '12px', background: meta.gradient,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}>
-                                    {(() => { const Icon = meta.icon; return <Icon size={20} style={{ color: '#fff' }} />; })()}
+                                    {(() => { const Icon = meta.icon; return <Icon size={20} style={{ color: 'var(--text-primary)' }} />; })()}
                                 </div>
                                 <div>
                                     <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
@@ -627,7 +627,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             onClick={handleAdd} disabled={loading || !newName}
                             style={{
                                 width: '100%', marginTop: '20px', padding: '14px', borderRadius: '14px',
-                                border: 'none', background: meta.gradient, color: '#fff',
+                                border: 'none', background: meta.gradient, color: 'var(--text-primary)',
                                 fontSize: '14px', fontWeight: 800, cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                 opacity: (!newName || loading) ? 0.5 : 1,
@@ -687,7 +687,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                                         boxShadow: `0 8px 20px -4px ${m.color}50`, border: '2px solid var(--bg-surface)',
                                     }}
                                 >
-                                    <Icon size={22} style={{ color: '#fff' }} />
+                                    <Icon size={22} style={{ color: 'var(--text-primary)' }} />
                                 </motion.div>
                             );
                         })}
