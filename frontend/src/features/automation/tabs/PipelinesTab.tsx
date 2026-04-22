@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Square, Trash2, Copy, FileText, Mail, Globe, Settings2, X, RefreshCw, Plus, Check } from 'lucide-react';
-import { StatusBadge, cronToHuman, PriorityBadge } from '../AutomationComponents';
+import { Play, Square, Trash2, Copy, FileText, Mail, Globe, Settings2, X, RefreshCw, Plus, Check, Calendar } from 'lucide-react';
+import { StatusBadge, cronToHuman, PriorityBadge, getNextRuns } from '../AutomationComponents';
 
 const CRON_PRESETS = [
     { value: '0 9 * * *', label: 'Every day at 9:00 AM' },
@@ -99,7 +99,7 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                                 <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9, fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', marginBottom: 8 }}><Calendar size={10} /> Next 5 Run Predictions</div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                        {getNextRuns(form.cronExpression).map((d, i) => (
+                                        {getNextRuns(form.cronExpression).map((d: Date, i: number) => (
                                             <div key={i} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'flex', justifyContent: 'space-between' }}>
                                                 <span>Run #{i+1}</span>
                                                 <span style={{ fontFamily: 'var(--font-mono)' }}>{d.toLocaleString()}</span>

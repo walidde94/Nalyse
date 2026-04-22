@@ -123,6 +123,11 @@ export const AUTOMATION_STYLES = `
 `;
 
 /* ─── Template Icon Map ─── */
+/* ─── Template Icon Map ─── */
+export const TEMPLATE_ICONS: Record<string, string> = {
+    briefcase: '💼', shield: '🛡️', server: '🖥️', landmark: '🏛️', users: '👥', database: '🗃️'
+};
+
 /* ─── Next Run Calculator (Simulation) ─── */
 export const getNextRuns = (cron: string, count: number = 5): Date[] => {
     const now = new Date();
