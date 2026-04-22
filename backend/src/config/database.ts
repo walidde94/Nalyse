@@ -177,6 +177,9 @@ async function ensureAuditLogTable() {
             `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS processing_time_ms int`,
             `ALTER TABLE analyses ADD COLUMN IF NOT EXISTS completed_at timestamp with time zone`,
 
+            // === Analysis Comments ===
+            `CREATE TABLE IF NOT EXISTS analysis_comments (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), analysis_id uuid NOT NULL, author_id uuid NOT NULL, content text NOT NULL, target_type text NOT NULL, target_id text, reply_to_id uuid, reactions jsonb DEFAULT '[]', is_resolved boolean DEFAULT false, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now())`,
+
             // === Dashboards ===
             `CREATE TABLE IF NOT EXISTS dashboards (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, user_id uuid NOT NULL)`,
             `ALTER TABLE dashboards ADD COLUMN IF NOT EXISTS panels jsonb DEFAULT '[]'`,
