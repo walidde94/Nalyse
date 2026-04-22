@@ -131,9 +131,9 @@ router.post('/schedules/:id/trigger', authenticate, requirePermission(Permission
 
         // Import engine and run it for this specific schedule
         const { processSingleSchedule } = require('../services/scheduleEngine');
-        await processSingleSchedule(schedule);
+        const run = await processSingleSchedule(schedule);
 
-        res.json({ message: 'Execution started successfully' });
+        res.status(202).json({ message: 'Execution started successfully', runId: run.id });
     } catch (error: any) {
         res.status(500).json({ error: 'Trigger failed: ' + error.message });
     }
