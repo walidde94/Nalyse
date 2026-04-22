@@ -372,7 +372,7 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                                     top: '-12px',
                                     right: '16px',
                                     background: 'var(--primary)',
-                                    color: 'var(--text-primary)',
+                                    color: '#fff',
                                     padding: '4px 12px',
                                     borderRadius: '20px',
                                     fontSize: '12px',

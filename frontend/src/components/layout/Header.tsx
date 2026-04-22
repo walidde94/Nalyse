@@ -358,7 +358,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     height: '12px',
                                     borderRadius: '6px',
                                     background: 'var(--primary)',
-                                    color: 'var(--text-primary)',
+                                    color: '#fff',
                                     fontSize: '8px',
                                     fontWeight: 900,
                                     display: 'flex',

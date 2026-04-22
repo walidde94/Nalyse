@@ -702,7 +702,7 @@ export const ElasticSearch = ({
                                         disabled={!saveQueryName.trim()}
                                         style={{
                                             background: 'var(--primary)', border: 'none', padding: '8px 16px',
-                                            borderRadius: '8px', color: 'var(--text-primary)', fontSize: '11px', fontWeight: 700,
+                                            borderRadius: '8px', color: '#fff', fontSize: '11px', fontWeight: 700,
                                             cursor: 'pointer', opacity: saveQueryName.trim() ? 1 : 0.4,
                                             whiteSpace: 'nowrap',
                                         }}

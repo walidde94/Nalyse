@@ -1125,7 +1125,7 @@ export const DashboardView = ({
                                                 <div style={{
                                                     width: '48px', height: '48px', borderRadius: '16px',
                                                     background: 'linear-gradient(135deg, var(--primary) 0%, #a855f7 100%)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)'
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
                                                 }}>
                                                     <CloudUpload size={24} strokeWidth={2.5} />
                                                 </div>
@@ -1237,7 +1237,7 @@ export const DashboardView = ({
                                                         </motion.button>
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => document.getElementById('file-input')?.click()} disabled={isOverLimit} style={{
                                                             background: 'var(--primary)',
-                                                            color: 'var(--text-primary)', border: 'none', padding: '10px 16px', borderRadius: '10px',
+                                                            color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer',
                                                             opacity: isOverLimit ? 0.5 : 1,
                                                             display: 'flex', alignItems: 'center', gap: '6px',
@@ -1682,7 +1682,7 @@ export const DashboardView = ({
                                             width: '100%', height: 52, borderRadius: 14, border: 'none', cursor: 'pointer',
                                             background: `linear-gradient(135deg, ${accentColor} 0%, #c084fc 50%, ${accentColor} 100%)`,
                                             backgroundSize: '200% 100%',
-                                            color: 'var(--text-primary)', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.25em',
+                                            color: '#fff', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.25em',
                                             boxShadow: `0 8px 30px -8px ${accentGlow}, 0 2px 8px rgba(0,0,0,0.3)`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                                             position: 'relative', overflow: 'hidden',
