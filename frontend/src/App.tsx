@@ -1352,7 +1352,7 @@ function AppContent() {
                 )}
 
                 {tab.type === 'private-chat' && (
-                  <PrivateChatView />
+                  <PrivateChatView initialConversationId={tab.data?.conversationId} />
                 )}
 
                 {tab.type === 'shared-workspaces' && (

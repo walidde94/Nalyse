@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             const preview = msg.content.replace(/[@#]\[([^\]]+)\]\([^)]+\)/g, '$1');
             const newNotif = {
                 id: Date.now().toString() + Math.random().toString(),
-                title: isMention ? 'You were mentioned' : `Message from ${msg.author.firstName || 'User'}`,
+                title: isMention ? 'You were mentioned' : `Message from ${msg.author?.firstName || 'User'}`,
                 message: preview,
                 timestamp: new Date().toISOString(),
                 type: (isMention ? 'mention' : 'message') as 'mention' | 'message',
@@ -117,15 +117,17 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 message: preview,
                 timestamp: new Date().toISOString(),
                 type: 'dm' as const,
-                read: false
+                read: false,
+                metadata: { conversationId: msg.conversationId }
             };
 
             setToastData({
                 title: newNotif.title,
                 message: newNotif.message,
                 author: msg.sender,
-                type: 'dm'
-            });
+                type: 'dm',
+                metadata: { conversationId: msg.conversationId }
+            } as any);
 
             setNotifications(prev => [newNotif, ...prev].slice(0, 20));
             
@@ -420,7 +422,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     }}
                                     onClick={() => {
                                         if (toastData.type === 'dm') {
-                                            onNavigate?.('private-chat');
+                                            const conversationId = (toastData as any).metadata?.conversationId;
+                                            onNavigate?.('private-chat', { conversationId } as any);
                                         } else {
                                             onNavigate?.('shared-workspaces', { discussion: true } as any);
                                         }
@@ -492,6 +495,9 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                                 onClick={() => {
                                                     if (n.type === 'message' || n.type === 'mention') {
                                                         onNavigate?.('shared-workspaces', { discussion: true } as any);
+                                                    } else if (n.type === 'dm') {
+                                                        const conversationId = n.metadata?.conversationId;
+                                                        onNavigate?.('private-chat', { conversationId } as any);
                                                     }
                                                     setShowNotifications(false);
                                                 }}

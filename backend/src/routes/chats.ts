@@ -12,11 +12,14 @@ router.get('/', authenticate, async (req: any, res: any) => {
     try {
         const userId = req.user.userId || req.user.id;
 
+        // Only return conversations that have at least one message, 
+        // ensuring users only see chats that have been actively used.
         const conversations = await prisma.directConversation.findMany({
             where: {
-                participants: {
-                    some: { id: userId }
-                }
+                AND: [
+                    { participants: { some: { id: userId } } },
+                    { messages: { some: {} } }
+                ]
             },
             include: {
                 participants: {
@@ -322,6 +325,7 @@ router.get('/search-users', authenticate, async (req: any, res: any) => {
                 AND: [
                     { id: { not: userId } },
                     { isActive: true },
+                    { organizationId: req.user.organizationId },
                     {
                         OR: [
                             { email: { contains: q, mode: 'insensitive' } },

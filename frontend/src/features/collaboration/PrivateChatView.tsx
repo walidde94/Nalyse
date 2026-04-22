@@ -327,7 +327,7 @@ const NeuralBackground = () => (
 );
 
 
-export const PrivateChatView: React.FC = () => {
+export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ initialConversationId }) => {
     const { user, token } = useAuth();
     const { 
         conversations, activeConversation, setActiveConversation, 
@@ -360,6 +360,15 @@ export const PrivateChatView: React.FC = () => {
     const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
         messagesEndRef.current?.scrollIntoView({ behavior });
     };
+
+    useEffect(() => {
+        if (initialConversationId && conversations.length > 0) {
+            const conv = conversations.find(c => c.id === initialConversationId);
+            if (conv && activeConversation?.id !== conv.id) {
+                setActiveConversation(conv);
+            }
+        }
+    }, [initialConversationId, conversations, activeConversation?.id, setActiveConversation]);
 
     // Load messages when conversation changes
     useEffect(() => {
