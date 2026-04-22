@@ -64,6 +64,7 @@ import { AnomalyDetection } from './components/AnomalyDetection';
 import { NexusAuditTrail } from './components/NexusAuditTrail';
 import { InsightPanel } from '../../components/ui/InsightPanel';
 import { CommentThread, CommentBadge } from '../../components/ui/CommentThread';
+import { TextSelectionComment } from '../../components/ui/TextSelectionComment';
 
 interface ChartOption {
     title: string;
@@ -348,9 +349,32 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
     const [commentTarget, setCommentTarget] = useState<{ type: string; id?: string; title?: string }>({ type: 'general' });
     const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
-    const openComments = (type: string, id?: string, title?: string) => {
+    const openComments = (type: string, id?: string, title?: string, initialText?: string) => {
         setCommentTarget({ type, id, title });
         setCommentOpen(true);
+        // We can pass initial text to the comment thread if we want, but just having the context in targetId is good.
+    };
+
+    // Chart Point Menu State
+    const [chartClickMenu, setChartClickMenu] = useState<{ x: number, y: number, data: any, column: string, title: string, index: number } | null>(null);
+
+    const handleChartClick = (data: any, opt: any, index: number, event?: React.MouseEvent) => {
+        const columnMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
+        const column = columnMatch ? columnMatch[2] : dimensions[0];
+        const valName = data.name || data.payload?.name || data.x;
+
+        if (event && event.clientX) {
+            setChartClickMenu({
+                x: event.clientX,
+                y: event.clientY,
+                data: valName,
+                column,
+                title: opt.title,
+                index
+            });
+        } else {
+            handleDrillDown(column, valName);
+        }
     };
 
     // Fetch comment counts when analysis loads
@@ -1390,12 +1414,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         strokeWidth={3}
                                         fill="none"
                                         dot={{ r: 4, cursor: 'pointer' }}
-                                        activeDot={{ r: 6, cursor: 'pointer' }}
-                                        onClick={(data: any) => {
-                                            const columnMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
-                                            const column = columnMatch ? columnMatch[2] : dimensions[0];
-                                            handleDrillDown(column, data.name || data.payload?.name);
-                                        }}
+                                        activeDot={{ r: 6, cursor: 'pointer', onClick: (e: any, payload: any) => handleChartClick(payload.payload, opt, index, e as unknown as React.MouseEvent) }}
+                                        onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
                                     /> :
                                     <Area
                                         type="monotone"
@@ -1404,12 +1424,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         strokeWidth={3}
                                         fill={`url(#grad${index})`}
                                         dot={{ r: 4, cursor: 'pointer' }}
-                                        activeDot={{ r: 6, cursor: 'pointer' }}
-                                        onClick={(data: any) => {
-                                            const columnMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
-                                            const column = columnMatch ? columnMatch[2] : dimensions[0];
-                                            handleDrillDown(column, data.name || data.payload?.name);
-                                        }}
+                                        activeDot={{ r: 6, cursor: 'pointer', onClick: (e: any, payload: any) => handleChartClick(payload.payload, opt, index, e as unknown as React.MouseEvent) }}
+                                        onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
                                     />
                                 }
                             </AreaChart>
@@ -1422,11 +1438,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     dataKey="value"
                                     paddingAngle={4}
                                     stroke="none"
-                                    onClick={(data: any) => {
-                                        const columnMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
-                                        const column = columnMatch ? columnMatch[2] : dimensions[0];
-                                        handleDrillDown(column, data.name);
-                                    }}
+                                    onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
                                     cursor="pointer"
                                 >
                                     {displayData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -1463,6 +1475,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         y: d.y !== undefined ? d.y : (d.value !== undefined ? d.value : 0)
                                     }))}
                                     fill={color}
+                                    cursor="pointer"
+                                    onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
                                 />
                             </ScatterChart>
                         ) : (
@@ -1499,12 +1513,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     fill={`url(#gradBar${index})`}
                                     radius={[6, 6, 0, 0]}
                                     maxBarSize={60}
-                                    onClick={(data: any) => {
-                                        // Extract column name from chart title (assumes format "Column by Category")
-                                        const columnMatch = opt.title.match(/^(.+?)\s+by\s+(.+)$/i);
-                                        const column = columnMatch ? columnMatch[2] : dimensions[0];
-                                        handleDrillDown(column, data.name);
-                                    }}
+                                    onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
                                     cursor="pointer"
                                 />
                                 {/* Removed per-cell coloring to enforce Elastic-style single-color series */}
@@ -2839,6 +2848,75 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     title={commentTarget.title}
                 />
             )}
+
+            {/* Floating Text Selection Comment Toolbar */}
+            <TextSelectionComment
+                onAddComment={(text) => {
+                    openComments('insight', text.substring(0, 50) + (text.length > 50 ? '...' : ''), 'Insight Selection');
+                }}
+            />
+
+            {/* Chart Point Click Menu */}
+            <AnimatePresence>
+                {chartClickMenu && (
+                    <>
+                        <div 
+                            style={{ position: 'fixed', inset: 0, zIndex: 9998 }} 
+                            onClick={() => setChartClickMenu(null)}
+                            onContextMenu={(e) => { e.preventDefault(); setChartClickMenu(null); }}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                            transition={{ duration: 0.15 }}
+                            style={{
+                                position: 'fixed',
+                                left: chartClickMenu.x,
+                                top: chartClickMenu.y,
+                                transform: 'translate(-50%, -100%)',
+                                marginTop: '-10px',
+                                zIndex: 9999,
+                                background: 'var(--bg-card)',
+                                border: '1px solid var(--border-subtle)',
+                                borderRadius: '12px',
+                                padding: '6px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px',
+                                boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+                                minWidth: '150px'
+                            }}
+                        >
+                            <div style={{ padding: '6px 8px', fontSize: '11px', color: 'var(--text-tertiary)', borderBottom: '1px solid var(--border-subtle)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {chartClickMenu.column}: {String(chartClickMenu.data)}
+                            </div>
+                            <button
+                                className="hover-bg transition-colors"
+                                onClick={() => {
+                                    handleDrillDown(chartClickMenu.column, chartClickMenu.data);
+                                    setChartClickMenu(null);
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '6px', cursor: 'pointer', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '12px', textAlign: 'left', width: '100%' }}
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                Drill Down
+                            </button>
+                            <button
+                                className="hover-bg transition-colors"
+                                onClick={() => {
+                                    openComments('chart', `chart:${chartClickMenu.index}:point:${chartClickMenu.data}`, `${chartClickMenu.title} (${chartClickMenu.data})`);
+                                    setChartClickMenu(null);
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '6px', cursor: 'pointer', background: 'none', border: 'none', color: 'var(--primary)', fontSize: '12px', textAlign: 'left', width: '100%' }}
+                            >
+                                <MessageCircle size={14} />
+                                Add Comment
+                            </button>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div >
     );
 };
