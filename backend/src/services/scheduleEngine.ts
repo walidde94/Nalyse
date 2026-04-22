@@ -28,19 +28,17 @@ const generateRealReportData = async (schedule: any): Promise<any> => {
 };
 
 const dispatchReport = async (schedule: any, data: any) => {
-    const config = schedule.config as any;
-    const channel = config?.deliveryChannel || 'email';
-    const target = config?.deliverTo;
+    // 4. Delivery Orchestration
+    const deliveryChannel = (schedule.config as any)?.deliveryChannel || 'email';
+    const deliverTo = (schedule.config as any)?.deliverTo;
 
-    if (!target) return;
-
-    if (channel === 'email') {
-        console.log(`[ScheduleEngine] 📧 Email Dispach to ${target} for "${schedule.name}"`);
-        // In real app: use nodemailer or sendgrid
-    } else if (channel === 'webhook') {
-        console.log(`[ScheduleEngine] 🪝 Webhook Push to ${target}`);
+    if (deliveryChannel === 'email' && deliverTo) {
+        console.log(`[ScheduleEngine] Delivering report via Email to ${deliverTo}`);
+        // await sendEmail(deliverTo, 'Intelligence Report', html);
+    } else if (deliveryChannel === 'webhook' && deliverTo) {
+        console.log(`[ScheduleEngine] Triggering Webhook at ${deliverTo}`);
         try {
-            await axios.post(target, {
+            await axios.post(deliverTo, {
                 report: schedule.name,
                 data: data,
                 event: 'automation.report_generated'

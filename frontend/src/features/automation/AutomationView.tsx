@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Zap, RefreshCw, Plus, Layers, Clock, Wand2, History, FileCode, Settings2 } from 'lucide-react';
+import { Zap, RefreshCw, Plus, Layers, Clock, Wand2, History, FileCode, Settings2, Search } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 import { API_URL } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
@@ -167,6 +167,11 @@ export const AutomationView = () => {
         { id: 'settings', label: 'Settings', icon: <Settings2 size={16} /> },
     ];
 
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredSchedules = schedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || (s.config?.description || '').toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredHistory = globalHistory.filter(h => (h.schedule?.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+
     return (
         <div style={{ height: '100%', overflowY: 'auto', padding: 'clamp(16px, 3vw, 40px)', background: 'var(--bg-app)', position: 'relative' }}>
             <div style={{ position: 'fixed', top: '-10%', right: '-10%', width: '40vw', height: '40vh', background: 'radial-gradient(circle, rgba(99,102,241,0.06), transparent 70%)', filter: 'blur(100px)', zIndex: 0, pointerEvents: 'none' }} />
@@ -183,16 +188,20 @@ export const AutomationView = () => {
                             <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '3px 0 0', fontWeight: 500 }}>AI Orchestration for Enterprise Data Distribution</p>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <div style={{ position: 'relative' }}>
+                            <input type="text" placeholder={`Search ${activeTab}...`} value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                                style={{ width: 220, padding: '10px 16px 10px 38px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: 12, outline: 'none' }} />
+                            <div style={{ position: 'absolute', left: 14, top: 11, color: 'rgba(255,255,255,0.2)' }}><Search size={14} /></div>
+                        </div>
                         <button className="glass-button" style={{ padding: '9px 18px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700 }} onClick={() => fetchData()}><RefreshCw size={14} /> Sync</button>
-                        <button onClick={() => { setActiveTab('pipelines'); }} style={{ padding: '9px 22px', borderRadius: 10, background: '#6366f1', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 7, boxShadow: '0 8px 20px -4px rgba(99,102,241,0.4)' }}><Plus size={16} /> New Pipeline</button>
                     </div>
                 </div>
 
                 {/* Tabs */}
                 <div style={{ display: 'flex', gap: 6, marginBottom: 28, background: 'rgba(255,255,255,0.03)', padding: 5, borderRadius: 14, width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
                     {TABS.map(tab => (
-                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className="auto-tab"
+                        <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }} className="auto-tab"
                             style={{ background: activeTab === tab.id ? 'rgba(99,102,241,0.15)' : 'transparent', color: activeTab === tab.id ? '#818cf8' : 'rgba(255,255,255,0.4)' }}>
                             {tab.icon} {tab.label}
                         </button>
@@ -201,10 +210,10 @@ export const AutomationView = () => {
 
                 {/* Content */}
                 {activeTab === 'command' && <CommandCenterTab stats={stats} schedules={schedules} globalHistory={globalHistory} onTriggerAll={() => handleBulk('trigger')} onPauseAll={() => handleBulk('pause')} />}
-                {activeTab === 'pipelines' && <PipelinesTab schedules={schedules} dashboards={dashboards} analyses={analyses} loading={loading} onTrigger={handleTrigger} onToggle={handleToggle} onDelete={handleDelete} onDuplicate={handleDuplicate} onCreate={handleCreate} />}
+                {activeTab === 'pipelines' && <PipelinesTab schedules={filteredSchedules} dashboards={dashboards} analyses={analyses} loading={loading} onTrigger={handleTrigger} onToggle={handleToggle} onDelete={handleDelete} onDuplicate={handleDuplicate} onCreate={handleCreate} />}
                 {activeTab === 'templates' && <TemplatesTab onDeployed={fetchData} />}
-                {activeTab === 'history' && <ExecutionLogTab history={globalHistory} schedules={schedules} total={historyTotal} page={historyPage} limit={50} onFilterChange={handleHistoryFilter} onRetry={handleRetry} onView={handleView} onDownload={handleDownload} />}
-                {activeTab === 'reports' && <ReportGalleryTab history={globalHistory} onView={handleView} onDownload={handleDownload} onDelete={handleDeleteReport} onGoSchedules={() => setActiveTab('pipelines')} onTriggerFirst={() => schedules[0] && handleTrigger(schedules[0].id)} hasSchedules={schedules.length > 0} />}
+                {activeTab === 'history' && <ExecutionLogTab history={filteredHistory} schedules={schedules} total={historyTotal} page={historyPage} limit={50} onFilterChange={handleHistoryFilter} onRetry={handleRetry} onView={handleView} onDownload={handleDownload} />}
+                {activeTab === 'reports' && <ReportGalleryTab history={filteredHistory} onView={handleView} onDownload={handleDownload} onDelete={handleDeleteReport} onGoSchedules={() => setActiveTab('pipelines')} onTriggerFirst={() => schedules[0] && handleTrigger(schedules[0].id)} hasSchedules={schedules.length > 0} />}
                 {activeTab === 'settings' && <SettingsTab />}
             </div>
 
