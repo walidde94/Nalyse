@@ -95,7 +95,19 @@ export const PipelinesTab = ({ schedules, dashboards, analyses, loading, onTrigg
                                 <div><div style={L}>Description</div><input style={S} placeholder="Optional description" value={form.description} onChange={e => setForm({...form, description: e.target.value})} /></div>
                                 <div><div style={L}>Schedule</div><select style={S} value={form.cronExpression} onChange={e => setForm({...form, cronExpression: e.target.value})}>
                                     {CRON_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                </select></div>
+                                </select>
+                                <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9, fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', marginBottom: 8 }}><Calendar size={10} /> Next 5 Run Predictions</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        {getNextRuns(form.cronExpression).map((d, i) => (
+                                            <div key={i} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'flex', justifyContent: 'space-between' }}>
+                                                <span>Run #{i+1}</span>
+                                                <span style={{ fontFamily: 'var(--font-mono)' }}>{d.toLocaleString()}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                </div>
                                 <div><div style={L}>Priority</div><div style={{ display: 'flex', gap: 8 }}>
                                     {['low','normal','high','critical'].map(p => (
                                         <button key={p} onClick={() => setForm({...form, priority: p})} style={{ flex: 1, padding: 10, borderRadius: 10, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', background: form.priority === p ? '#6366f1' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer' }}>{p}</button>

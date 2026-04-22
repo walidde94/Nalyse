@@ -1,8 +1,3 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Settings, Globe, Clock, Bell, Palette, Shield, Save } from 'lucide-react';
-import { useToast } from '../../../components/ui/Toast';
-
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Globe, Clock, Bell, Palette, Shield, Save, RefreshCw } from 'lucide-react';
@@ -146,3 +141,4 @@ export const SettingsTab = () => {
         </motion.div>
     );
 };
+

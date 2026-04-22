@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, ChevronDown, ChevronUp, RefreshCw, Eye, Download } from 'lucide-react';
-import { StatusBadge, RunStatusIcon } from '../AutomationComponents';
+import { History, ChevronDown, ChevronUp, RefreshCw, Eye, Download, FileSpreadsheet } from 'lucide-react';
+import { StatusBadge, RunStatusIcon, exportToCSV } from '../AutomationComponents';
 
 interface ExecutionLogTabProps {
     history: any[]; schedules: any[]; total: number; page: number; limit: number;

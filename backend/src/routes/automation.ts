@@ -201,7 +201,7 @@ router.delete('/webhooks/:id', authenticate, requirePermission(Permission.MANAGE
 
 async function getOrgSettings(orgId: string) {
     const settingsRecord = await prisma.schedule.findFirst({
-        where: { organizationId: orgId, name: '__SYSTEM_SETTINGS__' }
+        where: { organizationId: orgId!, name: '__SYSTEM_SETTINGS__' }
     });
     const defaults = { brandName: 'NALYSE', brandColor: '#6366f1', logoUrl: '', footerText: 'Confidential Intelligence Document', timezone: 'UTC', retention: '90' };
     if (!settingsRecord) return defaults;
@@ -218,7 +218,7 @@ router.get('/settings', authenticate, async (req: AuthRequest, res: Response) =>
 router.put('/settings', authenticate, requirePermission(Permission.MANAGE_ORG), async (req: AuthRequest, res: Response) => {
     try {
         const orgId = req.user!.organizationId!;
-        const existing = await prisma.schedule.findFirst({ where: { organizationId: orgId, name: '__SYSTEM_SETTINGS__' } });
+        const existing = await prisma.schedule.findFirst({ where: { organizationId: orgId!, name: '__SYSTEM_SETTINGS__' } });
         
         if (existing) {
             await prisma.schedule.update({ where: { id: existing.id }, data: { config: req.body } });
@@ -226,7 +226,7 @@ router.put('/settings', authenticate, requirePermission(Permission.MANAGE_ORG), 
             await prisma.schedule.create({
                 data: {
                     name: '__SYSTEM_SETTINGS__', cronExpression: '0 0 1 1 *',
-                    config: req.body, isActive: false, organizationId: orgId,
+                    config: req.body, isActive: false, organizationId: orgId!!,
                     createdByUserId: req.user!.userId!
                 }
             });
@@ -252,16 +252,16 @@ async function generateEnterpriseReport(orgId: string, runId: string) {
     
     // 2. Ultra-Safe Data Aggregation
     let fileStats = 0, storageRaw: any = null, analysisStats: any[] = [], teamCount = 0, workspaceCount = 0, recentLogs: any[] = [], fileTypeDistribution: any[] = [], topFiles: any[] = [];
-    try { fileStats = await prisma.file.count({ where: { organizationId: orgId } }); } catch (e) {}
+    try { fileStats = await prisma.file.count({ where: { organizationId: orgId! } }); } catch (e) {}
     try { storageRaw = await prisma.organization.findUnique({ where: { id: orgId }, select: { storageUsed: true, name: true } }); } catch (e) {}
     try { analysisStats = await prisma.analysis.findMany({ 
-        where: { createdBy: { organizationId: orgId } }, take: 5, orderBy: { createdAt: 'desc' },
+        where: { createdBy: { organizationId: orgId! } }, take: 5, orderBy: { createdAt: 'desc' },
         select: { status: true, file: { select: { filename: true } }, insights: true }
     }); } catch (e) {}
-    try { teamCount = await prisma.user.count({ where: { organizationId: orgId } }); } catch (e) {}
-    try { workspaceCount = await prisma.workspace.count({ where: { organizationId: orgId } }); } catch (e) {}
+    try { teamCount = await prisma.user.count({ where: { organizationId: orgId! } }); } catch (e) {}
+    try { workspaceCount = await prisma.workspace.count({ where: { organizationId: orgId! } }); } catch (e) {}
     try { 
-        const workspaces = await prisma.workspace.findMany({ where: { organizationId: orgId }, select: { id: true } });
+        const workspaces = await prisma.workspace.findMany({ where: { organizationId: orgId! }, select: { id: true } });
         recentLogs = await prisma.auditLog.findMany({
             where: { workspaceId: { in: workspaces.map((w: any) => w.id) } },
             take: 5, orderBy: { createdAt: 'desc' },
@@ -269,7 +269,7 @@ async function generateEnterpriseReport(orgId: string, runId: string) {
         }); 
     } catch (e) {}
     try { fileTypeDistribution = await (prisma.file.groupBy as any)({
-        by: ['mimeType'], where: { organizationId: orgId }, _count: { id: true }
+        by: ['mimeType'], where: { organizationId: orgId! }, _count: { id: true }
     }); } catch (e) {}
 
     const modules = (run.metadata as any)?.modules || (run.schedule.config as any)?.modules || { infrastructure: true, analysis: true, audit: true, business: true };
@@ -473,8 +473,8 @@ router.get('/stats', authenticate, requirePermission(Permission.READ_ANALYSIS), 
     try {
         const orgId = req.user!.organizationId;
         let schedules: any[] = [], runs: any[] = [];
-        try { schedules = await prisma.schedule.findMany({ where: { organizationId: orgId } }); } catch (e) {}
-        try { runs = await prisma.scheduleRun.findMany({ where: { schedule: { organizationId: orgId } }, orderBy: { startedAt: 'desc' } }); } catch (e) {}
+        try { schedules = await prisma.schedule.findMany({ where: { organizationId: orgId! } }); } catch (e) {}
+        try { runs = await prisma.scheduleRun.findMany({ where: { schedule: { organizationId: orgId! } }, orderBy: { startedAt: 'desc' } }); } catch (e) {}
 
         const activeCount = schedules.filter((s: any) => s.isActive).length;
         const totalRuns = runs.length;
@@ -533,13 +533,13 @@ router.post('/schedules/bulk-action', authenticate, requirePermission(Permission
         if (!ids?.length || !action) { res.status(400).json({ error: 'ids and action required' }); return; }
         const orgId = req.user!.organizationId;
         if (action === 'pause') {
-            await prisma.schedule.updateMany({ where: { id: { in: ids }, organizationId: orgId }, data: { isActive: false } });
+            await prisma.schedule.updateMany({ where: { id: { in: ids }, organizationId: orgId! }, data: { isActive: false } });
         } else if (action === 'activate') {
-            await prisma.schedule.updateMany({ where: { id: { in: ids }, organizationId: orgId }, data: { isActive: true } });
+            await prisma.schedule.updateMany({ where: { id: { in: ids }, organizationId: orgId! }, data: { isActive: true } });
         } else if (action === 'delete') {
-            await prisma.schedule.deleteMany({ where: { id: { in: ids }, organizationId: orgId } });
+            await prisma.schedule.deleteMany({ where: { id: { in: ids }, organizationId: orgId! } });
         } else if (action === 'trigger') {
-            const scheds = await prisma.schedule.findMany({ where: { id: { in: ids }, organizationId: orgId } });
+            const scheds = await prisma.schedule.findMany({ where: { id: { in: ids }, organizationId: orgId! } });
             const { processSingleSchedule } = require('../services/scheduleEngine');
             for (const s of scheds) await processSingleSchedule(s);
         }

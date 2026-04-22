@@ -123,6 +123,46 @@ export const AUTOMATION_STYLES = `
 `;
 
 /* ─── Template Icon Map ─── */
-export const TEMPLATE_ICONS: Record<string, string> = {
-    briefcase: '💼', shield: '🛡️', server: '🖥️', landmark: '🏛️', users: '👥', database: '🗃️'
+/* ─── Next Run Calculator (Simulation) ─── */
+export const getNextRuns = (cron: string, count: number = 5): Date[] => {
+    const now = new Date();
+    const runs: Date[] = [];
+    let current = new Date(now.getTime());
+
+    for (let i = 0; i < count; i++) {
+        if (cron === '0 9 * * *') {
+            current.setDate(current.getDate() + 1);
+            current.setHours(9, 0, 0, 0);
+        } else if (cron === '0 18 * * *') {
+            current.setDate(current.getDate() + 1);
+            current.setHours(18, 0, 0, 0);
+        } else if (cron === '0 0 * * 1') {
+            current.setDate(current.getDate() + ((1 + 7 - current.getDay()) % 7 || 7));
+            current.setHours(0, 0, 0, 0);
+        } else if (cron === '0 9 1 * *') {
+            current.setMonth(current.getMonth() + 1);
+            current.setDate(1);
+            current.setHours(9, 0, 0, 0);
+        } else {
+            current.setTime(current.getTime() + 24 * 60 * 60 * 1000);
+        }
+        runs.push(new Date(current));
+    }
+    return runs;
 };
+
+/* ─── CSV Export Utility ─── */
+export const exportToCSV = (data: any[], filename: string) => {
+    if (!data.length) return;
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(obj => Object.values(obj).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
