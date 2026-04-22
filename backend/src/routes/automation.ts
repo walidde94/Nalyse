@@ -2,6 +2,9 @@ import { Router, Request, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { requirePermission, Permission } from '../middleware/rbac';
 import { prisma } from '../config/database';
+import path from 'path';
+import fs from 'fs';
+import jwt from 'jsonwebtoken';
 
 const router = Router(); // RESTART_PULSE
 
@@ -421,6 +424,31 @@ router.get('/history', authenticate, requirePermission(Permission.READ_ANALYSIS)
 // ==========================================
 // REPORTS
 // ==========================================
+
+router.get('/reports/:id/preview', async (req: Request, res: Response) => {
+    try {
+        // Support both Header and Query token for preview (needed for window.open)
+        const authHeader = req.headers.authorization;
+        const queryToken = req.query.token as string;
+        const token = authHeader ? authHeader.split(' ')[1] : queryToken;
+        
+        if (!token) { res.status(401).json({ error: 'Unauthorized' }); return; }
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret') as any;
+        const orgId = decoded.organizationId;
+
+        const run = await prisma.scheduleRun.findFirst({
+            where: { id: req.params.id as string, schedule: { organizationId: orgId } }
+        });
+        if (!run || !run.outputUrl) { res.status(404).json({ error: 'Report not found' }); return; }
+        
+        const filePath = path.join(process.cwd(), run.outputUrl);
+        if (!fs.existsSync(filePath)) { res.status(404).json({ error: 'Report file missing' }); return; }
+        
+        res.setHeader('Content-Type', 'text/html');
+        res.sendFile(filePath);
+    } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
 
 router.get('/reports/:id/download', authenticate, async (req: AuthRequest, res: Response) => {
     try {

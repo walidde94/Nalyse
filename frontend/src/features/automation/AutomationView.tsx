@@ -144,7 +144,12 @@ export const AutomationView = () => {
         } catch {}
     };
 
-    const handleView = (url: string) => { if (!url) { addToast('Report not found', 'error'); return; } window.open(`${API_URL}${url}?token=${token}`, '_blank'); };
+    const handleView = (run: any) => {
+        if (!run.id) return;
+        // Open the authenticated preview in a new tab with the token for auth
+        const previewUrl = `${API_URL}/api/automation/reports/${run.id}/preview?token=${token}`;
+        window.open(previewUrl, '_blank');
+    };
 
     const handleDownload = async (runId: string) => {
         try {
