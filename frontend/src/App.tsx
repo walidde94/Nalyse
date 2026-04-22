@@ -1181,7 +1181,13 @@ function AppContent() {
               options?.settingsTab ? { initialTab: options.settingsTab } : undefined
             );
           } else if (path === 'shared-workspaces') {
-             openTab('shared-workspaces', 'Shared Workspaces', options);
+            openTab('shared-workspaces', 'Shared Workspaces', options);
+          } else if (path === 'private-chat') {
+            openTab('private-chat', 'Personal Chat', options);
+          } else {
+            // Generic fallback for any other path
+            const title = path.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            openTab(path as any, title, options);
           }
         }}
       />
