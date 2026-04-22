@@ -193,7 +193,7 @@ export const AutomationView = () => {
                 <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg, #6366f1, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px -6px rgba(99,102,241,0.4)' }}>
-                            <Zap size={26} style={{ color: 'var(--text-primary)' }} />
+                            <Zap size={26} color="#fff" />
                         </div>
                         <div>
                             <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Automated Reporting</h1>

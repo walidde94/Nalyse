@@ -2152,7 +2152,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     <div className="flex items-center gap-6">
                                         <div className="flex-col">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xl font-bold font-data text-white">{filteredData.length.toLocaleString()}</span>
+                                                <span className="text-xl font-bold font-data text-[var(--text-primary)]">{filteredData.length.toLocaleString()}</span>
                                                 <span className="text-[10px] font-black tracking-widest text-[var(--text-secondary)] opacity-40 uppercase">Total Records</span>
                                             </div>
                                             {filteredData.length !== localData.length && (
@@ -2160,14 +2160,14 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                             )}
                                         </div>
 
-                                        <div className="h-4 w-px bg-white/5 mx-2" />
+                                        <div className="h-4 w-px bg-[var(--border-subtle)] mx-2" />
 
                                         <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 group-focus-within:border-primary/40 transition-all">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-20"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                                             <input
                                                 type="text"
                                                 placeholder="Instant column search..."
-                                                className="bg-transparent border-none outline-none text-xs font-bold text-white w-64 placeholder:opacity-20"
+                                                className="bg-transparent border-none outline-none text-xs font-bold text-[var(--text-primary)] w-64 placeholder:opacity-20"
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                             />
@@ -2178,7 +2178,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-xl border border-white/5">
                                             <span className="text-[9px] font-bold uppercase tracking-widest opacity-20">Limit</span>
                                             <select
-                                                className="bg-transparent border-none text-[11px] font-black text-white outline-none cursor-pointer focus:ring-0"
+                                                className="bg-transparent border-none text-[11px] font-black text-[var(--text-primary)] outline-none cursor-pointer focus:ring-0"
                                                 value={gridPageSize}
                                                 onChange={(e) => setGridPageSize(Number(e.target.value))}
                                             >
@@ -2642,7 +2642,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
             {activeTab === 'presentation' && (
                 <div className="fade-in" style={{
                     position: 'absolute', inset: 0, zIndex: 9000,
-                    background: 'var(--bg-main)', color: 'var(--text-primary)',
+                    background: 'var(--bg-app)', color: 'var(--text-primary)',
                     display: 'flex', flexDirection: 'column'
                 }}>
                     {/* Top Progress Bars */}
@@ -2706,7 +2706,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
 
                         {/* Slide Content */}
                         <div className="fade-in-scale" style={{ width: '100%', maxWidth: '1000px', padding: '24px', zIndex: 6, pointerEvents: 'none' }}>
-                            <div style={{ textAlign: 'center', marginBottom: '40px', pointerEvents: 'auto', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '40px', pointerEvents: 'auto' }}>
                                 <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px', letterSpacing: '-0.01em' }}>
                                     {(analysis.options?.[presentationIndex]?.title) || "Analysis Overview"}
                                 </h1>
@@ -2735,7 +2735,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     return (
                         <div style={{
                             position: 'fixed', inset: 0, zIndex: 1000,
-                            background: 'rgba(5, 5, 10, 0.95)', backdropFilter: 'blur(10px)',
+                            background: 'var(--bg-app)', backdropFilter: 'blur(20px)',
                             display: 'flex', flexDirection: 'column', padding: '40px'
                         }}>
                             <div className="flex justify-between items-center mb-6">

@@ -151,7 +151,7 @@ const MemberRow = ({ m, idx, isAdmin, token, activeUsers, onRefresh, onSelect }:
             <td style={{ padding: '14px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ position: 'relative' }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: 'var(--text-primary)', boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${avatarColor}cc, ${avatarColor}66)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#fff', boxShadow: `0 4px 12px ${avatarColor}33`, flexShrink: 0 }}>
                             {(m.firstName?.charAt(0) || m.email.charAt(0)).toUpperCase()}
                         </div>
                         <div style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderRadius: '50%', background: status.color, border: '2px solid var(--bg-main)', boxShadow: status.glow ? `0 0 8px ${status.color}88` : 'none' }} />
@@ -393,7 +393,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             onClick={() => setActiveTab(tab.id)}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10,
-                                background: isActive ? 'var(--border-default)' : 'transparent',
+                                background: isActive ? 'var(--primary)' : 'transparent',
                                 border: 'none',
                                 color: isActive ? '#fff' : 'var(--text-muted)',
                                 fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
@@ -405,7 +405,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                             {tab.count !== undefined && (
                                 <span style={{
                                     fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 6,
-                                    background: isActive ? 'var(--bg-elevated)' : 'var(--bg-surface-hover)',
+                                    background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--bg-surface-hover)',
                                     color: isActive ? '#fff' : 'var(--text-muted)',
                                     minWidth: 16, textAlign: 'center'
                                 }}>
@@ -514,7 +514,7 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                     const config = ACTION_LABELS[log.action] || { label: log.action.toLowerCase().replace(/_/g, ' '), icon: Activity, color: '#64748b' };
                                                     const LogIcon = config.icon;
                                                     return (
-                                                        <div key={log.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderBottom: i < 7 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+                                                        <div key={log.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderBottom: i < 7 ? '1px solid var(--border-subtle)' : 'none' }}>
                                                             <div style={{ width: 28, height: 28, borderRadius: 7, background: `${config.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                                                                 <LogIcon size={13} color={config.color} />
                                                             </div>
@@ -591,9 +591,9 @@ export const OrganizationView = ({ token }: { token?: string }) => {
                                                 <button
                                                     onClick={() => setInviteModalOpen(true)}
                                                     style={{
-                                                        background: '#fff', color: 'var(--text-inverse)', border: 'none', borderRadius: 8, padding: '8px 16px',
+                                                        background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px',
                                                         fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-                                                        boxShadow: '0 4px 12px rgba(255,255,255,0.1)'
+                                                        boxShadow: '0 4px 12px var(--primary-glow)'
                                                     }}
                                                 >
                                                     <UserPlus size={14} /> Invite Member
