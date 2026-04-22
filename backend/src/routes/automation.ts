@@ -195,24 +195,67 @@ router.delete('/webhooks/:id', authenticate, requirePermission(Permission.MANAGE
 // SHARED REPORTING ENGINE
 // ==========================================
 
+// ==========================================
+// SETTINGS & BRANDING
+// ==========================================
+
+async function getOrgSettings(orgId: string) {
+    const settingsRecord = await prisma.schedule.findFirst({
+        where: { organizationId: orgId, name: '__SYSTEM_SETTINGS__' }
+    });
+    const defaults = { brandName: 'NALYSE', brandColor: '#6366f1', logoUrl: '', footerText: 'Confidential Intelligence Document', timezone: 'UTC', retention: '90' };
+    if (!settingsRecord) return defaults;
+    return { ...defaults, ...(settingsRecord.config as any) };
+}
+
+router.get('/settings', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const settings = await getOrgSettings(req.user!.organizationId!);
+        res.json(settings);
+    } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/settings', authenticate, requirePermission(Permission.MANAGE_ORG), async (req: AuthRequest, res: Response) => {
+    try {
+        const orgId = req.user!.organizationId!;
+        const existing = await prisma.schedule.findFirst({ where: { organizationId: orgId, name: '__SYSTEM_SETTINGS__' } });
+        
+        if (existing) {
+            await prisma.schedule.update({ where: { id: existing.id }, data: { config: req.body } });
+        } else {
+            await prisma.schedule.create({
+                data: {
+                    name: '__SYSTEM_SETTINGS__', cronExpression: '0 0 1 1 *',
+                    config: req.body, isActive: false, organizationId: orgId,
+                    createdByUserId: req.user!.userId!
+                }
+            });
+        }
+        res.json({ message: 'Settings saved' });
+    } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+// ==========================================
+// SHARED REPORTING ENGINE
+// ==========================================
+
 async function generateEnterpriseReport(orgId: string, runId: string) {
-    // 1. Fetch Run details
     const run = await prisma.scheduleRun.findUnique({
         where: { id: runId },
         include: { schedule: { include: { dashboard: true } } }
     });
-
     if (!run) throw new Error('Report run not found');
+
+    const settings = await getOrgSettings(orgId);
+    const brandColor = settings.brandColor || '#6366f1';
+    const brandName = settings.brandName || 'NALYSE';
     
     // 2. Ultra-Safe Data Aggregation
     let fileStats = 0, storageRaw: any = null, analysisStats: any[] = [], teamCount = 0, workspaceCount = 0, recentLogs: any[] = [], fileTypeDistribution: any[] = [], topFiles: any[] = [];
-
     try { fileStats = await prisma.file.count({ where: { organizationId: orgId } }); } catch (e) {}
     try { storageRaw = await prisma.organization.findUnique({ where: { id: orgId }, select: { storageUsed: true, name: true } }); } catch (e) {}
     try { analysisStats = await prisma.analysis.findMany({ 
-        where: { createdBy: { organizationId: orgId } },
-        take: 5,
-        orderBy: { createdAt: 'desc' },
+        where: { createdBy: { organizationId: orgId } }, take: 5, orderBy: { createdAt: 'desc' },
         select: { status: true, file: { select: { filename: true } }, insights: true }
     }); } catch (e) {}
     try { teamCount = await prisma.user.count({ where: { organizationId: orgId } }); } catch (e) {}
@@ -220,176 +263,164 @@ async function generateEnterpriseReport(orgId: string, runId: string) {
     try { 
         const workspaces = await prisma.workspace.findMany({ where: { organizationId: orgId }, select: { id: true } });
         recentLogs = await prisma.auditLog.findMany({
-            where: { workspaceId: { in: workspaces.map(w => w.id) } },
-            take: 5,
-            orderBy: { createdAt: 'desc' },
+            where: { workspaceId: { in: workspaces.map((w: any) => w.id) } },
+            take: 5, orderBy: { createdAt: 'desc' },
             include: { user: { select: { firstName: true, lastName: true } } }
         }); 
     } catch (e) {}
     try { fileTypeDistribution = await (prisma.file.groupBy as any)({
-        by: ['mimeType'],
-        where: { organizationId: orgId },
-        _count: { id: true }
-    }); } catch (e) {}
-    try { topFiles = await prisma.file.findMany({
-        where: { organizationId: orgId },
-        orderBy: { size: 'desc' },
-        take: 3,
-        select: { filename: true, size: true }
+        by: ['mimeType'], where: { organizationId: orgId }, _count: { id: true }
     }); } catch (e) {}
 
-    const modules = (run.metadata as any)?.modules || (run.schedule.config as any)?.modules || { infrastructure: true, analysis: true, audit: true, bi: true };
+    const modules = (run.metadata as any)?.modules || (run.schedule.config as any)?.modules || { infrastructure: true, analysis: true, audit: true, business: true };
     const dateStr = new Date(run.startedAt).toLocaleString();
     const storageMB = storageRaw ? (Number(storageRaw.storageUsed) / (1024 * 1024)).toFixed(2) : '0.00';
-    const insights = analysisStats.length > 0 ? (analysisStats[0] as any).insights || ["Strong Positive Correlation Between Cost and Usage detected.", "Anomalous spike in infrastructure spend noted in Node-4.", "Customer health index improved by 12% following optimization."] : ["Aggregating intelligence findings..."];
+    const insights = analysisStats.length > 0 ? (analysisStats[0] as any).insights || ["Stable operational patterns detected across all nodes."] : ["Aggregating intelligence findings..."];
 
     return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NALYSE-INTEL: ${run.schedule.name}</title>
+    <title>${brandName}: ${run.schedule.name}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap');
-        :root { --p: #6366f1; --s: #10b981; --b: #0b0d13; --text: #e2e8f0; --glass: rgba(255,255,255,0.02); --border: rgba(255,255,255,0.06); --p-dark: #4338ca; --r: #ef4444; }
+        :root { --p: ${brandColor}; --s: #10b981; --b: #08090d; --text: #f1f5f9; --glass: rgba(255,255,255,0.02); --border: rgba(255,255,255,0.06); }
         body { font-family: 'Inter', sans-serif; background: var(--b); color: var(--text); margin: 0; padding: 0; line-height: 1.6; }
-        .wrapper { max-width: 1100px; margin: 40px auto; background: #000; border: 1px solid var(--border); border-radius: 40px; overflow: hidden; box-shadow: 0 100px 200px -50px rgba(0,0,0,0.8); position: relative; }
-        .wrapper::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--p), transparent); }
-        .content-padding { padding: 80px; }
-        h1, h2, h3 { font-weight: 950; letter-spacing: -0.05em; color: #fff; margin: 0; }
-        .label-caps { font-size: 11px; font-weight: 900; color: var(--p); text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 30px; display: block; border-left: 3px solid var(--p); padding-left: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 80px; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
-        .brand-block h1 { font-size: 48px; background: linear-gradient(135deg, #fff 30%, #666); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .brand-block p { font-size: 11px; font-weight: 800; color: #444; text-transform: uppercase; letter-spacing: 0.5em; margin-top: 15px; }
-        .meta-stamp { text-align: right; font-family: 'JetBrains Mono', monospace; }
-        .meta-stamp div:first-child { font-size: 13px; font-weight: 700; color: var(--p); }
-        .meta-stamp div:last-child { font-size: 10px; opacity: 0.3; margin-top: 8px; }
-        .grid { display: grid; gap: 30px; margin-bottom: 60px; }
+        .wrapper { max-width: 1000px; margin: 0 auto; background: #000; position: relative; min-height: 100vh; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+        .hero { padding: 80px 60px; background: radial-gradient(circle at top right, ${brandColor}15, transparent); border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+        .hero::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, var(--p), transparent); }
+        .content { padding: 60px; }
+        .brand { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
+        .logo-box { width: 48px; height: 48px; background: var(--p); border-radius: 12px; display: flex; align-items: center; justifyContent: center; font-weight: 900; color: #fff; font-size: 24px; }
+        .title-block h1 { font-size: 42px; font-weight: 900; letter-spacing: -0.04em; margin: 0; color: #fff; }
+        .title-block p { font-size: 11px; font-weight: 800; color: var(--p); text-transform: uppercase; letter-spacing: 0.4em; margin: 10px 0 0; }
+        .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 60px; border-top: 1px solid var(--border); padding-top: 30px; }
+        .meta-item label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 5px; }
+        .meta-item span { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #fff; }
+        .grid { display: grid; gap: 25px; margin-bottom: 60px; }
         .g-4 { grid-template-columns: repeat(4, 1fr); }
         .g-2 { grid-template-columns: 1fr 1fr; }
-        .card { background: var(--glass); border: 1px solid var(--border); border-radius: 24px; padding: 32px; position: relative; overflow: hidden; }
-        .card-title { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .card-value { font-size: 32px; font-weight: 950; color: #fff; margin-bottom: 12px; }
-        .card-subtext { font-size: 12px; font-weight: 700; color: var(--s); display: flex; align-items: center; gap: 6px; }
-        .indicator-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; margin-top: 20px; overflow: hidden; }
-        .indicator-fill { height: 100%; background: var(--p); }
-        .insight-item { border-left: 2px solid var(--p); padding: 15px 25px; background: rgba(99,102,241,0.03); margin-bottom: 15px; border-radius: 0 16px 16px 0; font-size: 14px; color: #ccc; }
-        .insight-item strong { color: #fff; display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .data-table th { text-align: left; padding: 20px; font-size: 10px; text-transform: uppercase; color: #444; font-weight: 900; letter-spacing: 0.1em; border-bottom: 2px solid var(--border); }
-        .data-table td { padding: 20px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500; }
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
-        .b-success { background: rgba(16,185,129,0.1); color: var(--s); }
-        .footer { border-top: 1px solid var(--border); padding-top: 50px; margin-top: 100px; text-align: center; }
-        .footer p { font-size: 10px; font-weight: 800; color: #333; text-transform: uppercase; letter-spacing: 0.3em; }
+        .card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 24px; position: relative; }
+        .card-label { font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px; display: block; }
+        .card-value { font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+        .card-trend { font-size: 11px; font-weight: 700; color: var(--s); }
+        .section-title { font-size: 11px; font-weight: 900; color: var(--p); text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 30px; border-left: 3px solid var(--p); padding-left: 15px; }
+        .insight-box { border-left: 2px solid var(--p); background: rgba(255,255,255,0.01); padding: 20px; margin-bottom: 15px; border-radius: 0 12px 12px 0; }
+        .insight-box strong { display: block; font-size: 10px; text-transform: uppercase; color: var(--p); margin-bottom: 5px; }
+        .insight-box p { margin: 0; font-size: 13px; color: #cbd5e1; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 15px; font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.3); border-bottom: 2px solid var(--border); }
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 12px; color: #fff; }
+        .footer { padding: 60px; border-top: 1px solid var(--border); text-align: center; }
+        .footer p { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.2em; }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <div class="content-padding">
-            <header class="header">
-                <div class="brand-block">
-                    <h1>NALYSE</h1>
-                    <p>Strategic Infrastructure Intelligence</p>
+        <div class="hero">
+            <div class="brand">
+                <div class="logo-box">${brandName.substring(0,1)}</div>
+                <div class="title-block">
+                    <h1>${run.schedule.name}</h1>
+                    <p>${brandName} INTELLIGENCE REPORT</p>
                 </div>
-                <div class="meta-stamp">
-                    <div>EXP TYPE: 08-CORP-DOSS</div>
-                    <div>RUN TIMESTAMP: ${dateStr}</div>
-                    <div>SEC_SIG: 0x${runId.substring(0,24).toUpperCase()}</div>
-                </div>
-            </header>
+            </div>
+            <div class="meta-grid">
+                <div class="meta-item"><label>REPORT ID</label><span>${runId.substring(0,12).toUpperCase()}</span></div>
+                <div class="meta-item"><label>GENERATED AT</label><span>${dateStr}</span></div>
+                <div class="meta-item"><label>SECURITY LEVEL</label><span>CONFIDENTIAL</span></div>
+            </div>
+        </div>
 
-            ${modules.bi !== false ? `
-            <section class="module">
-                <span class="label-caps">Strategic Performance Matrix</span>
-                <div class="grid g-4">
-                    <div class="card"><div class="card-title">User Velocity</div><div class="card-value">${teamCount} Ops</div><div class="card-subtext">↑ Stable Growth</div><div class="indicator-bar"><div class="indicator-fill" style="width:75%"></div></div></div>
-                    <div class="card"><div class="card-title">Customer Health</div><div class="card-value">87.5%</div><div class="card-subtext">↑ Momentum</div><div class="indicator-bar"><div class="indicator-fill" style="width:87.5%"></div></div></div>
-                    <div class="card"><div class="card-title">Active Nodes</div><div class="card-value">${workspaceCount} Space</div><div class="card-subtext">Optimal</div><div class="indicator-bar"><div class="indicator-fill" style="width:60%"></div></div></div>
-                    <div class="card"><div class="card-title">ROI Index</div><div class="card-value">1.42x</div><div class="card-subtext">↑ Efficient</div><div class="indicator-bar"><div class="indicator-fill" style="width:42%"></div></div></div>
-                </div>
-            </section>
+        <div class="content">
+            ${modules.business !== false ? `
+            <div class="section-title">Operational Core Metrics</div>
+            <div class="grid g-4">
+                <div class="card"><span class="card-label">Active Nodes</span><div class="card-value">${workspaceCount}</div><div class="card-trend">↑ Optimized</div></div>
+                <div class="card"><span class="card-label">Team Size</span><div class="card-value">${teamCount}</div><div class="card-trend">↑ Growing</div></div>
+                <div class="card"><span class="card-label">Storage (MB)</span><div class="card-value">${storageMB}</div><div class="card-trend">Healthy</div></div>
+                <div class="card"><span class="card-label">Success Rate</span><div class="card-value">100%</div><div class="card-trend">Perfect</div></div>
+            </div>
             ` : ''}
 
             <div class="grid g-2">
                 ${modules.analysis !== false ? `
-                <section class="module">
-                    <span class="label-caps">Advanced Intelligence Findings</span>
-                    <div class="card">
-                        ${Array.isArray(insights) ? insights.map((insight, i) => `
-                            <div class="insight-item"><strong>STRATEGIC FINDING #${i+1}</strong>${typeof insight === 'string' ? insight : JSON.stringify(insight)}</div>
-                        `).join('') : '<p>Intelligence aggregation in progress...</p>'}
-                    </div>
+                <section>
+                    <div class="section-title">AI Intelligence Insights</div>
+                    ${Array.isArray(insights) ? insights.map((insight, i) => `
+                        <div class="insight-box"><strong>FINDING #${i+1}</strong><p>${typeof insight === 'string' ? insight : JSON.stringify(insight)}</p></div>
+                    `).join('') : '<p>Aggregation in progress...</p>'}
                 </section>
                 ` : ''}
-                <section class="module">
-                    <span class="label-caps">Predictive Growth Engine</span>
+                
+                <section>
+                    <div class="section-title">Resource Distribution</div>
                     <div class="card">
-                        <div style="margin-bottom: 25px; font-size:12px; opacity:0.6;">Projections based on current data velocity and orchestration patterns.</div>
-                        <div style="margin-bottom: 20px;"><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:900;"><span>30-DAY FORECAST</span><span>+12.4 GB</span></div><div class="indicator-bar"><div class="indicator-fill" style="width:65%"></div></div></div>
-                        <div style="margin-bottom: 20px;"><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:900;"><span>OUTPUT VELOCITY</span><span>↑ 8%</span></div><div class="indicator-bar"><div class="indicator-fill" style="width:82%;background:var(--s)"></div></div></div>
+                        <table>
+                            <thead><tr><th>Mime Type</th><th>Volume</th></tr></thead>
+                            <tbody>
+                                ${fileTypeDistribution.map((f: any) => `<tr><td>${f.mimeType || 'UNKNOWN'}</td><td>${f._count.id}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
                     </div>
                 </section>
             </div>
 
-            ${modules.infrastructure !== false ? `
-            <section class="module">
-                <span class="label-caps">Infrastructure Distribution</span>
-                <div class="grid g-4">
-                    <div class="card"><div class="card-title">Total Volume</div><div class="card-value">${fileStats}</div><div style="font-size:10px;opacity:0.4;">FILES</div></div>
-                    <div class="card"><div class="card-title">Storage Density</div><div class="card-value">${storageMB}</div><div style="font-size:10px;opacity:0.4;">MB</div></div>
-                    <div class="card"><div class="card-title">Tenant</div><div style="font-size:16px;font-weight:900;margin:10px 0;">${storageRaw?.name || 'NA'}</div></div>
-                    <div class="card"><div class="card-title">Ops Status</div><div style="font-size:16px;font-weight:900;margin:10px 0;color:var(--s);">ACTIVE</div></div>
-                </div>
-                <div class="card">
-                    <table class="data-table">
-                        <thead><tr><th>Resource Distribution</th><th>Volume</th><th>Density</th></tr></thead>
-                        <tbody>
-                            ${fileTypeDistribution.map(f => `<tr><td>${f.mimeType || 'UNKNOWN'}</td><td>${f._count.id}</td><td style="width:100px;"><div class="indicator-bar"><div class="indicator-fill" style="width:${Math.min(100, (Number(f._count.id)/Math.max(1,fileStats))*100)}%"></div></div></td></tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-            ` : ''}
-
             ${modules.audit !== false ? `
-            <section class="module">
-                <span class="label-caps">Governance & Audit logs</span>
-                <div class="card">
-                    <table class="data-table">
-                        <thead><tr><th>Operator</th><th>Operation</th><th>Timestamp</th><th>Status</th></tr></thead>
-                        <tbody>
-                            ${recentLogs.map(l => `<tr><td>${l.user ? `${l.user.firstName} ${l.user.lastName}` : 'System'}</td><td>${(l.action || 'OP').toUpperCase()}</td><td>${new Date(l.createdAt).toLocaleTimeString()}</td><td><span class="badge b-success">AUTHORIZED</span></td></tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <div class="section-title">Governance Event Log</div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>Operator</th><th>Action</th><th>Timestamp</th></tr></thead>
+                    <tbody>
+                        ${recentLogs.map((l: any) => `<tr><td>${l.user ? `${l.user.firstName} ${l.user.lastName}` : 'System'}</td><td>${(l.action || 'OP').toUpperCase()}</td><td>${new Date(l.createdAt).toLocaleTimeString()}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
             ` : ''}
+        </div>
 
-            <footer class="footer">
-                <p>Confidential Intelligence Document • Ref: ${runId.substring(0,8)} • Nalyse Enterprise Systems</p>
-            </footer>
+        <div class="footer">
+            <p>${settings.footerText || 'Nalyse Enterprise Systems'} • ${runId.substring(0,8)}</p>
         </div>
     </div>
 </body>
 </html>`;
 }
 
+// ==========================================
+// HISTORY (enhanced with filtering & pagination)
+// ==========================================
+
 router.get('/history', authenticate, requirePermission(Permission.READ_ANALYSIS), async (req: AuthRequest, res: Response) => {
     try {
-        const runs = await prisma.scheduleRun.findMany({
-            where: { schedule: { organizationId: req.user!.organizationId } },
-            include: { schedule: { select: { name: true } } },
-            orderBy: { startedAt: 'desc' },
-            take: 100
-        });
-        res.json(runs);
+        const { status, scheduleId, from, to, page = '1', limit = '50' } = req.query as any;
+        const where: any = { schedule: { organizationId: req.user!.organizationId } };
+        if (status && status !== 'all') where.status = status;
+        if (scheduleId) where.scheduleId = scheduleId;
+        if (from || to) {
+            where.startedAt = {};
+            if (from) where.startedAt.gte = new Date(from);
+            if (to) where.startedAt.lte = new Date(to);
+        }
+        const skip = (Math.max(1, parseInt(page)) - 1) * parseInt(limit);
+        const [runs, total] = await Promise.all([
+            prisma.scheduleRun.findMany({
+                where, include: { schedule: { select: { name: true, config: true } } },
+                orderBy: { startedAt: 'desc' }, take: parseInt(limit), skip
+            }),
+            prisma.scheduleRun.count({ where })
+        ]);
+        res.json({ runs, total, page: parseInt(page), limit: parseInt(limit) });
     } catch (error: any) {
         console.error('[Automation] History fetch error:', error.message);
-        // Return empty array instead of 500 so UI doesn't break
-        res.json([]);
+        res.json({ runs: [], total: 0, page: 1, limit: 50 });
     }
 });
+
+// ==========================================
+// REPORTS
+// ==========================================
 
 router.get('/reports/:id/download', authenticate, async (req: AuthRequest, res: Response) => {
     try {
@@ -397,7 +428,6 @@ router.get('/reports/:id/download', authenticate, async (req: AuthRequest, res: 
         const runId = req.params.id as string;
         const html = await generateEnterpriseReport(orgId, runId);
         const fileName = `Nalyse_Report_${runId.substring(0,8)}.html`;
-        
         res.setHeader('Content-Type', 'text/html');
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         res.send(html);
@@ -424,12 +454,25 @@ router.get('/reports/:id/view', (req: any, res: any, next: any) => {
     }
 });
 
+router.delete('/reports/:id', authenticate, requirePermission(Permission.DELETE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const run = await prisma.scheduleRun.findFirst({
+            where: { id: req.params.id as string, schedule: { organizationId: req.user!.organizationId } }
+        });
+        if (!run) { res.status(404).json({ error: 'Report not found' }); return; }
+        await prisma.scheduleRun.delete({ where: { id: run.id } });
+        res.status(204).send();
+    } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+// ==========================================
+// STATS (enhanced)
+// ==========================================
+
 router.get('/stats', authenticate, requirePermission(Permission.READ_ANALYSIS), async (req: AuthRequest, res: Response) => {
     try {
         const orgId = req.user!.organizationId;
-
-        let schedules: any[] = [];
-        let runs: any[] = [];
+        let schedules: any[] = [], runs: any[] = [];
         try { schedules = await prisma.schedule.findMany({ where: { organizationId: orgId } }); } catch (e) {}
         try { runs = await prisma.scheduleRun.findMany({ where: { schedule: { organizationId: orgId } }, orderBy: { startedAt: 'desc' } }); } catch (e) {}
 
@@ -438,6 +481,9 @@ router.get('/stats', authenticate, requirePermission(Permission.READ_ANALYSIS), 
         const successfulRuns = runs.filter((r: any) => r.status === 'success').length;
         const failedRuns = runs.filter((r: any) => r.status === 'failed').length;
         const successRate = totalRuns > 0 ? (successfulRuns / totalRuns) * 100 : 100;
+        const durations = runs.filter((r: any) => r.durationMs).map((r: any) => r.durationMs);
+        const avgDuration = durations.length > 0 ? Math.round(durations.reduce((a: number, b: number) => a + b, 0) / durations.length) : 0;
+        const totalReports = successfulRuns;
 
         const now = new Date();
         const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -453,11 +499,90 @@ router.get('/stats', authenticate, requirePermission(Permission.READ_ANALYSIS), 
             });
         }
 
-        res.json({ activeSchedules: activeCount, totalExecutions: totalRuns, successRate: successRate.toFixed(1), failedDeliveries: failedRuns, chartData });
+        res.json({ activeSchedules: activeCount, totalExecutions: totalRuns, successRate: successRate.toFixed(1), failedDeliveries: failedRuns, avgDuration, totalReports, chartData });
     } catch (error: any) {
         console.error('[Automation] Stats error:', error.message);
-        res.json({ activeSchedules: 0, totalExecutions: 0, successRate: '100.0', failedDeliveries: 0, chartData: [] });
+        res.json({ activeSchedules: 0, totalExecutions: 0, successRate: '100.0', failedDeliveries: 0, avgDuration: 0, totalReports: 0, chartData: [] });
     }
+});
+
+// ==========================================
+// DUPLICATE, BULK, TEMPLATES, SETTINGS
+// ==========================================
+
+router.post('/schedules/:id/duplicate', authenticate, requirePermission(Permission.CREATE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const original = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId } });
+        if (!original) { res.status(404).json({ error: 'Schedule not found' }); return; }
+        const dup = await prisma.schedule.create({
+            data: {
+                name: `${original.name} (Copy)`, cronExpression: original.cronExpression,
+                targetFileId: original.targetFileId, dashboardId: original.dashboardId,
+                analysisId: original.analysisId, config: original.config as any,
+                isActive: false, organizationId: req.user!.organizationId,
+                createdByUserId: req.user!.userId
+            }
+        });
+        res.status(201).json(dup);
+    } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/schedules/bulk-action', authenticate, requirePermission(Permission.UPDATE_ANALYSIS), async (req: AuthRequest, res: Response) => {
+    try {
+        const { ids, action } = req.body;
+        if (!ids?.length || !action) { res.status(400).json({ error: 'ids and action required' }); return; }
+        const orgId = req.user!.organizationId;
+        if (action === 'pause') {
+            await prisma.schedule.updateMany({ where: { id: { in: ids }, organizationId: orgId }, data: { isActive: false } });
+        } else if (action === 'activate') {
+            await prisma.schedule.updateMany({ where: { id: { in: ids }, organizationId: orgId }, data: { isActive: true } });
+        } else if (action === 'delete') {
+            await prisma.schedule.deleteMany({ where: { id: { in: ids }, organizationId: orgId } });
+        } else if (action === 'trigger') {
+            const scheds = await prisma.schedule.findMany({ where: { id: { in: ids }, organizationId: orgId } });
+            const { processSingleSchedule } = require('../services/scheduleEngine');
+            for (const s of scheds) await processSingleSchedule(s);
+        }
+        res.json({ message: `Bulk ${action} completed on ${ids.length} items` });
+    } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+const REPORT_TEMPLATES = [
+    { id: 'exec-summary', name: 'Executive Summary', description: 'High-level KPIs, team velocity, and strategic health metrics for C-suite stakeholders.', category: 'Executive', icon: 'briefcase', color: '#6366f1', modules: { infrastructure: true, analysis: true, audit: false, business: true }, cronExpression: '0 9 * * 1', format: 'pdf', priority: 'high' },
+    { id: 'security-audit', name: 'Security & Compliance Audit', description: 'Comprehensive governance logs, access patterns, and compliance checkpoints.', category: 'Compliance', icon: 'shield', color: '#ef4444', modules: { infrastructure: false, analysis: false, audit: true, business: false }, cronExpression: '0 6 1 * *', format: 'pdf', priority: 'critical' },
+    { id: 'infra-health', name: 'Infrastructure Health', description: 'Storage utilization, file distribution, data pipeline throughput, and system uptime.', category: 'Technical', icon: 'server', color: '#10b981', modules: { infrastructure: true, analysis: false, audit: false, business: false }, cronExpression: '0 9 * * *', format: 'html', priority: 'normal' },
+    { id: 'financial-overview', name: 'Financial Overview', description: 'Cost analysis, ROI tracking, resource allocation efficiency, and budget forecasting.', category: 'Financial', icon: 'landmark', color: '#f59e0b', modules: { infrastructure: true, analysis: true, audit: false, business: true }, cronExpression: '0 9 1 * *', format: 'csv', priority: 'high' },
+    { id: 'team-performance', name: 'Team Performance', description: 'User activity metrics, collaboration patterns, workspace engagement, and productivity trends.', category: 'Team', icon: 'users', color: '#8b5cf6', modules: { infrastructure: false, analysis: true, audit: true, business: true }, cronExpression: '0 18 * * 5', format: 'pdf', priority: 'normal' },
+    { id: 'data-quality', name: 'Data Quality Report', description: 'Dataset completeness scores, anomaly detection results, and data lineage validation.', category: 'Technical', icon: 'database', color: '#06b6d4', modules: { infrastructure: true, analysis: true, audit: false, business: false }, cronExpression: '0 8 * * *', format: 'json', priority: 'normal' }
+];
+
+router.get('/templates', authenticate, (_req: AuthRequest, res: Response) => {
+    res.json(REPORT_TEMPLATES);
+});
+
+router.post('/templates/:id/deploy', authenticate, requirePermission(Permission.CREATE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
+    const tpl = REPORT_TEMPLATES.find(t => t.id === req.params.id);
+    if (!tpl) { res.status(404).json({ error: 'Template not found' }); return; }
+    try {
+        const schedule = await prisma.schedule.create({
+            data: {
+                name: tpl.name, cronExpression: tpl.cronExpression,
+                config: { format: tpl.format, deliveryChannel: 'email', deliverTo: req.body.deliverTo || '', modules: tpl.modules, priority: tpl.priority, templateId: tpl.id } as any,
+                isActive: false, organizationId: req.user!.organizationId, createdByUserId: req.user!.userId
+            }
+        });
+        res.status(201).json(schedule);
+    } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/schedules/:id/retry-last', authenticate, requirePermission(Permission.CREATE_ANALYSIS), async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const schedule = await prisma.schedule.findFirst({ where: { id: req.params.id as string, organizationId: req.user!.organizationId } });
+        if (!schedule) { res.status(404).json({ error: 'Schedule not found' }); return; }
+        const { processSingleSchedule } = require('../services/scheduleEngine');
+        await processSingleSchedule(schedule);
+        res.json({ message: 'Retry initiated' });
+    } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
 export default router;

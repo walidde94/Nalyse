@@ -58,7 +58,8 @@ export const processSingleSchedule = async (schedule: any) => {
         data: {
             scheduleId: schedule.id,
             status: 'pending',
-            startedAt: new Date()
+            startedAt: new Date(),
+            metadata: { modules: (schedule.config as any)?.modules, config: schedule.config } as any
         }
     });
 
