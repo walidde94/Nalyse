@@ -151,6 +151,13 @@ export const AutomationView = () => {
         window.open(previewUrl, '_blank');
     };
 
+    const handleShare = (run: any) => {
+        if (!run.id) return;
+        const previewUrl = `${API_URL}/api/automation/reports/${run.id}/preview?token=${token}`;
+        navigator.clipboard.writeText(previewUrl);
+        addToast('Preview link copied to clipboard', 'success');
+    };
+
     const handleDownload = async (runId: string) => {
         try {
             const r = await fetch(`${API_URL}/api/automation/reports/${runId}/download`, { headers: { Authorization: `Bearer ${token}` } });
@@ -218,7 +225,7 @@ export const AutomationView = () => {
                 {activeTab === 'pipelines' && <PipelinesTab schedules={filteredSchedules} dashboards={dashboards} analyses={analyses} loading={loading} onTrigger={handleTrigger} onToggle={handleToggle} onDelete={handleDelete} onDuplicate={handleDuplicate} onCreate={handleCreate} />}
                 {activeTab === 'templates' && <TemplatesTab onDeployed={fetchData} />}
                 {activeTab === 'history' && <ExecutionLogTab history={filteredHistory} schedules={schedules} total={historyTotal} page={historyPage} limit={50} onFilterChange={handleHistoryFilter} onRetry={handleRetry} onView={handleView} onDownload={handleDownload} />}
-                {activeTab === 'reports' && <ReportGalleryTab history={filteredHistory} onView={handleView} onDownload={handleDownload} onDelete={handleDeleteReport} onGoSchedules={() => setActiveTab('pipelines')} onTriggerFirst={() => schedules[0] && handleTrigger(schedules[0].id)} hasSchedules={schedules.length > 0} />}
+                {activeTab === 'reports' && <ReportGalleryTab history={filteredHistory} onView={handleView} onShare={handleShare} onDownload={handleDownload} onDelete={handleDeleteReport} onGoSchedules={() => setActiveTab('pipelines')} onTriggerFirst={() => schedules[0] && handleTrigger(schedules[0].id)} hasSchedules={schedules.length > 0} />}
                 {activeTab === 'settings' && <SettingsTab />}
             </div>
 

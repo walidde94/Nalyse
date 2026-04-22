@@ -72,8 +72,12 @@ export const ReportGalleryTab = ({ history, onView, onDownload, onDelete, onGoSc
                                     style={{ flex: 2, padding: '10px', borderRadius: 10, background: isPending ? 'rgba(255,255,255,0.05)' : '#6366f1', color: '#fff', border: 'none', cursor: isPending ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: isPending ? 0.5 : 1 }}>
                                     <Eye size={14} /> View Report
                                 </button>
+                                <button onClick={() => onShare(run)} disabled={isPending}
+                                    style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: isPending ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isPending ? 0.5 : 1 }}>
+                                    <Share2 size={14} />
+                                </button>
                                 <button onClick={() => onDownload(run)} disabled={isPending}
-                                    style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: isPending ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: isPending ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isPending ? 0.5 : 1 }}>
                                     <Download size={14} />
                                 </button>
                                 <button onClick={() => onDelete(run.id)}
