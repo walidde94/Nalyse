@@ -224,11 +224,45 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
         { id: 'notifications', label: 'Notifications', icon: <Icons.Bell /> }
     ];
 
-    const NOTIFICATION_OPTIONS = [
-        { key: 'analysis', title: 'Analysis Complete', desc: 'Get notified when your data analysis jobs finish.' },
-        { key: 'digest', title: 'Weekly Digest', desc: 'Summary of your workspace activity every Monday.' },
-        { key: 'security', title: 'Security Alerts', desc: 'Important notifications about account security.' },
-        { key: 'updates', title: 'Product Updates', desc: 'News about new features and improvements.' }
+    const NOTIFICATION_CATEGORIES = [
+        {
+            title: 'Collaboration & Messages',
+            description: 'Stay updated on direct communication and teamwork.',
+            options: [
+                { key: 'direct_messages', title: 'Direct Messages', desc: 'Get notified when someone sends you a private message.' },
+                { key: 'mentions', title: 'Mentions', desc: 'Get notified when you are @mentioned in a workspace or comment.' },
+                { key: 'thread_replies', title: 'Thread Replies', desc: 'Get notified when someone replies to a thread you follow.' }
+            ]
+        },
+        {
+            title: 'Analysis & Intelligence',
+            description: 'Alerts from the Neural Bridge and Decision Engine.',
+            options: [
+                { key: 'analysis_complete', title: 'Analysis Complete', desc: 'Get notified when large data analysis jobs finish running.' },
+                { key: 'automl_training', title: 'AutoML Readiness', desc: 'Get notified when an AutoML model finishes training or deployment.' },
+                { key: 'anomaly_detected', title: 'Anomaly Alerts', desc: 'Critical alerts when the Anomaly Detection engine flags unexpected deviations.' },
+                { key: 'scheduled_reports', title: 'Scheduled Reports', desc: 'Get notified when your automated PDF/HTML reports are generated.' }
+            ]
+        },
+        {
+            title: 'Data & Infrastructure',
+            description: 'Monitor your data pipelines and integrations.',
+            options: [
+                { key: 'sync_failure', title: 'Sync Failures', desc: 'Immediate alerts when a data connector fails to synchronize.' },
+                { key: 'schema_change', title: 'Schema Changes', desc: 'Get notified when upstream source schemas change or break.' },
+                { key: 'pipeline_success', title: 'Pipeline Success', desc: 'Daily summary of successfully executed data pipelines.' }
+            ]
+        },
+        {
+            title: 'Security & Account',
+            description: 'Protect your account and stay informed.',
+            options: [
+                { key: 'new_logins', title: 'New Logins', desc: 'Alerts for logins from new IP addresses or unrecognized devices.' },
+                { key: 'role_changes', title: 'Role & Access Changes', desc: 'Get notified when your permissions or RBAC roles are updated.' },
+                { key: 'security', title: 'Security Alerts', desc: 'Important notifications about platform security events.' },
+                { key: 'updates', title: 'Product Updates', desc: 'News about new Nalyse features, improvements, and maintenance.' }
+            ]
+        }
     ];
 
     return (
@@ -477,30 +511,41 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
                     )}
 
                     {activeTab === 'notifications' && (
-                        <div style={{ maxWidth: '800px' }} className="fade-in">
-                            <div style={{ marginBottom: '24px' }}>
-                                <h3 className="text-h3">Email Notifications</h3>
-                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>Choose what updates you want to receive</p>
+                        <div style={{ maxWidth: '900px' }} className="fade-in">
+                            <div style={{ marginBottom: '32px' }}>
+                                <h3 className="text-h3">Notification Preferences</h3>
+                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '6px' }}>Configure how and when Nalyse alerts you across different platform modules.</p>
                             </div>
 
-                            <div className="card" style={{ overflow: 'hidden', padding: 0 }}>
-                                {NOTIFICATION_OPTIONS.map((pref, i) => (
-                                    <div key={pref.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', borderBottom: i < NOTIFICATION_OPTIONS.length - 1 ? '1px solid var(--border-default)' : 'none', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 500, fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px' }}>{pref.title}</div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{pref.desc}</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                                {NOTIFICATION_CATEGORIES.map((category, catIdx) => (
+                                    <div key={catIdx}>
+                                        <div style={{ marginBottom: '16px' }}>
+                                            <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>{category.title}</h4>
+                                            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>{category.description}</p>
                                         </div>
-                                        <label style={{ cursor: 'pointer', position: 'relative', display: 'inline-flex', alignItems: 'center', marginLeft: '24px' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={!!notificationPrefs[pref.key]}
-                                                onChange={() => handleNotificationToggle(pref.key)}
-                                                style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
-                                            />
-                                            <div style={{ width: '44px', height: '24px', background: notificationPrefs[pref.key] ? 'var(--primary)' : 'var(--border-default)', borderRadius: '12px', position: 'relative', transition: 'background 0.2s' }}>
-                                                <div style={{ position: 'absolute', top: '2px', left: notificationPrefs[pref.key] ? '22px' : '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.2s' }}></div>
-                                            </div>
-                                        </label>
+
+                                        <div className="card" style={{ overflow: 'hidden', padding: 0 }}>
+                                            {category.options.map((pref, i) => (
+                                                <div key={pref.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: i < category.options.length - 1 ? '1px solid var(--border-default)' : 'none', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                                    <div style={{ flex: 1, paddingRight: '24px' }}>
+                                                        <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px' }}>{pref.title}</div>
+                                                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{pref.desc}</div>
+                                                    </div>
+                                                    <label style={{ cursor: 'pointer', position: 'relative', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!notificationPrefs[pref.key]}
+                                                            onChange={() => handleNotificationToggle(pref.key)}
+                                                            style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+                                                        />
+                                                        <div style={{ width: '44px', height: '24px', background: notificationPrefs[pref.key] ? 'var(--primary)' : 'var(--border-default)', borderRadius: '12px', position: 'relative', transition: 'background 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                                                            <div style={{ position: 'absolute', top: '2px', left: notificationPrefs[pref.key] ? '22px' : '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}></div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
