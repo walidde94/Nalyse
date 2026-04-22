@@ -1414,8 +1414,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         strokeWidth={3}
                                         fill="none"
                                         dot={{ r: 4, cursor: 'pointer' }}
-                                        activeDot={{ r: 6, cursor: 'pointer', onClick: (e: any, payload: any) => handleChartClick(payload.payload, opt, index, e as unknown as React.MouseEvent) }}
-                                        onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
+                                        activeDot={{ r: 6, cursor: 'pointer', onClick: ((e: any, payload: any) => handleChartClick(payload.payload, opt, index, e)) as any }}
+                                        onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
                                     /> :
                                     <Area
                                         type="monotone"
@@ -1424,8 +1424,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         strokeWidth={3}
                                         fill={`url(#grad${index})`}
                                         dot={{ r: 4, cursor: 'pointer' }}
-                                        activeDot={{ r: 6, cursor: 'pointer', onClick: (e: any, payload: any) => handleChartClick(payload.payload, opt, index, e as unknown as React.MouseEvent) }}
-                                        onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
+                                        activeDot={{ r: 6, cursor: 'pointer', onClick: ((e: any, payload: any) => handleChartClick(payload.payload, opt, index, e)) as any }}
+                                        onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
                                     />
                                 }
                             </AreaChart>
@@ -1438,7 +1438,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     dataKey="value"
                                     paddingAngle={4}
                                     stroke="none"
-                                    onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
+                                    onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
                                     cursor="pointer"
                                 >
                                     {displayData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -1476,7 +1476,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     }))}
                                     fill={color}
                                     cursor="pointer"
-                                    onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
+                                    onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
                                 />
                             </ScatterChart>
                         ) : (
@@ -1513,7 +1513,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     fill={`url(#gradBar${index})`}
                                     radius={[6, 6, 0, 0]}
                                     maxBarSize={60}
-                                    onClick={(data: any, i: number, e: any) => handleChartClick(data, opt, index, e)}
+                                    onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
                                     cursor="pointer"
                                 />
                                 {/* Removed per-cell coloring to enforce Elastic-style single-color series */}
