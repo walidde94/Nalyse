@@ -151,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     return (
         <>
             <header className="nexus-header" style={{
-                height: '52px',
+                height: '56px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -159,10 +159,12 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
-                background: 'var(--bg-header)',
-                backdropFilter: isMidnight ? 'blur(24px) saturate(220%)' : 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: isMidnight ? 'blur(24px) saturate(220%)' : 'blur(20px) saturate(180%)',
-                borderBottom: `1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
+                background: isMidnight ? 'rgba(10, 10, 15, 0.65)' : (theme === 'dark' ? 'rgba(20, 20, 25, 0.65)' : 'rgba(255, 255, 255, 0.65)'),
+                backdropFilter: 'blur(24px) saturate(200%)',
+                WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+                borderBottom: `1px solid ${isMidnight ? 'rgba(255,255,255,0.05)' : 'var(--bento-border)'}`,
+                boxShadow: isMidnight ? '0 10px 40px -10px rgba(0,0,0,0.5)' : '0 10px 40px -10px rgba(0,0,0,0.05)',
+                transition: 'all 0.3s ease',
             }}>
 
                 {/* Left: Logo + Identity */}
@@ -197,6 +199,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     background: isMidnight ? 'var(--primary)' : '#10b981',
                                     boxShadow: `0 0 8px ${isMidnight ? 'var(--primary-glow)' : 'rgba(16, 185, 129, 0.5)'}`,
                                     flexShrink: 0,
+                                    animation: 'pulseStatus 2s infinite ease-in-out',
                                 }} title="Connected" />
                             </div>
                         </div>
@@ -206,6 +209,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 {/* Center: Search trigger (keyboard shortcut hint) */}
                 <div className="desktop-only" style={{ flex: 1, maxWidth: '320px', margin: '0 auto' }}>
                     <button
+                        className="hdr-search-btn"
                         onClick={() => {
                             const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true });
                             window.dispatchEvent(e);
@@ -215,38 +219,33 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                             alignItems: 'center',
                             gap: '8px',
                             width: '100%',
-                            padding: '7px 12px',
-                            background: isMidnight ? 'var(--primary-subtle)' : 'var(--bento-glass)',
-                            border: `1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'}`,
-                            borderRadius: 'var(--bento-radius-sm)',
+                            padding: '8px 14px',
+                            background: isMidnight ? 'rgba(255,255,255,0.03)' : 'var(--bg-surface)',
+                            border: `1px solid ${isMidnight ? 'rgba(255,255,255,0.08)' : 'var(--bento-border)'}`,
+                            borderRadius: '100px',
                             cursor: 'pointer',
                             color: 'var(--text-muted)',
-                            fontSize: '12.5px',
+                            fontSize: '13px',
                             fontWeight: 500,
-                            transition: 'all 0.25s ease',
-                            boxShadow: 'var(--bento-inset)',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'var(--bg-surface-hover)';
-                            e.currentTarget.style.borderColor = 'var(--bento-border-hover)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'var(--bg-surface)';
-                            e.currentTarget.style.borderColor = 'var(--border-default)';
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)',
+                            position: 'relative',
+                            overflow: 'hidden',
                         }}
                     >
-                        <Search size={14} style={{ opacity: 0.5, flexShrink: 0 }} />
-                        <span style={{ flex: 1, textAlign: 'left' }}>Search or jump to…</span>
+                        <Search size={14} className="search-icon" style={{ opacity: 0.6, flexShrink: 0, transition: 'all 0.3s' }} />
+                        <span style={{ flex: 1, textAlign: 'left', transition: 'all 0.3s' }}>Search commands, users...</span>
                         <kbd style={{
-                            fontSize: '10px',
-                            fontWeight: 700,
+                            fontSize: '11px',
+                            fontWeight: 600,
                             fontFamily: 'var(--font-mono)',
-                            padding: '2px 5px',
-                            background: 'var(--border-subtle)',
-                            borderRadius: '4px',
-                            border: `1px solid ${'var(--border-subtle)'}`,
-                            color: 'var(--text-muted)',
+                            padding: '3px 6px',
+                            background: isMidnight ? 'rgba(255,255,255,0.08)' : 'var(--border-subtle)',
+                            borderRadius: '6px',
+                            border: `1px solid ${isMidnight ? 'rgba(255,255,255,0.05)' : 'var(--border-subtle)'}`,
+                            color: 'var(--text-secondary)',
                             lineHeight: 1,
+                            transition: 'all 0.3s'
                         }}>⌘K</kbd>
                     </button>
                 </div>
@@ -741,6 +740,25 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             {showNotifications && <div onClick={() => setShowNotifications(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />}
 
             <style>{`
+                @keyframes pulseStatus {
+                    0% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.3); opacity: 0.7; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+                .hdr-search-btn:hover {
+                    background: ${isMidnight ? 'rgba(255,255,255,0.06)' : 'var(--bg-surface-hover)'} !important;
+                    border-color: ${isMidnight ? 'rgba(255,255,255,0.15)' : 'var(--bento-border-hover)'} !important;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+                    transform: translateY(-1px);
+                }
+                .hdr-search-btn:hover .search-icon {
+                    color: var(--primary);
+                    opacity: 1 !important;
+                    transform: scale(1.1);
+                }
+                .hdr-search-btn:active {
+                    transform: translateY(0);
+                }
                 @keyframes bellRing {
                     0% { transform: rotate(0deg); }
                     15% { transform: rotate(15deg); }
@@ -765,24 +783,28 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     to { transform: rotate(360deg); }
                 }
                 .hdr-icon-btn {
-                    width: 34px;
-                    height: 34px;
-                    border-radius: 10px;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 12px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-glass)'};
-                    border: 1px solid ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-border)'};
+                    background: ${isMidnight ? 'rgba(255,255,255,0.03)' : 'transparent'};
+                    border: 1px solid ${isMidnight ? 'rgba(255,255,255,0.05)' : 'transparent'};
                     color: ${isMidnight ? 'var(--primary)' : 'var(--text-secondary)'};
-                    transition: all 0.25s ease;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     cursor: pointer;
                     position: relative;
                 }
                 .hdr-icon-btn:hover {
-                    background: ${isMidnight ? 'var(--primary-subtle)' : 'var(--bento-glass-hover)'};
-                    border-color: ${isMidnight ? 'var(--primary-glow)' : 'var(--bento-border-hover)'};
+                    background: ${isMidnight ? 'rgba(255,255,255,0.08)' : 'var(--bg-surface-hover)'};
+                    border-color: ${isMidnight ? 'rgba(255,255,255,0.1)' : 'var(--border-subtle)'};
                     color: ${isMidnight ? 'var(--primary)' : 'var(--text-primary)'};
-                    transform: translateY(-1px);
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                }
+                .hdr-icon-btn:active {
+                    transform: translateY(0);
                 }
             `}</style>
         </>
