@@ -50,7 +50,8 @@ import {
     TrendingUp,
     CheckCircle2,
     ChevronUp,
-    ChevronDown
+    ChevronDown,
+    MessageCircle
 } from 'lucide-react';
 import { ElasticSearch } from './components/ElasticSearch';
 import { ElasticFilterBar } from './components/ElasticFilterBar';
@@ -62,6 +63,7 @@ import { WorldMapChart } from './components/WorldMapChart';
 import { AnomalyDetection } from './components/AnomalyDetection';
 import { NexusAuditTrail } from './components/NexusAuditTrail';
 import { InsightPanel } from '../../components/ui/InsightPanel';
+import { CommentThread, CommentBadge } from '../../components/ui/CommentThread';
 
 interface ChartOption {
     title: string;
@@ -340,6 +342,24 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
 
     // Deploy Modal State
     const [showDeployModal, setShowDeployModal] = useState(false);
+
+    // Comment State
+    const [commentOpen, setCommentOpen] = useState(false);
+    const [commentTarget, setCommentTarget] = useState<{ type: string; id?: string; title?: string }>({ type: 'general' });
+    const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+
+    const openComments = (type: string, id?: string, title?: string) => {
+        setCommentTarget({ type, id, title });
+        setCommentOpen(true);
+    };
+
+    // Fetch comment counts when analysis loads
+    useEffect(() => {
+        if (!analysis.id || !token) return;
+        fetch(`${API_URL}/api/comments/${analysis.id}/counts`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(r => r.ok ? r.json() : {}).then(c => setCommentCounts(c || {})).catch(() => {});
+    }, [analysis.id, token, commentOpen]);
 
     // React to fresh analysis data (Manual or Auto-Sync)
     const [localData, setLocalData] = useState<any[]>(analysis.sampleData || []);
@@ -1328,6 +1348,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             >
                                 <BrainCircuit size={16} />
                             </button>
+                            <CommentBadge
+                                count={commentCounts[`chart:${index}`] || 0}
+                                onClick={() => openComments('chart', String(index), opt.title)}
+                            />
                         </div>
                     </div>
                 </div>
@@ -1871,6 +1895,25 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             >
                                 <Download size={14} className="mr-1" />
                                 Download PDF
+                            </button>
+
+                            <button
+                                className="btn btn-secondary btn-sm hover-lift active-press whitespace-nowrap"
+                                onClick={() => openComments('general', undefined, 'General Discussion')}
+                                style={{ position: 'relative' }}
+                            >
+                                <MessageCircle size={14} className="mr-1" />
+                                Comments
+                                {Object.values(commentCounts).reduce((a, b) => a + b, 0) > 0 && (
+                                    <span style={{
+                                        position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18,
+                                        borderRadius: 9, background: '#818cf8', color: '#fff', fontSize: 10,
+                                        fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        padding: '0 5px', boxShadow: '0 2px 8px rgba(129,140,248,0.4)',
+                                    }}>
+                                        {Object.values(commentCounts).reduce((a, b) => a + b, 0)}
+                                    </span>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -2784,6 +2827,18 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
             />
 
             <DiagnosticOverlay />
+
+            {/* Analysis Comments Panel */}
+            {analysis.id && (
+                <CommentThread
+                    analysisId={analysis.id}
+                    targetType={commentTarget.type}
+                    targetId={commentTarget.id}
+                    isOpen={commentOpen}
+                    onClose={() => setCommentOpen(false)}
+                    title={commentTarget.title}
+                />
+            )}
         </div >
     );
 };

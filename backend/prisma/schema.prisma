@@ -81,6 +81,7 @@ model User {
   directMessages          DirectMessage[]
   directConversations     DirectConversation[]    @relation("ConversationParticipants")
   remoteSources           RemoteSource[]
+  analysisComments        AnalysisComment[]
 
   @@map("users")
 }
@@ -119,23 +120,44 @@ model File {
 }
 
 model Analysis {
-  id               String    @id @default(uuid())
-  fileId           String    @map("file_id")
-  createdById      String    @map("created_by_id")
-  status           String    @default("pending")
+  id               String             @id @default(uuid())
+  fileId           String             @map("file_id")
+  createdById      String             @map("created_by_id")
+  status           String             @default("pending")
   results          Json?
   insights         Json?
   statistics       Json?
-  errorMessage     String?   @map("error_message")
-  processingTimeMs Int?      @map("processing_time_ms")
-  completedAt      DateTime? @map("completed_at")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
-  createdBy        User      @relation(fields: [createdById], references: [id])
-  file             File      @relation(fields: [fileId], references: [id])
+  errorMessage     String?            @map("error_message")
+  processingTimeMs Int?               @map("processing_time_ms")
+  completedAt      DateTime?          @map("completed_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  createdBy        User               @relation(fields: [createdById], references: [id])
+  file             File               @relation(fields: [fileId], references: [id])
   schedules        Schedule[]
+  comments         AnalysisComment[]
 
   @@map("analyses")
+}
+
+model AnalysisComment {
+  id         String             @id @default(uuid())
+  analysisId String             @map("analysis_id")
+  authorId   String             @map("author_id")
+  content    String
+  targetType String             @map("target_type") // chart, insight, data, executive, general
+  targetId   String?            @map("target_id")    // e.g. chart index "0", insight index "2"
+  replyToId  String?            @map("reply_to_id")
+  reactions  Json?              @default("[]")
+  isResolved Boolean            @default(false) @map("is_resolved")
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+  analysis   Analysis           @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  author     User               @relation(fields: [authorId], references: [id])
+  replyTo    AnalysisComment?   @relation("CommentReplies", fields: [replyToId], references: [id])
+  replies    AnalysisComment[]  @relation("CommentReplies")
+
+  @@map("analysis_comments")
 }
 
 model Report {
