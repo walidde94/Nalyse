@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from '../common/Logo';
-import { Search, Bell, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint, Compass, Command, MessageCircle, AtSign, Send } from 'lucide-react';
+import { Search, Bell, Hexagon, Radio, Shield, Settings, LogOut, Zap, Fingerprint, Compass, Command, MessageCircle, AtSign, Send, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
@@ -9,6 +9,7 @@ import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { UserProfile } from '../UserProfile';
 import { ArchitectNode } from './ArchitectNode';
 import { useChat } from '../../contexts/ChatContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 export type SettingsNavTab = 'profile' | 'api' | 'notifications' | 'subscription';
 
@@ -32,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     
     // Toast and dropdown notification state
     const [toastData, setToastData] = useState<{ title: string; message: string; author: any; type: 'mention' | 'message' | 'dm' } | null>(null);
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const { notifications, unreadCount, markAsRead, markAllAsRead, addLocalNotification } = useNotifications();
 
     // Listen for real-time messages to show toast and play sound
     useEffect(() => {
@@ -80,23 +81,22 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
 
             // 3. Show Visual Toast & Add to List
             const preview = msg.content.replace(/[@#]\[([^\]]+)\]\([^)]+\)/g, '$1');
+            const typeValue = isMention ? 'mention' : 'message';
             const newNotif = {
-                id: Date.now().toString() + Math.random().toString(),
                 title: isMention ? 'You were mentioned' : `Message from ${msg.author?.firstName || 'User'}`,
                 message: preview,
-                timestamp: new Date().toISOString(),
-                type: (isMention ? 'mention' : 'message') as 'mention' | 'message',
-                read: false
+                createdAt: new Date().toISOString(),
+                metadata: { type: typeValue }
             };
             
             setToastData({
                 title: newNotif.title,
                 message: newNotif.message,
                 author: msg.author,
-                type: newNotif.type
+                type: typeValue as any
             });
 
-            setNotifications(prev => [newNotif, ...prev].slice(0, 20));
+            addLocalNotification(newNotif);
 
             // Auto dismiss toast
             setTimeout(() => {
@@ -115,10 +115,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 id: 'dm-' + msg.id,
                 title: `Direct message from ${msg.sender.firstName || 'User'}`,
                 message: preview,
-                timestamp: new Date().toISOString(),
-                type: 'dm' as const,
-                read: false,
-                metadata: { conversationId: msg.conversationId }
+                createdAt: new Date().toISOString(),
+                metadata: { type: 'dm', conversationId: msg.conversationId }
             };
 
             setToastData({
@@ -129,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                 metadata: { conversationId: msg.conversationId }
             } as any);
 
-            setNotifications(prev => [newNotif, ...prev].slice(0, 20));
+            addLocalNotification(newNotif);
             
             setTimeout(() => {
                 setToastData(current => current?.message === preview ? null : current);
@@ -142,9 +140,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             window.removeEventListener('workspace:new_message', handleNewMessage as EventListener);
             window.removeEventListener('chat:new_message', handleDirectMessage as EventListener);
         };
-    }, [user?.id, onNavigate]);
-
-    const unreadCount = notifications.filter(n => !n.read).length;
+    }, [user?.id, onNavigate, addLocalNotification]);
 
     const isDark = theme === 'dark' || theme === 'midnight';
     const isMidnight = theme === 'midnight';
@@ -474,7 +470,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     <h3 style={{ fontSize: '12px', fontWeight: 700, margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Notifications</h3>
                                     {unreadCount > 0 && (
                                         <button 
-                                            onClick={() => setNotifications(prev => prev.map(n => ({...n, read: true})))}
+                                            onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
                                             style={{
                                             background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.15)', color: '#38bdf8',
                                             fontSize: '10px', fontWeight: 700, cursor: 'pointer', padding: '3px 8px',
@@ -489,15 +485,34 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                             You're all caught up!
                                         </div>
                                     ) : (
-                                        notifications.map(n => (
+                                        notifications.map(n => {
+                                            const notifType = n.metadata?.type || 'message';
+                                            const isSystem = n.source === 'SYSTEM';
+                                            
+                                            // Determine background and icon color
+                                            let iconBg = 'var(--bg-surface-hover)';
+                                            let iconColor = 'var(--text-secondary)';
+                                            let Icon = Bell;
+
+                                            if (n.category === 'success') { iconBg = 'rgba(16, 185, 129, 0.12)'; iconColor = '#10b981'; Icon = Shield; }
+                                            else if (n.category === 'error' || n.category === 'alert') { iconBg = 'rgba(239, 68, 68, 0.12)'; iconColor = '#ef4444'; Icon = AlertCircle; }
+                                            else if (n.category === 'warning') { iconBg = 'rgba(245, 158, 11, 0.12)'; iconColor = '#f59e0b'; Icon = Zap; }
+                                            else if (notifType === 'mention') { iconBg = 'rgba(139, 92, 246, 0.12)'; iconColor = '#8b5cf6'; Icon = AtSign; }
+                                            else if (notifType === 'message' || notifType === 'dm') { iconBg = 'rgba(59, 130, 246, 0.12)'; iconColor = '#60a5fa'; Icon = MessageCircle; }
+                                            else { iconBg = 'rgba(99, 102, 241, 0.12)'; iconColor = '#6366f1'; }
+
+                                            return (
                                             <div 
                                                 key={n.id} 
                                                 onClick={() => {
-                                                    if (n.type === 'message' || n.type === 'mention') {
+                                                    markAsRead(n.id);
+                                                    if (notifType === 'message' || notifType === 'mention') {
                                                         onNavigate?.('shared-workspaces', { discussion: true } as any);
-                                                    } else if (n.type === 'dm') {
+                                                    } else if (notifType === 'dm') {
                                                         const conversationId = n.metadata?.conversationId;
                                                         onNavigate?.('private-chat', { conversationId } as any);
+                                                    } else if (n.actionUrl) {
+                                                        onNavigate?.(n.actionUrl.replace(/^\//, ''));
                                                     }
                                                     setShowNotifications(false);
                                                 }}
@@ -507,16 +522,16 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                                     border: `1px solid ${n.read ? 'transparent' : 'var(--border-subtle)'}`,
                                                     opacity: n.read ? 0.7 : 1,
                                                     transition: 'all 0.2s',
-                                                    cursor: (n.type === 'message' || n.type === 'mention') ? 'pointer' : 'default'
+                                                    cursor: (notifType === 'message' || notifType === 'mention' || notifType === 'dm' || n.actionUrl) ? 'pointer' : 'default'
                                                 }}
                                             >
                                                 <div style={{
                                                     width: '30px', height: '30px', borderRadius: '8px', 
-                                                    background: n.type === 'mention' ? 'rgba(139, 92, 246, 0.12)' : 'rgba(59, 130, 246, 0.12)',
-                                                    color: n.type === 'mention' ? '#8b5cf6' : '#60a5fa', 
+                                                    background: iconBg,
+                                                    color: iconColor, 
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                                                 }}>
-                                                    {n.type === 'mention' ? <AtSign size={14} /> : <MessageCircle size={14} />}
+                                                    <Icon size={14} />
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, width: '100%' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -527,11 +542,11 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                                         {n.message}
                                                     </span>
                                                     <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '2px' }}>
-                                                        {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                 </div>
                                             </div>
-                                        ))
+                                        )})
                                     )}
                                 </div>
                             </div>
