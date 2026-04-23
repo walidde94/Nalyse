@@ -106,9 +106,15 @@ export const AdminControlCenter: React.FC = () => {
       const res = await fetch(`${API_URL}/api/admin/organizations`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) setOrganizations(await res.json());
+      if (res.ok) {
+        setOrganizations(await res.json());
+      } else {
+        const errText = await res.text();
+        console.error('fetchOrganizations error:', res.status, errText);
+        addToast(`Failed to load organizations: HTTP ${res.status}`, 'error');
+      }
     } catch (e) {
-      addToast('Failed to fetch organizations', 'error');
+      addToast('Failed to fetch organizations network error', 'error');
     }
   };
 
