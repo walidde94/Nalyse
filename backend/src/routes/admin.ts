@@ -57,7 +57,7 @@ router.get('/organizations', async (req: AuthRequest, res: Response) => {
 
 router.post('/organizations/:id/suspend', async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const org = await prisma.organization.update({
             where: { id },
             data: { isActive: false }
@@ -93,7 +93,7 @@ router.get('/users', async (req: AuthRequest, res: Response) => {
 
 router.post('/users/:id/role', async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { role } = req.body;
         const user = await prisma.user.update({
             where: { id },
@@ -123,12 +123,11 @@ router.get('/workspaces', async (req: AuthRequest, res: Response) => {
 // 7. Security & Audit Logs
 router.get('/audit-logs', async (req: AuthRequest, res: Response) => {
     try {
-        const logs = await prisma.auditLog.findMany({
+        const logs = await prisma.platformAuditLog.findMany({
             orderBy: { createdAt: 'desc' },
             take: 100,
             include: {
-                user: { select: { email: true } },
-                workspace: { select: { name: true } }
+                user: { select: { email: true } }
             }
         });
         res.json(logs);
