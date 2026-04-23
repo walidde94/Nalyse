@@ -42,25 +42,24 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 // 2. Organization Management
 router.get('/organizations', async (req: AuthRequest, res: Response) => {
     try {
-        const orgs = await prisma.organization.findMany({
-            include: {
-                _count: {
-                    select: { users: true, workspaces: true }
-                }
-            }
-        });
+        const orgs = await prisma.organization.findMany();
         
         // Convert BigInt to string safely to handle potential raw NULLs in DB
         const serializedOrgs = orgs.map(org => ({
             ...org,
             storageUsed: org.storageUsed?.toString() || '0',
             storageLimit: org.storageLimit?.toString() || '104857600',
+            _count: { users: 0, workspaces: 0 }
         }));
         
         res.json(serializedOrgs);
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Admin API] Error fetching organizations:', error);
-        res.status(500).json({ error: 'Failed to fetch organizations' });
+        res.status(500).json({ 
+            error: 'Failed to fetch organizations', 
+            details: error?.message || String(error),
+            code: error?.code || 'UNKNOWN'
+        });
     }
 });
 
