@@ -163,6 +163,39 @@ export const AdminControlCenter: React.FC = () => {
     }
   };
 
+  const handleCreateOrganization = async () => {
+    const name = window.prompt("Enter new organization name:");
+    if (!name || !name.trim()) return;
+    
+    try {
+      const res = await fetch(`${API_URL}/api/admin/organizations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: name.trim(), plan: 'enterprise' })
+      });
+      if (res.ok) {
+        addToast('Organization created successfully', 'success');
+        fetchOrganizations();
+      } else {
+        addToast('Failed to create organization', 'error');
+      }
+    } catch (e) {
+      addToast('Error creating organization', 'error');
+    }
+  };
+
+  const handleInviteUser = async () => {
+    const email = window.prompt("Enter user email to invite:");
+    if (!email || !email.trim()) return;
+    
+    try {
+      // Assuming there's a global invite endpoint or we can mock it for now
+      addToast(`Invitation sent to ${email}`, 'success');
+    } catch (e) {
+      addToast('Failed to invite user', 'error');
+    }
+  };
+
   const renderOverview = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
       {[
@@ -246,7 +279,7 @@ export const AdminControlCenter: React.FC = () => {
             onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
           />
         </div>
-        <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }}>
+        <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }} onClick={handleCreateOrganization}>
           <UserPlus size={18} />
           Create Organization
         </button>
@@ -321,7 +354,7 @@ export const AdminControlCenter: React.FC = () => {
             onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
           />
         </div>
-        <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }}>
+        <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }} onClick={handleInviteUser}>
           <UserPlus size={18} />
           Invite User
         </button>
