@@ -59,6 +59,23 @@ interface GlobalUser {
   } | null;
 }
 
+interface WorkspaceData {
+  id: string;
+  name: string;
+  createdAt: string;
+  organization: { name: string } | null;
+  _count: { members: number, dashboards: number, files: number };
+}
+
+interface AuditLog {
+  id: string;
+  action: string;
+  resource: string;
+  createdAt: string;
+  user: { email: string } | null;
+  metadata: any;
+}
+
 export const AdminControlCenter: React.FC = () => {
   const { token, user } = useAuth();
   const { addToast } = useToast();
@@ -66,6 +83,8 @@ export const AdminControlCenter: React.FC = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<GlobalUser[]>([]);
+  const [workspaces, setWorkspaces] = useState<WorkspaceData[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -102,10 +121,28 @@ export const AdminControlCenter: React.FC = () => {
     }
   };
 
+  const fetchWorkspaces = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/workspaces`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setWorkspaces(await res.json());
+    } catch (e) {
+      addToast('Failed to fetch workspaces', 'error');
+    }
+  };
+
+  const fetchAuditLogs = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/audit-logs`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setAuditLogs(await res.json());
+    } catch (e) {
+      addToast('Failed to fetch audit logs', 'error');
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
-      await Promise.all([fetchStats(), fetchOrganizations(), fetchUsers()]);
+      await Promise.all([fetchStats(), fetchOrganizations(), fetchUsers(), fetchWorkspaces(), fetchAuditLogs()]);
       setIsLoading(false);
     };
     if (token) init();
@@ -335,6 +372,81 @@ export const AdminControlCenter: React.FC = () => {
     </div>
   );
 
+  const renderWorkspaces = () => (
+    <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Active Workspaces</h3>
+      </div>
+      <div style={{ overflowX: 'auto', width: '100%' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
+            <tr>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Workspace</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Organization</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Members</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Assets</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {workspaces.map((ws) => (
+              <tr key={ws.id} className="table-row-hover">
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{ws.name}</td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-secondary)' }}>{ws.organization?.name || '---'}</td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-secondary)' }}>{ws._count.members} Members</td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{ws._count.dashboards} Dashboards</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{ws._count.files} Files</span>
+                  </div>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(ws.createdAt).toLocaleDateString()}</td>
+              </tr>
+            ))}
+            {workspaces.length === 0 && (
+               <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No workspaces found</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderSecurity = () => (
+    <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Platform Audit Logs</h3>
+      </div>
+      <div style={{ overflowX: 'auto', width: '100%' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
+            <tr>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Action</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>User</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Resource</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {auditLogs.map((log) => (
+              <tr key={log.id} className="table-row-hover">
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', padding: '4px 10px', borderRadius: '12px', background: 'var(--bg-surface)' }}>{log.action}</span>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-secondary)' }}>{log.user?.email || 'System'}</td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-secondary)' }}>{log.resource}</td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleString()}</td>
+              </tr>
+            ))}
+            {auditLogs.length === 0 && (
+               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No audit logs found</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-app)', color: 'var(--text-primary)', overflow: 'hidden', fontFamily: '"Inter", sans-serif' }}>
       
@@ -417,7 +529,9 @@ export const AdminControlCenter: React.FC = () => {
               {activeSection === 'overview' && renderOverview()}
               {activeSection === 'organizations' && renderOrganizations()}
               {activeSection === 'users' && renderUsers()}
-              {['workspaces', 'security', 'config', 'health'].includes(activeSection) && (
+              {activeSection === 'workspaces' && renderWorkspaces()}
+              {activeSection === 'security' && renderSecurity()}
+              {['config', 'health'].includes(activeSection) && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '120px 20px', textAlign: 'center', opacity: 0.4 }}>
                   <Database size={80} style={{ marginBottom: '24px', color: 'var(--text-muted)' }} />
                   <h3 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>Module Synchronization Required</h3>
