@@ -89,6 +89,7 @@ export const AdminControlCenter: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeUserDropdown, setActiveUserDropdown] = useState<string | null>(null);
 
   const fetchStats = async () => {
     try {
@@ -191,6 +192,71 @@ export const AdminControlCenter: React.FC = () => {
       }
     } catch (e) {
       addToast('Error creating organization', 'error');
+    }
+  };
+
+  const handleToggleUserStatus = async (targetUser: GlobalUser) => {
+    setActiveUserDropdown(null);
+    if (!window.confirm(`Are you sure you want to ${targetUser.isActive ? 'suspend' : 'activate'} user ${targetUser.email}?`)) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${targetUser.id}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ isActive: !targetUser.isActive })
+      });
+      if (res.ok) {
+        addToast(`User ${targetUser.isActive ? 'suspended' : 'activated'} successfully`, 'success');
+        fetchUsers();
+      } else {
+        addToast('Failed to update user status', 'error');
+      }
+    } catch (e) {
+      addToast('Error updating user status', 'error');
+    }
+  };
+
+  const handleUpdateUserRole = async (targetUser: GlobalUser) => {
+    setActiveUserDropdown(null);
+    const newRole = window.prompt(`Enter new role for ${targetUser.email} (e.g. member, admin, SystemAdmin, PlatformAdmin):`, targetUser.role);
+    if (!newRole || newRole.trim() === '' || newRole === targetUser.role) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${targetUser.id}/role`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ role: newRole.trim() })
+      });
+      if (res.ok) {
+        addToast(`User role updated to ${newRole.trim()}`, 'success');
+        fetchUsers();
+      } else {
+        addToast('Failed to update user role', 'error');
+      }
+    } catch (e) {
+      addToast('Error updating user role', 'error');
+    }
+  };
+
+  const handleDeleteUser = async (targetUser: GlobalUser) => {
+    setActiveUserDropdown(null);
+    // Prevent deleting oneself
+    if (user?.id === targetUser.id) {
+      addToast('You cannot delete your own account from here.', 'warning');
+      return;
+    }
+    if (!window.confirm(`WARNING: Are you sure you want to permanently delete user ${targetUser.email}? This action cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${targetUser.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        addToast('User deleted successfully', 'success');
+        fetchUsers();
+      } else {
+        addToast('Failed to delete user', 'error');
+      }
+    } catch (e) {
+      addToast('Error deleting user', 'error');
     }
   };
 
@@ -479,10 +545,50 @@ export const AdminControlCenter: React.FC = () => {
                   </span>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never'}</td>
-                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', textAlign: 'right' }}>
-                  <button className="icon-btn hover-primary">
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', textAlign: 'right', position: 'relative' }}>
+                  <button 
+                    className="icon-btn hover-primary"
+                    onClick={() => setActiveUserDropdown(activeUserDropdown === u.id ? null : u.id)}
+                  >
                     <MoreVertical size={16} />
                   </button>
+                  <AnimatePresence>
+                    {activeUserDropdown === u.id && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        style={{
+                          position: 'absolute',
+                          right: '60px', // Push slightly left to avoid table edge clipping
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'var(--bg-surface)',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                          zIndex: 50,
+                          minWidth: '160px',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <button onClick={() => handleToggleUserStatus(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                           <Activity size={14} color={u.isActive ? '#ef4444' : '#10b981'} />
+                           {u.isActive ? 'Suspend User' : 'Activate User'}
+                        </button>
+                        <button onClick={() => handleUpdateUserRole(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                           <Edit2 size={14} color="var(--text-secondary)" />
+                           Change Role
+                        </button>
+                        <div style={{ height: '1px', background: 'var(--border-subtle)' }} />
+                        <button onClick={() => handleDeleteUser(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                           <Trash2 size={14} color="#ef4444" />
+                           Delete User
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </td>
               </tr>
             ))}

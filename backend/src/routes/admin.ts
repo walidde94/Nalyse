@@ -194,6 +194,30 @@ router.post('/users/:id/role', async (req: AuthRequest, res: Response) => {
     }
 });
 
+router.post('/users/:id/status', async (req: AuthRequest, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const { isActive } = req.body;
+        const user = await prisma.user.update({
+            where: { id },
+            data: { isActive }
+        });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update user status' });
+    }
+});
+
+router.delete('/users/:id', async (req: AuthRequest, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        await prisma.user.delete({ where: { id } });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete user' });
+    }
+});
+
 // 4. Workspace Monitoring
 router.get('/workspaces', async (req: AuthRequest, res: Response) => {
     try {
