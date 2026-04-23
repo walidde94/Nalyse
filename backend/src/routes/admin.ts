@@ -84,8 +84,67 @@ router.post('/organizations', async (req: AuthRequest, res: Response) => {
         });
         
         res.status(201).json(org);
-    } catch (error) {
+    } catch (error: any) {
+        if (error.code === 'P2002') {
+            return res.status(409).json({ error: 'Organization name already exists' });
+        }
         res.status(500).json({ error: 'Failed to create organization' });
+    }
+});
+
+router.put('/organizations/:id', async (req: AuthRequest, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const { name, plan } = req.body;
+        
+        const data: any = {};
+        if (name) {
+            data.name = name;
+            data.slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        }
+        if (plan) data.plan = plan;
+        
+        const org = await prisma.organization.update({
+            where: { id },
+            data
+        });
+        res.json(org);
+    } catch (error: any) {
+        if (error.code === 'P2002') return res.status(409).json({ error: 'Name already exists' });
+        res.status(500).json({ error: 'Failed to update organization' });
+    }
+});
+
+router.delete('/organizations/:id', async (req: AuthRequest, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        await prisma.organization.delete({ where: { id } });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete organization' });
+    }
+});
+
+router.post('/organizations/:id/users', async (req: AuthRequest, res: Response) => {
+    try {
+        const orgId = req.params.id as string;
+        const { email } = req.body;
+        
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+        
+        // Find user by email
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        // Update user to belong to this org
+        const updatedUser = await prisma.user.update({
+            where: { id: user.id },
+            data: { organizationId: orgId }
+        });
+        
+        res.json(updatedUser);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to add user to organization' });
     }
 });
 

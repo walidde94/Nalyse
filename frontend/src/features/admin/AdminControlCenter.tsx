@@ -16,7 +16,9 @@ import {
   RefreshCcw,
   ExternalLink,
   ChevronRight,
-  Filter
+  Filter,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -176,11 +178,79 @@ export const AdminControlCenter: React.FC = () => {
       if (res.ok) {
         addToast('Organization created successfully', 'success');
         fetchOrganizations();
+      } else if (res.status === 409) {
+        addToast('Warning: An organization with this name already exists', 'warning');
       } else {
         addToast('Failed to create organization', 'error');
       }
     } catch (e) {
       addToast('Error creating organization', 'error');
+    }
+  };
+
+  const handleEditOrganization = async (org: Organization) => {
+    const newName = window.prompt(`Enter new name for ${org.name}:`, org.name);
+    if (!newName || newName.trim() === '' || newName === org.name) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/admin/organizations/${org.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+      if (res.ok) {
+        addToast('Organization updated successfully', 'success');
+        fetchOrganizations();
+      } else if (res.status === 409) {
+        addToast('Warning: An organization with this name already exists', 'warning');
+      } else {
+        addToast('Failed to update organization', 'error');
+      }
+    } catch (e) {
+      addToast('Error updating organization', 'error');
+    }
+  };
+
+  const handleDeleteOrganization = async (id: string, name: string) => {
+    if (!window.confirm(`Are you absolutely sure you want to delete the organization "${name}"? This action cannot be undone.`)) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/admin/organizations/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        addToast('Organization deleted successfully', 'success');
+        fetchOrganizations();
+      } else {
+        addToast('Failed to delete organization', 'error');
+      }
+    } catch (e) {
+      addToast('Error deleting organization', 'error');
+    }
+  };
+
+  const handleAddUserToOrganization = async (orgId: string) => {
+    const email = window.prompt("Enter the exact email address of the user to add:");
+    if (!email || email.trim() === '') return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/admin/organizations/${orgId}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ email: email.trim() })
+      });
+      if (res.ok) {
+        addToast(`User ${email} added successfully`, 'success');
+        fetchOrganizations();
+        fetchUsers(); // Refresh users list too since organization assignment changed
+      } else if (res.status === 404) {
+        addToast(`User with email ${email} not found`, 'warning');
+      } else {
+        addToast('Failed to add user to organization', 'error');
+      }
+    } catch (e) {
+      addToast('Error adding user', 'error');
     }
   };
 
@@ -320,11 +390,17 @@ export const AdminControlCenter: React.FC = () => {
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(org.createdAt).toLocaleDateString()}</td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', textAlign: 'right' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                    <button onClick={() => handleSuspendOrg(org.id)} className="icon-btn hover-danger">
+                    <button onClick={() => handleAddUserToOrganization(org.id)} className="icon-btn hover-primary" title="Add User">
+                      <UserPlus size={16} />
+                    </button>
+                    <button onClick={() => handleEditOrganization(org)} className="icon-btn hover-primary" title="Rename Organization">
+                      <Edit2 size={16} />
+                    </button>
+                    <button onClick={() => handleSuspendOrg(org.id)} className={`icon-btn ${org.isActive ? 'hover-danger' : 'hover-primary'}`} title={org.isActive ? 'Suspend' : 'Activate'}>
                       <Lock size={16} />
                     </button>
-                    <button className="icon-btn hover-primary">
-                      <Settings size={16} />
+                    <button onClick={() => handleDeleteOrganization(org.id, org.name)} className="icon-btn hover-danger" title="Delete Organization">
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </td>
