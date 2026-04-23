@@ -14,6 +14,9 @@ export class Organization {
     @Column({ type: 'varchar', unique: true, nullable: true })
     slug: string | null;
 
+    @Column({ name: 'subscription_tier', type: 'varchar', default: 'free' })
+    subscriptionTier: string;
+
     @Column({ type: 'varchar', default: 'free' })
     plan: 'free' | 'pro' | 'enterprise';
 

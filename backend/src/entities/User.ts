@@ -35,7 +35,7 @@ export class User {
     passwordResetExpires: Date | null;
 
     @Column({ type: 'varchar', default: 'user' })
-    role: 'user' | 'admin';
+    role: 'user' | 'admin' | 'SystemAdmin' | 'PlatformAdmin';
 
     @ManyToOne(() => Organization, org => org.users, { nullable: true })
     @JoinColumn({ name: 'organization_id' })
