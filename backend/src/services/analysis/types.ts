@@ -69,6 +69,72 @@ export interface AnalysisResult {
     };
     metrics?: KeyMetric[];
     processingTimeMs?: number;
+
+    // ── Advanced Intelligence (auto-populated by engine phases 3.5–3.8) ──
+    mlAnalysis?: {
+        correlationMatrix?: {
+            columns: string[];
+            matrix: number[][];
+            spearmanMatrix: number[][];
+            entries: Array<{
+                col1: string;
+                col2: string;
+                pearson: number;
+                spearman: number;
+                pValue: string;
+                n: number;
+                strength: string;
+            }>;
+        };
+        kmeansResult?: {
+            k: number;
+            silhouetteScore: number;
+            clusterSizes: number[];
+            clusterProfiles: Array<{
+                clusterId: number;
+                size: number;
+                centroid: Record<string, number>;
+                label: string;
+            }>;
+        };
+        outlierResults?: Array<{
+            column: string;
+            method: string;
+            distribution: string;
+            outlierCount: number;
+            bounds: { lower: number; upper: number };
+            skewness: number;
+            kurtosis: number;
+        }>;
+    };
+    forecast?: {
+        column: string;
+        dateColumn: string;
+        historical: Array<{ date: string; value: number }>;
+        forecast: Array<{ date: string; value: number; lower: number; upper: number }>;
+        metrics: {
+            trend: 'increasing' | 'decreasing' | 'stable';
+            confidence: number;
+            mape: number;
+            r2: number;
+            modelReliability: 'High' | 'Medium' | 'Low';
+        };
+    };
+    regressionModel?: {
+        dependentVar: string;
+        independentVar: string;
+        equation: string;
+        rSquared: number;
+        adjustedRSquared: number;
+        pValue: number;
+        intercept: number;
+        slope: number;
+        diagnostics: {
+            normalityOk: boolean;
+            heteroskedasticity: boolean;
+        };
+        predictions: Array<{ actual: number; predicted: number }>;
+    };
 }
 
 export interface KeyMetric {

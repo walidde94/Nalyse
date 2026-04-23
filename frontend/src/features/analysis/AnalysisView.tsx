@@ -101,6 +101,33 @@ interface AnalysisData {
     };
     processingLog: string[];
     type?: string;
+    // Advanced Intelligence
+    mlAnalysis?: {
+        correlationMatrix?: {
+            columns: string[];
+            entries: Array<{ col1: string; col2: string; pearson: number; spearman: number; strength: string }>;
+        };
+        kmeansResult?: {
+            k: number;
+            silhouetteScore: number;
+            clusterSizes: number[];
+            clusterProfiles: Array<{ clusterId: number; size: number; label: string }>;
+        };
+        outlierResults?: Array<{ column: string; method: string; distribution: string; outlierCount: number }>;
+    };
+    forecast?: {
+        column: string;
+        dateColumn: string;
+        metrics: { trend: string; confidence: number; r2: number; modelReliability: string };
+        forecast: Array<{ date: string; value: number }>;
+    };
+    regressionModel?: {
+        equation: string;
+        rSquared: number;
+        pValue: number;
+        dependentVar: string;
+        independentVar: string;
+    };
 }
 
 interface AnalysisViewProps {
@@ -2055,7 +2082,198 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                     {analysis.options?.map((opt: any, i: number) => renderChart(opt, i, memoizedChartsData[i]))}
                                                 </div>
                                             )
-                                        }
+                                        },
+                                        // Deep Intelligence Section (ML / Forecast / Regression)
+                                        ...((analysis.mlAnalysis || analysis.forecast || analysis.regressionModel) ? [{
+                                            id: 'an-deep-intel',
+                                            label: 'Deep Intelligence',
+                                            component: (
+                                                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                                                    {/* K-Means Clustering Card */}
+                                                    {analysis.mlAnalysis?.kmeansResult && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 16 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="card"
+                                                            style={{ background: 'linear-gradient(135deg, var(--bg-card), rgba(168,85,247,0.05))', border: '1px solid rgba(168,85,247,0.2)', position: 'relative', overflow: 'hidden' }}
+                                                        >
+                                                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #a855f7, #6366f1, transparent)' }} />
+                                                            <div className="flex items-center gap-3 mb-3">
+                                                                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(168,85,247,0.15)', color: '#a855f7' }}>
+                                                                    <Layers size={18} />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Segment Discovery</h4>
+                                                                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>K-Means Clustering</span>
+                                                                </div>
+                                                                <div style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: '20px', background: 'rgba(168,85,247,0.12)', color: '#a855f7', fontSize: '11px', fontWeight: 700 }}>
+                                                                    {analysis.mlAnalysis.kmeansResult.k} Segments
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mb-3">
+                                                                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Silhouette Score:</span>
+                                                                <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
+                                                                    <div style={{ width: `${Math.max(0, analysis.mlAnalysis.kmeansResult.silhouetteScore * 100)}%`, height: '100%', borderRadius: '3px', background: analysis.mlAnalysis.kmeansResult.silhouetteScore > 0.5 ? '#34d399' : analysis.mlAnalysis.kmeansResult.silhouetteScore > 0.25 ? '#fbbf24' : '#f87171', transition: 'width 1s ease' }} />
+                                                                </div>
+                                                                <span className="text-xs font-mono font-bold" style={{ color: 'var(--text-primary)' }}>{analysis.mlAnalysis.kmeansResult.silhouetteScore.toFixed(3)}</span>
+                                                            </div>
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {analysis.mlAnalysis.kmeansResult.clusterProfiles?.map((p: any, ci: number) => (
+                                                                    <div key={ci} style={{ padding: '4px 8px', borderRadius: '6px', background: 'var(--bg-surface-hover)', fontSize: '10px', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
+                                                                        <span style={{ fontWeight: 700, color: COLORS[ci % COLORS.length] }}>C{ci + 1}</span> • {p.size} records
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* Forecast Card */}
+                                                    {analysis.forecast && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 16 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: 0.1 }}
+                                                            className="card"
+                                                            style={{ background: 'linear-gradient(135deg, var(--bg-card), rgba(56,189,248,0.05))', border: '1px solid rgba(56,189,248,0.2)', position: 'relative', overflow: 'hidden' }}
+                                                        >
+                                                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #38bdf8, #34d399, transparent)' }} />
+                                                            <div className="flex items-center gap-3 mb-3">
+                                                                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(56,189,248,0.15)', color: '#38bdf8' }}>
+                                                                    <TrendingUp size={18} />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Predictive Forecast</h4>
+                                                                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{analysis.forecast.column}</span>
+                                                                </div>
+                                                                <div style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: '20px', background: analysis.forecast.metrics.trend === 'increasing' ? 'rgba(52,211,153,0.12)' : analysis.forecast.metrics.trend === 'decreasing' ? 'rgba(248,113,113,0.12)' : 'rgba(251,191,36,0.12)', color: analysis.forecast.metrics.trend === 'increasing' ? '#34d399' : analysis.forecast.metrics.trend === 'decreasing' ? '#f87171' : '#fbbf24', fontSize: '11px', fontWeight: 700 }}>
+                                                                    {analysis.forecast.metrics.trend === 'increasing' ? '↗ Upward' : analysis.forecast.metrics.trend === 'decreasing' ? '↘ Downward' : '→ Stable'}
+                                                                </div>
+                                                            </div>
+                                                            <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                                                                <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-surface-hover)' }}>
+                                                                    <div className="text-xs" style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Confidence</div>
+                                                                    <div className="font-mono font-bold" style={{ color: 'var(--text-primary)', fontSize: '18px' }}>{analysis.forecast.metrics.confidence.toFixed(0)}%</div>
+                                                                </div>
+                                                                <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-surface-hover)' }}>
+                                                                    <div className="text-xs" style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Reliability</div>
+                                                                    <div className="font-bold" style={{ color: analysis.forecast.metrics.modelReliability === 'High' ? '#34d399' : analysis.forecast.metrics.modelReliability === 'Medium' ? '#fbbf24' : '#f87171', fontSize: '18px' }}>{analysis.forecast.metrics.modelReliability}</div>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* Regression Model Card */}
+                                                    {analysis.regressionModel && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 16 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: 0.2 }}
+                                                            className="card"
+                                                            style={{ background: 'linear-gradient(135deg, var(--bg-card), rgba(99,102,241,0.05))', border: '1px solid rgba(99,102,241,0.2)', position: 'relative', overflow: 'hidden' }}
+                                                        >
+                                                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #6366f1, #818cf8, transparent)' }} />
+                                                            <div className="flex items-center gap-3 mb-3">
+                                                                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
+                                                                    <Activity size={18} />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Regression Model</h4>
+                                                                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{analysis.regressionModel.dependentVar} ← {analysis.regressionModel.independentVar}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-surface-hover)', marginBottom: '12px', fontFamily: 'monospace', fontSize: '12px', color: 'var(--text-primary)', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+                                                                {analysis.regressionModel.equation}
+                                                            </div>
+                                                            <div className="flex gap-3">
+                                                                <div style={{ padding: '6px 12px', borderRadius: '8px', background: analysis.regressionModel.rSquared > 0.7 ? 'rgba(52,211,153,0.12)' : 'rgba(251,191,36,0.12)', border: `1px solid ${analysis.regressionModel.rSquared > 0.7 ? 'rgba(52,211,153,0.3)' : 'rgba(251,191,36,0.3)'}` }}>
+                                                                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>R² = </span>
+                                                                    <span className="font-mono font-bold" style={{ color: analysis.regressionModel.rSquared > 0.7 ? '#34d399' : '#fbbf24' }}>{analysis.regressionModel.rSquared.toFixed(3)}</span>
+                                                                </div>
+                                                                <div style={{ padding: '6px 12px', borderRadius: '8px', background: analysis.regressionModel.pValue < 0.05 ? 'rgba(52,211,153,0.12)' : 'rgba(248,113,113,0.12)', border: `1px solid ${analysis.regressionModel.pValue < 0.05 ? 'rgba(52,211,153,0.3)' : 'rgba(248,113,113,0.3)'}` }}>
+                                                                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>p = </span>
+                                                                    <span className="font-mono font-bold" style={{ color: analysis.regressionModel.pValue < 0.05 ? '#34d399' : '#f87171' }}>{analysis.regressionModel.pValue < 0.001 ? '<0.001' : analysis.regressionModel.pValue.toFixed(4)}</span>
+                                                                </div>
+                                                                {analysis.regressionModel.pValue < 0.05 && (
+                                                                    <div style={{ padding: '6px 10px', borderRadius: '8px', background: 'rgba(52,211,153,0.12)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <CheckCircle2 size={12} style={{ color: '#34d399' }} />
+                                                                        <span className="text-xs font-bold" style={{ color: '#34d399' }}>Significant</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* Outlier Summary Card */}
+                                                    {analysis.mlAnalysis?.outlierResults && analysis.mlAnalysis.outlierResults.length > 0 && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 16 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: 0.3 }}
+                                                            className="card"
+                                                            style={{ background: 'linear-gradient(135deg, var(--bg-card), rgba(251,146,60,0.05))', border: '1px solid rgba(251,146,60,0.2)', position: 'relative', overflow: 'hidden' }}
+                                                        >
+                                                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #fb923c, #f87171, transparent)' }} />
+                                                            <div className="flex items-center gap-3 mb-3">
+                                                                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(251,146,60,0.15)', color: '#fb923c' }}>
+                                                                    <AlertCircle size={18} />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Anomaly Detection</h4>
+                                                                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Distribution-Aware Outliers</span>
+                                                                </div>
+                                                                <div style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: '20px', background: 'rgba(251,146,60,0.12)', color: '#fb923c', fontSize: '11px', fontWeight: 700 }}>
+                                                                    {analysis.mlAnalysis.outlierResults.reduce((s: number, o: any) => s + o.outlierCount, 0)} Total
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-col gap-2">
+                                                                {analysis.mlAnalysis.outlierResults.slice(0, 4).map((o: any, oi: number) => (
+                                                                    <div key={oi} className="flex items-center gap-3" style={{ padding: '8px 10px', borderRadius: '6px', background: 'var(--bg-surface-hover)', fontSize: '12px' }}>
+                                                                        <span className="font-mono font-bold" style={{ color: 'var(--text-primary)', minWidth: '80px' }}>{o.column.length > 12 ? o.column.slice(0, 10) + '…' : o.column}</span>
+                                                                        <span style={{ color: '#fb923c', fontWeight: 700 }}>{o.outlierCount}</span>
+                                                                        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{o.method} • {o.distribution}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* Correlation Highlights Card */}
+                                                    {analysis.mlAnalysis?.correlationMatrix?.entries && analysis.mlAnalysis.correlationMatrix.entries.filter((e: any) => e.strength !== 'none' && e.strength !== 'weak').length > 0 && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 16 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: 0.4 }}
+                                                            className="card"
+                                                            style={{ background: 'linear-gradient(135deg, var(--bg-card), rgba(52,211,153,0.05))', border: '1px solid rgba(52,211,153,0.2)', position: 'relative', overflow: 'hidden' }}
+                                                        >
+                                                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #34d399, #38bdf8, transparent)' }} />
+                                                            <div className="flex items-center gap-3 mb-3">
+                                                                <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>
+                                                                    <Network size={18} />
+                                                                </div>
+                                                                <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Top Correlations</h4>
+                                                            </div>
+                                                            <div className="flex-col gap-2">
+                                                                {analysis.mlAnalysis.correlationMatrix.entries
+                                                                    .filter((e: any) => e.strength !== 'none' && e.strength !== 'weak')
+                                                                    .sort((a: any, b: any) => Math.abs(b.pearson) - Math.abs(a.pearson))
+                                                                    .slice(0, 4)
+                                                                    .map((e: any, ei: number) => (
+                                                                        <div key={ei} className="flex items-center gap-2" style={{ padding: '8px 10px', borderRadius: '6px', background: 'var(--bg-surface-hover)', fontSize: '12px' }}>
+                                                                            <span className="font-mono" style={{ color: 'var(--text-primary)', fontWeight: 600, flex: 1 }}>{e.col1.length > 10 ? e.col1.slice(0, 8) + '…' : e.col1}</span>
+                                                                            <span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>↔</span>
+                                                                            <span className="font-mono" style={{ color: 'var(--text-primary)', fontWeight: 600, flex: 1 }}>{e.col2.length > 10 ? e.col2.slice(0, 8) + '…' : e.col2}</span>
+                                                                            <div style={{ padding: '2px 8px', borderRadius: '10px', background: Math.abs(e.pearson) > 0.7 ? 'rgba(52,211,153,0.15)' : 'rgba(251,191,36,0.15)', color: Math.abs(e.pearson) > 0.7 ? '#34d399' : '#fbbf24', fontWeight: 700, fontSize: '11px' }}>
+                                                                                r={e.pearson.toFixed(2)}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </div>
+                                            )
+                                        }] : [])
                                     ];
 
                                     return sections
@@ -2092,12 +2310,22 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         const isTrend = insight.type === 'trend';
                                         const isQuality = insight.type === 'quality';
                                         const isSegment = insight.type === 'segment';
+                                        const isCorrelation = insight.type === 'correlation';
+                                        const isPrediction = insight.type === 'prediction';
+                                        const isRisk = insight.type === 'risk';
+                                        const isPattern = insight.type === 'pattern';
 
-                                        // Choose color based on type
+                                        // Rich color mapping by type
                                         let colorVar = 'var(--primary)';
                                         let bgVar = 'rgba(88, 101, 242, 0.1)';
 
-                                        if (isAnomaly) { colorVar = 'var(--danger)'; bgVar = 'rgba(218, 54, 51, 0.1)'; }
+                                        if (isAnomaly) { colorVar = '#f87171'; bgVar = 'rgba(248, 113, 113, 0.1)'; }
+                                        else if (isCorrelation) { colorVar = '#38bdf8'; bgVar = 'rgba(56, 189, 248, 0.1)'; }
+                                        else if (isTrend) { colorVar = '#34d399'; bgVar = 'rgba(52, 211, 153, 0.1)'; }
+                                        else if (isSegment) { colorVar = '#a78bfa'; bgVar = 'rgba(167, 139, 250, 0.1)'; }
+                                        else if (isPrediction) { colorVar = '#22d3ee'; bgVar = 'rgba(34, 211, 238, 0.1)'; }
+                                        else if (isRisk) { colorVar = '#fb923c'; bgVar = 'rgba(251, 146, 60, 0.1)'; }
+                                        else if (isPattern) { colorVar = '#818cf8'; bgVar = 'rgba(129, 140, 248, 0.1)'; }
                                         else if (isTrend) { colorVar = 'var(--warning)'; bgVar = 'rgba(210, 153, 34, 0.1)'; }
                                         else if (isQuality) { colorVar = 'var(--success)'; bgVar = 'rgba(16, 185, 129, 0.1)'; }
                                         else if (isSegment) { colorVar = 'var(--info-custom)'; bgVar = 'rgba(56, 189, 248, 0.1)'; }
