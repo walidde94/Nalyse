@@ -103,14 +103,23 @@ async function ensureAuditLogTable() {
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS cancel_at_period_end boolean DEFAULT false`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS storage_used bigint DEFAULT 0`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS storage_limit bigint DEFAULT 104857600`,
-            `UPDATE organizations SET storage_used = 0 WHERE storage_used IS NULL`,
-            `UPDATE organizations SET storage_limit = 104857600 WHERE storage_limit IS NULL`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS user_limit int DEFAULT 1`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS file_limit int DEFAULT 5`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS max_users int DEFAULT 5`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
+
+            // Null healing for ALL non-nullable fields in organizations table
+            `UPDATE organizations SET cancel_at_period_end = false WHERE cancel_at_period_end IS NULL`,
+            `UPDATE organizations SET storage_used = 0 WHERE storage_used IS NULL`,
+            `UPDATE organizations SET storage_limit = 104857600 WHERE storage_limit IS NULL`,
+            `UPDATE organizations SET user_limit = 1 WHERE user_limit IS NULL`,
+            `UPDATE organizations SET file_limit = 5 WHERE file_limit IS NULL`,
+            `UPDATE organizations SET max_users = 5 WHERE max_users IS NULL`,
+            `UPDATE organizations SET is_active = true WHERE is_active IS NULL`,
+            `UPDATE organizations SET created_at = now() WHERE created_at IS NULL`,
+            `UPDATE organizations SET updated_at = now() WHERE updated_at IS NULL`,
 
             // === Users columns ===
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text`,
