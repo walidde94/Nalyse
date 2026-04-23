@@ -49,7 +49,15 @@ router.get('/organizations', async (req: AuthRequest, res: Response) => {
                 }
             }
         });
-        res.json(orgs);
+        
+        // Convert BigInt to string for JSON serialization
+        const serializedOrgs = orgs.map(org => ({
+            ...org,
+            storageUsed: org.storageUsed.toString(),
+            storageLimit: org.storageLimit.toString(),
+        }));
+        
+        res.json(serializedOrgs);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch organizations' });
     }
