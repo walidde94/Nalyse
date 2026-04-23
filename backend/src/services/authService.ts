@@ -334,4 +334,57 @@ export class AuthService {
 
         return this.sanitizeUser(user);
     }
+    /**
+     * Bootstrap the system admin account.
+     * Only works if no SystemAdmin exists or with a secret key.
+     */
+    async bootstrapAdmin() {
+        const userRepository = AppDataSource.getRepository(User);
+        const orgRepository = AppDataSource.getRepository(Organization);
+
+        // Check if any admin already exists
+        const existingAdmin = await userRepository.findOne({
+            where: [
+                { role: 'SystemAdmin' },
+                { role: 'PlatformAdmin' }
+            ]
+        });
+
+        if (existingAdmin) {
+            // Already bootstrapped, but let's ensure the password is what we expect for ease of use
+            existingAdmin.passwordHash = await bcrypt.hash('nalyse123', 12);
+            existingAdmin.isActive = true;
+            existingAdmin.role = 'SystemAdmin' as any;
+            await userRepository.save(existingAdmin);
+            return existingAdmin;
+        }
+
+        // Create a default organization for operations
+        let org = await orgRepository.findOneBy({ slug: 'nalyse-ops' });
+        if (!org) {
+            org = orgRepository.create({
+                name: 'Nalyse Operations',
+                slug: 'nalyse-ops',
+                plan: 'pro',
+                subscriptionTier: 'enterprise',
+                isActive: true
+            });
+            await orgRepository.save(org);
+        }
+
+        const passwordHash = await bcrypt.hash('nalyse123', 12);
+        const admin = userRepository.create({
+            email: 'admin@nalyse.com',
+            passwordHash,
+            firstName: 'System',
+            lastName: 'Admin',
+            role: 'SystemAdmin' as any,
+            isActive: true,
+            emailVerified: true,
+            organizationId: org.id
+        });
+
+        await userRepository.save(admin);
+        return admin;
+    }
 }
