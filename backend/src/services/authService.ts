@@ -342,21 +342,30 @@ export class AuthService {
         const userRepository = AppDataSource.getRepository(User);
         const orgRepository = AppDataSource.getRepository(Organization);
 
-        // Check if any admin already exists
-        const existingAdmin = await userRepository.findOne({
+        // Check if admin@nalyse.com already exists
+        let admin = await userRepository.findOneBy({ email: 'admin@nalyse.com' });
+
+        if (admin) {
+            // Update existing user to be SystemAdmin with known password
+            admin.passwordHash = await bcrypt.hash('nalyse123', 12);
+            admin.isActive = true;
+            admin.role = 'SystemAdmin' as any;
+            admin.emailVerified = true;
+            await userRepository.save(admin);
+            return admin;
+        }
+
+        // Otherwise check if any SystemAdmin exists at all
+        const existingSystemAdmin = await userRepository.findOne({
             where: [
                 { role: 'SystemAdmin' },
                 { role: 'PlatformAdmin' }
             ]
         });
 
-        if (existingAdmin) {
-            // Already bootstrapped, but let's ensure the password is what we expect for ease of use
-            existingAdmin.passwordHash = await bcrypt.hash('nalyse123', 12);
-            existingAdmin.isActive = true;
-            existingAdmin.role = 'SystemAdmin' as any;
-            await userRepository.save(existingAdmin);
-            return existingAdmin;
+        if (existingSystemAdmin) {
+            // Just return the existing one if we don't want to create admin@nalyse.com
+            return existingSystemAdmin;
         }
 
         // Create a default organization for operations
@@ -373,7 +382,7 @@ export class AuthService {
         }
 
         const passwordHash = await bcrypt.hash('nalyse123', 12);
-        const admin = userRepository.create({
+        admin = userRepository.create({
             email: 'admin@nalyse.com',
             passwordHash,
             firstName: 'System',
