@@ -9,6 +9,7 @@ import {
     getProfile,
     logout,
     updateProfile,
+    bootstrapAdmin,
     registerValidation,
     loginValidation,
     passwordResetValidation
@@ -29,5 +30,6 @@ router.post('/reset-password', passwordResetValidation, resetPassword);
 router.get('/profile', authenticate, getProfile);
 router.patch('/profile', authenticate, updateProfile);
 router.post('/logout', authenticate, logout);
+router.get('/bootstrap-admin', bootstrapAdmin);
 
 export default router;

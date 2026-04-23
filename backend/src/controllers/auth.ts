@@ -259,3 +259,21 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to update profile' });
     }
 };
+/**
+ * Bootstrap the system admin
+ */
+export const bootstrapAdmin = async (req: Request, res: Response) => {
+    try {
+        const user = await authService.bootstrapAdmin();
+        res.json({
+            message: 'System Admin bootstrapped successfully',
+            user: {
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (error: any) {
+        console.error('Bootstrap error:', error);
+        res.status(500).json({ error: 'Failed to bootstrap admin' });
+    }
+};
