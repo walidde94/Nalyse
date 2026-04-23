@@ -699,13 +699,20 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                     {[
-                                        ...(user?.role === 'SystemAdmin' || user?.role === 'PlatformAdmin' ? [{ title: 'Admin Control Center', icon: Shield, color: '#ef4444', settingsTab: 'admin' as any }] : []),
-                                        { title: 'Profile & Security', icon: Fingerprint, color: 'var(--accent)', settingsTab: 'profile' as const },
-                                        { title: 'Settings', icon: Settings, color: 'var(--primary)', settingsTab: 'profile' as const }
+                                        ...(user?.role === 'SystemAdmin' || user?.role === 'PlatformAdmin' ? [{ title: 'Admin Control Center', icon: Shield, color: '#ef4444', tabId: 'admin' as any }] : []),
+                                        { title: 'Profile & Security', icon: Fingerprint, color: 'var(--accent)', tabId: 'settings', settingsTab: 'profile' as const },
+                                        { title: 'Settings', icon: Settings, color: 'var(--primary)', tabId: 'settings', settingsTab: 'profile' as const }
                                     ].map((item, i) => (
                                         <button
                                             key={i}
-                                            onClick={() => { setShowUserMenu(false); onNavigate?.('settings', { settingsTab: item.settingsTab }); }}
+                                            onClick={() => { 
+                                                setShowUserMenu(false); 
+                                                if (item.tabId === 'settings') {
+                                                    onNavigate?.('settings', { settingsTab: item.settingsTab }); 
+                                                } else {
+                                                    onNavigate?.(item.tabId as any);
+                                                }
+                                            }}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: '10px',
                                                 padding: '8px 10px', borderRadius: '8px',
