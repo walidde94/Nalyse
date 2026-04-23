@@ -3,13 +3,13 @@ import { loadLayoutPreferences, LAYOUT_PREFS_EVENT, getTabBarMetrics, type TabBa
 import {
     LayoutDashboard, Settings, ArrowRightLeft, FileText,
     Database, Code2, Map, Users, X, Trash2, Layers, Bell,
-    ArrowRightFromLine, ArrowLeftFromLine, Files, BarChart3, Bot, Sparkles, Network, GitCompareArrows, Activity, ShieldAlert, Landmark, FlaskConical, Building2, Webhook, Boxes
+    ArrowRightFromLine, ArrowLeftFromLine, Files, BarChart3, Bot, Sparkles, Network, GitCompareArrows, Activity, ShieldAlert, Landmark, FlaskConical, Building2, Webhook, Boxes, Shield
 } from 'lucide-react';
 
 export interface TabType {
     id: string;
     title: string;
-    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'forecast' | 'spatial' | 'automl' | 'automation' | 'organization' | 'collaboration' | 'webhooks' | 'embed' | 'canvas' | 'lens' | 'shared-workspaces' | 'private-chat';
+    type: 'dashboard' | 'analysis' | 'settings' | 'landing' | 'bi' | 'correlate' | 'migration' | 'nexus' | 'groups' | 'projects' | 'developer' | 'sources' | 'logistics' | 'agentic' | 'democracy' | 'multi-analysis' | 'diff' | 'anomaly' | 'financial' | 'simulation' | 'forecast' | 'spatial' | 'automl' | 'automation' | 'organization' | 'collaboration' | 'webhooks' | 'embed' | 'canvas' | 'lens' | 'shared-workspaces' | 'private-chat' | 'admin';
     data?: any;
     icon?: React.ReactNode;
 }
@@ -104,6 +104,7 @@ export const TabBar = ({
             'embed': <Boxes size={s} />,
             'canvas': <Layers size={s} />,
             'lens': <Sparkles size={s} />,
+            'admin': <Shield size={s} />,
         };
         return iconMap[tab.type] || <FileText size={s} />;
     };

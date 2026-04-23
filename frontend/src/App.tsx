@@ -27,6 +27,7 @@ import {
   Cpu,
   BarChart3,
   Network,
+  Shield,
   FileText
 } from 'lucide-react';
 import { OnboardingTour } from './components/ui/OnboardingTour';
