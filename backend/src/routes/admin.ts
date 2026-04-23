@@ -50,15 +50,16 @@ router.get('/organizations', async (req: AuthRequest, res: Response) => {
             }
         });
         
-        // Convert BigInt to string for JSON serialization
+        // Convert BigInt to string safely to handle potential raw NULLs in DB
         const serializedOrgs = orgs.map(org => ({
             ...org,
-            storageUsed: org.storageUsed.toString(),
-            storageLimit: org.storageLimit.toString(),
+            storageUsed: org.storageUsed?.toString() || '0',
+            storageLimit: org.storageLimit?.toString() || '104857600',
         }));
         
         res.json(serializedOrgs);
     } catch (error) {
+        console.error('[Admin API] Error fetching organizations:', error);
         res.status(500).json({ error: 'Failed to fetch organizations' });
     }
 });
