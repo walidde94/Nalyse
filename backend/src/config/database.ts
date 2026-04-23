@@ -144,6 +144,14 @@ async function ensureAuditLogTable() {
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
+            // Null healing for ALL non-nullable fields in users table
+            `UPDATE users SET password_hash = '' WHERE password_hash IS NULL`,
+            `UPDATE users SET role = 'member' WHERE role IS NULL`,
+            `UPDATE users SET is_active = true WHERE is_active IS NULL`,
+            `UPDATE users SET email_verified = false WHERE email_verified IS NULL`,
+            `UPDATE users SET created_at = now() WHERE created_at IS NULL`,
+            `UPDATE users SET updated_at = now() WHERE updated_at IS NULL`,
+
             // === Workspaces columns ===
             `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS organization_id uuid`,
             `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
