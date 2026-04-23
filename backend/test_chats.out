@@ -1,0 +1,66 @@
+Users: [
+  { id: '65152292-d9be-4b0a-87db-ebaf8a3724b3', email: 'w@gmail.com' },
+  {
+    id: 'bf98dd80-9d4f-48cf-b5af-167e4c27d2a1',
+    email: 'walidde94@gmail.com'
+  }
+]
+Conversations: [
+  {
+    "id": "74cfd96d-2846-463a-9720-23148e53d78b",
+    "createdAt": "2026-04-20T19:53:12.325Z",
+    "updatedAt": "2026-04-21T21:49:47.819Z",
+    "participants": [
+      {
+        "id": "65152292-d9be-4b0a-87db-ebaf8a3724b3",
+        "email": "w@gmail.com",
+        "passwordHash": "$2b$12$n2aiMWH1gU7nEEWyoQV22u1xVtsR1bQgBrCcQVQpLEFo0f792BeBu",
+        "firstName": "W",
+        "lastName": "D",
+        "role": "admin",
+        "plan": "free",
+        "isActive": true,
+        "bio": null,
+        "displayName": null,
+        "avatarUrl": null,
+        "stripeCustomerId": null,
+        "subscriptionStatus": "inactive",
+        "lastLoginAt": "2026-04-20T21:51:19.744Z",
+        "organizationId": "debd07a7-9c6f-4448-baed-72a2f73ac561",
+        "emailVerified": false,
+        "emailVerificationToken": "b8ca1bdfb56ae297343ee74632b27dd4e840622b2fb532a8f274765283f5d8b2",
+        "passwordResetToken": null,
+        "passwordResetExpires": null,
+        "notificationPreferences": {},
+        "apiKeys": [],
+        "createdAt": "2026-04-20T21:51:19.239Z",
+        "updatedAt": "2026-04-20T21:51:19.759Z"
+      },
+      {
+        "id": "bf98dd80-9d4f-48cf-b5af-167e4c27d2a1",
+        "email": "walidde94@gmail.com",
+        "passwordHash": "$2b$12$sx.FTnlrLXkIKHwRI7dDJuO/1Nz4WSjhBmqlfOi0ga8EdGnPNn6eK",
+        "firstName": "A",
+        "lastName": "S",
+        "role": "user",
+        "plan": "free",
+        "isActive": true,
+        "bio": null,
+        "displayName": null,
+        "avatarUrl": null,
+        "stripeCustomerId": null,
+        "subscriptionStatus": "inactive",
+        "lastLoginAt": "2026-04-21T23:47:44.124Z",
+        "organizationId": "debd07a7-9c6f-4448-baed-72a2f73ac561",
+        "emailVerified": false,
+        "emailVerificationToken": "7d6e8bd3a911adfb1a787c1b37c067a27216fde7b6b7a76c64cf9ae400f68df6",
+        "passwordResetToken": null,
+        "passwordResetExpires": null,
+        "notificationPreferences": {},
+        "apiKeys": [],
+        "createdAt": "2026-04-20T21:52:32.222Z",
+        "updatedAt": "2026-04-21T23:47:44.134Z"
+      }
+    ]
+  }
+]

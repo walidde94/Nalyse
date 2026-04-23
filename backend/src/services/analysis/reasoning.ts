@@ -27,6 +27,15 @@ interface ReasoningContext {
     hasStatus: boolean;
     hasGeo: boolean;
     dataHealthScore: number;
+    // Advanced intelligence context
+    clusterCount: number;
+    silhouetteScore: number;
+    forecastTrend: string | null;
+    forecastConfidence: number;
+    forecastReliability: string | null;
+    regressionR2: number;
+    regressionEquation: string | null;
+    outlierColumns: number;
 }
 
 const DOMAINS: DomainProfile[] = [
@@ -170,6 +179,15 @@ export class ReasoningEngine {
             hasStatus: Object.keys(result.summary.columnTypes).some(c => /status|state|active|churn/i.test(c)),
             hasGeo: Object.keys(result.summary.columnTypes).some(c => /country|region|city|state/i.test(c)),
             dataHealthScore: result.dataHealth?.score || 0,
+            // Advanced intelligence context
+            clusterCount: result.mlAnalysis?.kmeansResult?.k || 0,
+            silhouetteScore: result.mlAnalysis?.kmeansResult?.silhouetteScore || 0,
+            forecastTrend: result.forecast?.metrics?.trend || null,
+            forecastConfidence: result.forecast?.metrics?.confidence || 0,
+            forecastReliability: result.forecast?.metrics?.modelReliability || null,
+            regressionR2: result.regressionModel?.rSquared || 0,
+            regressionEquation: result.regressionModel?.equation || null,
+            outlierColumns: result.mlAnalysis?.outlierResults?.length || 0
         };
 
         // 3. Generate Executive Summary
@@ -196,6 +214,23 @@ export class ReasoningEngine {
 
         if (findingCounts.length > 0) {
             parts.push(`Analysis identified: ${findingCounts.join(', ')}.`);
+        }
+
+        // ML intelligence callouts
+        if (ctx.clusterCount > 0) {
+            parts.push(`Machine learning identified ${ctx.clusterCount} natural data segments (silhouette: ${ctx.silhouetteScore.toFixed(2)}).`);
+        }
+
+        if (ctx.forecastTrend) {
+            parts.push(`Predictive forecast shows ${ctx.forecastTrend} trajectory with ${ctx.forecastReliability} reliability (${ctx.forecastConfidence.toFixed(0)}% confidence).`);
+        }
+
+        if (ctx.regressionR2 > 0.5 && ctx.regressionEquation) {
+            parts.push(`Regression model explains ${(ctx.regressionR2 * 100).toFixed(0)}% of variance: ${ctx.regressionEquation}.`);
+        }
+
+        if (ctx.outlierColumns > 0) {
+            parts.push(`Distribution-aware outlier detection flagged anomalies in ${ctx.outlierColumns} columns.`);
         }
 
         // Top insight callout
@@ -257,10 +292,35 @@ export class ReasoningEngine {
             effort: 'High'
         });
 
+        // ML-driven matrix items
+        if (ctx.clusterCount > 0) {
+            matrix.push({
+                task: `Operationalize ${ctx.clusterCount}-segment strategy from cluster analysis`,
+                impact: ctx.silhouetteScore > 0.5 ? 'High' : 'Medium',
+                effort: 'Medium'
+            });
+        }
+
+        if (ctx.forecastTrend && ctx.forecastReliability !== 'Low') {
+            matrix.push({
+                task: `Action ${ctx.forecastTrend} forecast — deploy monitoring alerts`,
+                impact: 'High',
+                effort: 'Low'
+            });
+        }
+
+        if (ctx.regressionR2 > 0.6) {
+            matrix.push({
+                task: `Deploy predictive model (R²=${ctx.regressionR2.toFixed(2)}) for automated scoring`,
+                impact: 'High',
+                effort: 'Medium'
+            });
+        }
+
         return {
             executiveSummary: summary,
             strategicAdvice: advice,
-            priorityMatrix: matrix.slice(0, 5)
+            priorityMatrix: matrix.slice(0, 7)
         };
     }
 }

@@ -521,7 +521,8 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         /* ────── BACKDROP ────── */
                         .po-backdrop {
                             position: absolute; inset: 0;
-                            background: radial-gradient(ellipse at 50% 30%, rgba(15,23,42,0.92), rgba(2,6,23,0.98));
+                            background: var(--bg-app);
+                            opacity: 0.92;
                             backdrop-filter: blur(40px) saturate(120%);
                             -webkit-backdrop-filter: blur(40px) saturate(120%);
                         }
@@ -549,10 +550,10 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         .po-card {
                             position: relative; z-index: 10;
                             width: 100%; max-width: 560px;
-                            background: linear-gradient(165deg, rgba(15,23,42,0.95) 0%, rgba(8,12,28,0.98) 100%);
+                            background: var(--bg-card);
                             border: 1px solid var(--border-default);
                             border-radius: 28px;
-                            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03) inset;
+                            box-shadow: 0 20px 60px -10px rgba(0,0,0,0.3);
                             overflow: hidden;
                             display: flex; flex-direction: column;
                         }
@@ -561,17 +562,18 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         .po-header {
                             display: flex; align-items: center; justify-content: space-between;
                             padding: 16px 24px;
-                            border-bottom: 1px solid rgba(255,255,255,0.05);
-                            background: rgba(255,255,255,0.015);
+                            border-bottom: 1px solid var(--border-subtle);
+                            background: var(--bg-surface);
+                            border-radius: 28px 28px 0 0;
                         }
                         .po-header-left { display: flex; align-items: center; gap: 10px; }
                         .po-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
                         .po-header-label {
                             font-size: 10px; font-weight: 800; letter-spacing: 0.18em;
-                            text-transform: uppercase; color: rgba(255,255,255,0.35);
+                            text-transform: uppercase; color: var(--text-secondary);
                             font-family: var(--font-mono, 'JetBrains Mono', monospace);
                         }
-                        .po-header-right { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.25); }
+                        .po-header-right { display: flex; align-items: center; gap: 12px; color: var(--text-muted); }
                         .po-pct-badge {
                             font-size: 10px; font-weight: 900; font-family: var(--font-mono, monospace);
                             color: var(--primary); background: rgba(59,130,246,0.08);
@@ -579,10 +581,10 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         }
                         .po-close-btn {
                             padding: 6px; border-radius: 8px; border: none; background: transparent;
-                            color: rgba(255,255,255,0.3); cursor: pointer; display: flex;
+                            color: var(--text-muted); cursor: pointer; display: flex;
                             transition: all 0.2s;
                         }
-                        .po-close-btn:hover { background: var(--bg-elevated); color: rgba(255,255,255,0.7); }
+                        .po-close-btn:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
 
                         /* ────── PROGRESS TRACK (thin top bar) ────── */
                         .po-progress-track {
@@ -625,7 +627,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                             position: relative; z-index: 5;
                             width: 80px; height: 80px; border-radius: 24px;
                             display: flex; align-items: center; justify-content: center;
-                            color: var(--text-primary);
+                            color: white;
                             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
                         }
 
@@ -637,7 +639,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                             font-family: var(--font-heading, 'Outfit', sans-serif);
                         }
                         .po-desc {
-                            font-size: 14px; line-height: 1.65; color: rgba(255,255,255,0.45);
+                            font-size: 14px; line-height: 1.65; color: var(--text-secondary);
                             margin: 0;
                         }
                         .po-desc-error { color: #f87171; font-weight: 500; }
@@ -659,7 +661,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         }
                         .po-stat-label {
                             font-size: 10px; font-weight: 700; text-transform: uppercase;
-                            letter-spacing: 0.1em; color: rgba(255,255,255,0.3);
+                            letter-spacing: 0.1em; color: var(--text-muted);
                         }
 
                         /* ────── STAGES ────── */
@@ -670,7 +672,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                             display: flex; align-items: center; gap: 12px;
                             padding: 12px 16px; border-radius: 14px;
                             border: 1px solid var(--border-default);
-                            background: rgba(255,255,255,0.015);
+                            background: var(--bg-surface);
                             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                         }
                         .po-stage-active {
@@ -688,18 +690,18 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                             width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
                             display: flex; align-items: center; justify-content: center;
                             border: 1px solid var(--border-default);
-                            color: rgba(255,255,255,0.25); font-size: 11px; font-weight: 800;
+                            color: var(--text-muted); font-size: 11px; font-weight: 800;
                             transition: all 0.3s;
                         }
                         .po-stage-icon-done {
-                            background: #10b981; border-color: #10b981; color: var(--text-primary);
+                            background: #10b981; border-color: #10b981; color: white;
                         }
                         .po-stage-icon-active {
                             background: var(--primary, #3b82f6); border-color: var(--primary, #3b82f6);
-                            color: var(--text-primary); box-shadow: 0 4px 16px -4px rgba(59,130,246,0.4);
+                            color: white; box-shadow: 0 4px 16px -4px rgba(59,130,246,0.4);
                         }
                         .po-stage-icon-error {
-                            background: #ef4444; border-color: #ef4444; color: var(--text-primary);
+                            background: #ef4444; border-color: #ef4444; color: white;
                         }
                         .po-stage-num { font-family: var(--font-mono, monospace); }
                         .po-stage-text {
@@ -707,7 +709,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         }
                         .po-stage-label {
                             font-size: 12px; font-weight: 700; text-transform: uppercase;
-                            letter-spacing: 0.08em; color: rgba(255,255,255,0.55);
+                            letter-spacing: 0.08em; color: var(--text-secondary);
                         }
                         .po-stage-active .po-stage-label { color: var(--text-primary); }
                         .po-stage-error .po-stage-label { color: #f87171; }
@@ -729,7 +731,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         }
                         .po-bp-label {
                             font-size: 10px; font-weight: 800; text-transform: uppercase;
-                            letter-spacing: 0.15em; color: rgba(255,255,255,0.2);
+                            letter-spacing: 0.15em; color: var(--text-muted);
                             font-family: var(--font-mono, monospace);
                         }
                         .po-bp-pct {
@@ -754,25 +756,25 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         .po-btn-primary {
                             padding: 18px 24px; border-radius: 16px; font-size: 14px;
                             background: linear-gradient(135deg, #3b82f6, #6366f1);
-                            color: var(--text-primary);
+                            color: white;
                             box-shadow: 0 6px 24px -4px rgba(59,130,246,0.4);
                         }
                         .po-btn-primary:hover { box-shadow: 0 10px 36px -6px rgba(59,130,246,0.5); }
                         .po-btn-danger {
                             padding: 18px 24px; border-radius: 16px; font-size: 14px;
                             background: linear-gradient(135deg, #dc2626, #b91c1c);
-                            color: var(--text-primary);
+                            color: white;
                             box-shadow: 0 6px 24px -4px rgba(239,68,68,0.3);
                         }
                         .po-btn-ghost {
                             padding: 12px; border-radius: 10px; font-size: 10px;
-                            background: transparent; color: rgba(255,255,255,0.25);
+                            background: transparent; color: var(--text-muted);
                             letter-spacing: 0.25em;
                         }
-                        .po-btn-ghost:hover { color: rgba(255,255,255,0.6); background: var(--bg-surface-hover); }
+                        .po-btn-ghost:hover { color: var(--text-primary); background: var(--bg-surface-hover); }
                         .po-hint {
                             font-size: 10px; font-family: var(--font-mono, monospace);
-                            color: rgba(255,255,255,0.15); text-transform: uppercase;
+                            color: var(--text-muted); text-transform: uppercase;
                             letter-spacing: 0.15em; padding-top: 8px; margin: 0;
                         }
 
@@ -780,19 +782,19 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         .po-footer {
                             display: flex; align-items: center; justify-content: space-between;
                             padding: 14px 24px;
-                            border-top: 1px solid rgba(255,255,255,0.04);
-                            background: rgba(0,0,0,0.15);
+                            border-top: 1px solid var(--border-default);
+                            background: var(--bg-surface);
                             border-radius: 0 0 28px 28px;
                         }
                         .po-footer-meta { display: flex; align-items: center; gap: 16px; }
                         .po-footer-item { display: flex; flex-direction: column; gap: 2px; }
                         .po-footer-key {
                             font-size: 8px; font-weight: 900; text-transform: uppercase;
-                            letter-spacing: 0.2em; color: rgba(255,255,255,0.15);
+                            letter-spacing: 0.2em; color: var(--text-muted);
                         }
                         .po-footer-val {
                             font-size: 10px; font-family: var(--font-mono, monospace);
-                            color: rgba(255,255,255,0.35); text-transform: lowercase;
+                            color: var(--text-secondary); text-transform: lowercase;
                         }
                         .po-footer-val-green { color: rgba(16,185,129,0.6); }
                         .po-footer-divider {

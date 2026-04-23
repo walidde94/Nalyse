@@ -22,12 +22,15 @@ import {
 } from './stats';
 import { analyzePDF, analyzeHTML } from './document';
 import { ReasoningEngine } from './reasoning';
+import { generateMLInsights, detectOutliersAdvanced } from './mlEngine';
+import { simpleLinearRegression } from './regression';
+import { generateForecast, detectSeasonality } from './forecasting';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024;      // 500MB
 const MAX_SAMPLE_ROWS = 50_000;                 // Frontend grid safety limit
-const MAX_CHART_OPTIONS = 24;                   // Max charts to return
+const MAX_CHART_OPTIONS = 32;                   // Max charts to return (expanded for ML/forecast)
 const IGNORE_COLUMNS = /^(id|idx|index|uid|uuid|timestamp|created_at|updated_at|serial|row_?num|record_?id|_id|__v)$/i;
 
 // ─── Core Analysis Pipeline ─────────────────────────────────────────────────
@@ -126,6 +129,208 @@ export const analyzeRawData = (records: any[], sourceName: string = 'Data'): Ana
         allOptions.push(...distRes.options);
     }
 
+    // ── Phase 3.5: ML Intelligence (K-Means, Correlation Matrix, Advanced Outliers) ──
+    let mlAnalysisData: AnalysisResult['mlAnalysis'] = undefined;
+    if (measures.length >= 2) {
+        try {
+            log.push('🤖 Running ML Intelligence suite...');
+            const mlResult = generateMLInsights(data, measures);
+            allInsights.push(...mlResult.insights);
+            allOptions.push(...mlResult.options);
+
+            mlAnalysisData = {};
+
+            // Store correlation matrix
+            if (mlResult.correlationMatrix) {
+                mlAnalysisData.correlationMatrix = mlResult.correlationMatrix;
+            }
+
+            // Store K-Means result
+            if (mlResult.kmeansResult) {
+                mlAnalysisData.kmeansResult = mlResult.kmeansResult;
+            }
+
+            // Advanced outlier detection per numeric column (distribution-aware)
+            const outlierResults: NonNullable<AnalysisResult['mlAnalysis']>['outlierResults'] = [];
+            for (const col of measures.slice(0, 8)) {
+                try {
+                    const outlierResult = detectOutliersAdvanced(data, col);
+                    if (outlierResult.outliers.length > 0) {
+                        outlierResults.push({
+                            column: col,
+                            method: outlierResult.method,
+                            distribution: outlierResult.distribution,
+                            outlierCount: outlierResult.outliers.length,
+                            bounds: outlierResult.bounds,
+                            skewness: Math.round(outlierResult.skewness * 100) / 100,
+                            kurtosis: Math.round(outlierResult.kurtosis * 100) / 100
+                        });
+
+                        allInsights.push({
+                            id: `ml-outlier-${col}`,
+                            type: 'anomaly',
+                            description: `**${outlierResult.outliers.length} outliers** detected in ${col} using ${outlierResult.method} method (${outlierResult.distribution} distribution). Bounds: [${outlierResult.bounds.lower.toFixed(2)}, ${outlierResult.bounds.upper.toFixed(2)}].`,
+                            confidence: Math.min(0.95, 0.7 + (outlierResult.outliers.length / data.length)),
+                            isVerified: true,
+                            severity: outlierResult.outliers.length > data.length * 0.05 ? 'warning' : 'info'
+                        });
+                    }
+                } catch (e) { /* skip column on error */ }
+            }
+            if (outlierResults.length > 0) {
+                mlAnalysisData.outlierResults = outlierResults;
+            }
+
+            const totalOutliers = outlierResults.reduce((s, o) => s + o.outlierCount, 0);
+            log.push(`🤖 ML Intelligence: ${mlResult.insights.length} insights, ${totalOutliers} outliers across ${outlierResults.length} columns`);
+        } catch (e: any) {
+            log.push(`⚠️ ML Intelligence skipped: ${e.message}`);
+        }
+    }
+
+    // ── Phase 3.6: Predictive Forecasting ──
+    let forecastData: AnalysisResult['forecast'] = undefined;
+    if (dates.length > 0 && measures.length > 0) {
+        try {
+            const dateCol = dates[0];
+            // Pick best measure: prefer revenue/sales columns, else first measure
+            const forecastMeasure = measures.find(m => /revenue|sales|amount|total|price|value|count|quantity/i.test(m)) || measures[0];
+
+            log.push(`📈 Generating forecast for ${forecastMeasure} over ${dateCol}...`);
+            const fcResult = generateForecast(data, dateCol, forecastMeasure, 30);
+
+            forecastData = {
+                column: forecastMeasure,
+                dateColumn: dateCol,
+                ...fcResult
+            };
+
+            // Generate forecast chart option
+            const forecastChartData = [
+                ...fcResult.historical.slice(-60).map(h => ({ name: h.date, value: h.value, type: 'historical' })),
+                ...fcResult.forecast.map(f => ({ name: f.date, value: f.value, lower: f.lower, upper: f.upper, type: 'forecast' }))
+            ];
+
+            allOptions.push({
+                id: 'forecast-timeseries',
+                title: `${forecastMeasure} Forecast (30-Day)`,
+                description: `Trend: ${fcResult.metrics.trend} | R²: ${fcResult.metrics.r2.toFixed(3)} | Confidence: ${fcResult.metrics.confidence.toFixed(1)}% | Reliability: ${fcResult.metrics.modelReliability}`,
+                chartType: 'area',
+                data: forecastChartData,
+                priority: 9
+            });
+
+            allInsights.push({
+                id: 'forecast-trend',
+                type: 'prediction',
+                description: `**${fcResult.metrics.trend === 'increasing' ? '📈 Upward' : fcResult.metrics.trend === 'decreasing' ? '📉 Downward' : '➡️ Stable'} trend** detected for ${forecastMeasure}. Model reliability: ${fcResult.metrics.modelReliability} (R²=${fcResult.metrics.r2.toFixed(3)}, MAPE=${fcResult.metrics.mape.toFixed(1)}%). 30-day forecast generated with ${fcResult.metrics.confidence.toFixed(0)}% confidence.`,
+                confidence: Math.max(0.5, fcResult.metrics.r2),
+                isVerified: true,
+                severity: fcResult.metrics.modelReliability === 'Low' ? 'warning' : 'info'
+            });
+
+            // Seasonality detection
+            try {
+                const seasonality = detectSeasonality(data, dateCol, forecastMeasure);
+                if (seasonality.hasSeasonality) {
+                    allInsights.push({
+                        id: 'forecast-seasonality',
+                        type: 'pattern',
+                        description: `**Weekly seasonality detected** in ${forecastMeasure} (${seasonality.strength.toFixed(1)}% of variance explained by day-of-week patterns). Consider seasonal adjustments in forecasting models.`,
+                        confidence: Math.min(0.95, seasonality.strength / 100 + 0.5),
+                        isVerified: true
+                    });
+                }
+            } catch (e) { /* seasonality detection optional */ }
+
+            log.push(`📈 Forecast complete: ${fcResult.metrics.trend} trend, ${fcResult.metrics.modelReliability} reliability`);
+        } catch (e: any) {
+            log.push(`⚠️ Forecasting skipped: ${e.message}`);
+        }
+    }
+
+    // ── Phase 3.7: Regression Modeling ──
+    let regressionData: AnalysisResult['regressionModel'] = undefined;
+    if (measures.length >= 2 && data.length >= 10) {
+        try {
+            // Find strongest correlation pair from existing correlation insights
+            let bestPair: { col1: string; col2: string; r: number } | null = null;
+
+            // Check ML correlation matrix first
+            if (mlAnalysisData?.correlationMatrix?.entries) {
+                for (const entry of mlAnalysisData.correlationMatrix.entries) {
+                    if (Math.abs(entry.pearson) > (bestPair?.r || 0.6)) {
+                        bestPair = { col1: entry.col1, col2: entry.col2, r: Math.abs(entry.pearson) };
+                    }
+                }
+            }
+
+            // Fallback: scan existing correlation insights
+            if (!bestPair) {
+                for (const insight of allInsights) {
+                    if (insight.type === 'correlation' && insight.confidence > 0.6) {
+                        const match = insight.description.match(/between\s+(.+?)\s+and\s+(.+?)\s+\(r=/);
+                        if (match && measures.includes(match[1]) && measures.includes(match[2])) {
+                            bestPair = { col1: match[1], col2: match[2], r: insight.confidence };
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (bestPair) {
+                log.push(`📐 Running regression: ${bestPair.col2} ~ ${bestPair.col1} (r=${bestPair.r.toFixed(3)})...`);
+                const regResult = simpleLinearRegression(data, bestPair.col2, bestPair.col1);
+
+                regressionData = {
+                    dependentVar: bestPair.col2,
+                    independentVar: bestPair.col1,
+                    equation: regResult.model.equation,
+                    rSquared: regResult.metrics.rSquared,
+                    adjustedRSquared: regResult.metrics.adjustedRSquared,
+                    pValue: regResult.metrics.pValue,
+                    intercept: regResult.model.intercept,
+                    slope: regResult.model.coefficients[0]?.coefficient || 0,
+                    diagnostics: {
+                        normalityOk: regResult.diagnostics.normalityTest.isNormal,
+                        heteroskedasticity: regResult.diagnostics.heteroskedasticity.detected
+                    },
+                    predictions: regResult.predictions.slice(0, 200)
+                };
+
+                // Generate regression scatter chart
+                const regressionChartData = regResult.predictions.slice(0, 200).map((p, i) => ({
+                    name: `Point ${i + 1}`,
+                    x: data[i]?.[bestPair!.col1] != null ? parseFloat(String(data[i][bestPair!.col1]).replace(/[$€£,% ]/g, '')) : 0,
+                    y: p.actual,
+                    predicted: p.predicted
+                })).filter(p => !isNaN(p.x) && !isNaN(p.y));
+
+                allOptions.push({
+                    id: 'regression-scatter',
+                    title: `Regression: ${bestPair.col2} vs ${bestPair.col1}`,
+                    description: `${regResult.model.equation} | R²=${regResult.metrics.rSquared.toFixed(3)} | p=${regResult.metrics.pValue < 0.001 ? '<0.001' : regResult.metrics.pValue.toFixed(4)}`,
+                    chartType: 'scatter',
+                    data: regressionChartData,
+                    priority: 8
+                });
+
+                allInsights.push({
+                    id: 'regression-model',
+                    type: 'correlation',
+                    description: `**Predictive model built**: ${regResult.model.equation}. The model explains ${(regResult.metrics.rSquared * 100).toFixed(1)}% of variance (R²=${regResult.metrics.rSquared.toFixed(3)}, F=${regResult.metrics.fStatistic.toFixed(2)}, p=${regResult.metrics.pValue < 0.001 ? '<0.001' : regResult.metrics.pValue.toFixed(4)}).${regResult.diagnostics.heteroskedasticity.detected ? ' ⚠️ Heteroskedasticity detected — predictions may be less reliable at extreme values.' : ''}`,
+                    confidence: Math.min(0.99, regResult.metrics.rSquared),
+                    isVerified: regResult.metrics.pValue < 0.05,
+                    severity: regResult.metrics.rSquared > 0.7 ? 'info' : 'warning'
+                });
+
+                log.push(`📐 Regression: R²=${regResult.metrics.rSquared.toFixed(3)}, p=${regResult.metrics.pValue < 0.001 ? '<0.001' : regResult.metrics.pValue.toFixed(4)}`);
+            }
+        } catch (e: any) {
+            log.push(`⚠️ Regression skipped: ${e.message}`);
+        }
+    }
+
     // ── Phase 4: Smart Fallback ──
     if (allOptions.length === 0 && dimensions.length > 0) {
         const cat = dimensions[0];
@@ -184,7 +389,10 @@ export const analyzeRawData = (records: any[], sourceName: string = 'Data'): Ana
         processingLog: log,
         sampleData: data.slice(0, MAX_SAMPLE_ROWS),
         dataHealth: cleaning.stats,
-        metrics: generateKeyMetrics(data, columns, cleaning.stats.score, cleaning.columnStats)
+        metrics: generateKeyMetrics(data, columns, cleaning.stats.score, cleaning.columnStats),
+        mlAnalysis: mlAnalysisData,
+        forecast: forecastData,
+        regressionModel: regressionData
     };
 
     // ── Phase 6: Executive Reasoning Synthesis ──

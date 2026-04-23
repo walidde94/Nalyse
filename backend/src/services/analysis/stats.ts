@@ -245,6 +245,32 @@ export const generateCategoryInsights = (
                 confidence: 0.95,
                 isVerified: true
             });
+
+            // Herfindahl-Hirschman Index (HHI) for concentration measurement
+            const allCounts = Array.from(counts.values());
+            const totalCount = allCounts.reduce((a, b) => a + b, 0);
+            if (totalCount > 0 && counts.size >= 3) {
+                const hhi = allCounts.reduce((sum, c) => {
+                    const share = c / totalCount;
+                    return sum + share * share;
+                }, 0);
+                const normalizedHHI = Math.round(hhi * 10000); // Standard HHI scale (0-10000)
+
+                let concentration = 'Fragmented';
+                let severity: 'info' | 'warning' | 'critical' = 'info';
+                if (normalizedHHI > 2500) { concentration = 'Highly Concentrated'; severity = 'warning'; }
+                else if (normalizedHHI > 1500) { concentration = 'Moderately Concentrated'; }
+                else { concentration = 'Competitive / Fragmented'; }
+
+                insights.push({
+                    id: `hhi-${cat}`,
+                    type: 'segment',
+                    description: `**Market Concentration (HHI)**: ${cat} distribution scores ${normalizedHHI.toLocaleString()} on the Herfindahl-Hirschman Index — classified as **${concentration}** (${counts.size} segments). ${normalizedHHI > 2500 ? 'High dependency on few segments poses risk.' : 'Healthy diversification across segments.'}`,
+                    confidence: 0.94,
+                    isVerified: true,
+                    severity
+                });
+            }
         }
     }
 
@@ -318,6 +344,76 @@ export const generateTimeSeriesAnalysis = (
             data: cumulativeData,
             priority: 6
         });
+    }
+
+    // Moving Average Overlay (3-period and 7-period)
+    if (timeData.length >= 6) {
+        const maData = timeData.map((d, i) => {
+            const ma3Window = timeData.slice(Math.max(0, i - 2), i + 1);
+            const ma7Window = timeData.slice(Math.max(0, i - 6), i + 1);
+            return {
+                name: d.name,
+                value: d.value,
+                ma3: Math.round(ma3Window.reduce((s, w) => s + w.value, 0) / ma3Window.length * 100) / 100,
+                ma7: i >= 6 ? Math.round(ma7Window.reduce((s, w) => s + w.value, 0) / ma7Window.length * 100) / 100 : undefined
+            };
+        });
+
+        options.push({
+            id: 'time-moving-avg',
+            title: `${metricLabel} with Moving Averages`,
+            description: `Smoothed trend lines (3-period & 7-period MA) to filter noise and reveal underlying momentum.`,
+            chartType: 'line',
+            data: maData,
+            priority: 7
+        });
+    }
+
+    // Year-over-Year Comparison (when data spans >12 months)
+    if (sortedMonths.length > 12) {
+        const yoyData: Array<{ name: string; value: number; yoyGrowth?: number }> = [];
+        const monthMap = new Map(sortedMonths.map(([k, v]) => [k, v.sum]));
+
+        for (let i = 12; i < sortedMonths.length; i++) {
+            const currentKey = sortedMonths[i][0];
+            const currentVal = sortedMonths[i][1].sum;
+            // Find same month last year
+            const year = parseInt(currentKey.slice(0, 4));
+            const month = currentKey.slice(5, 7);
+            const lastYearKey = `${year - 1}-${month}`;
+            const lastYearVal = monthMap.get(lastYearKey);
+
+            if (lastYearVal && lastYearVal > 0) {
+                const growth = ((currentVal - lastYearVal) / lastYearVal) * 100;
+                yoyData.push({
+                    name: currentKey,
+                    value: Math.round(growth * 10) / 10,
+                    yoyGrowth: Math.round(growth * 10) / 10
+                });
+            }
+        }
+
+        if (yoyData.length >= 3) {
+            options.push({
+                id: 'time-yoy',
+                title: `${metricLabel} Year-over-Year Growth`,
+                description: `Monthly YoY growth rate comparison across ${yoyData.length} periods.`,
+                chartType: 'bar',
+                data: yoyData,
+                priority: 7
+            });
+
+            const avgYoY = yoyData.reduce((s, d) => s + d.value, 0) / yoyData.length;
+            const latestYoY = yoyData[yoyData.length - 1].value;
+            insights.push({
+                id: 'yoy-growth',
+                type: 'trend',
+                description: `**Year-over-Year**: Average YoY growth of ${avgYoY > 0 ? '+' : ''}${avgYoY.toFixed(1)}% across ${yoyData.length} comparable months. Most recent: ${latestYoY > 0 ? '+' : ''}${latestYoY.toFixed(1)}% (${sortedMonths[sortedMonths.length - 1][0]}).`,
+                confidence: 0.92,
+                isVerified: true,
+                severity: latestYoY < -10 ? 'warning' : 'info'
+            });
+        }
     }
 
     // Growth Analysis

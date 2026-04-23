@@ -264,11 +264,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                 flexShrink: 0,
                             }}>N</div>
                             <span style={{
-                                fontSize: 14,
-                                fontWeight: 800,
-                                color: 'var(--text-primary)',
+                                fontSize: 15,
+                                fontWeight: 900,
                                 fontFamily: 'var(--font-heading)',
                                 letterSpacing: '-0.02em',
+                                background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
                             }}>Nalyse</span>
                         </div>
                     ) : (
@@ -502,10 +504,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                             style={{
                                 cursor: 'pointer',
                                 padding: collapsed ? 10 : 14,
-                                borderRadius: 10,
-                                background: 'linear-gradient(135deg, var(--primary-subtle), rgba(139, 92, 246, 0.08))',
-                                border: '1px solid var(--border-subtle)',
-                                transition: 'all 0.2s ease',
+                                borderRadius: 12,
+                                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(56, 189, 248, 0.05) 100%)',
+                                border: '1px solid rgba(139, 92, 246, 0.15)',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                boxShadow: '0 4px 12px rgba(139, 92, 246, 0.05)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.15)';
+                                e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.05)';
+                                e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.15)';
                             }}
                             onClick={() => onViewChange({ id: 'settings', data: { initialTab: 'subscription' } })}
                             role="button"
@@ -619,18 +634,20 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
                     fontSize: 12.5,
                     fontWeight: isActive ? 600 : 500,
                     background: isActive
-                        ? `${sectorAccent}12`
+                        ? `${sectorAccent}15`
                         : hovered
-                            ? 'var(--bento-glass-hover)'
+                            ? 'var(--bg-surface-hover)'
                             : 'transparent',
                     borderColor: isActive
-                        ? `${sectorAccent}25`
+                        ? `${sectorAccent}30`
                         : hovered
                             ? 'var(--bento-border-hover)'
                             : 'transparent',
                     color: isActive ? sectorAccent : hovered ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     outline: 'none',
+                    transform: hovered && !isActive ? 'translateX(4px)' : 'translateX(0)',
+                    boxShadow: isActive ? `0 4px 12px ${sectorGlow}` : 'none'
                 }}
             >
                 {/* Active indicator bar */}
@@ -638,12 +655,13 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
                     <span style={{
                         position: 'absolute',
                         left: 0,
-                        top: '20%',
-                        bottom: '20%',
-                        width: 3,
-                        borderRadius: '0 3px 3px 0',
+                        top: '15%',
+                        bottom: '15%',
+                        width: 4,
+                        borderRadius: '0 4px 4px 0',
                         background: sectorAccent,
-                        boxShadow: `0 0 8px ${sectorGlow}`,
+                        boxShadow: `0 0 12px ${sectorAccent}`,
+                        animation: 'pulseGlow 2s infinite alternate',
                     }} />
                 )}
 
