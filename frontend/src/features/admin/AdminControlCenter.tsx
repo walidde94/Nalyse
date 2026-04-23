@@ -234,17 +234,19 @@ export const AdminControlCenter: React.FC = () => {
   const renderOrganizations = () => (
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)' }}>
-        <div style={{ position: 'relative', width: '320px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+        <div style={{ position: 'relative', width: '300px', height: '42px' }}>
+          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input 
             type="text" 
             placeholder="Search organizations..." 
-            style={{ width: '100%', padding: '12px 16px 12px 48px', background: 'var(--bg-app)', border: '1px solid var(--border-default)', borderRadius: '12px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }}
+            style={{ width: '100%', height: '100%', padding: '0 16px 0 42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
           />
         </div>
-        <button className="premium-btn">
+        <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }}>
           <UserPlus size={18} />
           Create Organization
         </button>
@@ -306,17 +308,23 @@ export const AdminControlCenter: React.FC = () => {
 
   const renderUsers = () => (
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
-        <div style={{ position: 'relative', width: '320px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)' }}>
+        <div style={{ position: 'relative', width: '300px', height: '42px' }}>
+          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input 
             type="text" 
             placeholder="Search users globally..." 
-            style={{ width: '100%', padding: '12px 16px 12px 48px', background: 'var(--bg-app)', border: '1px solid var(--border-default)', borderRadius: '12px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }}
+            style={{ width: '100%', height: '100%', padding: '0 16px 0 42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
           />
         </div>
+        <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }}>
+          <UserPlus size={18} />
+          Invite User
+        </button>
       </div>
       <div style={{ overflowX: 'auto', width: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
