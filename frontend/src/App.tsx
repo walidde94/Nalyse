@@ -69,6 +69,7 @@ const DashboardCanvas = React.lazy(() => import('./features/canvas/DashboardCanv
 const LensVisualizer = React.lazy(() => import('./features/lens/LensVisualizer').then(m => ({ default: m.LensVisualizer })));
 const EmbedSDKView = React.lazy(() => import('./features/embed/EmbedSDKView').then(m => ({ default: m.EmbedSDKView })));
 const PrivateChatView = React.lazy(() => import('./features/collaboration/PrivateChatView').then(m => ({ default: m.PrivateChatView })));
+const AdminControlCenter = React.lazy(() => import('./features/admin/AdminControlCenter').then(m => ({ default: m.AdminControlCenter })));
 
 
 
@@ -1097,6 +1098,7 @@ function AppContent() {
     { id: 'upload', label: 'Upload New File', icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', 'Dashboard'); document.getElementById('file-input')?.click(); }, category: 'Actions', keywords: ['import', 'add', 'dataset', 'csv', 'data'] },
     { id: 'theme', label: `Switch to ${theme === 'dark' ? 'Light' : theme === 'light' ? 'Custom' : 'Dark'} Mode`, icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance', keywords: ['color', 'style', 'dark', 'light', 'ui', 'theme'] },
     { id: 'logout', label: 'Logout', icon: <LogOut size={18} />, action: logout, category: 'Account', keywords: ['sign out', 'exit', 'leave'] },
+    ...(user?.role === 'SystemAdmin' || user?.role === 'PlatformAdmin' ? [{ id: 'admin', label: 'Admin Control Center', icon: <Shield size={18} />, action: () => openTab('admin', 'Admin Control Center'), category: 'Navigation', keywords: ['platform', 'control', 'manage', 'organizations', 'users'] }] : []),
     
     // Core Engines
     { id: 'simulation', label: 'Open Simulation Engine', icon: <Cpu size={18} />, action: () => openTab('simulation', 'Simulation Engine'), category: 'Engines', keywords: ['run', 'execute', 'model', 'test', 'scenario', 'monte carlo'] },
@@ -1210,7 +1212,8 @@ function AppContent() {
                   id === 'democracy' ? 'Self-Service Studio' :
                     id === 'canvas' ? 'Dashboard Canvas' :
                         id === 'lens' ? 'Smart Lens' :
-                          id === 'shared-workspaces' ? 'Shared Workspaces' :
+                    id === 'shared-workspaces' ? 'Shared Workspaces' :
+                    id === 'admin' ? 'Admin Control Center' :
                     id.charAt(0).toUpperCase() + id.slice(1);
           openTab(id, title, data);
         }}
@@ -1427,6 +1430,10 @@ function AppContent() {
                     files={files}
                     token={token || ''}
                   />
+                )}
+
+                {tab.type === 'admin' && (
+                  <AdminControlCenter />
                 )}
 
                 {tab.type === 'settings' && (

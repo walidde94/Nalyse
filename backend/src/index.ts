@@ -33,6 +33,7 @@ import dashboardRoutes from './routes/dashboards';
 import workspaceRoutes from './routes/workspaces';
 import chatRoutes from './routes/chats';
 import commentRoutes from './routes/comments';
+import adminRoutes from './routes/admin';
 import { initializeWorkspaceSocket } from './services/workspaceService';
 import { initializeChatSocket } from './services/chatService';
 const allowedOrigins = [
@@ -130,6 +131,7 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check
