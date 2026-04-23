@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ArchitectProvider } from './contexts/ArchitectContext';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { ChatProvider } from './contexts/ChatContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { io } from 'socket.io-client';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { API_URL } from './config';
@@ -1487,13 +1488,15 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <ChatProvider>
-          <WorkspaceProvider>
-            <ArchitectProvider>
-              <AppContent />
-            </ArchitectProvider>
-          </WorkspaceProvider>
-        </ChatProvider>
+        <NotificationProvider>
+          <ChatProvider>
+            <WorkspaceProvider>
+              <ArchitectProvider>
+                <AppContent />
+              </ArchitectProvider>
+            </WorkspaceProvider>
+          </ChatProvider>
+        </NotificationProvider>
       </LanguageProvider>
     </AuthProvider>
   );
