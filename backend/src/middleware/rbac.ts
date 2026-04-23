@@ -19,6 +19,9 @@ export enum Permission {
     MANAGE_USERS = 'manage:users',
     MANAGE_ORG = 'manage:org',
     MANAGE_BILLING = 'manage:billing',
+
+    // Platform Level
+    MANAGE_PLATFORM = 'manage:platform',
 }
 
 // Define Role -> Permissions mapping
@@ -40,7 +43,27 @@ export const RolePermissions: Record<string, Permission[]> = {
     ],
     user: [ // Legacy default role mapping
         ...Object.values(Permission)
+    ],
+    SystemAdmin: [
+        ...Object.values(Permission)
+    ],
+    PlatformAdmin: [
+        ...Object.values(Permission)
     ]
+};
+
+export const requireSystemAdmin = () => {
+    return (req: AuthRequest, res: Response, next: NextFunction) => {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+        
+        if (req.user.role !== 'SystemAdmin' && req.user.role !== 'PlatformAdmin') {
+            return res.status(403).json({ error: 'Forbidden: Platform Administration access required' });
+        }
+        
+        next();
+    }
 };
 
 export const requirePermission = (permission: Permission) => {

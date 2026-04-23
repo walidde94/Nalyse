@@ -79,7 +79,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             fetchNotifications();
             // Fallback robust polling every 30 seconds
             const interval = setInterval(fetchNotifications, 30000);
-            
+
             // Socket connection for real-time updates
             const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
             socket.on('live_update', (payload: any) => {
@@ -87,7 +87,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
                     const notif = payload.data.notification;
                     if (notif.userId === user.id) {
                         addLocalNotification(notif);
-                        
+
                         // Play sound dynamically
                         try {
                             const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -96,15 +96,15 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
                                 if (ctx.state === 'suspended') ctx.resume();
                                 const osc = ctx.createOscillator();
                                 const gain = ctx.createGain();
-                                
+
                                 osc.type = 'sine';
                                 osc.frequency.setValueAtTime(800, ctx.currentTime);
                                 osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
-                                
+
                                 gain.gain.setValueAtTime(0, ctx.currentTime);
                                 gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.02);
                                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-                                
+
                                 osc.connect(gain);
                                 gain.connect(ctx.destination);
                                 osc.start();

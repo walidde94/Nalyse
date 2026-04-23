@@ -1,0 +1,32 @@
+--- schema.prisma	2026-04-23 20:00:00.000000000 +0200
++++ schema.prisma	2026-04-23 20:00:00.000000000 +0200
+@@ -452,4 +452,30 @@
+ 
+   @@map("remote_sources")
+ }
++
++model SystemConfiguration {
++  id          String   @id @default(uuid())
++  key         String   @unique
++  value       Json
++  updatedBy   String?  @map("updated_by")
++  updatedAt   DateTime @updatedAt @map("updated_at")
++  createdAt   DateTime @default(now()) @map("created_at")
++
++  @@map("system_configurations")
++}
++
++model PlatformAuditLog {
++  id          String   @id @default(uuid())
++  userId      String   @map("user_id")
++  action      String
++  resource    String
++  resourceId  String?  @map("resource_id")
++  details     Json?
++  ipAddress   String?  @map("ip_address")
++  createdAt   DateTime @default(now()) @map("created_at")
++  
++  user        User     @relation(fields: [userId], references: [id])
++
++  @@map("platform_audit_logs")
++}

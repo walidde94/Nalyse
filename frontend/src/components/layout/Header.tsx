@@ -699,6 +699,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                     {[
+                                        ...(user?.role === 'SystemAdmin' || user?.role === 'PlatformAdmin' ? [{ title: 'Admin Control Center', icon: Shield, color: '#ef4444', settingsTab: 'admin' as any }] : []),
                                         { title: 'Profile & Security', icon: Fingerprint, color: 'var(--accent)', settingsTab: 'profile' as const },
                                         { title: 'Settings', icon: Settings, color: 'var(--primary)', settingsTab: 'profile' as const }
                                     ].map((item, i) => (
