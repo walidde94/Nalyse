@@ -68,6 +68,27 @@ router.post('/organizations/:id/suspend', async (req: AuthRequest, res: Response
     }
 });
 
+router.post('/organizations', async (req: AuthRequest, res: Response) => {
+    try {
+        const { name, plan } = req.body;
+        if (!name) return res.status(400).json({ error: 'Organization name is required' });
+        
+        const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        
+        const org = await prisma.organization.create({
+            data: {
+                name,
+                slug,
+                plan: plan || 'free',
+            }
+        });
+        
+        res.status(201).json(org);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create organization' });
+    }
+});
+
 // 3. Global User Management
 router.get('/users', async (req: AuthRequest, res: Response) => {
     try {
