@@ -299,10 +299,10 @@ export const AdminControlCenter: React.FC = () => {
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 800, boxShadow: '0 4px 10px rgba(99,102,241,0.3)', paddingLeft: '11px', paddingTop: '10px' }}>
-                      {u.firstName[0]}{u.lastName[0]}
+                      {u.firstName?.[0] || 'U'}{u.lastName?.[0] || ''}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{u.firstName} {u.lastName}</span>
+                      <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{u.firstName || 'Unknown'} {u.lastName || 'User'}</span>
                       <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{u.email}</span>
                     </div>
                   </div>
