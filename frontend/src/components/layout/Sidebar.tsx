@@ -263,15 +263,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                 fontFamily: 'var(--font-heading)',
                                 flexShrink: 0,
                             }}>N</div>
-                            <span style={{
-                                fontSize: 15,
-                                fontWeight: 900,
-                                fontFamily: 'var(--font-heading)',
-                                letterSpacing: '-0.02em',
-                                background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                            }}>Nalyse</span>
                         </div>
                     ) : (
                         <div style={{
