@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { AuthService } from '../services/authService';
 import { AuthRequest } from '../middleware/auth';
+import { prisma } from '../config/database';
 
 const authService = new AuthService();
 
