@@ -247,41 +247,55 @@ router.delete('/users/:id', async (req: AuthRequest, res: Response) => {
 // 4. Workspace Monitoring
 router.get('/workspaces', async (req: AuthRequest, res: Response) => {
     try {
-        // 1. Fetch workspaces without aggregation
+        console.log('[Admin API] Fetching workspaces...');
+        // 1. Fetch workspaces without mandatory organization join
         const workspaces = await prisma.workspace.findMany({
-            include: {
-                organization: { select: { name: true } }
-            },
             orderBy: { createdAt: 'desc' }
         });
         
-        // 2. Manual counting for each workspace
+        console.log(`[Admin API] Found ${workspaces.length} workspaces. Processing joins and counts...`);
+
+        // 2. Manual joining and counting for each workspace
         const serializedWorkspaces = await Promise.all(workspaces.map(async (ws) => {
             try {
-                const memberCount = await prisma.workspaceMember.count({ where: { workspaceId: ws.id } });
-                const dashboardCount = await prisma.dashboard.count({ where: { workspaceId: ws.id } });
-                const fileCount = await prisma.file.count({ where: { workspaceId: ws.id } });
+                const [org, memberCount, dashboardCount, fileCount] = await Promise.all([
+                    prisma.organization.findUnique({ 
+                        where: { id: ws.organizationId },
+                        select: { name: true }
+                    }),
+                    prisma.workspaceMember.count({ where: { workspaceId: ws.id } }),
+                    prisma.dashboard.count({ where: { workspaceId: ws.id } }),
+                    prisma.file.count({ where: { workspaceId: ws.id } })
+                ]);
 
                 return {
                     ...ws,
+                    organization: org || { name: 'ORPHANED / UNKNOWN' },
                     _count: {
                         members: memberCount,
                         dashboards: dashboardCount,
                         files: fileCount
                     }
                 };
-            } catch (err) {
+            } catch (err: any) {
+                console.warn(`[Admin API] Failed to process workspace ${ws.id}:`, err.message);
                 return {
                     ...ws,
+                    organization: { name: 'ERROR LOADING' },
                     _count: { members: 0, dashboards: 0, files: 0 }
                 };
             }
         }));
 
+        console.log(`[Admin API] Successfully serialized ${serializedWorkspaces.length} workspaces.`);
         res.json(serializedWorkspaces);
     } catch (error: any) {
-        console.error('[Admin API] Error fetching workspaces:', error);
-        res.status(500).json({ error: 'Failed to fetch workspaces' });
+        console.error('[Admin API] Critical error fetching workspaces:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch workspaces',
+            details: error?.message || String(error),
+            code: error?.code || 'UNKNOWN'
+        });
     }
 });
 
