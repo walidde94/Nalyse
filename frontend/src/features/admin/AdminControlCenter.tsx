@@ -90,6 +90,9 @@ export const AdminControlCenter: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [tierFilter, setTierFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [activeUserDropdown, setActiveUserDropdown] = useState<string | null>(null);
 
   const fetchStats = async () => {
@@ -410,17 +413,36 @@ export const AdminControlCenter: React.FC = () => {
   const renderOrganizations = () => (
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)' }}>
-        <div style={{ position: 'relative', width: '300px', height: '42px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input 
-            type="text" 
-            placeholder="Search organizations..." 
-            style={{ width: '100%', height: '100%', padding: '0 16px 0 42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-            onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
-          />
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ position: 'relative', width: '240px', height: '42px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              placeholder="Search organizations..." 
+              style={{ width: '100%', height: '100%', padding: '0 16px 0 42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+          <select 
+            value={tierFilter} 
+            onChange={(e) => setTierFilter(e.target.value)}
+            style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all">All Tiers</option>
+            <option value="free">Free</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
         </div>
         <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }} onClick={handleCreateOrganization}>
           <UserPlus size={18} />
@@ -440,7 +462,11 @@ export const AdminControlCenter: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {organizations.filter(o => o.name.toLowerCase().includes(searchQuery.toLowerCase())).map((org) => (
+            {organizations
+              .filter(o => o.name.toLowerCase().includes(searchQuery.toLowerCase()))
+              .filter(o => statusFilter === 'all' || (statusFilter === 'active' ? o.isActive : !o.isActive))
+              .filter(o => tierFilter === 'all' || o.subscriptionTier.toLowerCase() === tierFilter.toLowerCase())
+              .map((org) => (
               <tr key={org.id} className="table-row-hover">
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -491,17 +517,46 @@ export const AdminControlCenter: React.FC = () => {
   const renderUsers = () => (
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)' }}>
-        <div style={{ position: 'relative', width: '300px', height: '42px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input 
-            type="text" 
-            placeholder="Search users globally..." 
-            style={{ width: '100%', height: '100%', padding: '0 16px 0 42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-            onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
-          />
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ position: 'relative', width: '240px', height: '42px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              placeholder="Search users globally..." 
+              style={{ width: '100%', height: '100%', padding: '0 16px 0 42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <select 
+            value={roleFilter} 
+            onChange={(e) => setRoleFilter(e.target.value)}
+            style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all">All Roles</option>
+            <option value="member">Member</option>
+            <option value="PlatformAdmin">Platform Admin</option>
+            <option value="SystemAdmin">System Admin</option>
+          </select>
+          <select 
+            value={tierFilter} 
+            onChange={(e) => setTierFilter(e.target.value)}
+            style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all">All Tiers</option>
+            <option value="free">Free</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
         </div>
         <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }} onClick={handleInviteUser}>
           <UserPlus size={18} />
@@ -522,7 +577,12 @@ export const AdminControlCenter: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {users.filter(u => u.email.toLowerCase().includes(searchQuery.toLowerCase())).map((u) => (
+            {users
+              .filter(u => u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+              .filter(u => statusFilter === 'all' || (statusFilter === 'active' ? u.isActive : !u.isActive))
+              .filter(u => roleFilter === 'all' || u.role === roleFilter)
+              .filter(u => tierFilter === 'all' || u.plan === tierFilter)
+              .map((u) => (
               <tr key={u.id} className="table-row-hover">
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
