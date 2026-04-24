@@ -20,7 +20,8 @@ import {
   Edit2,
   Trash2,
   Key,
-  Clock
+  Clock,
+  MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -880,7 +881,17 @@ export const AdminControlCenter: React.FC = () => {
                   </div>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
-                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)' }}>{log.ipAddress}</span>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                     <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', width: 'fit-content' }}>
+                       {log.ipAddress}
+                     </span>
+                     {log.details?.location && (
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                         <MapPin size={10} color="var(--primary)" />
+                         {log.details.location}
+                       </div>
+                     )}
+                   </div>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                    <div style={{ display: 'flex', flexDirection: 'column' }}>
