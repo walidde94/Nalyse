@@ -264,7 +264,8 @@ async function ensureAuditLogTable() {
             `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS mode text DEFAULT 'standard'`,
             `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS is_preset boolean DEFAULT false`,
             `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS is_built_in boolean DEFAULT false`,
-            `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS owner_id uuid`
+            `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS owner_id uuid`,
+            `CREATE TABLE IF NOT EXISTS platform_audit_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL, action text NOT NULL, resource text NOT NULL, resource_id text, details jsonb, ip_address text, created_at timestamp with time zone DEFAULT now())`
         ];
 
         for (const query of healingQueries) {

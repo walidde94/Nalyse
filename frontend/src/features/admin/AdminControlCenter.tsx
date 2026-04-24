@@ -989,6 +989,7 @@ export const AdminControlCenter: React.FC = () => {
               <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Organization</th>
               <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</th>
               <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Activity</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -1015,6 +1016,16 @@ export const AdminControlCenter: React.FC = () => {
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>
                   {new Date(u.lastActiveAt).toLocaleTimeString()}
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', textAlign: 'right' }}>
+                  <button 
+                    onClick={() => handleForceLogout(u.id, u.email)} 
+                    className="icon-btn hover-danger" 
+                    title="Terminate Session"
+                    style={{ padding: '8px', borderRadius: '8px' }}
+                  >
+                    <LogOut size={16} />
+                  </button>
                 </td>
               </tr>
             ))}
