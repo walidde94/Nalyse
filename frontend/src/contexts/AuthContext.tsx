@@ -66,6 +66,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         setUser(user);
                         localStorage.setItem('user', JSON.stringify(user));
                     } else {
+                        const data = await res.json().catch(() => ({}));
+                        if (data.code === 'FORCE_LOGOUT') {
+                            logout();
+                            return;
+                        }
                         // Token invalid, try refresh
                         await refreshToken();
                     }
@@ -156,6 +161,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
 
             if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                if (data.code === 'FORCE_LOGOUT') {
+                    console.warn('[Security] Refresh token invalidated by force logout signal');
+                }
                 logout();
                 return;
             }
@@ -185,6 +194,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 const userData = data.user || data;
                 setUser(userData);
                 localStorage.setItem('user', JSON.stringify(userData));
+            } else {
+                const data = await res.json().catch(() => ({}));
+                if (data.code === 'FORCE_LOGOUT') {
+                    logout();
+                }
             }
         } catch (e) {
             console.error('Failed to refresh profile:', e);

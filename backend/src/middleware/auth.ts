@@ -44,9 +44,17 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
             });
 
             if (dbUser?.forceLogoutAt) {
-                const tokenIssuedAt = new Date((decoded.iat || 0) * 1000);
-                if (tokenIssuedAt < dbUser.forceLogoutAt) {
-                    return res.status(401).json({ error: 'Session invalidated by administrator. Please log in again.' });
+                const tokenIssuedAtMs = (decoded.iat || 0) * 1000;
+                const forceLogoutTimeMs = new Date(dbUser.forceLogoutAt).getTime();
+                
+                // If token was issued before (or at the same second as) the force logout timestamp, invalidate it
+                // We use a 1s buffer to ensure immediate enforcement regardless of clock skew
+                if (tokenIssuedAtMs <= forceLogoutTimeMs + 1000) {
+                    console.warn(`[Security] Force logout enforced for user ${decoded.userId}. IAT: ${tokenIssuedAtMs}, ForceLogoutAt: ${forceLogoutTimeMs}`);
+                    return res.status(401).json({ 
+                        error: 'Session invalidated by administrator', 
+                        code: 'FORCE_LOGOUT'
+                    });
                 }
             }
 
