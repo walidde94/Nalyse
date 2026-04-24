@@ -18,7 +18,8 @@ import {
   ChevronRight,
   Filter,
   Edit2,
-  Trash2
+  Trash2,
+  Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -237,6 +238,31 @@ export const AdminControlCenter: React.FC = () => {
       }
     } catch (e) {
       addToast('Error updating user role', 'error');
+    }
+  };
+
+  const handleResetPassword = async (targetUser: GlobalUser) => {
+    setActiveUserDropdown(null);
+    const newPassword = window.prompt(`Enter NEW password for ${targetUser.email} (min 8 chars):`);
+    if (!newPassword || newPassword.trim().length < 8) {
+      if (newPassword !== null) addToast('Password must be at least 8 characters', 'warning');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${targetUser.id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ password: newPassword.trim() })
+      });
+      if (res.ok) {
+        addToast(`Password for ${targetUser.email} reset successfully`, 'success');
+      } else {
+        const data = await res.json();
+        addToast(data.error || 'Failed to reset password', 'error');
+      }
+    } catch (e) {
+      addToast('Error resetting password', 'error');
     }
   };
 
@@ -648,6 +674,10 @@ export const AdminControlCenter: React.FC = () => {
                         <button onClick={() => handleUpdateUserRole(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                            <Edit2 size={14} color="var(--text-secondary)" />
                            Change Role
+                        </button>
+                        <button onClick={() => handleResetPassword(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                           <Key size={14} color="#f59e0b" />
+                           Reset Password
                         </button>
                         <div style={{ height: '1px', background: 'var(--border-subtle)' }} />
                         <button onClick={() => handleDeleteUser(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>

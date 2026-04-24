@@ -3,6 +3,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { requireSystemAdmin } from '../middleware/rbac';
 import { prisma } from '../config/database';
 import { Response } from 'express';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
@@ -231,6 +232,27 @@ router.post('/users/:id/status', async (req: AuthRequest, res: Response) => {
         res.json(user);
     } catch (error) {
         res.status(500).json({ error: 'Failed to update user status' });
+    }
+});
+
+router.post('/users/:id/reset-password', async (req: AuthRequest, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const { password } = req.body;
+        
+        if (!password || password.length < 8) {
+            return res.status(400).json({ error: 'Password must be at least 8 characters' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await prisma.user.update({
+            where: { id },
+            data: { passwordHash: hashedPassword }
+        });
+
+        res.json({ success: true, message: 'Password reset successful' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to reset password' });
     }
 });
 
