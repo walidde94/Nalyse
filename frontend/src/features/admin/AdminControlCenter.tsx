@@ -429,8 +429,12 @@ export const AdminControlCenter: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        addToast(`Sessions terminated for ${userEmail}`, 'success');
-        fetchActiveUsers(); // Refresh live sessions list
+        addToast(`Security command sent: Terminating sessions for ${userEmail}`, 'success');
+        // Wait 1s for backend propagation then refresh
+        setTimeout(() => {
+          fetchActiveUsers();
+          fetchUsers();
+        }, 1000);
       } else {
         addToast('Failed to terminate sessions', 'error');
       }
