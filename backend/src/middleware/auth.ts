@@ -13,7 +13,7 @@ export interface AuthRequest extends Request {
 /**
  * Middleware to authenticate requests using JWT
  */
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
 

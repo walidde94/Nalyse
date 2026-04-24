@@ -255,7 +255,7 @@ router.delete('/users/:id', async (req: AuthRequest, res: Response) => {
 // 4. Workspace Monitoring
 router.post('/users/:id/logout', async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const user = await prisma.user.update({
             where: { id },
             data: { forceLogoutAt: new Date() }
