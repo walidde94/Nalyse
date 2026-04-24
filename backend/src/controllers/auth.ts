@@ -91,6 +91,26 @@ export const login = async (req: Request, res: Response) => {
 
         const { user, accessToken, refreshToken } = await authService.login(email, password);
 
+        // Log the login attempt
+        try {
+            await prisma.platformAuditLog.create({
+                data: {
+                    userId: user.id,
+                    action: 'LOGIN',
+                    resource: 'AUTH',
+                    ipAddress: req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
+                    details: {
+                        userAgent: req.headers['user-agent'] || 'unknown',
+                        device: req.headers['sec-ch-ua-platform'] || 'unknown',
+                        loginAt: new Date().toISOString()
+                    }
+                }
+            });
+        } catch (logError) {
+            console.error('Failed to log login attempt:', logError);
+            // Don't fail the login if logging fails
+        }
+
         res.json({
             accessToken,
             refreshToken,

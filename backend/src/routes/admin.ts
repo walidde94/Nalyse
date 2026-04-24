@@ -317,7 +317,34 @@ router.get('/workspaces', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// 7. Security & Audit Logs
+// 5. Security & Audit Logs
+router.get('/login-logs', async (req: AuthRequest, res: Response) => {
+    try {
+        const logs = await prisma.platformAuditLog.findMany({
+            where: {
+                action: 'LOGIN'
+            },
+            include: {
+                user: {
+                    select: {
+                        email: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: 100 // Last 100 logins
+        });
+        res.json(logs);
+    } catch (error) {
+        console.error('[Admin API] Error fetching login logs:', error);
+        res.status(500).json({ error: 'Failed to fetch login logs' });
+    }
+});
+
 router.get('/audit-logs', async (req: AuthRequest, res: Response) => {
     try {
         const logs = await prisma.platformAuditLog.findMany({

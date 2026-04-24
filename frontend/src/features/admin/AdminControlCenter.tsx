@@ -80,15 +80,30 @@ interface AuditLog {
   metadata: any;
 }
 
+interface LoginLog {
+  id: string;
+  userId: string;
+  action: string;
+  ipAddress: string;
+  details: any;
+  createdAt: string;
+  user: {
+    email: string;
+    firstName: string;
+    lastName: string;
+  } | null;
+}
+
 export const AdminControlCenter: React.FC = () => {
   const { token, user } = useAuth();
   const { addToast } = useToast();
-  const [activeSection, setActiveSection] = useState<'overview' | 'organizations' | 'users' | 'workspaces' | 'security' | 'config' | 'health'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'organizations' | 'users' | 'workspaces' | 'login-logs' | 'security' | 'config' | 'health'>('overview');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<GlobalUser[]>([]);
   const [workspaces, setWorkspaces] = useState<WorkspaceData[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -153,10 +168,34 @@ export const AdminControlCenter: React.FC = () => {
     }
   };
 
+  const fetchLoginLogs = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/login-logs`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setLoginLogs(await res.json());
+    } catch (e) {
+      addToast('Failed to fetch login logs', 'error');
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'overview') fetchStats();
+    if (activeSection === 'organizations') fetchOrganizations();
+    if (activeSection === 'users') fetchUsers();
+    if (activeSection === 'workspaces') fetchWorkspaces();
+    if (activeSection === 'security') fetchAuditLogs();
+    if (activeSection === 'login-logs') fetchLoginLogs();
+    
+    // Reset filters when switching sections
+    setStatusFilter('all');
+    setTierFilter('all');
+    setRoleFilter('all');
+    setSearchQuery('');
+  }, [activeSection]);
+
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
-      await Promise.all([fetchStats(), fetchOrganizations(), fetchUsers(), fetchWorkspaces(), fetchAuditLogs()]);
+      await Promise.all([fetchStats(), fetchOrganizations(), fetchUsers(), fetchWorkspaces(), fetchAuditLogs(), fetchLoginLogs()]);
       setIsLoading(false);
     };
     if (token) init();
@@ -739,6 +778,51 @@ export const AdminControlCenter: React.FC = () => {
     </div>
   );
 
+  const renderLoginLogs = () => (
+    <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>User Login History</h3>
+      </div>
+      <div style={{ overflowX: 'auto', width: '100%' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
+            <tr>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>User</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>IP Address</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Platform / Device</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loginLogs.map((log) => (
+              <tr key={log.id} className="table-row-hover">
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{log.user?.firstName} {log.user?.lastName}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{log.user?.email}</span>
+                  </div>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
+                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)' }}>{log.ipAddress}</span>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
+                   <div style={{ display: 'flex', flexDirection: 'column' }}>
+                     <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{log.details?.device || 'Unknown'}</span>
+                     <span style={{ fontSize: '10px', color: 'var(--text-muted)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.details?.userAgent}</span>
+                   </div>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleString()}</td>
+              </tr>
+            ))}
+            {loginLogs.length === 0 && (
+               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No login logs found</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   const renderSecurity = () => (
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
@@ -794,7 +878,7 @@ export const AdminControlCenter: React.FC = () => {
                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} className="pulse-anim"></div>
                <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px' }}>Platform Sync: Active</span>
              </div>
-             <button onClick={() => { fetchStats(); fetchOrganizations(); fetchUsers(); }} className="icon-btn-large" title="Refresh Data">
+             <button onClick={() => { fetchStats(); fetchOrganizations(); fetchUsers(); fetchLoginLogs(); }} className="icon-btn-large" title="Refresh Data">
                 <RefreshCcw size={20} />
              </button>
           </div>
@@ -810,41 +894,58 @@ export const AdminControlCenter: React.FC = () => {
             { id: 'organizations', label: 'Organizations', icon: Building2 },
             { id: 'users', label: 'User Management', icon: Users },
             { id: 'workspaces', label: 'Workspace Hub', icon: Database },
+            { id: 'login-logs', label: 'Login History', icon: Activity },
             { id: 'security', label: 'Security & Audit', icon: Shield },
             { id: 'config', label: 'System Config', icon: Settings },
             { id: 'health', label: 'Infrastructure', icon: Activity },
-          ].map((item) => {
-            const isActive = activeSection === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id as any)}
-                className={`sidebar-btn ${isActive ? 'active' : ''}`}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <item.icon size={20} style={{ color: isActive ? '#fff' : 'var(--text-secondary)' }} />
-                  {item.label}
-                </div>
-                <ChevronRight size={16} style={{ opacity: isActive ? 1 : 0, transition: 'opacity 0.2s' }} />
-              </button>
-            );
-          })}
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id as any)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: activeSection === item.id ? 'var(--primary)' : 'transparent',
+                color: activeSection === item.id ? 'white' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: '14px',
+                fontWeight: activeSection === item.id ? 700 : 500,
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: activeSection === item.id ? '0 4px 12px rgba(99,102,241,0.2)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (activeSection !== item.id) e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+              }}
+              onMouseLeave={(e) => {
+                if (activeSection !== item.id) e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <item.icon size={18} />
+              {item.label}
+              {activeSection === item.id && <ChevronRight size={16} style={{ marginLeft: 'auto' }} />}
+            </button>
+          ))}
 
-          <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
-             <div style={{ padding: '20px', borderRadius: '20px', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', marginBottom: '16px' }}>
-                 <AlertTriangle size={18} />
+          <div style={{ marginTop: 'auto', padding: '20px 0' }}>
+            <div style={{ padding: '16px', background: 'rgba(239,68,68,0.05)', borderRadius: '16px', border: '1px solid rgba(239,68,68,0.1)' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#ef4444' }}>
+                 <AlertTriangle size={14} />
                  <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Emergency Controls</span>
                </div>
-               <button className="danger-btn">
-                 Lock Down Platform
+               <button className="btn-danger w-full" style={{ padding: '10px', fontSize: '12px', fontWeight: 800, borderRadius: '8px' }}>
+                 LOCK DOWN PLATFORM
                </button>
-             </div>
+            </div>
           </div>
         </div>
 
         {/* Content Area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '40px', background: 'var(--bg-app)' }} className="custom-scrollbar">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '40px', background: 'var(--bg-app-subtle)' }} className="custom-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}
@@ -857,12 +958,13 @@ export const AdminControlCenter: React.FC = () => {
               {activeSection === 'organizations' && renderOrganizations()}
               {activeSection === 'users' && renderUsers()}
               {activeSection === 'workspaces' && renderWorkspaces()}
+              {activeSection === 'login-logs' && renderLoginLogs()}
               {activeSection === 'security' && renderSecurity()}
-              {['config', 'health'].includes(activeSection) && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '120px 20px', textAlign: 'center', opacity: 0.4 }}>
-                  <Database size={80} style={{ marginBottom: '24px', color: 'var(--text-muted)' }} />
-                  <h3 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>Module Synchronization Required</h3>
-                  <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-secondary)', maxWidth: '400px', lineHeight: 1.6 }}>This administrative neural link is being initialized. Real-time data streams will appear shortly.</p>
+              {(activeSection === 'config' || activeSection === 'health') && (
+                <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                   <Activity size={48} style={{ marginBottom: '16px', opacity: 0.2 }} />
+                   <h3 style={{ margin: 0, fontWeight: 700 }}>Section under heavy construction</h3>
+                   <p style={{ fontSize: '13px' }}>The Neural Operations team is finalizing this module.</p>
                 </div>
               )}
             </motion.div>
