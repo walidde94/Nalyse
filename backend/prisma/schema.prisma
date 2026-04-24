@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Organization {
@@ -65,12 +65,16 @@ model User {
   updatedAt               DateTime                @updatedAt @map("updated_at")
   agents                  Agent[]
   analyses                Analysis[]
+  analysisComments        AnalysisComment[]
   analysisConfigs         AnalysisConfiguration[]
   auditLogs               AuditLog[]
   dashboards              Dashboard[]
+  directMessages          DirectMessage[]
   files                   File[]
   groups                  Group[]
   notifications           Notification[]
+  platformAuditLogs       PlatformAuditLog[]
+  remoteSources           RemoteSource[]
   reports                 Report[]
   schedules               Schedule[]
   invitationsSent         UserInvitation[]        @relation("invitedBy")
@@ -78,11 +82,7 @@ model User {
   webhooks                Webhook[]
   workspaceMembers        WorkspaceMember[]
   workspaceMessages       WorkspaceMessage[]
-  directMessages          DirectMessage[]
   directConversations     DirectConversation[]    @relation("ConversationParticipants")
-  remoteSources           RemoteSource[]
-  analysisComments        AnalysisComment[]
-  platformAuditLogs       PlatformAuditLog[]
 
   @@map("users")
 }
@@ -111,52 +111,52 @@ model File {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   analyses       Analysis[]
-  schedules      Schedule[]
   group          Group?        @relation(fields: [groupId], references: [id])
   organization   Organization? @relation(fields: [organizationId], references: [id])
   owner          User          @relation(fields: [ownerId], references: [id])
   workspace      Workspace?    @relation(fields: [workspaceId], references: [id])
+  schedules      Schedule[]
 
   @@map("files")
 }
 
 model Analysis {
-  id               String             @id @default(uuid())
-  fileId           String             @map("file_id")
-  createdById      String             @map("created_by_id")
-  status           String             @default("pending")
+  id               String            @id @default(uuid())
+  fileId           String            @map("file_id")
+  createdById      String            @map("created_by_id")
+  status           String            @default("pending")
   results          Json?
   insights         Json?
   statistics       Json?
-  errorMessage     String?            @map("error_message")
-  processingTimeMs Int?               @map("processing_time_ms")
-  completedAt      DateTime?          @map("completed_at")
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt        DateTime           @updatedAt @map("updated_at")
-  createdBy        User               @relation(fields: [createdById], references: [id])
-  file             File               @relation(fields: [fileId], references: [id])
-  schedules        Schedule[]
+  errorMessage     String?           @map("error_message")
+  processingTimeMs Int?              @map("processing_time_ms")
+  completedAt      DateTime?         @map("completed_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  createdBy        User              @relation(fields: [createdById], references: [id])
+  file             File              @relation(fields: [fileId], references: [id])
   comments         AnalysisComment[]
+  schedules        Schedule[]
 
   @@map("analyses")
 }
 
 model AnalysisComment {
-  id         String             @id @default(uuid())
-  analysisId String             @map("analysis_id")
-  authorId   String             @map("author_id")
+  id         String            @id @default(uuid())
+  analysisId String            @map("analysis_id")
+  authorId   String            @map("author_id")
   content    String
-  targetType String             @map("target_type") // chart, insight, data, executive, general
-  targetId   String?            @map("target_id")    // e.g. chart index "0", insight index "2"
-  replyToId  String?            @map("reply_to_id")
-  reactions  Json?              @default("[]")
-  isResolved Boolean            @default(false) @map("is_resolved")
-  createdAt  DateTime           @default(now()) @map("created_at")
-  updatedAt  DateTime           @updatedAt @map("updated_at")
-  analysis   Analysis           @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  author     User               @relation(fields: [authorId], references: [id])
-  replyTo    AnalysisComment?   @relation("CommentReplies", fields: [replyToId], references: [id])
-  replies    AnalysisComment[]  @relation("CommentReplies")
+  targetType String            @map("target_type")
+  targetId   String?           @map("target_id")
+  replyToId  String?           @map("reply_to_id")
+  reactions  Json?             @default("[]")
+  isResolved Boolean           @default(false) @map("is_resolved")
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+  analysis   Analysis          @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  author     User              @relation(fields: [authorId], references: [id])
+  replyTo    AnalysisComment?  @relation("CommentReplies", fields: [replyToId], references: [id])
+  replies    AnalysisComment[] @relation("CommentReplies")
 
   @@map("analysis_comments")
 }
@@ -235,41 +235,41 @@ model AnalysisConfiguration {
 }
 
 model Schedule {
-  id              String       @id @default(uuid())
+  id              String        @id @default(uuid())
   name            String
-  cronExpression  String       @map("cron_expression")
-  targetFileId    String?      @map("target_file_id")
-  dashboardId     String?      @map("dashboard_id")
-  analysisId      String?      @map("analysis_id")
+  cronExpression  String        @map("cron_expression")
+  targetFileId    String?       @map("target_file_id")
   config          Json?
-  isActive        Boolean      @default(true) @map("is_active")
-  organizationId  String       @map("organization_id")
-  createdByUserId String       @map("created_by_user_id")
-  lastRunAt       DateTime?    @map("last_run_at")
-  nextRunAt       DateTime?    @map("next_run_at")
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  createdBy       User         @relation(fields: [createdByUserId], references: [id])
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  targetFile      File?        @relation(fields: [targetFileId], references: [id])
-  dashboard       Dashboard?   @relation(fields: [dashboardId], references: [id])
-  analysis        Analysis?    @relation(fields: [analysisId], references: [id])
+  isActive        Boolean       @default(true) @map("is_active")
+  organizationId  String        @map("organization_id")
+  createdByUserId String        @map("created_by_user_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  dashboardId     String?       @map("dashboard_id")
+  lastRunAt       DateTime?     @map("last_run_at")
+  nextRunAt       DateTime?     @map("next_run_at")
+  analysisId      String?       @map("analysis_id")
   runs            ScheduleRun[]
+  analysis        Analysis?     @relation(fields: [analysisId], references: [id])
+  createdBy       User          @relation(fields: [createdByUserId], references: [id])
+  dashboard       Dashboard?    @relation(fields: [dashboardId], references: [id])
+  organization    Organization  @relation(fields: [organizationId], references: [id])
+  targetFile      File?         @relation(fields: [targetFileId], references: [id])
 
   @@map("schedules")
 }
 
 model ScheduleRun {
-  id          String   @id @default(uuid())
-  scheduleId  String   @map("schedule_id")
-  status      String   @default("pending") // pending, success, failed
-  startedAt   DateTime @default(now()) @map("started_at")
-  completedAt DateTime? @map("completed_at")
-  durationMs  Int?     @map("duration_ms")
-  outputUrl   String?  @map("output_url")
-  errorMessage String? @map("error_message")
-  metadata    Json?
-  schedule    Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  id           String    @id @default(uuid())
+  scheduleId   String    @map("schedule_id")
+  status       String    @default("pending")
+  startedAt    DateTime  @default(now()) @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  durationMs   Int?      @map("duration_ms")
+  outputUrl    String?   @map("output_url")
+  errorMessage String?   @map("error_message")
+  metadata     Json?
+  schedule     Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@map("schedule_runs")
 }
@@ -372,8 +372,8 @@ model Group {
   id          String   @id @default(uuid())
   name        String
   description String?
-  ownerId     String   @map("owner_id")
   createdAt   DateTime @default(now()) @map("created_at")
+  ownerId     String   @map("owner_id")
   updatedAt   DateTime @updatedAt @map("updated_at")
   files       File[]
   owner       User     @relation(fields: [ownerId], references: [id])
@@ -386,11 +386,11 @@ model Agent {
   name        String
   role        String
   status      String
+  createdAt   DateTime    @default(now()) @map("created_at")
   currentGoal String?     @map("current_goal")
   finalReport String?     @map("final_report")
-  userId      String      @map("user_id")
-  createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
+  userId      String      @map("user_id")
   user        User        @relation(fields: [userId], references: [id])
   tasks       AgentTask[]
 
@@ -410,11 +410,11 @@ model AgentTask {
 }
 
 model DirectConversation {
-  id            String          @id @default(uuid())
-  createdAt     DateTime        @default(now()) @map("created_at")
-  updatedAt     DateTime        @updatedAt @map("updated_at")
-  messages      DirectMessage[]
-  participants  User[]          @relation("ConversationParticipants")
+  id           String          @id @default(uuid())
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  messages     DirectMessage[]
+  participants User[]          @relation("ConversationParticipants")
 
   @@map("direct_conversations")
 }
@@ -425,16 +425,16 @@ model DirectMessage {
   senderId       String             @map("sender_id")
   content        String
   imageUrl       String?            @map("image_url")
-  replyToId      String?            @map("reply_to_id")
   reactions      Json?              @default("[]")
   isEdited       Boolean            @default(false) @map("is_edited")
   isDeleted      Boolean            @default(false) @map("is_deleted")
   createdAt      DateTime           @default(now()) @map("created_at")
   updatedAt      DateTime           @updatedAt @map("updated_at")
+  replyToId      String?            @map("reply_to_id")
   conversation   DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User               @relation(fields: [senderId], references: [id])
   replyTo        DirectMessage?     @relation("MessageReplies", fields: [replyToId], references: [id])
   replies        DirectMessage[]    @relation("MessageReplies")
+  sender         User               @relation(fields: [senderId], references: [id])
 
   @@map("direct_messages")
 }
@@ -455,27 +455,26 @@ model RemoteSource {
 }
 
 model SystemConfiguration {
-  id          String   @id @default(uuid())
-  key         String   @unique
-  value       Json
-  updatedBy   String?  @map("updated_by")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("system_configurations")
 }
 
 model PlatformAuditLog {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  action      String
-  resource    String
-  resourceId  String?  @map("resource_id")
-  details     Json?
-  ipAddress   String?  @map("ip_address")
-  createdAt   DateTime @default(now()) @map("created_at")
-  
-  user        User     @relation(fields: [userId], references: [id])
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  details    Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id])
 
   @@map("platform_audit_logs")
 }
