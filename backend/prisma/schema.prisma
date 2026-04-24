@@ -55,6 +55,7 @@ model User {
   subscriptionStatus      String                  @default("inactive") @map("subscription_status")
   lastLoginAt             DateTime?               @map("last_login_at")
   lastActiveAt            DateTime?               @map("last_active_at")
+  forceLogoutAt           DateTime?               @map("force_logout_at")
   organizationId          String?                 @map("organization_id")
   emailVerified           Boolean                 @default(false) @map("email_verified")
   emailVerificationToken  String?                 @map("email_verification_token")

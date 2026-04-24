@@ -134,6 +134,7 @@ async function ensureAuditLogTable() {
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'inactive'`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at timestamp with time zone`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at timestamp with time zone`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS force_logout_at timestamp with time zone`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id uuid`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean DEFAULT false`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token text`,
