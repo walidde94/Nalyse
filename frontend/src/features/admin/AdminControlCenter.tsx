@@ -131,9 +131,12 @@ export const AdminControlCenter: React.FC = () => {
       if (res.ok) {
         setOrganizations(await res.json());
       } else {
-        const errText = await res.text();
-        console.error('fetchOrganizations error:', res.status, errText);
-        addToast(`Failed to load organizations: HTTP ${res.status}`, 'error');
+        try {
+          const errData = await res.json();
+          addToast(`Organizations Error: ${errData.details || errData.error}`, 'error');
+        } catch (e) {
+          addToast(`Failed to load organizations: HTTP ${res.status}`, 'error');
+        }
       }
     } catch (e) {
       addToast('Failed to fetch organizations network error', 'error');

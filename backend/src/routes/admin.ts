@@ -43,23 +43,27 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 // 2. Organization Management
 router.get('/organizations', async (req: AuthRequest, res: Response) => {
     try {
+        // 1. Fetch base organizations
         const orgs = await prisma.organization.findMany({
-            orderBy: { createdAt: 'desc' },
-            include: {
-                _count: {
-                    select: {
-                        users: true,
-                        workspaces: true
-                    }
-                }
-            }
+            orderBy: { createdAt: 'desc' }
         });
         
-        const serializedOrgs = orgs.map(org => ({
-            ...org,
-            storageUsed: org.storageUsed?.toString() || '0',
-            storageLimit: org.storageLimit?.toString() || '104857600'
-        }));
+        // 2. Fetch counts sequentially to prevent connection pool saturation (500 errors)
+        const serializedOrgs = [];
+        for (const org of orgs) {
+            const userCount = await prisma.user.count({ where: { organizationId: org.id } });
+            const workspaceCount = await prisma.workspace.count({ where: { organizationId: org.id } });
+            
+            serializedOrgs.push({
+                ...org,
+                storageUsed: org.storageUsed?.toString() || '0',
+                storageLimit: org.storageLimit?.toString() || '104857600',
+                _count: {
+                    users: userCount,
+                    workspaces: workspaceCount
+                }
+            });
+        }
         
         res.json(serializedOrgs);
     } catch (error: any) {
