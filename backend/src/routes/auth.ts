@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import {
     register,
     login,
@@ -15,6 +15,8 @@ import {
     passwordResetValidation
 } from '../controllers/auth';
 import { authenticate } from '../middleware/auth';
+import { prisma } from '../config/database';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
