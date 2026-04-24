@@ -784,10 +784,33 @@ export const AdminControlCenter: React.FC = () => {
     </div>
   );
 
-  const renderLoginLogs = () => (
-    <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>User Login History</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>User Login History</h3>
+          <button 
+            onClick={async () => {
+              if (!window.confirm('Generate 15 sample login entries for testing?')) return;
+              try {
+                const res = await fetch(`${API_URL}/api/admin/seed-login-logs`, { 
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${token}` } 
+                });
+                if (res.ok) {
+                  addToast('Sample logs generated', 'success');
+                  fetchLoginLogs();
+                } else {
+                  addToast('Failed to seed logs', 'error');
+                }
+              } catch (e) {
+                addToast('Connection error', 'error');
+              }
+            }}
+            style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 800, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '8px', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Database size={12} />
+            SEED DATA
+          </button>
+        </div>
         {fetchError && (
           <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 700, padding: '4px 12px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '20px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
             {fetchError}
