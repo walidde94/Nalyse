@@ -373,6 +373,37 @@ router.post('/seed-login-logs', async (req: AuthRequest, res: Response) => {
     }
 });
 
+router.get('/active-users', async (req: AuthRequest, res: Response) => {
+    try {
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+        const activeUsers = await prisma.user.findMany({
+            where: {
+                lastActiveAt: {
+                    gte: fifteenMinutesAgo
+                }
+            },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                lastActiveAt: true,
+                organization: {
+                    select: { name: true }
+                }
+            },
+            orderBy: {
+                lastActiveAt: 'desc'
+            }
+        });
+        res.json(activeUsers);
+    } catch (error) {
+        console.error('[Admin API] Error fetching active users:', error);
+        res.status(500).json({ error: 'Failed to fetch active users' });
+    }
+});
+
 router.get('/audit-logs', async (req: AuthRequest, res: Response) => {
     try {
         const logs = await prisma.platformAuditLog.findMany({

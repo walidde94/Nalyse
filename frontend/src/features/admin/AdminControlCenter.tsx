@@ -154,6 +154,17 @@ export const AdminControlCenter: React.FC = () => {
     }
   };
 
+  const fetchActiveUsers = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/active-users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) setActiveUsers(await res.json());
+    } catch (e) {
+      addToast('Failed to fetch active users', 'error');
+    }
+  };
+
   const fetchWorkspaces = async () => {
     try {
       const res = await fetch(`${API_URL}/api/admin/workspaces`, { headers: { Authorization: `Bearer ${token}` } });
@@ -190,6 +201,7 @@ export const AdminControlCenter: React.FC = () => {
     if (activeSection === 'overview') fetchStats();
     if (activeSection === 'organizations') fetchOrganizations();
     if (activeSection === 'users') fetchUsers();
+    if (activeSection === 'active-users') fetchActiveUsers();
     if (activeSection === 'workspaces') fetchWorkspaces();
     if (activeSection === 'security') fetchAuditLogs();
     if (activeSection === 'login-logs') fetchLoginLogs();
@@ -897,6 +909,63 @@ export const AdminControlCenter: React.FC = () => {
     </div>
   );
 
+  const renderActiveUsers = () => (
+    <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Live User Sessions</h3>
+          <span style={{ fontSize: '11px', fontWeight: 700, padding: '4px 10px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderRadius: '20px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+            <span className="pulse-anim" style={{ display: 'inline-block', width: '6px', height: '6px', background: '#22c55e', borderRadius: '50%', marginRight: '8px' }}></span>
+            ACTUAL ACTIVITY (LAST 15M)
+          </span>
+        </div>
+      </div>
+      <div style={{ overflowX: 'auto', width: '100%' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
+            <tr>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Organization</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Activity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeUsers.map((u) => (
+              <tr key={u.id} className="table-row-hover">
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '12px' }}>
+                      {u.firstName?.[0] || u.email[0].toUpperCase()}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{u.firstName} {u.lastName}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{u.email}</span>
+                    </div>
+                  </div>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-primary)' }}>
+                  {u.organization?.name || 'No Organization'}
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '8px', background: u.role === 'admin' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.05)', color: u.role === 'admin' ? 'var(--primary)' : 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    {u.role}
+                  </span>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>
+                  {new Date(u.lastActiveAt).toLocaleTimeString()}
+                </td>
+              </tr>
+            ))}
+            {activeUsers.length === 0 && (
+               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No users active in the last 15 minutes</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-app)', color: 'var(--text-primary)', overflow: 'hidden', fontFamily: '"Inter", sans-serif' }}>
       
@@ -933,7 +1002,8 @@ export const AdminControlCenter: React.FC = () => {
             { id: 'organizations', label: 'Organizations', icon: Building2 },
             { id: 'users', label: 'User Management', icon: Users },
             { id: 'workspaces', label: 'Workspace Hub', icon: Database },
-            { id: 'login-logs', label: 'Login History', icon: Activity },
+            { id: 'login-logs', label: 'Login History', icon: Clock },
+            { id: 'active-users', label: 'Live Sessions', icon: Activity },
             { id: 'security', label: 'Security & Audit', icon: Shield },
             { id: 'config', label: 'System Config', icon: Settings },
             { id: 'health', label: 'Infrastructure', icon: Activity },
@@ -996,7 +1066,8 @@ export const AdminControlCenter: React.FC = () => {
               {activeSection === 'overview' && renderOverview()}
               {activeSection === 'organizations' && renderOrganizations()}
               {activeSection === 'users' && renderUsers()}
-              {activeSection === 'workspaces' && renderWorkspaces()}
+              {activeSection === 'active-users' && renderActiveUsers()}
+        {activeSection === 'workspaces' && renderWorkspaces()}
               {activeSection === 'login-logs' && renderLoginLogs()}
               {activeSection === 'security' && renderSecurity()}
               {(activeSection === 'config' || activeSection === 'health') && (

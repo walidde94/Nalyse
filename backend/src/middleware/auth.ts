@@ -35,6 +35,16 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
             organizationId: decoded.organizationId
         };
 
+        // Background update of lastActiveAt to track live users
+        import('../config/database').then(({ prisma, prismaReady }) => {
+            if (prismaReady) {
+                prisma.user.update({
+                    where: { id: decoded.userId },
+                    data: { lastActiveAt: new Date() }
+                }).catch(() => {});
+            }
+        });
+
         next();
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError) {
