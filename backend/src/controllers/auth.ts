@@ -119,6 +119,31 @@ export const login = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error('Login error:', error);
+        
+        // Log FAILED login attempt
+        try {
+            // Try to find user to get their ID for the log, even if login failed
+            const attemptedUser = await prisma.user.findUnique({ where: { email: req.body.email } });
+            
+            await prisma.platformAuditLog.create({
+                data: {
+                    userId: attemptedUser?.id || '00000000-0000-0000-0000-000000000000', // Link to user if exists, else System/Unknown
+                    action: 'LOGIN_FAILED',
+                    resource: 'AUTH',
+                    ipAddress: req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
+                    details: {
+                        email: req.body.email,
+                        reason: error.message || 'Invalid credentials',
+                        userAgent: req.headers['user-agent'] || 'unknown',
+                        device: req.headers['sec-ch-ua-platform'] || 'unknown',
+                        attemptedAt: new Date().toISOString()
+                    }
+                }
+            });
+        } catch (logError) {
+            console.error('Failed to log failed login attempt:', logError);
+        }
+
         res.status(401).json({ error: error.message });
     }
 };

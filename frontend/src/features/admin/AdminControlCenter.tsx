@@ -841,6 +841,7 @@ export const AdminControlCenter: React.FC = () => {
           <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
             <tr>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>User</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>IP Address</th>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Platform / Device</th>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Time</th>
@@ -851,8 +852,31 @@ export const AdminControlCenter: React.FC = () => {
               <tr key={log.id} className="table-row-hover">
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{log.user?.firstName} {log.user?.lastName}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{log.user?.email}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {log.user ? `${log.user.firstName} ${log.user.lastName}` : 'Unknown Attempt'}
+                    </span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{log.user?.email || log.details?.email || 'N/A'}</span>
+                  </div>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ 
+                      padding: '4px 8px', 
+                      borderRadius: '8px', 
+                      fontSize: '10px', 
+                      fontWeight: 800, 
+                      width: 'fit-content',
+                      background: log.action === 'LOGIN' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      color: log.action === 'LOGIN' ? '#22c55e' : '#ef4444',
+                      border: `1px solid ${log.action === 'LOGIN' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
+                    }}>
+                      {log.action === 'LOGIN' ? 'SUCCESS' : 'FAILED'}
+                    </span>
+                    {log.action === 'LOGIN_FAILED' && (
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                        {log.details?.reason || 'Invalid credentials'}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
