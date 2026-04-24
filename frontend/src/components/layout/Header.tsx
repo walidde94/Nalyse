@@ -181,13 +181,6 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <Logo />
                             <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{
-                                    fontSize: '15px',
-                                    fontWeight: 800,
-                                    fontFamily: 'var(--font-heading)',
-                                    color: 'var(--text-primary)',
-                                    letterSpacing: '-0.02em',
-                                }}>Nalyse</span>
 
                                 {/* Connection status dot */}
                                 <div style={{
