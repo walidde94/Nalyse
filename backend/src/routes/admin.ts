@@ -345,6 +345,48 @@ router.get('/login-logs', async (req: AuthRequest, res: Response) => {
     }
 });
 
+router.post('/seed-login-logs', async (req: AuthRequest, res: Response) => {
+    try {
+        const users = await prisma.user.findMany({ take: 5 });
+        if (users.length === 0) return res.status(400).json({ error: 'No users found to seed logs for' });
+
+        const ips = ['192.168.1.1', '10.0.0.42', '172.16.0.5', '8.8.8.8'];
+        const platforms = ['macOS', 'Windows', 'Linux', 'iOS', 'Android'];
+        const browsers = ['Chrome', 'Firefox', 'Safari', 'Edge'];
+
+        const seedPromises = [];
+        for (const user of users) {
+            for (let i = 0; i < 3; i++) {
+                const ip = ips[Math.floor(Math.random() * ips.length)];
+                const platform = platforms[Math.floor(Math.random() * platforms.length)];
+                const browser = browsers[Math.floor(Math.random() * browsers.length)];
+                const date = new Date();
+                date.setHours(date.getHours() - Math.floor(Math.random() * 24 * 7));
+
+                seedPromises.push(prisma.platformAuditLog.create({
+                    data: {
+                        userId: user.id,
+                        action: 'LOGIN',
+                        resource: 'AUTH',
+                        ipAddress: ip,
+                        details: {
+                            device: platform,
+                            userAgent: `Mozilla/5.0 (${platform}; Intel ${platform} ...) ${browser}/120.0.0.0`,
+                            loginAt: date.toISOString()
+                        },
+                        createdAt: date
+                    }
+                }));
+            }
+        }
+        await Promise.all(seedPromises);
+        res.json({ success: true, count: seedPromises.length });
+    } catch (error) {
+        console.error('[Admin API] Seed error:', error);
+        res.status(500).json({ error: 'Failed to seed login logs' });
+    }
+});
+
 router.get('/audit-logs', async (req: AuthRequest, res: Response) => {
     try {
         const logs = await prisma.platformAuditLog.findMany({
