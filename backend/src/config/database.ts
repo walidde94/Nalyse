@@ -110,7 +110,8 @@ async function ensureAuditLogTable() {
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
             `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
 
-            // Null healing for ALL non-nullable fields in organizations table
+            `UPDATE organizations SET subscription_tier = 'free' WHERE subscription_tier IS NULL`,
+            `UPDATE organizations SET plan = 'free' WHERE plan IS NULL`,
             `UPDATE organizations SET cancel_at_period_end = false WHERE cancel_at_period_end IS NULL`,
             `UPDATE organizations SET storage_used = 0 WHERE storage_used IS NULL`,
             `UPDATE organizations SET storage_limit = 104857600 WHERE storage_limit IS NULL`,
@@ -147,14 +148,26 @@ async function ensureAuditLogTable() {
             // Null healing for ALL non-nullable fields in users table
             `UPDATE users SET password_hash = '' WHERE password_hash IS NULL`,
             `UPDATE users SET role = 'member' WHERE role IS NULL`,
+            `UPDATE users SET plan = 'free' WHERE plan IS NULL`,
             `UPDATE users SET is_active = true WHERE is_active IS NULL`,
             `UPDATE users SET email_verified = false WHERE email_verified IS NULL`,
             `UPDATE users SET created_at = now() WHERE created_at IS NULL`,
             `UPDATE users SET updated_at = now() WHERE updated_at IS NULL`,
+            `UPDATE users SET subscription_status = 'inactive' WHERE subscription_status IS NULL`,
 
             // === Workspaces columns ===
             `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS organization_id uuid`,
             `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            
+            // Relational Healing: Ensure every user and workspace belongs to an organization
+            // 1. Create a default system organization if none exists
+            `INSERT INTO organizations (id, name, slug, subscription_tier, plan, is_active) 
+             SELECT gen_random_uuid(), 'Default System', 'default-sys', 'free', 'free', true 
+             WHERE NOT EXISTS (SELECT 1 FROM organizations LIMIT 1)`,
+             
+            // 2. Point orphaned users and workspaces to the first available organization
+            `UPDATE users SET organization_id = (SELECT id FROM organizations LIMIT 1) WHERE organization_id IS NULL`,
+            `UPDATE workspaces SET organization_id = (SELECT id FROM organizations LIMIT 1) WHERE organization_id IS NULL`,
 
             // === Workspace Members ===
             `CREATE TABLE IF NOT EXISTS workspace_members (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), workspace_id uuid NOT NULL, user_id uuid NOT NULL, role text DEFAULT 'editor')`,
