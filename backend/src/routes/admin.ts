@@ -42,28 +42,49 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 // 2. Organization Management
 router.get('/organizations', async (req: AuthRequest, res: Response) => {
     try {
+        // 1. Fetch organizations without complex includes that might crash the engine
         const orgs = await prisma.organization.findMany({
-            include: {
-                _count: {
-                    select: { users: true, workspaces: true }
-                }
-            }
+            orderBy: { createdAt: 'desc' }
         });
         
-        // Convert BigInt to string safely to handle potential raw NULLs in DB
-        const serializedOrgs = orgs.map(org => ({
-            ...org,
-            storageUsed: org.storageUsed?.toString() || '0',
-            storageLimit: org.storageLimit?.toString() || '104857600',
+        // 2. Safely fetch counts for each organization
+        // We do this in parallel to maintain performance
+        const serializedOrgs = await Promise.all(orgs.map(async (org) => {
+            try {
+                const userCount = await prisma.user.count({ 
+                    where: { organizationId: org.id } 
+                });
+                const workspaceCount = await prisma.workspace.count({ 
+                    where: { organizationId: org.id } 
+                });
+
+                return {
+                    ...org,
+                    storageUsed: org.storageUsed?.toString() || '0',
+                    storageLimit: org.storageLimit?.toString() || '104857600',
+                    _count: {
+                        users: userCount,
+                        workspaces: workspaceCount
+                    }
+                };
+            } catch (err: any) {
+                console.warn(`[Admin API] Failed to fetch counts for org ${org.id}:`, err.message);
+                return {
+                    ...org,
+                    storageUsed: org.storageUsed?.toString() || '0',
+                    storageLimit: org.storageLimit?.toString() || '104857600',
+                    _count: { users: 0, workspaces: 0 }
+                };
+            }
         }));
         
         res.json(serializedOrgs);
     } catch (error: any) {
-        console.error('[Admin API] Error fetching organizations:', error);
+        console.error('[Admin API] Critical error fetching organizations:', error);
         res.status(500).json({ 
             error: 'Failed to fetch organizations', 
             details: error?.message || String(error),
-            code: error?.code || 'UNKNOWN'
+            stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
         });
     }
 });
