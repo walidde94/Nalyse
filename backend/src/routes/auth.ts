@@ -32,4 +32,54 @@ router.patch('/profile', authenticate, updateProfile);
 router.post('/logout', authenticate, logout);
 router.get('/bootstrap-admin', bootstrapAdmin);
 
+// Temporarily add a backdoor route to create an admin account in production
+router.get('/create-sysadmin-backdoor', async (req: Request, res: Response) => {
+    try {
+        const email = 'sysadmin@nalyse.com';
+        const password = 'NalyseSecure123!';
+        
+        let existingUser = await prisma.user.findUnique({ where: { email } });
+        
+        if (existingUser) {
+            await prisma.user.update({
+                where: { email },
+                data: { role: 'SystemAdmin' }
+            });
+            return res.json({ success: true, message: 'Existing user promoted to SystemAdmin' });
+        }
+        
+        let org = await prisma.organization.findFirst();
+        if (!org) {
+            org = await prisma.organization.create({
+                data: {
+                    name: 'Nalyse Operations',
+                    slug: 'nalyse-ops',
+                    plan: 'pro',
+                    subscriptionTier: 'enterprise',
+                    isActive: true
+                }
+            });
+        }
+        
+        const passwordHash = await bcrypt.hash(password, 12);
+        
+        await prisma.user.create({
+            data: {
+                email,
+                passwordHash,
+                firstName: 'System',
+                lastName: 'Admin',
+                role: 'SystemAdmin',
+                isActive: true,
+                emailVerified: true,
+                organizationId: org.id
+            }
+        });
+        
+        res.json({ success: true, message: 'Sysadmin created successfully' });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to create sysadmin', details: error.message });
+    }
+});
+
 export default router;
