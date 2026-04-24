@@ -247,14 +247,40 @@ router.delete('/users/:id', async (req: AuthRequest, res: Response) => {
 // 4. Workspace Monitoring
 router.get('/workspaces', async (req: AuthRequest, res: Response) => {
     try {
+        // 1. Fetch workspaces without aggregation
         const workspaces = await prisma.workspace.findMany({
             include: {
-                organization: { select: { name: true } },
-                _count: { select: { members: true, dashboards: true, files: true } }
-            }
+                organization: { select: { name: true } }
+            },
+            orderBy: { createdAt: 'desc' }
         });
-        res.json(workspaces);
-    } catch (error) {
+        
+        // 2. Manual counting for each workspace
+        const serializedWorkspaces = await Promise.all(workspaces.map(async (ws) => {
+            try {
+                const memberCount = await prisma.workspaceMember.count({ where: { workspaceId: ws.id } });
+                const dashboardCount = await prisma.dashboard.count({ where: { workspaceId: ws.id } });
+                const fileCount = await prisma.file.count({ where: { workspaceId: ws.id } });
+
+                return {
+                    ...ws,
+                    _count: {
+                        members: memberCount,
+                        dashboards: dashboardCount,
+                        files: fileCount
+                    }
+                };
+            } catch (err) {
+                return {
+                    ...ws,
+                    _count: { members: 0, dashboards: 0, files: 0 }
+                };
+            }
+        }));
+
+        res.json(serializedWorkspaces);
+    } catch (error: any) {
+        console.error('[Admin API] Error fetching workspaces:', error);
         res.status(500).json({ error: 'Failed to fetch workspaces' });
     }
 });
