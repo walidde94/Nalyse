@@ -253,6 +253,32 @@ router.delete('/users/:id', async (req: AuthRequest, res: Response) => {
 });
 
 // 4. Workspace Monitoring
+router.post('/users/:id/logout', async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const user = await prisma.user.update({
+            where: { id },
+            data: { forceLogoutAt: new Date() }
+        });
+        
+        // Log the administrative action
+        await prisma.platformAuditLog.create({
+            data: {
+                userId: req.user!.userId,
+                action: 'ADMIN_FORCE_LOGOUT',
+                resource: 'USER',
+                resourceId: id,
+                details: { targetEmail: user.email }
+            }
+        }).catch(() => {});
+
+        res.json({ message: 'User sessions invalidated successfully' });
+    } catch (error) {
+        console.error('[Admin API] Error forcing logout:', error);
+        res.status(500).json({ error: 'Failed to invalidate sessions' });
+    }
+});
+
 router.get('/workspaces', async (req: AuthRequest, res: Response) => {
     try {
         const workspaces = await prisma.workspace.findMany({

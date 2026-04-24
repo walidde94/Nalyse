@@ -83,30 +83,34 @@ export const register = async (req: Request, res: Response) => {
  */
 export const login = async (req: Request, res: Response) => {
     try {
+        const { email, password } = req.body;
+        const ip = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            // Log validation failure
+            await prisma.platformAuditLog.create({
+                data: {
+                    userId: '00000000-0000-0000-0000-000000000000',
+                    action: 'LOGIN_FAILED',
+                    resource: 'AUTH',
+                    ipAddress: ip,
+                    details: { email, reason: 'Validation failed', errors: errors.array(), attemptedAt: new Date().toISOString() }
+                }
+            }).catch(() => {});
             return res.status(400).json({ errors: errors.array() });
         }
-
-        const { email, password } = req.body;
 
         const { user, accessToken, refreshToken } = await authService.login(email, password);
 
         // Log the login attempt with Geo-Location
         try {
-            const ip = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
             let location = 'Unknown Location';
-            
             try {
-                // Use a free IP API to get location
                 const geoRes = await fetch(`http://ip-api.com/json/${ip.split(',')[0].trim()}`);
                 const geoData = await geoRes.json();
-                if (geoData.status === 'success') {
-                    location = `${geoData.city}, ${geoData.country}`;
-                }
-            } catch (e) {
-                console.warn('GeoIP fetch failed:', e);
-            }
+                if (geoData.status === 'success') location = `${geoData.city}, ${geoData.country}`;
+            } catch (e) {}
 
             await prisma.platformAuditLog.create({
                 data: {
@@ -117,7 +121,7 @@ export const login = async (req: Request, res: Response) => {
                     details: {
                         userAgent: req.headers['user-agent'] || 'unknown',
                         device: req.headers['sec-ch-ua-platform'] || 'unknown',
-                        location: location,
+                        location,
                         loginAt: new Date().toISOString()
                     }
                 }
@@ -126,11 +130,7 @@ export const login = async (req: Request, res: Response) => {
             console.error('Failed to log login attempt:', logError);
         }
 
-        res.json({
-            accessToken,
-            refreshToken,
-            user
-        });
+        res.json({ accessToken, refreshToken, user });
     } catch (error: any) {
         console.error('Login error:', error);
         
@@ -138,28 +138,24 @@ export const login = async (req: Request, res: Response) => {
         try {
             const ip = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
             let location = 'Unknown Location';
-            
             try {
                 const geoRes = await fetch(`http://ip-api.com/json/${ip.split(',')[0].trim()}`);
                 const geoData = await geoRes.json();
-                if (geoData.status === 'success') {
-                    location = `${geoData.city}, ${geoData.country}`;
-                }
+                if (geoData.status === 'success') location = `${geoData.city}, ${geoData.country}`;
             } catch (e) {}
 
-            // Try to find user to get their ID for the log, even if login failed
             const attemptedUser = await prisma.user.findUnique({ where: { email: req.body.email } });
             
             await prisma.platformAuditLog.create({
                 data: {
-                    userId: attemptedUser?.id || '00000000-0000-0000-0000-000000000000', // Link to user if exists, else System/Unknown
+                    userId: attemptedUser?.id || '00000000-0000-0000-0000-000000000000',
                     action: 'LOGIN_FAILED',
                     resource: 'AUTH',
                     ipAddress: ip,
                     details: {
                         email: req.body.email,
                         reason: error.message || 'Invalid credentials',
-                        location: location,
+                        location,
                         userAgent: req.headers['user-agent'] || 'unknown',
                         device: req.headers['sec-ch-ua-platform'] || 'unknown',
                         attemptedAt: new Date().toISOString()

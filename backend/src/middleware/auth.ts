@@ -35,15 +35,27 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
             organizationId: decoded.organizationId
         };
 
-        // Background update of lastActiveAt to track live users
-        import('../config/database').then(({ prisma, prismaReady }) => {
-            if (prismaReady) {
-                prisma.user.update({
-                    where: { id: decoded.userId },
-                    data: { lastActiveAt: new Date() }
-                }).catch(() => {});
+        // Security Check: Force Logout validation
+        const { prisma, prismaReady } = await import('../config/database');
+        if (prismaReady) {
+            const dbUser = await prisma.user.findUnique({
+                where: { id: decoded.userId },
+                select: { forceLogoutAt: true }
+            });
+
+            if (dbUser?.forceLogoutAt) {
+                const tokenIssuedAt = new Date((decoded.iat || 0) * 1000);
+                if (tokenIssuedAt < dbUser.forceLogoutAt) {
+                    return res.status(401).json({ error: 'Session invalidated by administrator. Please log in again.' });
+                }
             }
-        });
+
+            // Background update of lastActiveAt
+            prisma.user.update({
+                where: { id: decoded.userId },
+                data: { lastActiveAt: new Date() }
+            }).catch(() => {});
+        }
 
         next();
     } catch (error) {

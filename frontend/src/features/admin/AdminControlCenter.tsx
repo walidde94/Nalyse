@@ -21,7 +21,8 @@ import {
   Trash2,
   Key,
   Clock,
-  MapPin
+  MapPin,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -419,6 +420,25 @@ export const AdminControlCenter: React.FC = () => {
     }
   };
 
+  const handleForceLogout = async (userId: string, userEmail: string) => {
+    if (!window.confirm(`Are you sure you want to terminate all active sessions for ${userEmail}? They will be forced to log in again.`)) return;
+    
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${userId}/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        addToast(`Sessions terminated for ${userEmail}`, 'success');
+        fetchActiveUsers(); // Refresh live sessions list
+      } else {
+        addToast('Failed to terminate sessions', 'error');
+      }
+    } catch (e) {
+      addToast('Error forcing logout', 'error');
+    }
+  };
+
   const handleInviteUser = async () => {
     const email = window.prompt("Enter user email to invite:");
     if (!email || !email.trim()) return;
@@ -741,6 +761,10 @@ export const AdminControlCenter: React.FC = () => {
                         <button onClick={() => handleResetPassword(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                            <Key size={14} color="#f59e0b" />
                            Reset Password
+                        </button>
+                        <button onClick={() => handleForceLogout(u.id, u.email)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                           <LogOut size={14} color="#6366f1" />
+                           Force Logout
                         </button>
                         <div style={{ height: '1px', background: 'var(--border-subtle)' }} />
                         <button onClick={() => handleDeleteUser(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
