@@ -105,6 +105,7 @@ export const AdminControlCenter: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tierFilter, setTierFilter] = useState<string>('all');
@@ -170,10 +171,15 @@ export const AdminControlCenter: React.FC = () => {
 
   const fetchLoginLogs = async () => {
     try {
+      setFetchError(null);
       const res = await fetch(`${API_URL}/api/admin/login-logs`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setLoginLogs(await res.json());
+      if (res.ok) {
+        setLoginLogs(await res.json());
+      } else {
+        setFetchError(`Backend error: ${res.status} ${res.statusText}`);
+      }
     } catch (e) {
-      addToast('Failed to fetch login logs', 'error');
+      setFetchError('Connection failed: Ensure backend is updated and online.');
     }
   };
 
@@ -780,8 +786,13 @@ export const AdminControlCenter: React.FC = () => {
 
   const renderLoginLogs = () => (
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>User Login History</h3>
+      <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>User Login History</h3>
+        {fetchError && (
+          <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 700, padding: '4px 12px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '20px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            {fetchError}
+          </span>
+        )}
       </div>
       <div style={{ overflowX: 'auto', width: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
