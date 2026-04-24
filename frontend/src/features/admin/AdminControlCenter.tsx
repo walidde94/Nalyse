@@ -54,6 +54,7 @@ interface GlobalUser {
   firstName: string;
   lastName: string;
   role: string;
+  plan: string;
   isActive: boolean;
   lastLoginAt: string | null;
   organization: {
@@ -513,6 +514,7 @@ export const AdminControlCenter: React.FC = () => {
             <tr>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>User</th>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Role</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tier</th>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Organization</th>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
               <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Last Login</th>
@@ -536,6 +538,12 @@ export const AdminControlCenter: React.FC = () => {
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                    <span style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: (u.role === 'SystemAdmin' || u.role === 'PlatformAdmin') ? 'rgba(99,102,241,0.1)' : 'rgba(107,114,128,0.1)', color: (u.role === 'SystemAdmin' || u.role === 'PlatformAdmin') ? '#6366f1' : '#9ca3af', border: `1px solid ${(u.role === 'SystemAdmin' || u.role === 'PlatformAdmin') ? 'rgba(99,102,241,0.2)' : 'rgba(107,114,128,0.2)'}` }}>
                     {u.role.toUpperCase()}
+                  </span>
+                </td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', textTransform: 'uppercase', fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {u.plan === 'pro' || u.plan === 'enterprise' ? <Shield size={14} color="#f59e0b" /> : null}
+                    {u.plan || 'FREE'}
                   </span>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>{u.organization?.name || '---'}</td>
@@ -593,7 +601,7 @@ export const AdminControlCenter: React.FC = () => {
               </tr>
             ))}
              {users.length === 0 && (
-               <tr><td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No users found</td></tr>
+               <tr><td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No users found</td></tr>
             )}
           </tbody>
         </table>

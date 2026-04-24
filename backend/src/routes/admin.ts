@@ -166,6 +166,7 @@ router.get('/users', async (req: AuthRequest, res: Response) => {
                 firstName: true,
                 lastName: true,
                 role: true,
+                plan: true,
                 isActive: true,
                 lastLoginAt: true,
                 organization: {
