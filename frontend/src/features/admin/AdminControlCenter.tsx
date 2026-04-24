@@ -19,7 +19,8 @@ import {
   Filter,
   Edit2,
   Trash2,
-  Key
+  Key,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -97,10 +98,11 @@ interface LoginLog {
 export const AdminControlCenter: React.FC = () => {
   const { token, user } = useAuth();
   const { addToast } = useToast();
-  const [activeSection, setActiveSection] = useState<'overview' | 'organizations' | 'users' | 'workspaces' | 'login-logs' | 'security' | 'config' | 'health'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'organizations' | 'users' | 'active-users' | 'workspaces' | 'login-logs' | 'security' | 'config' | 'health'>('overview');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<GlobalUser[]>([]);
+  const [activeUsers, setActiveUsers] = useState<any[]>([]);
   const [workspaces, setWorkspaces] = useState<WorkspaceData[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
@@ -931,7 +933,7 @@ export const AdminControlCenter: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {activeUsers.map((u) => (
+            {activeUsers.map((u: any) => (
               <tr key={u.id} className="table-row-hover">
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
