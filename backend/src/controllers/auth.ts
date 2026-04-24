@@ -92,24 +92,38 @@ export const login = async (req: Request, res: Response) => {
 
         const { user, accessToken, refreshToken } = await authService.login(email, password);
 
-        // Log the login attempt
+        // Log the login attempt with Geo-Location
         try {
+            const ip = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+            let location = 'Unknown Location';
+            
+            try {
+                // Use a free IP API to get location
+                const geoRes = await fetch(`http://ip-api.com/json/${ip.split(',')[0].trim()}`);
+                const geoData = await geoRes.json();
+                if (geoData.status === 'success') {
+                    location = `${geoData.city}, ${geoData.country}`;
+                }
+            } catch (e) {
+                console.warn('GeoIP fetch failed:', e);
+            }
+
             await prisma.platformAuditLog.create({
                 data: {
                     userId: user.id,
                     action: 'LOGIN',
                     resource: 'AUTH',
-                    ipAddress: req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
+                    ipAddress: ip,
                     details: {
                         userAgent: req.headers['user-agent'] || 'unknown',
                         device: req.headers['sec-ch-ua-platform'] || 'unknown',
+                        location: location,
                         loginAt: new Date().toISOString()
                     }
                 }
             });
         } catch (logError) {
             console.error('Failed to log login attempt:', logError);
-            // Don't fail the login if logging fails
         }
 
         res.json({
@@ -122,6 +136,17 @@ export const login = async (req: Request, res: Response) => {
         
         // Log FAILED login attempt
         try {
+            const ip = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+            let location = 'Unknown Location';
+            
+            try {
+                const geoRes = await fetch(`http://ip-api.com/json/${ip.split(',')[0].trim()}`);
+                const geoData = await geoRes.json();
+                if (geoData.status === 'success') {
+                    location = `${geoData.city}, ${geoData.country}`;
+                }
+            } catch (e) {}
+
             // Try to find user to get their ID for the log, even if login failed
             const attemptedUser = await prisma.user.findUnique({ where: { email: req.body.email } });
             
@@ -130,10 +155,11 @@ export const login = async (req: Request, res: Response) => {
                     userId: attemptedUser?.id || '00000000-0000-0000-0000-000000000000', // Link to user if exists, else System/Unknown
                     action: 'LOGIN_FAILED',
                     resource: 'AUTH',
-                    ipAddress: req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
+                    ipAddress: ip,
                     details: {
                         email: req.body.email,
                         reason: error.message || 'Invalid credentials',
+                        location: location,
                         userAgent: req.headers['user-agent'] || 'unknown',
                         device: req.headers['sec-ch-ua-platform'] || 'unknown',
                         attemptedAt: new Date().toISOString()
