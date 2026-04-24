@@ -54,6 +54,7 @@ model User {
   stripeCustomerId        String?                 @map("stripe_customer_id")
   subscriptionStatus      String                  @default("inactive") @map("subscription_status")
   lastLoginAt             DateTime?               @map("last_login_at")
+  lastActiveAt            DateTime?               @map("last_active_at")
   organizationId          String?                 @map("organization_id")
   emailVerified           Boolean                 @default(false) @map("email_verified")
   emailVerificationToken  String?                 @map("email_verification_token")
