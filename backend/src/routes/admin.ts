@@ -377,7 +377,7 @@ router.get('/login-logs', async (req: AuthRequest, res: Response) => {
     try {
         const logs = await prisma.platformAuditLog.findMany({
             where: {
-                action: 'LOGIN'
+                action: { in: ['LOGIN', 'LOGIN_FAILED'] }
             },
             include: {
                 user: {
