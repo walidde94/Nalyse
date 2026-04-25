@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { API_URL } from '../config';
@@ -92,6 +92,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }, [isAuthenticated, fetchConversations]);
 
+    const activeConversationIdRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        activeConversationIdRef.current = activeConversation?.id || null;
+    }, [activeConversation?.id]);
+
     // Socket initialization
     useEffect(() => {
         if (!token || !isAuthenticated) return;
@@ -121,7 +127,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
 
             // If it's the active conversation, dispatch local event for the view
-            if (activeConversation?.id === msg.conversationId) {
+            if (activeConversationIdRef.current === msg.conversationId) {
                 window.dispatchEvent(new CustomEvent('chat:new_message', { detail: msg }));
             } else {
                 // Increment unread if not active
@@ -130,7 +136,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
 
         newSocket.on('message_updated', (msg: ChatMessage) => {
-            if (activeConversation?.id === msg.conversationId) {
+            if (activeConversationIdRef.current === msg.conversationId) {
                 window.dispatchEvent(new CustomEvent('chat:message_updated', { detail: msg }));
             }
         });
@@ -144,7 +150,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return () => {
             newSocket.disconnect();
         };
-    }, [token, isAuthenticated, activeConversation?.id, fetchConversations]);
+    }, [token, isAuthenticated, fetchConversations]);
 
     // Automatically join the active conversation room
     useEffect(() => {

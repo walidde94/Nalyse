@@ -60,13 +60,36 @@ export const initializePresenceSocket = (io: Server) => {
                 connectedUsers.get(userId)!.delete(socket.id);
                 if (connectedUsers.get(userId)!.size === 0) {
                     connectedUsers.delete(userId);
-                    // Broadcast that user is now offline
-                    io.emit('live_update', { 
-                        entity: 'presence', 
-                        data: { userId, status: 'offline' },
-                        timestamp: new Date()
+                    
+                    // Fetch from DB to preserve persistent statuses
+                    const { prisma } = require('../config/database');
+                    prisma.user.findUnique({
+                        where: { id: userId },
+                        select: { presenceStatus: true, customStatusText: true }
+                    }).then((user: any) => {
+                        let finalStatus = 'offline';
+                        if (user && ['vacation', 'busy', 'away'].includes(user.presenceStatus)) {
+                            finalStatus = user.presenceStatus;
+                        }
+                        
+                        io.emit('live_update', { 
+                            entity: 'presence', 
+                            data: { 
+                                userId, 
+                                status: finalStatus,
+                                customText: user?.customStatusText || null 
+                            },
+                            timestamp: new Date()
+                        });
+                        console.log(`[Presence] User ${userId} went offline (status broadcast: ${finalStatus}).`);
+                    }).catch((err: any) => {
+                        console.error('[Presence] Error on disconnect status check:', err);
+                        io.emit('live_update', { 
+                            entity: 'presence', 
+                            data: { userId, status: 'offline' },
+                            timestamp: new Date()
+                        });
                     });
-                    console.log(`[Presence] User ${userId} went offline.`);
                 }
             }
         });
