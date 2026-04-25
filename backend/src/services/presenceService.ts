@@ -2,8 +2,10 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 
 const connectedUsers = new Map<string, Set<string>>(); // userId -> Set of socketIds
+let globalIo: Server | null = null;
 
 export const initializePresenceSocket = (io: Server) => {
+    globalIo = io;
     io.on('connection', (socket: Socket) => {
         let userId: string | null = null;
 
@@ -24,13 +26,29 @@ export const initializePresenceSocket = (io: Server) => {
 
         if (userId) {
             // Track connection
-            if (!connectedUsers.has(userId)) {
+            const isFirstConnection = !connectedUsers.has(userId);
+            if (isFirstConnection) {
                 connectedUsers.set(userId, new Set());
-                // Broadcast that user is now online
-                io.emit('live_update', { 
-                    entity: 'presence', 
-                    data: { userId, status: 'available' },
-                    timestamp: new Date()
+                
+                // Fetch current status from DB to broadcast correctly
+                const { prisma } = require('../config/database');
+                prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { presenceStatus: true, customStatusText: true }
+                }).then((user: any) => {
+                    if (user) {
+                        io.emit('live_update', { 
+                            entity: 'presence', 
+                            data: { 
+                                userId, 
+                                status: user.presenceStatus || 'available',
+                                customText: user.customStatusText || null
+                            },
+                            timestamp: new Date()
+                        });
+                    }
+                }).catch((err: any) => {
+                    console.error('[Presence] Error fetching user status on connect:', err);
                 });
             }
             connectedUsers.get(userId)!.add(socket.id);
@@ -53,6 +71,16 @@ export const initializePresenceSocket = (io: Server) => {
             }
         });
     });
+};
+
+export const broadcastStatusUpdate = (userId: string, status: string, customText: string | null) => {
+    if (globalIo) {
+        globalIo.emit('live_update', {
+            entity: 'presence',
+            data: { userId, status, customText },
+            timestamp: new Date()
+        });
+    }
 };
 
 export const getOnlineUsers = () => Array.from(connectedUsers.keys());
