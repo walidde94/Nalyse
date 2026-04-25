@@ -109,6 +109,27 @@ async function ensureAuditLogTable() {
             }
         }
 
+        try {
+            // Forcefully align column types to UUID to resolve "operator does not exist: text = uuid" or mixed types
+            const fixQueries = [
+                `ALTER TABLE schedules ALTER COLUMN id TYPE uuid USING id::uuid`,
+                `ALTER TABLE schedules ALTER COLUMN organization_id TYPE uuid USING organization_id::uuid`,
+                `ALTER TABLE schedules ALTER COLUMN created_by_user_id TYPE uuid USING created_by_user_id::uuid`,
+                `ALTER TABLE schedule_runs ALTER COLUMN id TYPE uuid USING id::uuid`,
+                `ALTER TABLE schedule_runs ALTER COLUMN schedule_id TYPE uuid USING schedule_id::uuid`,
+                `ALTER TABLE organizations ALTER COLUMN id TYPE uuid USING id::uuid`,
+                `ALTER TABLE users ALTER COLUMN id TYPE uuid USING id::uuid`,
+                `ALTER TABLE users ALTER COLUMN organization_id TYPE uuid USING organization_id::uuid`,
+                `ALTER TABLE workspaces ALTER COLUMN id TYPE uuid USING id::uuid`,
+                `ALTER TABLE workspaces ALTER COLUMN organization_id TYPE uuid USING organization_id::uuid`
+            ];
+            for (const query of fixQueries) {
+                try { await AppDataSource.query(query); } catch (e) { /* ignore if already uuid or empty */ }
+            }
+        } catch (e) {
+            console.error('[Database] Failed to execute fixQueries:', e);
+        }
+
         const healingQueries = [
             `CREATE TABLE IF NOT EXISTS organizations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text UNIQUE NOT NULL)`,
             `CREATE TABLE IF NOT EXISTS users (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), email text UNIQUE NOT NULL)`,

@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Organization {
-  id                    String           @id @default(uuid()) @db.Uuid
+  id                    String           @id @default(uuid())
   name                  String           @unique
   slug                  String?          @unique
   subscriptionTier      String           @default("free") @map("subscription_tier")
@@ -40,7 +40,7 @@ model Organization {
 }
 
 model User {
-  id                      String                  @id @default(uuid()) @db.Uuid
+  id                      String                  @id @default(uuid())
   email                   String                  @unique
   passwordHash            String                  @map("password_hash")
   firstName               String?                 @map("first_name")
@@ -56,7 +56,7 @@ model User {
   lastLoginAt             DateTime?               @map("last_login_at")
   lastActiveAt            DateTime?               @map("last_active_at")
   forceLogoutAt           DateTime?               @map("force_logout_at")
-  organizationId          String?                 @map("organization_id") @db.Uuid
+  organizationId          String?                 @map("organization_id")
   emailVerified           Boolean                 @default(false) @map("email_verified")
   emailVerificationToken  String?                 @map("email_verification_token")
   passwordResetToken      String?                 @map("password_reset_token")
@@ -92,7 +92,7 @@ model User {
 }
 
 model File {
-  id             String        @id @default(uuid()) @db.Uuid
+  id             String        @id @default(uuid())
   filename       String
   originalName   String?       @map("original_name")
   mimeType       String?       @map("mime_type")
@@ -100,7 +100,7 @@ model File {
   path           String?
   s3Key          String?       @map("s3_key")
   s3Bucket       String?       @map("s3_bucket")
-  groupId        String?       @map("group_id") @db.Uuid
+  groupId        String?       @map("group_id")
   metadata       Json?
   checksum       String?
   status         String        @default("ready")
@@ -109,9 +109,9 @@ model File {
   isProcessed    Boolean       @default(false) @map("is_processed")
   isArchived     Boolean       @default(false) @map("is_archived")
   processedAt    DateTime?     @map("processed_at")
-  ownerId        String        @map("owner_id") @db.Uuid
-  organizationId String?       @map("organization_id") @db.Uuid
-  workspaceId    String?       @map("workspace_id") @db.Uuid
+  ownerId        String        @map("owner_id")
+  organizationId String?       @map("organization_id")
+  workspaceId    String?       @map("workspace_id")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   analyses       Analysis[]
@@ -125,9 +125,9 @@ model File {
 }
 
 model Analysis {
-  id               String            @id @default(uuid()) @db.Uuid
-  fileId           String            @map("file_id") @db.Uuid
-  createdById      String            @map("created_by_id") @db.Uuid
+  id               String            @id @default(uuid())
+  fileId           String            @map("file_id")
+  createdById      String            @map("created_by_id")
   status           String            @default("pending")
   results          Json?
   insights         Json?
@@ -146,13 +146,13 @@ model Analysis {
 }
 
 model AnalysisComment {
-  id         String            @id @default(uuid()) @db.Uuid
-  analysisId String            @map("analysis_id") @db.Uuid
-  authorId   String            @map("author_id") @db.Uuid
+  id         String            @id @default(uuid())
+  analysisId String            @map("analysis_id")
+  authorId   String            @map("author_id")
   content    String
   targetType String            @map("target_type")
-  targetId   String?           @map("target_id") @db.Uuid
-  replyToId  String?           @map("reply_to_id") @db.Uuid
+  targetId   String?           @map("target_id")
+  replyToId  String?           @map("reply_to_id")
   reactions  Json?             @default("[]")
   isResolved Boolean           @default(false) @map("is_resolved")
   createdAt  DateTime          @default(now()) @map("created_at")
@@ -166,11 +166,11 @@ model AnalysisComment {
 }
 
 model Report {
-  id             String        @id @default(uuid()) @db.Uuid
+  id             String        @id @default(uuid())
   title          String
   config         Json
-  userId         String        @map("user_id") @db.Uuid
-  organizationId String?       @map("organization_id") @db.Uuid
+  userId         String        @map("user_id")
+  organizationId String?       @map("organization_id")
   shareToken     String?       @unique @map("share_token")
   isPublic       Boolean       @default(false) @map("is_public")
   createdAt      DateTime      @default(now()) @map("created_at")
@@ -182,9 +182,9 @@ model Report {
 }
 
 model Notification {
-  id             String   @id @default(uuid()) @db.Uuid
-  userId         String   @map("user_id") @db.Uuid
-  organizationId String?  @map("organization_id") @db.Uuid
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  organizationId String?  @map("organization_id")
   title          String
   message        String
   category       String   @default("info")
@@ -207,12 +207,12 @@ model Notification {
 }
 
 model UserInvitation {
-  id             String       @id @default(uuid()) @db.Uuid
+  id             String       @id @default(uuid())
   email          String
   role           String       @default("member")
   token          String       @unique
-  organizationId String       @map("organization_id") @db.Uuid
-  inviterId      String       @map("inviter_id") @db.Uuid
+  organizationId String       @map("organization_id")
+  inviterId      String       @map("inviter_id")
   expiresAt      DateTime     @map("expires_at")
   status         String       @default("pending")
   createdAt      DateTime     @default(now()) @map("created_at")
@@ -223,14 +223,14 @@ model UserInvitation {
 }
 
 model AnalysisConfiguration {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String   @id @default(uuid())
   name        String
   description String?
   mode        String   @default("standard")
   isPreset    Boolean  @default(false) @map("is_preset")
   isBuiltIn   Boolean  @default(false) @map("is_built_in")
   config      Json
-  ownerId     String?  @map("owner_id") @db.Uuid
+  ownerId     String?  @map("owner_id")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   owner       User?    @relation(fields: [ownerId], references: [id])
@@ -239,20 +239,20 @@ model AnalysisConfiguration {
 }
 
 model Schedule {
-  id              String        @id @default(uuid()) @db.Uuid
+  id              String        @id @default(uuid())
   name            String
   cronExpression  String        @map("cron_expression")
-  targetFileId    String?       @map("target_file_id") @db.Uuid
+  targetFileId    String?       @map("target_file_id")
   config          Json?
   isActive        Boolean       @default(true) @map("is_active")
-  organizationId  String        @map("organization_id") @db.Uuid
-  createdByUserId String        @map("created_by_user_id") @db.Uuid
+  organizationId  String        @map("organization_id")
+  createdByUserId String        @map("created_by_user_id")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
-  dashboardId     String?       @map("dashboard_id") @db.Uuid
+  dashboardId     String?       @map("dashboard_id")
   lastRunAt       DateTime?     @map("last_run_at")
   nextRunAt       DateTime?     @map("next_run_at")
-  analysisId      String?       @map("analysis_id") @db.Uuid
+  analysisId      String?       @map("analysis_id")
   runs            ScheduleRun[]
   analysis        Analysis?     @relation(fields: [analysisId], references: [id])
   createdBy       User          @relation(fields: [createdByUserId], references: [id])
@@ -264,8 +264,8 @@ model Schedule {
 }
 
 model ScheduleRun {
-  id           String    @id @default(uuid()) @db.Uuid
-  scheduleId   String    @map("schedule_id") @db.Uuid
+  id           String    @id @default(uuid())
+  scheduleId   String    @map("schedule_id")
   status       String    @default("pending")
   startedAt    DateTime  @default(now()) @map("started_at")
   completedAt  DateTime? @map("completed_at")
@@ -279,14 +279,14 @@ model ScheduleRun {
 }
 
 model Webhook {
-  id              String       @id @default(uuid()) @db.Uuid
+  id              String       @id @default(uuid())
   name            String
   url             String
   secret          String?
   events          Json         @default("[\"analysis.completed\"]")
   isActive        Boolean      @default(true) @map("is_active")
-  organizationId  String       @map("organization_id") @db.Uuid
-  createdByUserId String       @map("created_by_user_id") @db.Uuid
+  organizationId  String       @map("organization_id")
+  createdByUserId String       @map("created_by_user_id")
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
   createdBy       User         @relation(fields: [createdByUserId], references: [id])
@@ -296,13 +296,13 @@ model Webhook {
 }
 
 model Dashboard {
-  id             String        @id @default(uuid()) @db.Uuid
+  id             String        @id @default(uuid())
   name           String
   panels         Json          @default("[]")
   gridLayout     Json          @default("[]") @map("grid_layout")
-  userId         String        @map("user_id") @db.Uuid
-  organizationId String?       @map("organization_id") @db.Uuid
-  workspaceId    String?       @map("workspace_id") @db.Uuid
+  userId         String        @map("user_id")
+  organizationId String?       @map("organization_id")
+  workspaceId    String?       @map("workspace_id")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   organization   Organization? @relation(fields: [organizationId], references: [id])
@@ -314,9 +314,9 @@ model Dashboard {
 }
 
 model Workspace {
-  id             String             @id @default(uuid()) @db.Uuid
+  id             String             @id @default(uuid())
   name           String
-  organizationId String             @map("organization_id") @db.Uuid
+  organizationId String             @map("organization_id")
   createdAt      DateTime           @default(now()) @map("created_at")
   auditLogs      AuditLog[]
   dashboards     Dashboard[]
@@ -329,9 +329,9 @@ model Workspace {
 }
 
 model WorkspaceMember {
-  id          String    @id @default(uuid()) @db.Uuid
-  workspaceId String    @map("workspace_id") @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
+  id          String    @id @default(uuid())
+  workspaceId String    @map("workspace_id")
+  userId      String    @map("user_id")
   role        String    @default("editor")
   user        User      @relation(fields: [userId], references: [id])
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
@@ -341,11 +341,11 @@ model WorkspaceMember {
 }
 
 model WorkspaceMessage {
-  id          String             @id @default(uuid()) @db.Uuid
-  workspaceId String             @map("workspace_id") @db.Uuid
-  authorId    String             @map("author_id") @db.Uuid
+  id          String             @id @default(uuid())
+  workspaceId String             @map("workspace_id")
+  authorId    String             @map("author_id")
   content     String
-  replyToId   String?            @map("reply_to_id") @db.Uuid
+  replyToId   String?            @map("reply_to_id")
   mentions    String[]           @default([])
   reactions   Json?              @default("[]")
   createdAt   DateTime           @default(now()) @map("created_at")
@@ -359,11 +359,11 @@ model WorkspaceMessage {
 }
 
 model AuditLog {
-  id          String    @id @default(uuid()) @db.Uuid
-  workspaceId String    @map("workspace_id") @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
+  id          String    @id @default(uuid())
+  workspaceId String    @map("workspace_id")
+  userId      String    @map("user_id")
   action      String
-  entityId    String?   @map("entity_id") @db.Uuid
+  entityId    String?   @map("entity_id")
   details     Json?
   createdAt   DateTime  @default(now()) @map("created_at")
   user        User      @relation(fields: [userId], references: [id])
@@ -373,11 +373,11 @@ model AuditLog {
 }
 
 model Group {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String   @id @default(uuid())
   name        String
   description String?
   createdAt   DateTime @default(now()) @map("created_at")
-  ownerId     String   @map("owner_id") @db.Uuid
+  ownerId     String   @map("owner_id")
   updatedAt   DateTime @updatedAt @map("updated_at")
   files       File[]
   owner       User     @relation(fields: [ownerId], references: [id])
@@ -386,7 +386,7 @@ model Group {
 }
 
 model Agent {
-  id          String      @id @default(uuid()) @db.Uuid
+  id          String      @id @default(uuid())
   name        String
   role        String
   status      String
@@ -394,7 +394,7 @@ model Agent {
   currentGoal String?     @map("current_goal")
   finalReport String?     @map("final_report")
   updatedAt   DateTime    @updatedAt @map("updated_at")
-  userId      String      @map("user_id") @db.Uuid
+  userId      String      @map("user_id")
   user        User        @relation(fields: [userId], references: [id])
   tasks       AgentTask[]
 
@@ -402,11 +402,11 @@ model Agent {
 }
 
 model AgentTask {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String   @id @default(uuid())
   description String
   status      String   @default("pending")
   result      String?
-  agentId     String   @map("agent_id") @db.Uuid
+  agentId     String   @map("agent_id")
   createdAt   DateTime @default(now()) @map("created_at")
   agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -414,7 +414,7 @@ model AgentTask {
 }
 
 model DirectConversation {
-  id           String          @id @default(uuid()) @db.Uuid
+  id           String          @id @default(uuid())
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
   messages     DirectMessage[]
@@ -424,9 +424,9 @@ model DirectConversation {
 }
 
 model DirectMessage {
-  id             String             @id @default(uuid()) @db.Uuid
-  conversationId String             @map("conversation_id") @db.Uuid
-  senderId       String             @map("sender_id") @db.Uuid
+  id             String             @id @default(uuid())
+  conversationId String             @map("conversation_id")
+  senderId       String             @map("sender_id")
   content        String
   imageUrl       String?            @map("image_url")
   reactions      Json?              @default("[]")
@@ -434,7 +434,7 @@ model DirectMessage {
   isDeleted      Boolean            @default(false) @map("is_deleted")
   createdAt      DateTime           @default(now()) @map("created_at")
   updatedAt      DateTime           @updatedAt @map("updated_at")
-  replyToId      String?            @map("reply_to_id") @db.Uuid
+  replyToId      String?            @map("reply_to_id")
   conversation   DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   replyTo        DirectMessage?     @relation("MessageReplies", fields: [replyToId], references: [id])
   replies        DirectMessage[]    @relation("MessageReplies")
@@ -444,13 +444,13 @@ model DirectMessage {
 }
 
 model RemoteSource {
-  id           String    @id @default(uuid()) @db.Uuid
+  id           String    @id @default(uuid())
   name         String
   type         String
   config       Json?
   status       String    @default("active")
   lastSyncedAt DateTime? @map("last_synced_at")
-  ownerId      String    @map("owner_id") @db.Uuid
+  ownerId      String    @map("owner_id")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   owner        User      @relation(fields: [ownerId], references: [id])
@@ -459,7 +459,7 @@ model RemoteSource {
 }
 
 model SystemConfiguration {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(uuid())
   key       String   @unique
   value     Json
   updatedBy String?  @map("updated_by")
@@ -470,11 +470,11 @@ model SystemConfiguration {
 }
 
 model PlatformAuditLog {
-  id         String   @id @default(uuid()) @db.Uuid
-  userId     String?  @map("user_id") @db.Uuid
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
   action     String
   resource   String
-  resourceId String?  @map("resource_id") @db.Uuid
+  resourceId String?  @map("resource_id")
   details    Json?
   ipAddress  String?  @map("ip_address")
   createdAt  DateTime @default(now()) @map("created_at")
