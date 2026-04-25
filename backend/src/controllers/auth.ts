@@ -148,8 +148,8 @@ export const login = async (req: Request, res: Response) => {
             try {
                 const attemptedUser = await prisma.user.findUnique({ where: { email: req.body.email } });
                 if (attemptedUser) attemptedUserId = attemptedUser.id;
-            } catch (e) {
-                console.error('[Auth Controller] Could not lookup user for logging:', e.message);
+            } catch (e: any) {
+                console.error('[Auth Controller] Could not lookup user for logging:', e?.message || e);
             }
             
             await prisma.platformAuditLog.create({
