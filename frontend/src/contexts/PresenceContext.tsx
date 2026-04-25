@@ -72,6 +72,7 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
         const handleLiveUpdate = (payload: any) => {
             if (payload.entity === 'presence') {
                 const { userId, status, customText } = payload.data;
+                console.log(`[Presence] Live update for ${userId}: ${status}`);
                 setPresences(prev => ({
                     ...prev,
                     [userId]: { status: status || 'available', text: customText || null }
@@ -79,10 +80,22 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
             }
         };
 
+        const handleConnect = () => {
+            console.log('[Presence] Socket connected, syncing state...');
+            fetchPresences();
+        };
+
         socket.on('live_update', handleLiveUpdate);
+        socket.on('connect', handleConnect);
+
+        // If already connected, sync immediately
+        if (socket.connected) {
+            fetchPresences();
+        }
 
         return () => {
             socket.off('live_update', handleLiveUpdate);
+            socket.off('connect', handleConnect);
         };
     }, [socket]);
 

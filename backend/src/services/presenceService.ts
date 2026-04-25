@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../config/database';
 
 const connectedUsers = new Map<string, Set<string>>(); // userId -> Set of socketIds
 let globalIo: Server | null = null;
@@ -31,17 +32,23 @@ export const initializePresenceSocket = (io: Server) => {
                 connectedUsers.set(userId, new Set());
                 
                 // Fetch current status from DB to broadcast correctly
-                const { prisma } = require('../config/database');
                 prisma.user.findUnique({
                     where: { id: userId },
                     select: { presenceStatus: true, customStatusText: true }
                 }).then((user: any) => {
                     if (user) {
+                        let currentStatus = user.presenceStatus || 'available';
+                        
+                        // If they were marked offline in DB, they are now available because they connected
+                        if (currentStatus === 'offline') {
+                            currentStatus = 'available';
+                        }
+
                         io.emit('live_update', { 
                             entity: 'presence', 
                             data: { 
                                 userId, 
-                                status: user.presenceStatus || 'available',
+                                status: currentStatus,
                                 customText: user.customStatusText || null
                             },
                             timestamp: new Date()
@@ -62,7 +69,6 @@ export const initializePresenceSocket = (io: Server) => {
                     connectedUsers.delete(userId);
                     
                     // Fetch from DB to preserve persistent statuses
-                    const { prisma } = require('../config/database');
                     prisma.user.findUnique({
                         where: { id: userId },
                         select: { presenceStatus: true, customStatusText: true }
