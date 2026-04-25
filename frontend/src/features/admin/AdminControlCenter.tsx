@@ -204,7 +204,8 @@ export const AdminControlCenter: React.FC = () => {
       if (res.ok) {
         setLoginLogs(await res.json());
       } else {
-        setFetchError(`Backend error: ${res.status} ${res.statusText}`);
+        const errData = await res.json().catch(() => ({}));
+        setFetchError(`Backend error: ${res.status} ${errData.details || res.statusText}`);
       }
     } catch (e) {
       setFetchError('Connection failed: Ensure backend is updated and online.');
