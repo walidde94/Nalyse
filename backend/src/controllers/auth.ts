@@ -144,21 +144,28 @@ export const login = async (req: Request, res: Response) => {
                 if (geoData.status === 'success') location = `${geoData.city}, ${geoData.country}`;
             } catch (e) {}
 
-            const attemptedUser = await prisma.user.findUnique({ where: { email: req.body.email } });
+            let attemptedUserId = '00000000-0000-0000-0000-000000000000';
+            try {
+                const attemptedUser = await prisma.user.findUnique({ where: { email: req.body.email } });
+                if (attemptedUser) attemptedUserId = attemptedUser.id;
+            } catch (e) {
+                console.error('[Auth Controller] Could not lookup user for logging:', e.message);
+            }
             
             await prisma.platformAuditLog.create({
                 data: {
-                    userId: attemptedUser?.id || '00000000-0000-0000-0000-000000000000',
+                    userId: attemptedUserId,
                     action: 'LOGIN_FAILED',
                     resource: 'AUTH',
                     ipAddress: ip,
                     details: {
                         email: req.body.email,
-                        reason: error.message || 'Invalid credentials',
+                        reason: error.message || 'System error',
                         location,
                         userAgent: req.headers['user-agent'] || 'unknown',
                         device: req.headers['sec-ch-ua-platform'] || 'unknown',
-                        attemptedAt: new Date().toISOString()
+                        attemptedAt: new Date().toISOString(),
+                        isSystemError: error.message?.includes('MaxClients') || error.message?.includes('pool')
                     }
                 }
             });
