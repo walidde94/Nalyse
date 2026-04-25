@@ -1200,7 +1200,7 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
                                     onClick={() => setSelectedProfileUser(null)}
                                     style={{
                                         width: '100%', padding: '14px', borderRadius: 16,
-                                        border: 'none', background: 'var(--bg-surface)',
+                                        background: 'var(--bg-surface)',
                                         color: 'var(--text-primary)', fontWeight: 800, fontSize: 14,
                                         cursor: 'pointer', marginTop: 'auto',
                                         boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)'
