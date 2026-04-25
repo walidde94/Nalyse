@@ -239,20 +239,20 @@ model AnalysisConfiguration {
 }
 
 model Schedule {
-  id              String        @id @default(uuid())
+  id              String        @id @default(uuid()) @db.Uuid
   name            String
   cronExpression  String        @map("cron_expression")
-  targetFileId    String?       @map("target_file_id")
+  targetFileId    String?       @map("target_file_id") @db.Uuid
   config          Json?
   isActive        Boolean       @default(true) @map("is_active")
-  organizationId  String        @map("organization_id")
-  createdByUserId String        @map("created_by_user_id")
+  organizationId  String        @map("organization_id") @db.Uuid
+  createdByUserId String        @map("created_by_user_id") @db.Uuid
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
-  dashboardId     String?       @map("dashboard_id")
+  dashboardId     String?       @map("dashboard_id") @db.Uuid
   lastRunAt       DateTime?     @map("last_run_at")
   nextRunAt       DateTime?     @map("next_run_at")
-  analysisId      String?       @map("analysis_id")
+  analysisId      String?       @map("analysis_id") @db.Uuid
   runs            ScheduleRun[]
   analysis        Analysis?     @relation(fields: [analysisId], references: [id])
   createdBy       User          @relation(fields: [createdByUserId], references: [id])
@@ -264,8 +264,8 @@ model Schedule {
 }
 
 model ScheduleRun {
-  id           String    @id @default(uuid())
-  scheduleId   String    @map("schedule_id")
+  id           String    @id @default(uuid()) @db.Uuid
+  scheduleId   String    @map("schedule_id") @db.Uuid
   status       String    @default("pending")
   startedAt    DateTime  @default(now()) @map("started_at")
   completedAt  DateTime? @map("completed_at")
