@@ -44,24 +44,18 @@ router.patch('/', authenticate, async (req: any, res: any) => {
 
 /**
  * GET /api/presence/org
- * Get presence for all users in the user's organization
+ * Get presence for all users in the user's organization (or all active users if no org is set)
  */
 router.get('/org', authenticate, async (req: any, res: any) => {
     try {
-        const userId = req.user.userId || req.user.id;
         const orgId = req.user.organizationId;
-
-        if (!orgId) {
-            // For users without an organization, just return their own presence
-            const user = await prisma.user.findUnique({
-                where: { id: userId },
-                select: { id: true, presenceStatus: true, customStatusText: true }
-            });
-            return res.json([user]);
-        }
+        
+        const whereClause = orgId 
+            ? { organizationId: orgId, isActive: true }
+            : { isActive: true };
 
         const users = await prisma.user.findMany({
-            where: { organizationId: orgId, isActive: true },
+            where: whereClause,
             select: { id: true, presenceStatus: true, customStatusText: true }
         });
 
