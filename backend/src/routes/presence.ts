@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { prisma } from '../config/database';
-import { isUserOnline } from '../services/presenceService';
+import { isUserOnline, broadcastStatusUpdate } from '../services/presenceService';
 
 const router = Router();
 
@@ -27,14 +27,8 @@ router.patch('/', authenticate, async (req: any, res: any) => {
             select: { id: true, presenceStatus: true, customStatusText: true }
         });
 
-        // Broadcast presence update globally
-        import('../index').then(app => {
-            app.broadcastUpdate('presence', {
-                userId,
-                status: user.presenceStatus,
-                customText: user.customStatusText
-            });
-        });
+        // Broadcast presence update globally via PresenceService (avoiding circular dependency)
+        broadcastStatusUpdate(userId, user.presenceStatus, user.customStatusText);
 
         return res.json(user);
     } catch (error) {
