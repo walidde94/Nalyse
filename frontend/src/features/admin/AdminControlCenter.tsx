@@ -31,13 +31,23 @@ import { useToast } from '../../components/ui/Toast';
 
 interface AdminStats {
   totalOrganizations: number;
+  orgGrowth: number;
   totalUsers: number;
+  userGrowth: number;
   activeWorkspaces: number;
+  workspaceGrowth: number;
   datasetsProcessed: number;
   dashboardsCreated: number;
   apiUsage: number;
   aiAnalysisJobs: number;
+  aiJobsGrowth: number;
   systemHealthStatus: string;
+  systemHealth?: {
+    cpuLoad: number;
+    memoryUsage: number;
+    dbConnections: number;
+    latency: number;
+  };
 }
 
 interface Organization {
@@ -458,10 +468,10 @@ export const AdminControlCenter: React.FC = () => {
   const renderOverview = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
       {[
-        { label: 'Total Organizations', value: stats?.totalOrganizations, icon: Building2, color: '#6366f1' },
-        { label: 'Total Users', value: stats?.totalUsers, icon: Users, color: '#8b5cf6' },
-        { label: 'Active Workspaces', value: stats?.activeWorkspaces, icon: Layout, color: '#ec4899' },
-        { label: 'AI Jobs Processed', value: stats?.aiAnalysisJobs, icon: Cpu, color: '#f59e0b' },
+        { label: 'Total Organizations', value: stats?.totalOrganizations, growth: stats?.orgGrowth, icon: Building2, color: '#6366f1' },
+        { label: 'Total Users', value: stats?.totalUsers, growth: stats?.userGrowth, icon: Users, color: '#8b5cf6' },
+        { label: 'Active Workspaces', value: stats?.activeWorkspaces, growth: stats?.workspaceGrowth, icon: Layout, color: '#ec4899' },
+        { label: 'AI Jobs Processed', value: stats?.aiAnalysisJobs, growth: stats?.aiJobsGrowth, icon: Cpu, color: '#f59e0b' },
       ].map((stat, i) => (
         <motion.div 
           key={i}
@@ -475,7 +485,19 @@ export const AdminControlCenter: React.FC = () => {
             <div style={{ padding: '14px', borderRadius: '16px', background: `${stat.color}15`, color: stat.color, border: `1px solid ${stat.color}30`, boxShadow: `0 8px 32px ${stat.color}20` }}>
               <stat.icon size={26} />
             </div>
-            <span style={{ fontSize: '12px', fontWeight: 800, padding: '6px 12px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}>+12%</span>
+            {stat.growth !== undefined && (
+              <span style={{ 
+                fontSize: '12px', 
+                fontWeight: 800, 
+                padding: '6px 12px', 
+                borderRadius: '20px', 
+                background: stat.growth >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                color: stat.growth >= 0 ? '#10b981' : '#ef4444', 
+                border: `1px solid ${stat.growth >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}` 
+              }}>
+                {stat.growth >= 0 ? '+' : ''}{stat.growth}%
+              </span>
+            )}
           </div>
           <div style={{ fontSize: '42px', fontWeight: 900, letterSpacing: '-1.5px', color: 'var(--text-primary)', marginBottom: '8px', lineHeight: 1 }}>{stat.value?.toLocaleString() || '---'}</div>
           <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>{stat.label}</div>
@@ -491,7 +513,7 @@ export const AdminControlCenter: React.FC = () => {
           <div className="admin-card glass-panel">
             <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>API Latency</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-              <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>24ms</span>
+              <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>{stats?.systemHealth?.latency || 24}ms</span>
               <span style={{ color: '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>OPTIMAL</span>
             </div>
             <div style={{ width: '100%', height: '6px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '10px', marginTop: '32px', overflow: 'hidden' }}>
@@ -499,23 +521,27 @@ export const AdminControlCenter: React.FC = () => {
             </div>
           </div>
           <div className="admin-card glass-panel">
-            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>Worker Load</div>
+            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>System CPU Load</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-              <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>12%</span>
-              <span style={{ color: '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>IDLE</span>
+              <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>{stats?.systemHealth?.cpuLoad || 12}%</span>
+              <span style={{ color: (stats?.systemHealth?.cpuLoad || 0) > 80 ? '#ef4444' : '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>
+                {(stats?.systemHealth?.cpuLoad || 0) > 80 ? 'HIGH' : (stats?.systemHealth?.cpuLoad || 0) > 50 ? 'MODERATE' : 'OPTIMAL'}
+              </span>
             </div>
             <div style={{ width: '100%', height: '6px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '10px', marginTop: '32px', overflow: 'hidden' }}>
-              <div style={{ width: '12%', height: '100%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+              <div style={{ width: `${Math.min(stats?.systemHealth?.cpuLoad || 12, 100)}%`, height: '100%', background: (stats?.systemHealth?.cpuLoad || 0) > 80 ? '#ef4444' : '#10b981', boxShadow: `0 0 10px ${(stats?.systemHealth?.cpuLoad || 0) > 80 ? '#ef4444' : '#10b981'}` }}></div>
             </div>
           </div>
           <div className="admin-card glass-panel">
-            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>DB Connections</div>
+            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>Memory Usage</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-              <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>148</span>
-              <span style={{ color: '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>STABLE</span>
+              <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>{stats?.systemHealth?.memoryUsage || 45}%</span>
+              <span style={{ color: (stats?.systemHealth?.memoryUsage || 0) > 85 ? '#ef4444' : '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>
+                {(stats?.systemHealth?.memoryUsage || 0) > 85 ? 'CRITICAL' : 'STABLE'}
+              </span>
             </div>
             <div style={{ width: '100%', height: '6px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '10px', marginTop: '32px', overflow: 'hidden' }}>
-              <div style={{ width: '45%', height: '100%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+              <div style={{ width: `${stats?.systemHealth?.memoryUsage || 45}%`, height: '100%', background: (stats?.systemHealth?.memoryUsage || 0) > 85 ? '#ef4444' : '#10b981', boxShadow: `0 0 10px ${(stats?.systemHealth?.memoryUsage || 0) > 85 ? '#ef4444' : '#10b981'}` }}></div>
             </div>
           </div>
         </div>

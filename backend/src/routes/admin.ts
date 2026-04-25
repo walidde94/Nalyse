@@ -4,6 +4,7 @@ import { requireSystemAdmin } from '../middleware/rbac';
 import { prisma } from '../config/database';
 import { Response } from 'express';
 import bcrypt from 'bcryptjs';
+import os from 'os';
 
 const router = Router();
 
@@ -14,28 +15,70 @@ router.use(requireSystemAdmin());
 // 1. Platform Overview Dashboard
 router.get('/stats', async (req: AuthRequest, res: Response) => {
     try {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        // Helper to calculate growth
+        const calculateGrowth = async (model: any) => {
+            const total = await model.count();
+            const previous = await model.count({
+                where: {
+                    createdAt: {
+                        lt: thirtyDaysAgo
+                    }
+                }
+            });
+            
+            if (previous === 0) return total > 0 ? 100 : 0;
+            return Math.round(((total - previous) / previous) * 100);
+        };
+
         const totalOrganizations = await prisma.organization.count();
+        const orgGrowth = await calculateGrowth(prisma.organization);
+
         const totalUsers = await prisma.user.count();
+        const userGrowth = await calculateGrowth(prisma.user);
+
         const activeWorkspaces = await prisma.workspace.count();
+        const workspaceGrowth = await calculateGrowth(prisma.workspace);
+
         const datasetsProcessed = await prisma.file.count();
         const dashboardsCreated = await prisma.dashboard.count();
         const apiUsage = 0; // Placeholder for API usage
-        const aiAnalysisJobs = await prisma.analysis.count();
         
-        // System Health Mock
-        const systemHealthStatus = 'healthy';
+        const aiAnalysisJobs = await prisma.analysis.count();
+        const aiJobsGrowth = await calculateGrowth(prisma.analysis);
+        
+        // System Health Metrics (Real)
+        const totalMem = os.totalmem();
+        const freeMem = os.freemem();
+        const memoryUsage = Math.round(((totalMem - freeMem) / totalMem) * 100);
+        const cpuLoad = Math.round(os.loadavg()[0] * 100); // Percentage proxy
+        
+        const systemHealthStatus = cpuLoad > 80 ? 'strained' : 'healthy';
 
         res.json({
             totalOrganizations,
+            orgGrowth,
             totalUsers,
+            userGrowth,
             activeWorkspaces,
+            workspaceGrowth,
             datasetsProcessed,
             dashboardsCreated,
             apiUsage,
             aiAnalysisJobs,
+            aiJobsGrowth,
             systemHealthStatus,
+            systemHealth: {
+                cpuLoad,
+                memoryUsage,
+                dbConnections: 148, // Keeping this as a placeholder or could fetch from prisma if possible
+                latency: 24 // Placeholder for latency
+            }
         });
     } catch (error) {
+        console.error('[Admin Stats Error]:', error);
         res.status(500).json({ error: 'Failed to fetch stats' });
     }
 });
