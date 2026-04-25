@@ -7,7 +7,7 @@ import * as notifService from '../services/notificationService';
  */
 export async function getNotifications(req: Request, res: Response) {
     try {
-        const userId = (req as any).user?.id;
+        const userId = (req as any).user?.userId || (req as any).user?.id;
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
         const { category, unreadOnly, limit, offset } = req.query;
@@ -30,7 +30,7 @@ export async function getNotifications(req: Request, res: Response) {
  */
 export async function getUnreadCounts(req: Request, res: Response) {
     try {
-        const userId = (req as any).user?.id;
+        const userId = (req as any).user?.userId || (req as any).user?.id;
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
         const counts = await notifService.getUnreadCounts(userId);
@@ -46,7 +46,7 @@ export async function getUnreadCounts(req: Request, res: Response) {
  */
 export async function markRead(req: Request, res: Response) {
     try {
-        const userId = (req as any).user?.id;
+        const userId = (req as any).user?.userId || (req as any).user?.id;
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
         await notifService.markAsRead(req.params.id as string, userId);
@@ -62,7 +62,7 @@ export async function markRead(req: Request, res: Response) {
  */
 export async function markAllRead(req: Request, res: Response) {
     try {
-        const userId = (req as any).user?.id;
+        const userId = (req as any).user?.userId || (req as any).user?.id;
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
         await notifService.markAllAsRead(userId);
@@ -78,7 +78,7 @@ export async function markAllRead(req: Request, res: Response) {
  */
 export async function togglePin(req: Request, res: Response) {
     try {
-        const userId = (req as any).user?.id;
+        const userId = (req as any).user?.userId || (req as any).user?.id;
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
         const notif = await notifService.togglePin(req.params.id as string, userId);
@@ -95,7 +95,7 @@ export async function togglePin(req: Request, res: Response) {
  */
 export async function deleteNotification(req: Request, res: Response) {
     try {
-        const userId = (req as any).user?.id;
+        const userId = (req as any).user?.userId || (req as any).user?.id;
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
         await notifService.deleteNotification(req.params.id as string, userId);
@@ -111,7 +111,7 @@ export async function deleteNotification(req: Request, res: Response) {
  */
 export async function deleteAllNotifications(req: Request, res: Response) {
     try {
-        const userId = (req as any).user?.id;
+        const userId = (req as any).user?.userId || (req as any).user?.id;
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
         await notifService.deleteAllNotifications(userId);
