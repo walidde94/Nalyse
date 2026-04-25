@@ -394,9 +394,13 @@ router.get('/login-logs', async (req: AuthRequest, res: Response) => {
             take: 100 // Last 100 logins
         });
         res.json(logs);
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Admin API] Error fetching login logs:', error);
-        res.status(500).json({ error: 'Failed to fetch login logs' });
+        res.status(500).json({ 
+            error: 'Failed to fetch login logs',
+            details: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 

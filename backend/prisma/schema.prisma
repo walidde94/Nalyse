@@ -469,14 +469,14 @@ model SystemConfiguration {
 
 model PlatformAuditLog {
   id         String   @id @default(uuid())
-  userId     String   @map("user_id")
+  userId     String?  @map("user_id")
   action     String
   resource   String
   resourceId String?  @map("resource_id")
   details    Json?
   ipAddress  String?  @map("ip_address")
   createdAt  DateTime @default(now()) @map("created_at")
-  user       User     @relation(fields: [userId], references: [id])
+  user       User?    @relation(fields: [userId], references: [id])
 
   @@map("platform_audit_logs")
 }
