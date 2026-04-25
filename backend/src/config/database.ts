@@ -331,6 +331,9 @@ const getOptions = (): any => {
         logging: false,
         entities,
         migrations: [path.join(__dirname, '../migrations/**/*.{ts,js}')],
+        extra: {
+            max: 3, // Limit TypeORM connection pool to prevent max clients reached
+        }
     };
 
     // Support standard PG environment variables and common hosting patterns
@@ -452,10 +455,20 @@ if (finalOptions.url && (!process.env.DATABASE_URL || process.env.DATABASE_URL.l
     process.env.DATABASE_URL = finalOptions.url;
 }
 
+let prismaUrl = finalOptions.url;
+if (prismaUrl) {
+    if (prismaUrl.includes('pgbouncer=false')) {
+        prismaUrl = prismaUrl.replace('pgbouncer=false', 'pgbouncer=true');
+    }
+    if (!prismaUrl.includes('connection_limit=')) {
+        prismaUrl += (prismaUrl.includes('?') ? '&' : '?') + 'connection_limit=3';
+    }
+}
+
 export const prisma = new PrismaClient({
     datasources: {
         db: {
-            url: finalOptions.url
+            url: prismaUrl
         }
     }
 });
