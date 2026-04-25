@@ -51,6 +51,7 @@ import chatRoutes from './routes/chats';
 import notificationRoutes from './routes/notifications';
 import commentRoutes from './routes/comments';
 import adminRoutes from './routes/admin';
+import presenceRoutes from './routes/presence';
 import { initializeWorkspaceSocket } from './services/workspaceService';
 import { initializeChatSocket } from './services/chatService';
 const allowedOrigins = [
@@ -150,6 +151,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/presence', presenceRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check

@@ -11,6 +11,8 @@ import { useChat } from '../../contexts/ChatContext';
 import type { Conversation, ChatMessage, ChatParticipant } from '../../contexts/ChatContext';
 import { API_URL } from '../../config';
 import { useToast } from '../../components/ui/Toast';
+import { usePresence } from '../../contexts/PresenceContext';
+import { PresenceIndicator } from '../../components/common/PresenceIndicator';
 
 // ═══════════════════════════════════════════════════════════════
 // NEURAL THEME STYLES
@@ -277,7 +279,7 @@ const getInitials = (u: any) => {
 // COMPONENTS
 // ═══════════════════════════════════════════════════════════════
 
-const UserAvatar = ({ user, size = 40, status = 'online' }: { user: ChatParticipant; size?: number; status?: 'online' | 'offline' }) => {
+const UserAvatar = ({ user, size = 40, status }: { user: ChatParticipant; size?: number; status?: string }) => {
     const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
     const idx = (user?.email || '').charCodeAt(0) % colors.length;
     
@@ -297,13 +299,10 @@ const UserAvatar = ({ user, size = 40, status = 'online' }: { user: ChatParticip
                     {getInitials(user)}
                 </div>
             )}
-            {status === 'online' && (
-                <div style={{
-                    position: 'absolute', bottom: -1, right: -1,
-                    width: size * 0.28, height: size * 0.28, borderRadius: '50%',
-                    background: '#22c55e', border: '2.5px solid var(--bg-sidebar)',
-                    boxShadow: '0 0 6px rgba(34,197,94,0.5)'
-                }} />
+            {status && (
+                <div style={{ position: 'absolute', bottom: -2, right: -2 }}>
+                    <PresenceIndicator status={status as any} size="sm" />
+                </div>
             )}
         </div>
     );
@@ -334,6 +333,7 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
         startConversation, sendMessage, refreshConversations, isLoading 
     } = useChat();
     const { addToast } = useToast();
+    const { getPresence } = usePresence();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState<ChatParticipant[]>([]);
@@ -633,7 +633,7 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
                                         onClick={() => handleStartChat(u)}
                                         className="nc-conv-card"
                                     >
-                                        <UserAvatar user={u} size={38} />
+                                        <UserAvatar user={u} size={38} status={getPresence(u.id).status} />
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{getUserName(u)}</div>
                                             <div style={{ fontSize: 12, color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{u.email}</div>
@@ -660,7 +660,7 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
                                             onClick={() => setActiveConversation(conv)}
                                             className={`nc-conv-card ${isActive ? 'active' : ''}`}
                                         >
-                                            <UserAvatar user={other} size={44} />
+                                            <UserAvatar user={other} size={44} status={other ? getPresence(other.id).status : undefined} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                                                     <span className="nc-conv-name" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -701,12 +701,13 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
                         {/* Header */}
                         <div className="nc-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                <UserAvatar user={otherMember!} size={42} />
+                                <UserAvatar user={otherMember!} size={42} status={otherMember ? getPresence(otherMember.id).status : undefined} />
                                 <div>
                                     <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{getUserName(otherMember)}</div>
-                                    <div style={{ fontSize: 11, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600, marginTop: 2 }}>
-                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 6px var(--success-glow)' }} />
-                                        Online
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600, marginTop: 2 }}>
+                                        {otherMember && getPresence(otherMember.id).text ? getPresence(otherMember.id).text : (
+                                            otherMember ? getPresence(otherMember.id).status.charAt(0).toUpperCase() + getPresence(otherMember.id).status.slice(1) : ''
+                                        )}
                                     </div>
                                 </div>
                             </div>

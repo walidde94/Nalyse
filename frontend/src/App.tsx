@@ -4,6 +4,7 @@ import { ArchitectProvider } from './contexts/ArchitectContext';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { ChatProvider } from './contexts/ChatContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { PresenceProvider } from './contexts/PresenceContext';
 import { io } from 'socket.io-client';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { API_URL } from './config';
@@ -1500,7 +1501,9 @@ function App() {
           <ChatProvider>
             <WorkspaceProvider>
               <ArchitectProvider>
-                <AppContent />
+                <PresenceProvider>
+                  <AppContent />
+                </PresenceProvider>
               </ArchitectProvider>
             </WorkspaceProvider>
           </ChatProvider>
