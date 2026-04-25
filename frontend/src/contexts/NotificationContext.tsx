@@ -45,7 +45,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const fetchNotifications = useCallback(async () => {
         if (!token) return;
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications?limit=100`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications?limit=100&unreadOnly=true`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -147,7 +147,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }, [user, token, fetchNotifications, addLocalNotification]);
 
     const markAsRead = async (id: string) => {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        setNotifications(prev => prev.filter(n => n.id !== id));
         try {
             await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/${id}/read`, {
                 method: 'PATCH',
@@ -159,7 +159,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
 
     const markAllAsRead = async () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setNotifications([]);
         try {
             await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/read-all`, {
                 method: 'PATCH',
