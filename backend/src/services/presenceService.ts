@@ -42,6 +42,11 @@ export const initializePresenceSocket = (io: Server) => {
                         // If they were marked offline in DB, they are now available because they connected
                         if (currentStatus === 'offline') {
                             currentStatus = 'available';
+                            // Update DB so poll and others see them as available
+                            prisma.user.update({
+                                where: { id: userId },
+                                data: { presenceStatus: 'available', lastActiveAt: new Date() }
+                            }).catch((e: any) => console.error('[Presence] DB Update failed on connect:', e));
                         }
 
                         io.emit('live_update', { 
