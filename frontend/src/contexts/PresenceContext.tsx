@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { io } from 'socket.io-client';
+import { useChat } from './ChatContext';
 import { API_URL } from '../config';
 
 export interface Presence {
@@ -19,7 +19,8 @@ interface PresenceContextType {
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined);
 
 export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, token } = useAuth();
+    const { user, token, isAuthenticated } = useAuth();
+    const { socket } = useChat();
     const [presences, setPresences] = useState<Record<string, Presence>>({});
 
     // Fetch initial presence map for the organization
@@ -27,7 +28,11 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (!token) return;
         try {
             const res = await fetch(`${API_URL}/api/presence/org`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                }
             });
             if (res.ok) {
                 const data = await res.json();
@@ -49,37 +54,37 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     }, [token]);
 
+    // Initial fetch and polling
     useEffect(() => {
-        if (user && token) {
+        if (isAuthenticated && token) {
             fetchPresences();
-
-            // Set up socket listener for live presence updates
-            const socket = io(API_URL.replace('http', 'ws'), {
-                auth: { token },
-                transports: ['websocket']
-            });
-            
-            socket.on('live_update', (payload: any) => {
-                if (payload.entity === 'presence') {
-                    const { userId, status, customText } = payload.data;
-                    setPresences(prev => ({
-                        ...prev,
-                        [userId]: { status: status || 'available', text: customText || null }
-                    }));
-                }
-            });
-
-            // Safety net: Refresh presences every 60 seconds
             const interval = setInterval(fetchPresences, 60000);
-
-            return () => {
-                socket.disconnect();
-                clearInterval(interval);
-            };
+            return () => clearInterval(interval);
         } else {
             setPresences({});
         }
-    }, [user, token, fetchPresences]);
+    }, [isAuthenticated, token, fetchPresences]);
+
+    // Socket listener
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleLiveUpdate = (payload: any) => {
+            if (payload.entity === 'presence') {
+                const { userId, status, customText } = payload.data;
+                setPresences(prev => ({
+                    ...prev,
+                    [userId]: { status: status || 'available', text: customText || null }
+                }));
+            }
+        };
+
+        socket.on('live_update', handleLiveUpdate);
+
+        return () => {
+            socket.off('live_update', handleLiveUpdate);
+        };
+    }, [socket]);
 
     const updateMyPresence = async (status: Presence['status'], text?: string | null) => {
         if (!user || !token) return;
@@ -91,7 +96,7 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
         }));
 
         try {
-            await fetch(`${API_URL}/api/presence`, {
+            const res = await fetch(`${API_URL}/api/presence`, {
                 method: 'PATCH',
                 headers: { 
                     'Authorization': `Bearer ${token}`,
@@ -99,8 +104,14 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
                 },
                 body: JSON.stringify({ status, customText: text })
             });
+            
+            if (!res.ok) {
+                // If it failed, revert the optimistic update by re-fetching
+                fetchPresences();
+            }
         } catch (error) {
             console.error('Failed to update presence', error);
+            fetchPresences();
         }
     };
 
