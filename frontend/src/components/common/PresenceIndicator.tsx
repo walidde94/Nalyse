@@ -33,7 +33,7 @@ export const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
                 return { bg: '#8b5cf6', border: 'transparent' };
             case 'offline':
             default:
-                return { bg: 'transparent', border: '#9ca3af' };
+                return { bg: 'var(--bg-surface)', border: '#9ca3af' };
         }
     };
 
