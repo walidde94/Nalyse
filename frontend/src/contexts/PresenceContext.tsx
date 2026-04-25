@@ -32,7 +32,8 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
                     'Authorization': `Bearer ${token}`,
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
                     'Pragma': 'no-cache'
-                }
+                },
+                credentials: 'omit'
             });
             if (res.ok) {
                 const data = await res.json();
