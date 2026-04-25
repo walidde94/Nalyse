@@ -1066,87 +1066,129 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
                         </div>
                     </div>
                 )}
-            {/* ─── User Profile Modal ─── */}
+            {/* ─── User Profile Side Panel ─── */}
             <AnimatePresence>
                 {selectedProfileUser && (
                     <div style={{
-                        position: 'fixed', inset: 0, zIndex: 1000,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        padding: 20, backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.4)'
+                        position: 'absolute', inset: 0, zIndex: 1000,
+                        display: 'flex', justifyContent: 'flex-end',
+                        overflow: 'hidden'
                     }}>
+                        {/* Subtle Backdrop */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedProfileUser(null)}
+                            style={{ 
+                                position: 'absolute', inset: 0, 
+                                background: 'rgba(0,0,0,0.1)', 
+                                backdropFilter: 'blur(4px)' 
+                            }}
+                        />
+
+                        <motion.div
+                            initial={{ x: '100%', opacity: 0.5 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: '100%', opacity: 0.5 }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
                             style={{
-                                width: '100%', maxWidth: 360, background: 'var(--bg-elevated)',
-                                borderRadius: 24, border: '1px solid var(--border-default)',
-                                boxShadow: 'var(--shadow-2xl)', position: 'relative',
-                                overflow: 'hidden'
+                                width: '100%', maxWidth: 380, height: '100%',
+                                background: 'var(--bg-elevated)',
+                                backdropFilter: 'blur(40px) saturate(180%)',
+                                borderLeft: '1px solid var(--border-default)',
+                                boxShadow: '-20px 0 50px rgba(0,0,0,0.15)',
+                                position: 'relative', display: 'flex', flexDirection: 'column'
                             }}
                         >
-                            {/* Modal Header/Cover */}
-                            <div style={{ height: 100, background: 'linear-gradient(135deg, var(--primary), var(--accent, #7c3aed))', position: 'relative' }}>
+                            {/* Profile Header (Cover Area) */}
+                            <div style={{ 
+                                height: 160, position: 'relative', overflow: 'hidden',
+                                background: 'linear-gradient(135deg, var(--primary), var(--accent, #7c3aed))' 
+                            }}>
+                                <div style={{ 
+                                    position: 'absolute', inset: 0, 
+                                    opacity: 0.3, background: 'radial-gradient(circle at 20% 30%, #fff 0%, transparent 70%)' 
+                                }} />
+                                
                                 <button 
                                     onClick={() => setSelectedProfileUser(null)}
                                     style={{
-                                        position: 'absolute', top: 16, right: 16,
-                                        width: 32, height: 32, borderRadius: 10, border: 'none',
-                                        background: 'rgba(255,255,255,0.2)', color: '#fff',
+                                        position: 'absolute', top: 20, right: 20,
+                                        width: 36, height: 36, borderRadius: 12, border: 'none',
+                                        background: 'rgba(255,255,255,0.15)', color: '#fff',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        cursor: 'pointer', backdropFilter: 'blur(4px)'
+                                        cursor: 'pointer', backdropFilter: 'blur(10px)', transition: 'all 0.2s'
                                     }}
                                 >
-                                    <X size={18} />
+                                    <X size={20} />
                                 </button>
                             </div>
 
                             {/* Profile Content */}
-                            <div style={{ padding: '0 24px 32px', marginTop: -40, textAlign: 'center' }}>
-                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 32px 32px', marginTop: -60 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
                                     <div style={{ 
-                                        padding: 4, background: 'var(--bg-elevated)', borderRadius: 32,
-                                        boxShadow: 'var(--shadow-lg)'
+                                        padding: 5, background: 'var(--bg-elevated)', borderRadius: 40,
+                                        boxShadow: 'var(--shadow-xl)', marginBottom: 20,
+                                        border: '1px solid var(--border-default)'
                                     }}>
-                                        <UserAvatar user={selectedProfileUser} size={80} status={getPresence(selectedProfileUser.id).status} />
+                                        <UserAvatar user={selectedProfileUser} size={110} status={getPresence(selectedProfileUser.id).status} />
+                                    </div>
+
+                                    <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px', letterSpacing: '-0.03em' }}>
+                                        {getUserName(selectedProfileUser)}
+                                    </h2>
+                                    <div style={{ 
+                                        fontSize: 14, color: 'var(--text-muted)', fontWeight: 500,
+                                        background: 'var(--bg-surface)', padding: '4px 12px', borderRadius: 20,
+                                        border: '1px solid var(--border-subtle)'
+                                    }}>
+                                        {selectedProfileUser.email}
                                     </div>
                                 </div>
 
-                                <h3 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
-                                    {getUserName(selectedProfileUser)}
-                                </h3>
-                                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
-                                    {selectedProfileUser.email}
-                                </div>
+                                <div className="nc-scroll" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+                                    <div style={{ padding: '24px 0', borderTop: '1px solid var(--border-subtle)' }}>
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Information</div>
+                                        
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                                                    <Settings size={20} />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Organization</div>
+                                                    <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 700 }}>{selectedProfileUser.organization?.name || 'Nalyse Internal'}</div>
+                                                </div>
+                                            </div>
 
-                                <div style={{ 
-                                    display: 'flex', flexDirection: 'column', gap: 12, 
-                                    padding: '20px 0', borderTop: '1px solid var(--border-subtle)',
-                                    textAlign: 'left'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                                            <Settings size={16} />
-                                        </div>
-                                        <div>
-                                            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Organization</div>
-                                            <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>{selectedProfileUser.organization?.name || 'Nalyse Internal'}</div>
-                                        </div>
-                                    </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--accent-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent, #7c3aed)' }}>
+                                                    <Clock size={20} />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Presence</div>
+                                                    <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        {getPresence(selectedProfileUser.id).status.charAt(0).toUpperCase() + getPresence(selectedProfileUser.id).status.slice(1)}
+                                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: getPresence(selectedProfileUser.id).status === 'available' ? 'var(--success)' : (getPresence(selectedProfileUser.id).status === 'offline' ? 'var(--text-disabled)' : 'var(--warning)') }} />
+                                                    </div>
+                                                    {getPresence(selectedProfileUser.id).status === 'offline' && selectedProfileUser.lastActiveAt && (
+                                                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                                                            Active {timeAgo(selectedProfileUser.lastActiveAt)} ago
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
 
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                                            <Clock size={16} />
-                                        </div>
-                                        <div>
-                                            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Presence</div>
-                                            <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                {getPresence(selectedProfileUser.id).status.charAt(0).toUpperCase() + getPresence(selectedProfileUser.id).status.slice(1)}
-                                                {getPresence(selectedProfileUser.id).status === 'offline' && selectedProfileUser.lastActiveAt && (
-                                                    <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 400 }}>
-                                                        • Last seen {timeAgo(selectedProfileUser.lastActiveAt)}
-                                                    </span>
-                                                )}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                                                    <Bell size={20} />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Notifications</div>
+                                                    <div style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 700 }}>Enabled</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1157,13 +1199,14 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => setSelectedProfileUser(null)}
                                     style={{
-                                        width: '100%', padding: '12px', borderRadius: 12,
-                                        border: '1px solid var(--border-default)', background: 'var(--bg-surface)',
-                                        color: 'var(--text-primary)', fontWeight: 700, fontSize: 14,
-                                        cursor: 'pointer', marginTop: 8
+                                        width: '100%', padding: '14px', borderRadius: 16,
+                                        border: 'none', background: 'var(--bg-surface)',
+                                        color: 'var(--text-primary)', fontWeight: 800, fontSize: 14,
+                                        cursor: 'pointer', marginTop: 'auto',
+                                        boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)'
                                     }}
                                 >
-                                    Close Profile
+                                    Close Panel
                                 </motion.button>
                             </div>
                         </motion.div>
