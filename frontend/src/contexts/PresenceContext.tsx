@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { io } from 'socket.io-client';
+import { API_URL } from '../config';
 
 export interface Presence {
     status: 'available' | 'busy' | 'away' | 'offline' | 'vacation';
@@ -24,18 +25,22 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
     const fetchPresences = useCallback(async () => {
         if (!token) return;
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/presence/org`, {
+            const res = await fetch(`${API_URL}/api/presence/org`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 const data = await res.json();
                 const presenceMap: Record<string, Presence> = {};
-                data.forEach((u: any) => {
-                    presenceMap[u.id] = {
-                        status: u.presenceStatus || 'available',
-                        text: u.customStatusText || null
-                    };
-                });
+                
+                if (Array.isArray(data)) {
+                    data.forEach((u: any) => {
+                        presenceMap[u.id] = {
+                            status: u.presenceStatus || 'available',
+                            text: u.customStatusText || null
+                        };
+                    });
+                }
+                
                 setPresences(presenceMap);
             }
         } catch (error) {
@@ -48,7 +53,10 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
             fetchPresences();
 
             // Set up socket listener for live presence updates
-            const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
+            const socket = io(API_URL.replace('http', 'ws'), {
+                auth: { token },
+                transports: ['websocket']
+            });
             
             socket.on('live_update', (payload: any) => {
                 if (payload.entity === 'presence') {
@@ -78,7 +86,7 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
         }));
 
         try {
-            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/presence`, {
+            await fetch(`${API_URL}/api/presence`, {
                 method: 'PATCH',
                 headers: { 
                     'Authorization': `Bearer ${token}`,
