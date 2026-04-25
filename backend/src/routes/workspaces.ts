@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../config/database';
 import { authenticate } from '../middleware/auth';
 import { executeWorkspaceAction, broadcastMessage } from '../services/workspaceService';
+import { triggerMention } from '../services/notificationTriggers';
 import { AppDataSource } from '../config/database';
 import { File } from '../entities/File';
 import { AiService } from '../services/aiService';
@@ -499,21 +500,15 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
                 const authorName = author?.displayName || author?.email?.split('@')[0] || 'Someone';
                 const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { name: true } });
 
-                await prisma.notification.createMany({
-                    data: mentions
-                        .filter(mentionedId => mentionedId !== userId) // Don't notify self
-                        .map(mentionedId => ({
-                            userId: mentionedId,
-                            title: `${authorName} mentioned you`,
-                            message: `You were mentioned in ${workspace?.name || 'a workspace'}: "${content.slice(0, 80)}${content.length > 80 ? '...' : ''}"`,
-                            category: 'mention',
-                            priority: 'high',
-                            source: 'WORKSPACE',
-                            iconType: 'at-sign',
-                            color: '#8b5cf6',
-                            metadata: { workspaceId, messageId: message.id }
-                        }))
-                });
+                for (const mentionedId of mentions.filter(mid => mid !== userId)) {
+                    triggerMention(
+                        mentionedId,
+                        authorName,
+                        content.slice(0, 80),
+                        workspace?.name || 'a workspace',
+                        workspaceId
+                    ).catch(err => console.error('[Mention Notification] Non-fatal:', err));
+                }
             } catch (notifyErr) {
                 console.error('[Non-Fatal Error] Failed to create notifications for mentions:', notifyErr);
             }

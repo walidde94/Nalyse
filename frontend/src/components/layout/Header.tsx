@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     const [toastData, setToastData] = useState<{ title: string; message: string; author: any; type: 'mention' | 'message' | 'dm' } | null>(null);
     const { notifications, unreadCount, markAsRead, markAllAsRead, addLocalNotification } = useNotifications();
 
-    // Listen for real-time messages to show toast and play sound
+    // Listen for real-time messages to show toast (sounds handled by NotificationContext)
     useEffect(() => {
         const handleNewMessage = (e: CustomEvent) => {
             const msg = e.detail;
@@ -46,64 +46,23 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
 
             const isMention = msg.mentions?.includes(user?.id);
 
-            // 1. Play Dynamic Sound via Web Audio API
-            try {
-                const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-                if (AudioContext) {
-                    const ctx = new AudioContext();
-                    if (ctx.state === 'suspended') ctx.resume();
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    
-                    osc.type = isMention ? 'square' : 'sine';
-                    osc.frequency.setValueAtTime(isMention ? 880 : 600, ctx.currentTime);
-                    if (isMention) osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.1);
-                    else osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
-                    
-                    gain.gain.setValueAtTime(0, ctx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.02);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + (isMention ? 0.3 : 0.2));
-                    
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start();
-                    osc.stop(ctx.currentTime + (isMention ? 0.3 : 0.2));
-                }
-            } catch (err) { console.warn('Audio auto-play blocked', err); }
-
-            // 2. Play Bell Animation
-            const bell = document.getElementById('hdr-bell-icon');
-            if (bell) {
-                bell.classList.remove('animate-bell');
-                void bell.offsetWidth; // force reflow
-                bell.classList.add('animate-bell');
-            }
-
-            // 3. Show Visual Toast & Add to List
+            // Show Visual Toast (notification is persisted by backend & arrives via WebSocket)
             const preview = msg.content.replace(/[@#]\[([^\]]+)\]\([^)]+\)/g, '$1');
             const typeValue = isMention ? 'mention' : 'message';
-            const newNotif = {
+
+            setToastData({
                 title: isMention ? 'You were mentioned' : `Message from ${msg.author?.firstName || 'User'}`,
                 message: preview,
-                createdAt: new Date().toISOString(),
-                metadata: { type: typeValue }
-            };
-            
-            setToastData({
-                title: newNotif.title,
-                message: newNotif.message,
                 author: msg.author,
                 type: typeValue as any
             });
-
-            addLocalNotification(newNotif);
 
             // Auto dismiss toast
             setTimeout(() => {
                 setToastData(current => {
                     return current?.message === preview ? null : current;
                 });
-            }, 8000); // 8s for more interaction time
+            }, 8000);
         };
 
         const handleDirectMessage = (e: any) => {
@@ -111,23 +70,14 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             if (!msg || msg.senderId === user?.id) return;
 
             const preview = msg.content || 'Sent an image';
-            const newNotif = {
-                id: 'dm-' + msg.id,
-                title: `Direct message from ${msg.sender.firstName || 'User'}`,
-                message: preview,
-                createdAt: new Date().toISOString(),
-                metadata: { type: 'dm', conversationId: msg.conversationId }
-            };
 
             setToastData({
-                title: newNotif.title,
-                message: newNotif.message,
+                title: `Direct message from ${msg.sender.firstName || 'User'}`,
+                message: preview,
                 author: msg.sender,
                 type: 'dm',
                 metadata: { conversationId: msg.conversationId }
             } as any);
-
-            addLocalNotification(newNotif);
             
             setTimeout(() => {
                 setToastData(current => current?.message === preview ? null : current);
@@ -140,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             window.removeEventListener('workspace:new_message', handleNewMessage as EventListener);
             window.removeEventListener('chat:new_message', handleDirectMessage as EventListener);
         };
-    }, [user?.id, onNavigate, addLocalNotification]);
+    }, [user?.id, onNavigate]);
 
     const isDark = theme === 'dark' || theme === 'midnight';
     const isMidnight = theme === 'midnight';

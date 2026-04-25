@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../config/database';
 import { authenticate } from '../middleware/auth';
 import { broadcastDirectMessage } from '../services/chatService';
+import { triggerDirectMessage } from '../services/notificationTriggers';
 import { upload } from '../middleware/upload';
 import path from 'path';
 
@@ -194,20 +195,13 @@ router.post('/:id/messages', authenticate, async (req: any, res: any) => {
         const senderName = sender?.displayName || sender?.email?.split('@')[0] || 'Someone';
 
         const otherParticipants = chat?.participants.filter(p => p.id !== userId) || [];
-        if (otherParticipants.length > 0) {
-            await prisma.notification.createMany({
-                data: otherParticipants.map(p => ({
-                    userId: p.id,
-                    title: `New message from ${senderName}`,
-                    message: content ? (content.length > 60 ? content.slice(0, 60) + '...' : content) : 'Sent an image',
-                    category: 'chat',
-                    priority: 'medium',
-                    source: 'CHAT',
-                    iconType: 'message-square',
-                    color: '#6366f1',
-                    metadata: { conversationId, messageId: message.id }
-                }))
-            });
+        for (const participant of otherParticipants) {
+            triggerDirectMessage(
+                participant.id,
+                senderName,
+                content ? (content.length > 60 ? content.slice(0, 60) + '...' : content) : 'Sent an image',
+                conversationId
+            ).catch(err => console.error('[DM Notification] Non-fatal:', err));
         }
 
         res.status(201).json(message);

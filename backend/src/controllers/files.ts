@@ -14,6 +14,7 @@ import crypto from 'crypto';
 import { parse } from 'csv-parse/sync';
 import { executeWorkspaceAction } from '../services/workspaceService';
 import { prisma } from '../config/database';
+import { triggerFileUploaded, triggerAnalysisCompleted, triggerAnalysisFailed } from '../services/notificationTriggers';
 
 // ─── Upload ─────────────────────────────────────────────────────────────────
 
@@ -145,6 +146,10 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 groupId: null
             }
         });
+
+        // Fire notification (non-blocking)
+        triggerFileUploaded(userId, organizationId || null, result.originalName || result.filename)
+            .catch(err => console.error('[File Upload Notification] Non-fatal:', err));
 
     } catch (error: any) {
         console.error('File Upload Error:', error);
@@ -499,9 +504,12 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
                     }
                 } catch (e) { console.error('Workspace broadcast error', e); }
 
+                // Fire analysis-complete notification (non-blocking)
+                triggerAnalysisCompleted(userId, file.organizationId || null, file.originalName || file.filename, file.id, duration)
+                    .catch(err => console.error('[Analysis Notification] Non-fatal:', err));
+
                 // Return the exact same payload
                 return res.json({ id: file.id, cached: false, ...payload });
-
             } catch (dbErr) {
                 console.error('[Analysis] DB persist failed:', dbErr);
                 // Still return the result even if DB save failed
@@ -522,6 +530,10 @@ export const analyzeFileHandler = async (req: AuthRequest, res: Response) => {
                 message: error.message
             });
         }
+
+        // Fire analysis-failed notification (non-blocking)
+        triggerAnalysisFailed(userId, null, (req.params?.id as string) || 'Unknown file', error?.message)
+            .catch(err => console.error('[Analysis Fail Notification] Non-fatal:', err));
 
         res.status(500).json({ error: error?.message || 'Analysis failed' });
     }
