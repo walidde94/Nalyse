@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { AuthService } from '../services/authService';
 import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/database';
+import { triggerNewLogin } from '../services/notificationTriggers';
 
 const authService = new AuthService();
 
@@ -131,6 +132,11 @@ export const login = async (req: Request, res: Response) => {
         }
 
         res.json({ accessToken, refreshToken, user });
+
+        // Fire login notification (non-blocking, after response)
+        const loginDevice = (req.headers['sec-ch-ua-platform'] as string || req.headers['user-agent']?.split(' ')[0] || 'Unknown device');
+        triggerNewLogin(user.id, ip, 'Location lookup', loginDevice)
+            .catch(err => console.error('[Login Notification] Non-fatal:', err));
     } catch (error: any) {
         console.error('Login error:', error);
         

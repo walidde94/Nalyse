@@ -2,6 +2,7 @@ import { prisma } from '../config/database';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
+import { triggerReportGenerated } from './notificationTriggers';
 
 // Mock report generation helper - in a real app this would call a template engine
 const generateEnterpriseReport = async (schedule: any, runId: string) => {
@@ -115,6 +116,21 @@ export const processSingleSchedule = async (schedule: any) => {
             }
 
             console.log(`[ScheduleEngine] ✅ Report generated: ${filename}`);
+
+            // Notify the schedule owner (use first org admin as fallback)
+            try {
+                const orgUsers = await prisma.user.findMany({
+                    where: { organizationId: schedule.organizationId },
+                    select: { id: true },
+                    take: 10
+                });
+                for (const u of orgUsers) {
+                    triggerReportGenerated(u.id, schedule.organizationId, schedule.name, filename)
+                        .catch(() => {});
+                }
+            } catch (notifErr) {
+                console.error('[ScheduleEngine] Notification error:', notifErr);
+            }
         } catch (error: any) {
             console.error(`[ScheduleEngine] ❌ Error in manual run:`, error.message);
             await prisma.scheduleRun.update({

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { io } from 'socket.io-client';
@@ -15,6 +15,7 @@ export interface Notification {
     actionLabel?: string;
     actionUrl?: string;
     read: boolean;
+    pinned?: boolean;
     createdAt: string;
     metadata?: any;
 }
@@ -22,6 +23,7 @@ export interface Notification {
 interface NotificationContextType {
     notifications: Notification[];
     unreadCount: number;
+    totalCount: number;
     loading: boolean;
     fetchNotifications: () => Promise<void>;
     markAsRead: (id: string) => Promise<void>;
@@ -36,17 +38,21 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, token } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const socketRef = useRef<any>(null);
 
     const fetchNotifications = useCallback(async () => {
         if (!token) return;
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications?limit=100`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 const data = await res.json();
-                setNotifications(data.notifications || []);
+                // Backend returns { items: [...], total: N }
+                setNotifications(data.items || []);
+                setTotalCount(data.total || 0);
             }
         } catch (error) {
             console.error('Error fetching notifications:', error);
@@ -58,7 +64,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     // For instantaneous local updates from WebSockets or UI events before refetch
     const addLocalNotification = useCallback((notif: Partial<Notification>) => {
         const newNotif: Notification = {
-            id: notif.id || Date.now().toString(),
+            id: notif.id || 'local-' + Date.now().toString(),
             title: notif.title || 'Notification',
             message: notif.message || '',
             category: notif.category || 'info',
@@ -70,7 +76,11 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             createdAt: notif.createdAt || new Date().toISOString(),
             ...notif
         };
-        setNotifications(prev => [newNotif, ...prev]);
+        // Deduplicate — don't add if we already have this ID
+        setNotifications(prev => {
+            if (prev.some(n => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev];
+        });
     }, []);
 
     // Initial fetch and polling setup
@@ -82,13 +92,23 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
             // Socket connection for real-time updates
             const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
+            socketRef.current = socket;
+
             socket.on('live_update', (payload: any) => {
                 if (payload.entity === 'notification' && payload.data?.notification) {
                     const notif = payload.data.notification;
                     if (notif.userId === user.id) {
                         addLocalNotification(notif);
 
-                        // Play sound dynamically
+                        // Animate bell icon
+                        const bell = document.getElementById('hdr-bell-icon');
+                        if (bell) {
+                            bell.classList.remove('animate-bell');
+                            void bell.offsetWidth;
+                            bell.classList.add('animate-bell');
+                        }
+
+                        // Play notification sound (single source — no duplicate in Header)
                         try {
                             const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
                             if (AudioContext) {
@@ -102,7 +122,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
                                 osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
 
                                 gain.gain.setValueAtTime(0, ctx.currentTime);
-                                gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+                                gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.02);
                                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
 
                                 osc.connect(gain);
@@ -110,7 +130,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
                                 osc.start();
                                 osc.stop(ctx.currentTime + 0.2);
                             }
-                        } catch (err) { console.warn('Audio auto-play blocked', err); }
+                        } catch (err) { /* Audio auto-play blocked — silent fallback */ }
                     }
                 }
             });
@@ -118,6 +138,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             return () => {
                 clearInterval(interval);
                 socket.disconnect();
+                socketRef.current = null;
             };
         } else {
             setNotifications([]);
@@ -181,6 +202,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         <NotificationContext.Provider value={{
             notifications,
             unreadCount,
+            totalCount,
             loading,
             fetchNotifications,
             markAsRead,
