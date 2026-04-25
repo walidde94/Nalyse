@@ -76,9 +76,17 @@ async function ensureAuditLogTable() {
                         if (snakeExists) {
                             console.log(`[SchemaNormalizer] Merging ${table}."${name}" -> "${snakeName}" (both exist)`);
                             try {
-                                // Attempt safe cast for JSONB columns
+                                // Attempt safe cast for JSONB and UUID columns
                                 if (['details', 'notification_preferences', 'api_keys', 'reactions'].includes(snakeName)) {
                                     await queryRunner.query(`UPDATE "${table}" SET "${snakeName}" = "${name}"::jsonb WHERE "${snakeName}" IS NULL AND "${name}" IS NOT NULL`);
+                                } else if (snakeName.endsWith('_id') || snakeName === 'id') {
+                                    // Try casting to UUID if it looks like an ID column
+                                    try {
+                                        await queryRunner.query(`UPDATE "${table}" SET "${snakeName}" = "${name}"::uuid WHERE "${snakeName}" IS NULL AND "${name}" IS NOT NULL`);
+                                    } catch (uuidErr) {
+                                        // Fallback to text if UUID cast fails (e.g. for non-uuid ID columns)
+                                        await queryRunner.query(`UPDATE "${table}" SET "${snakeName}" = "${name}" WHERE "${snakeName}" IS NULL AND "${name}" IS NOT NULL`);
+                                    }
                                 } else {
                                     await queryRunner.query(`UPDATE "${table}" SET "${snakeName}" = "${name}" WHERE "${snakeName}" IS NULL AND "${name}" IS NOT NULL`);
                                 }
@@ -142,6 +150,8 @@ async function ensureAuditLogTable() {
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires timestamp with time zone`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences jsonb DEFAULT '{}'`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS api_keys jsonb DEFAULT '[]'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS presence_status text DEFAULT 'available'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_status_text text`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
             `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`,
             `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS organization_id uuid`,
