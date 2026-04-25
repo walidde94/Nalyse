@@ -440,13 +440,20 @@ router.get('/reports/:id/preview', async (req: Request, res: Response) => {
         const run = await prisma.scheduleRun.findFirst({
             where: { id: req.params.id as string, schedule: { organizationId: orgId } }
         });
-        if (!run || !run.outputUrl) { res.status(404).json({ error: 'Report not found' }); return; }
+        if (!run) { res.status(404).json({ error: 'Report not found' }); return; }
         
-        const filePath = path.join(process.cwd(), run.outputUrl);
-        if (!fs.existsSync(filePath)) { res.status(404).json({ error: 'Report file missing' }); return; }
+        if (run.outputUrl && run.outputUrl !== 'dynamic') {
+            const filePath = path.join(process.cwd(), run.outputUrl);
+            if (fs.existsSync(filePath)) {
+                res.setHeader('Content-Type', 'text/html');
+                return res.sendFile(filePath);
+            }
+        }
         
+        // Dynamically generate
+        const html = await generateEnterpriseReport(orgId, run.id);
         res.setHeader('Content-Type', 'text/html');
-        res.sendFile(filePath);
+        res.send(html);
     } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
