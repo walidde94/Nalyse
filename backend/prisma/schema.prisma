@@ -63,6 +63,8 @@ model User {
   passwordResetExpires    DateTime?               @map("password_reset_expires")
   notificationPreferences Json?                   @default("{}") @map("notification_preferences")
   apiKeys                 Json?                   @default("[]") @map("api_keys")
+  presenceStatus          String                  @default("available") @map("presence_status")
+  customStatusText        String?                 @map("custom_status_text")
   createdAt               DateTime                @default(now()) @map("created_at")
   updatedAt               DateTime                @updatedAt @map("updated_at")
   agents                  Agent[]

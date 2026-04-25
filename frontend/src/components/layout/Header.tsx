@@ -10,6 +10,8 @@ import { UserProfile } from '../UserProfile';
 import { ArchitectNode } from './ArchitectNode';
 import { useChat } from '../../contexts/ChatContext';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { usePresence } from '../../contexts/PresenceContext';
+import { PresenceIndicator } from '../common/PresenceIndicator';
 
 export type SettingsNavTab = 'profile' | 'api' | 'notifications' | 'subscription';
 
@@ -34,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
     // Toast and dropdown notification state
     const [toastData, setToastData] = useState<{ title: string; message: string; author: any; type: 'mention' | 'message' | 'dm' } | null>(null);
     const { notifications, unreadCount, markAsRead, markAllAsRead, addLocalNotification } = useNotifications();
+    const { getPresence, updateMyPresence } = usePresence();
 
     // Listen for real-time messages to show toast (sounds handled by NotificationContext)
     useEffect(() => {
@@ -556,7 +559,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 e.currentTarget.style.background = 'transparent';
                             }}
                         >
-                            <div style={{
+                            <div className="user-avatar-wrapper" style={{
                                 width: '30px',
                                 height: '30px',
                                 borderRadius: '50%',
@@ -570,12 +573,11 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 color: 'var(--text-primary)',
                                 fontWeight: 800,
                                 fontSize: '11px',
-                                overflow: 'hidden',
                                 position: 'relative',
                             }}>
                                 <div style={{
                                     position: 'absolute', inset: isPro ? '2px' : '0', background: 'var(--bg-main)', borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, overflow: 'hidden'
                                 }}>
                                     {user?.avatarUrl ? (
                                         <img src={user.avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
@@ -583,6 +585,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                         <>{user?.firstName?.[0] || 'U'}{user?.lastName?.[0] || ''}</>
                                     )}
                                 </div>
+                                {user && <PresenceIndicator status={getPresence(user.id).status} size="sm" />}
                             </div>
                             <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1 }}>
@@ -638,6 +641,31 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 }}>
                                     <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{user?.firstName} {user?.lastName}</div>
                                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{user?.email || '—'}</div>
+                                    
+                                    <div style={{ marginTop: '10px', borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
+                                        <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '6px' }}>Status</div>
+                                        <select 
+                                            value={user ? getPresence(user.id).status : 'available'}
+                                            onChange={(e) => updateMyPresence(e.target.value as any)}
+                                            style={{
+                                                width: '100%',
+                                                background: 'var(--bg-elevated)',
+                                                border: '1px solid var(--border-subtle)',
+                                                color: 'var(--text-primary)',
+                                                padding: '6px 8px',
+                                                borderRadius: '6px',
+                                                fontSize: '12px',
+                                                outline: 'none',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <option value="available">🟢 Available</option>
+                                            <option value="busy">🔴 Busy</option>
+                                            <option value="away">🟡 Away</option>
+                                            <option value="offline">⚪️ Offline</option>
+                                            <option value="vacation">✈️ Vacation</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
