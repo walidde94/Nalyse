@@ -25,7 +25,11 @@ router.get('/', authenticate, async (req: any, res: any) => {
             include: {
                 participants: {
                     where: { id: { not: userId } },
-                    select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true }
+                    select: { 
+                        id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true,
+                        lastActiveAt: true, presenceStatus: true,
+                        organization: { select: { name: true } }
+                    }
                 },
                 messages: {
                     orderBy: { createdAt: 'desc' },
@@ -130,7 +134,13 @@ router.get('/:id/messages', authenticate, async (req: any, res: any) => {
             take: limit,
             ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
             include: {
-                sender: { select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true } },
+                sender: { 
+                    select: { 
+                        id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true,
+                        lastActiveAt: true, presenceStatus: true,
+                        organization: { select: { name: true } }
+                    } 
+                },
                 replyTo: { select: { id: true, content: true, sender: { select: { displayName: true } } } }
             }
         });
@@ -330,7 +340,11 @@ router.get('/search-users', authenticate, async (req: any, res: any) => {
                     }
                 ]
             },
-            select: { id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true },
+            select: { 
+                id: true, email: true, displayName: true, firstName: true, lastName: true, avatarUrl: true,
+                lastActiveAt: true, presenceStatus: true,
+                organization: { select: { name: true } }
+            },
             take: 10
         });
 

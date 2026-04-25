@@ -350,6 +350,7 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
     const [msgSearchQuery, setMsgSearchQuery] = useState('');
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+    const [selectedProfileUser, setSelectedProfileUser] = useState<ChatParticipant | null>(null);
     const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());
     const [replyingTo, setReplyingTo] = useState<any>(null);
     
@@ -702,7 +703,10 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
                         <div className="nc-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                                 <UserAvatar user={otherMember!} size={42} status={otherMember ? getPresence(otherMember.id).status : undefined} />
-                                <div>
+                                <div 
+                                    onClick={() => setSelectedProfileUser(otherMember || null)}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{getUserName(otherMember)}</div>
                                     <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600, marginTop: 2 }}>
                                         {otherMember && getPresence(otherMember.id).text ? getPresence(otherMember.id).text : (
@@ -1062,6 +1066,110 @@ export const PrivateChatView: React.FC<{ initialConversationId?: string }> = ({ 
                         </div>
                     </div>
                 )}
+            {/* ─── User Profile Modal ─── */}
+            <AnimatePresence>
+                {selectedProfileUser && (
+                    <div style={{
+                        position: 'fixed', inset: 0, zIndex: 1000,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: 20, backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.4)'
+                    }}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            style={{
+                                width: '100%', maxWidth: 360, background: 'var(--bg-elevated)',
+                                borderRadius: 24, border: '1px solid var(--border-default)',
+                                boxShadow: 'var(--shadow-2xl)', position: 'relative',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {/* Modal Header/Cover */}
+                            <div style={{ height: 100, background: 'linear-gradient(135deg, var(--primary), var(--accent, #7c3aed))', position: 'relative' }}>
+                                <button 
+                                    onClick={() => setSelectedProfileUser(null)}
+                                    style={{
+                                        position: 'absolute', top: 16, right: 16,
+                                        width: 32, height: 32, borderRadius: 10, border: 'none',
+                                        background: 'rgba(255,255,255,0.2)', color: '#fff',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', backdropFilter: 'blur(4px)'
+                                    }}
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {/* Profile Content */}
+                            <div style={{ padding: '0 24px 32px', marginTop: -40, textAlign: 'center' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                                    <div style={{ 
+                                        padding: 4, background: 'var(--bg-elevated)', borderRadius: 32,
+                                        boxShadow: 'var(--shadow-lg)'
+                                    }}>
+                                        <UserAvatar user={selectedProfileUser} size={80} status={getPresence(selectedProfileUser.id).status} />
+                                    </div>
+                                </div>
+
+                                <h3 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+                                    {getUserName(selectedProfileUser)}
+                                </h3>
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
+                                    {selectedProfileUser.email}
+                                </div>
+
+                                <div style={{ 
+                                    display: 'flex', flexDirection: 'column', gap: 12, 
+                                    padding: '20px 0', borderTop: '1px solid var(--border-subtle)',
+                                    textAlign: 'left'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                                            <Settings size={16} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Organization</div>
+                                            <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>{selectedProfileUser.organization?.name || 'Nalyse Internal'}</div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                                            <Clock size={16} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Presence</div>
+                                            <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                {getPresence(selectedProfileUser.id).status.charAt(0).toUpperCase() + getPresence(selectedProfileUser.id).status.slice(1)}
+                                                {getPresence(selectedProfileUser.id).status === 'offline' && selectedProfileUser.lastActiveAt && (
+                                                    <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 400 }}>
+                                                        • Last seen {timeAgo(selectedProfileUser.lastActiveAt)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setSelectedProfileUser(null)}
+                                    style={{
+                                        width: '100%', padding: '12px', borderRadius: 12,
+                                        border: '1px solid var(--border-default)', background: 'var(--bg-surface)',
+                                        color: 'var(--text-primary)', fontWeight: 700, fontSize: 14,
+                                        cursor: 'pointer', marginTop: 8
+                                    }}
+                                >
+                                    Close Profile
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
             </div>
         </div>
     );

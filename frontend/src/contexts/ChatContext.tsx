@@ -10,6 +10,11 @@ export interface ChatParticipant {
     firstName?: string;
     lastName?: string;
     avatarUrl?: string;
+    lastActiveAt?: string;
+    presenceStatus?: string;
+    organization?: {
+        name: string;
+    };
 }
 
 export interface ChatMessage {
