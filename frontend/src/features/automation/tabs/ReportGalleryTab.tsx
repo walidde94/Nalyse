@@ -76,7 +76,7 @@ export const ReportGalleryTab = ({ history, onView, onDownload, onDelete, onShar
                                     style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'var(--bg-surface-hover)', color: 'var(--text-primary)', border: 'none', cursor: isPending ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isPending ? 0.5 : 1 }}>
                                     <Share2 size={14} />
                                 </button>
-                                <button onClick={() => onDownload(run)} disabled={isPending}
+                                <button onClick={() => onDownload(run.id)} disabled={isPending}
                                     style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'var(--bg-surface-hover)', color: 'var(--text-primary)', border: 'none', cursor: isPending ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isPending ? 0.5 : 1 }}>
                                     <Download size={14} />
                                 </button>

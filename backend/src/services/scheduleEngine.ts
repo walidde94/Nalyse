@@ -89,14 +89,7 @@ export const processSingleSchedule = async (schedule: any) => {
     (async () => {
         try {
             console.log(`[ScheduleEngine] 🚀 Starting manual run for "${schedule.name}" (Run ID: ${run.id})`);
-            const html = await generateEnterpriseReport(schedule, run.id);
-            const filename = `reports/report_${run.id}.html`;
-            const filePath = path.join(process.cwd(), filename);
-            
-            if (!fs.existsSync(path.join(process.cwd(), 'reports'))) {
-                fs.mkdirSync(path.join(process.cwd(), 'reports'), { recursive: true });
-            }
-            fs.writeFileSync(filePath, html);
+            const filename = `dynamic`;
 
             await prisma.scheduleRun.update({
                 where: { id: run.id },
@@ -111,11 +104,12 @@ export const processSingleSchedule = async (schedule: any) => {
             // Delivery logic
             const deliveryChannel = (schedule.config as any)?.deliveryChannel || 'email';
             const deliverTo = (schedule.config as any)?.deliverTo;
+            const reportUrl = `/api/automation/reports/${run.id}/preview`;
             if (deliveryChannel === 'webhook' && deliverTo) {
-                await axios.post(deliverTo, { runId: run.id, status: 'completed', reportUrl: filename }).catch(() => {});
+                await axios.post(deliverTo, { runId: run.id, status: 'completed', reportUrl }).catch(() => {});
             }
 
-            console.log(`[ScheduleEngine] ✅ Report generated: ${filename}`);
+            console.log(`[ScheduleEngine] ✅ Report generated: ${run.id}`);
 
             // Notify the schedule owner (use first org admin as fallback)
             try {
