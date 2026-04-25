@@ -96,19 +96,6 @@ const externalApiLimiter = globalApiLimiter;
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-app.use(cors({
-    origin: (origin, callback) => {
-        // Reflect origin to satisfy credentials: true requirement
-        callback(null, true);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-}));
-
-// Logging
-app.use(morgan('dev'));
-
 // Body parsing (Exclude webhook)
 app.use((req, res, next) => {
     if (req.originalUrl === '/api/subscription/webhook') {
@@ -118,6 +105,17 @@ app.use((req, res, next) => {
     }
 });
 app.use(express.urlencoded({ extended: true, limit: '500mb' }));
+
+// Logging
+app.use(morgan('dev'));
+
+// CORS configuration - MUST be before routes
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+}));
 
 // Rate limiting
 app.use('/api/', globalApiLimiter);
