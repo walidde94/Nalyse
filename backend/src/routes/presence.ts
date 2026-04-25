@@ -45,18 +45,14 @@ router.patch('/', authenticate, async (req: any, res: any) => {
 
 /**
  * GET /api/presence/org
- * Get presence for all users in the user's organization (or all active users if no org is set)
+ * Get presence for all active users on the platform
  */
 router.get('/org', authenticate, async (req: any, res: any) => {
     try {
-        const orgId = req.user.organizationId;
-        
-        const whereClause = orgId 
-            ? { organizationId: orgId, isActive: true }
-            : { isActive: true };
-
+        // For simplicity and to ensure cross-org presence works in this stage of development,
+        // we return all active users.
         const users = await prisma.user.findMany({
-            where: whereClause,
+            where: { isActive: true },
             select: { id: true, presenceStatus: true, customStatusText: true }
         });
 
@@ -68,8 +64,8 @@ router.get('/org', authenticate, async (req: any, res: any) => {
             if (status === 'offline' && isUserOnline(u.id)) {
                 status = 'available';
             } 
-            // If user is not connected, they are offline (unless they set a persistent status like 'vacation'? No, vacation usually means offline too but with a note)
-            else if (!isUserOnline(u.id) && status !== 'vacation') {
+            // If user is not connected, they are offline (unless they set a persistent status like 'vacation')
+            else if (!isUserOnline(u.id) && status !== 'vacation' && status !== 'busy' && status !== 'away') {
                 status = 'offline';
             }
 

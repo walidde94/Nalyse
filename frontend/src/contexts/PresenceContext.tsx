@@ -13,6 +13,7 @@ interface PresenceContextType {
     presences: Record<string, Presence>;
     updateMyPresence: (status: Presence['status'], text?: string | null) => Promise<void>;
     getPresence: (userId: string) => Presence;
+    refreshPresences: () => Promise<void>;
 }
 
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined);
@@ -68,8 +69,12 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
                 }
             });
 
+            // Safety net: Refresh presences every 60 seconds
+            const interval = setInterval(fetchPresences, 60000);
+
             return () => {
                 socket.disconnect();
+                clearInterval(interval);
             };
         } else {
             setPresences({});
@@ -104,7 +109,7 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, [presences]);
 
     return (
-        <PresenceContext.Provider value={{ presences, updateMyPresence, getPresence }}>
+        <PresenceContext.Provider value={{ presences, updateMyPresence, getPresence, refreshPresences: fetchPresences }}>
             {children}
         </PresenceContext.Provider>
     );
