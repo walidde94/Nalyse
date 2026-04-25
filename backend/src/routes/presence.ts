@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { prisma } from '../config/database';
+import { isUserOnline } from '../services/presenceService';
 
 const router = Router();
 
@@ -59,7 +60,26 @@ router.get('/org', authenticate, async (req: any, res: any) => {
             select: { id: true, presenceStatus: true, customStatusText: true }
         });
 
-        return res.json(users);
+        // Overlay real-time online status
+        const usersWithRealtimeStatus = users.map(u => {
+            let status = u.presenceStatus || 'available';
+            
+            // If DB says offline but user is connected, mark as available
+            if (status === 'offline' && isUserOnline(u.id)) {
+                status = 'available';
+            } 
+            // If user is not connected, they are offline (unless they set a persistent status like 'vacation'? No, vacation usually means offline too but with a note)
+            else if (!isUserOnline(u.id) && status !== 'vacation') {
+                status = 'offline';
+            }
+
+            return {
+                ...u,
+                presenceStatus: status
+            };
+        });
+
+        return res.json(usersWithRealtimeStatus);
     } catch (error) {
         console.error('Error fetching org presence:', error);
         return res.status(500).json({ error: 'Failed to fetch presence data' });

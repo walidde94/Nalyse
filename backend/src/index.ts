@@ -54,6 +54,7 @@ import adminRoutes from './routes/admin';
 import presenceRoutes from './routes/presence';
 import { initializeWorkspaceSocket } from './services/workspaceService';
 import { initializeChatSocket } from './services/chatService';
+import { initializePresenceSocket } from './services/presenceService';
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
@@ -302,9 +303,10 @@ const startServer = async () => {
     // inside socket handlers and the schedule engine don't fire before
     // the connection is established.
 
-    // Attach Real-Time Workspace & Chat Engines
+    // Attach Real-Time Workspace, Chat & Presence Engines
     initializeWorkspaceSocket(io);
     initializeChatSocket(io);
+    initializePresenceSocket(io);
 
     // Start the Automated Reporting Cron Engine
     if (prismaReady) {
