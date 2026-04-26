@@ -13,7 +13,7 @@ interface Author {
 interface Comment {
   id: string; content: string; targetType: string; targetId?: string;
   authorId: string; author: Author; isResolved: boolean;
-  createdAt: string; replies?: Comment[];
+  createdAt: string; replies?: Comment[]; replyToId?: string;
 }
 
 interface Props {
