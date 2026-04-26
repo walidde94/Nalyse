@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { prisma } from '../config/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { broadcastCommentUpdate } from '../services/commentService';
+
 
 const router = Router();
 
@@ -53,6 +55,8 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
             }
         });
         res.status(201).json(comment);
+        broadcastCommentUpdate(analysisId, 'comment_created', comment);
+
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to create comment' });
     }
@@ -72,6 +76,8 @@ router.patch('/:id', authenticate, async (req: AuthRequest, res) => {
             include: { author: { select: authorSelect } }
         });
         res.json(updated);
+        broadcastCommentUpdate(updated.analysisId, 'comment_updated', updated);
+
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to update comment' });
     }
@@ -85,7 +91,9 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
         if (existing.authorId !== req.user!.userId && req.user!.role !== 'admin')
             return res.status(403).json({ error: 'Not authorized' });
         await prisma.analysisComment.delete({ where: { id: String(req.params.id) } });
+        broadcastCommentUpdate(existing.analysisId, 'comment_deleted', { id: req.params.id });
         res.json({ success: true });
+
     } catch (err: any) {
         res.status(500).json({ error: 'Failed to delete comment' });
     }

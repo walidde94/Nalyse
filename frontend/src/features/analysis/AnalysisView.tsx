@@ -202,14 +202,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 import { API_URL } from '../../config';
+import { useChat } from '../../contexts/ChatContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
+
 import { ArchitectNode } from '../../components/layout/ArchitectNode';
 import { DiagnosticOverlay } from '../../components/layout/DiagnosticOverlay';
 
 export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, onUpdate }: AnalysisViewProps) => {
     const { token } = useAuth();
     const { addToast } = useToast();
+    const { socket } = useChat();
     const { layoutState, layoutMode } = useArchitect();
+
 
     const [activeTab, setActiveTab] = useState<'overview' | 'data' | 'sql' | 'insights' | 'presentation' | 'builder' | 'advanced' | 'graph' | 'map' | 'python' | 'ai' | 'anomaly' | 'forecast'>('overview');
     const [isNLQueryOpen, setIsNLQueryOpen] = useState(false);
@@ -404,13 +408,30 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
         }
     };
 
-    // Fetch comment counts when analysis loads
     useEffect(() => {
         if (!analysis.id || !token) return;
-        fetch(`${API_URL}/api/comments/${analysis.id}/counts`, {
-            headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.ok ? r.json() : {}).then(c => setCommentCounts(c || {})).catch(() => {});
-    }, [analysis.id, token, commentOpen]);
+        
+        const fetchCounts = () => {
+            fetch(`${API_URL}/api/comments/${analysis.id}/counts`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).then(r => r.ok ? r.json() : {}).then(c => setCommentCounts(c || {})).catch(() => {});
+        };
+
+        fetchCounts();
+
+        if (!socket) return;
+        
+        const handleSync = () => fetchCounts();
+        
+        socket.on('comment_created', handleSync);
+        socket.on('comment_deleted', handleSync);
+        
+        return () => {
+            socket.off('comment_created', handleSync);
+            socket.off('comment_deleted', handleSync);
+        };
+    }, [analysis.id, token, socket]);
+
 
     // React to fresh analysis data (Manual or Auto-Sync)
     const [localData, setLocalData] = useState<any[]>(analysis.sampleData || []);

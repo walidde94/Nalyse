@@ -55,7 +55,10 @@ import presenceRoutes from './routes/presence';
 import { initializeWorkspaceSocket } from './services/workspaceService';
 import { initializeChatSocket } from './services/chatService';
 import { initializePresenceSocket } from './services/presenceService';
+import { initializeCommentSocket } from './services/commentService';
+
 const allowedOrigins = [
+
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
@@ -305,6 +308,8 @@ const startServer = async () => {
     initializeWorkspaceSocket(io);
     initializeChatSocket(io);
     initializePresenceSocket(io);
+    initializeCommentSocket(io);
+
 
     // Start the Automated Reporting Cron Engine
     if (prismaReady) {

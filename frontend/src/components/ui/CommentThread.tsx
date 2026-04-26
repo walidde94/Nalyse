@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send, X, Reply, Check, Trash2, MoreHorizontal, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useChat } from '../../contexts/ChatContext';
 import { API_URL } from '../../config';
+
 
 interface Author {
   id: string; email: string; firstName?: string; lastName?: string;
@@ -44,6 +46,8 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { socket } = useChat();
+
 
   const fetchComments = async () => {
     if (!token || !analysisId) return;
@@ -58,6 +62,61 @@ export const CommentThread = ({ analysisId, targetType, targetId, isOpen, onClos
   };
 
   useEffect(() => { if (isOpen) fetchComments(); }, [isOpen, analysisId, targetType, targetId]);
+
+  useEffect(() => {
+    if (!socket || !analysisId) return;
+
+    socket.emit('join_analysis', { analysisId });
+
+    const handleCreated = (newComment: Comment) => {
+      // Only add if it matches current filter
+      if (newComment.targetType === targetType && newComment.targetId === (targetId || null)) {
+        setComments(prev => {
+          if (prev.some(c => c.id === newComment.id)) return prev;
+          if (newComment.replyToId) {
+             return prev.map(c => c.id === newComment.replyToId ? { ...c, replies: [...(c.replies || []), newComment] } : c);
+          }
+          return [newComment, ...prev];
+        });
+      }
+    };
+
+    const handleUpdated = (updated: Comment) => {
+      setComments(prev => {
+        if (updated.replyToId) {
+          return prev.map(c => c.id === updated.replyToId ? {
+            ...c,
+            replies: (c.replies || []).map(r => r.id === updated.id ? updated : r)
+          } : c);
+        }
+        return prev.map(c => c.id === updated.id ? { ...updated, replies: c.replies } : c);
+      });
+    };
+
+    const handleDeleted = (payload: { id: string }) => {
+      setComments(prev => {
+        // Try removing from top level
+        const filtered = prev.filter(c => c.id !== payload.id);
+        // Also try removing from replies
+        return filtered.map(c => ({
+          ...c,
+          replies: (c.replies || []).filter(r => r.id !== payload.id)
+        }));
+      });
+    };
+
+    socket.on('comment_created', handleCreated);
+    socket.on('comment_updated', handleUpdated);
+    socket.on('comment_deleted', handleDeleted);
+
+    return () => {
+      socket.emit('leave_analysis', { analysisId });
+      socket.off('comment_created', handleCreated);
+      socket.off('comment_updated', handleUpdated);
+      socket.off('comment_deleted', handleDeleted);
+    };
+  }, [socket, analysisId, targetType, targetId]);
+
 
   const submit = async () => {
     if (!input.trim() || !token) return;
