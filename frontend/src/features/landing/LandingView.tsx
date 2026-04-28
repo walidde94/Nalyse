@@ -7,6 +7,7 @@ import {
     Shield, BrainCircuit, Sparkles
 } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 /* ═══════════════════════════════════════════════════════════════
    NALYSE LANDING PAGE — Apple Keynote-Style
@@ -78,6 +79,16 @@ const AnalyticsVisual = ({ progress }: { progress: MotionValue<number> }) => {
     );
 };
 
+// ─── VISUAL: Forecast Badge (translated) ────────────────────
+const ForecastBadge = ({ progress, forecastOp }: { progress: MotionValue<number>; forecastOp: any }) => {
+    const { t: tr } = useLanguage();
+    return (
+        <motion.div className="lp-vis-badge" style={{ opacity: forecastOp, y: useSpring(useTransform(progress, [0.5, 0.7], [16, 0]), SPRING) }}>
+            <TrendingUp size={14} /> {tr('landing.forecast.active')}
+        </motion.div>
+    );
+};
+
 // ─── VISUAL: Forecast Trend Chart ────────────────────────────
 const ForecastVisual = ({ progress }: { progress: MotionValue<number> }) => {
     const axisOp = useSpring(useTransform(progress, [0.05, 0.2], [0, 1]), SPRING);
@@ -123,15 +134,14 @@ const ForecastVisual = ({ progress }: { progress: MotionValue<number> }) => {
                     </linearGradient>
                 </defs>
             </svg>
-            <motion.div className="lp-vis-badge" style={{ opacity: forecastOp, y: useSpring(useTransform(progress, [0.5, 0.7], [16, 0]), SPRING) }}>
-                <TrendingUp size={14} /> Forecast Active
-            </motion.div>
+            <ForecastBadge progress={progress} forecastOp={forecastOp} />
         </motion.div>
     );
 };
 
 // ─── VISUAL: Dashboard Bento Preview ─────────────────────────
 const DashboardVisual = ({ progress }: { progress: MotionValue<number> }) => {
+    const { t: tr } = useLanguage();
     const card1Op = useSpring(useTransform(progress, [0.1, 0.25], [0, 1]), SPRING);
     const card1Y = useSpring(useTransform(progress, [0.1, 0.25], [30, 0]), SPRING);
     const card2Op = useSpring(useTransform(progress, [0.2, 0.35], [0, 1]), SPRING);
@@ -146,7 +156,7 @@ const DashboardVisual = ({ progress }: { progress: MotionValue<number> }) => {
         <motion.div className="lp-vis lp-dash-vis">
             <div className="lp-dash-grid">
                 <motion.div className="lp-dash-card lp-dash-wide" style={{ opacity: card1Op, y: card1Y }}>
-                    <div className="lp-dash-label">Revenue Trend</div>
+                    <div className="lp-dash-label">{tr('landing.dashVis.revenue')}</div>
                     <div className="lp-dash-bars">
                         {[65, 45, 80, 55, 90, 70, 95].map((h, i) => (
                             <div key={i} className="lp-dash-bar" style={{ height: `${h}%` }} />
@@ -154,17 +164,17 @@ const DashboardVisual = ({ progress }: { progress: MotionValue<number> }) => {
                     </div>
                 </motion.div>
                 <motion.div className="lp-dash-card" style={{ opacity: card2Op, y: card2Y }}>
-                    <div className="lp-dash-label">Conversion</div>
+                    <div className="lp-dash-label">{tr('landing.dashVis.conversion')}</div>
                     <motion.div className="lp-dash-metric" style={{ opacity: glowOp }}>94.2<span>%</span></motion.div>
                 </motion.div>
                 <motion.div className="lp-dash-card" style={{ opacity: card3Op, y: card3Y }}>
-                    <div className="lp-dash-label">Status</div>
+                    <div className="lp-dash-label">{tr('landing.dashVis.status')}</div>
                     <div className="lp-dash-status">
-                        <div className="lp-dash-dot" /><span>All Systems Active</span>
+                        <div className="lp-dash-dot" /><span>{tr('landing.dashVis.allActive')}</span>
                     </div>
                 </motion.div>
                 <motion.div className="lp-dash-card lp-dash-wide" style={{ opacity: card4Op, y: card4Y }}>
-                    <div className="lp-dash-label">Forecast Accuracy</div>
+                    <div className="lp-dash-label">{tr('landing.dashVis.forecastAccuracy')}</div>
                     <div className="lp-dash-sparkline">
                         <svg viewBox="0 0 200 50" fill="none">
                             <path d="M 0 40 C 30 35, 50 20, 80 25 S 120 10, 150 15 S 180 8, 200 5" stroke="#10b981" strokeWidth="2" />
@@ -177,18 +187,19 @@ const DashboardVisual = ({ progress }: { progress: MotionValue<number> }) => {
 };
 
 // ─── VISUAL: Process Pipeline ────────────────────────────────
-const PIPELINE_STEPS = [
-    { icon: Upload, label: 'Connect', color: '#6366f1' },
-    { icon: Cpu, label: 'Process', color: '#8b5cf6' },
-    { icon: Search, label: 'Analyze', color: '#a78bfa' },
-    { icon: TrendingUp, label: 'Predict', color: '#06b6d4' },
-    { icon: Zap, label: 'Execute', color: '#10b981' },
+const PIPELINE_STEP_DEFS = [
+    { icon: Upload, labelKey: 'landing.pipeline.connect', color: '#6366f1' },
+    { icon: Cpu, labelKey: 'landing.pipeline.process', color: '#8b5cf6' },
+    { icon: Search, labelKey: 'landing.pipeline.analyze', color: '#a78bfa' },
+    { icon: TrendingUp, labelKey: 'landing.pipeline.predict', color: '#06b6d4' },
+    { icon: Zap, labelKey: 'landing.pipeline.execute', color: '#10b981' },
 ];
 
 const ProcessVisual = ({ progress }: { progress: MotionValue<number> }) => {
+    const { t: tr } = useLanguage();
     return (
         <div className="lp-pipeline">
-            {PIPELINE_STEPS.map((step, i) => {
+            {PIPELINE_STEP_DEFS.map((step, i) => {
                 const start = i * 0.15 + 0.1;
                 const nodeOp = useSpring(useTransform(progress, [start, start + 0.12], [0.2, 1]), SPRING);
                 const nodeScale = useSpring(useTransform(progress, [start, start + 0.12], [0.8, 1]), SPRING);
@@ -196,16 +207,16 @@ const ProcessVisual = ({ progress }: { progress: MotionValue<number> }) => {
                 const glowOp = useSpring(useTransform(progress, [start + 0.05, start + 0.15], [0, 0.5]), SPRING);
                 const Icon = step.icon;
                 return (
-                    <div key={step.label} className="lp-pipe-step">
+                    <div key={step.labelKey} className="lp-pipe-step">
                         <motion.div
                             className="lp-pipe-node"
                             style={{ opacity: nodeOp, scale: nodeScale, boxShadow: useTransform(glowOp, v => `0 0 ${v * 40}px ${step.color}`) }}
                         >
                             <Icon size={22} style={{ color: step.color }} />
                         </motion.div>
-                        <motion.span className="lp-pipe-label" style={{ opacity: nodeOp }}>{step.label}</motion.span>
-                        {i < PIPELINE_STEPS.length - 1 && (
-                            <motion.div className="lp-pipe-line" style={{ scaleX: lineLen, background: `linear-gradient(90deg, ${step.color}, ${PIPELINE_STEPS[i + 1].color})` }} />
+                        <motion.span className="lp-pipe-label" style={{ opacity: nodeOp }}>{tr(step.labelKey)}</motion.span>
+                        {i < PIPELINE_STEP_DEFS.length - 1 && (
+                            <motion.div className="lp-pipe-line" style={{ scaleX: lineLen, background: `linear-gradient(90deg, ${step.color}, ${PIPELINE_STEP_DEFS[i + 1].color})` }} />
                         )}
                     </div>
                 );
@@ -215,16 +226,17 @@ const ProcessVisual = ({ progress }: { progress: MotionValue<number> }) => {
 };
 
 // ─── VISUAL: Deep Dive Steps ─────────────────────────────────
-const DEEP_STEPS = [
-    { num: '01', title: 'Upload your data', desc: 'Drag and drop CSV, Excel, or JSON files. Schema is auto-detected in milliseconds.', icon: Upload, color: '#6366f1' },
-    { num: '02', title: 'AI finds patterns', desc: 'Smart Lens scans every column, detects anomalies, correlations, and statistical patterns automatically.', icon: BrainCircuit, color: '#8b5cf6' },
-    { num: '03', title: 'Get actionable insights', desc: 'Receive clear, prioritized recommendations with confidence scores — ready for strategic decisions.', icon: Lightbulb, color: '#10b981' },
+const DEEP_STEP_DEFS = [
+    { num: '01', titleKey: 'landing.deep.step1.title', descKey: 'landing.deep.step1.desc', icon: Upload, color: '#6366f1' },
+    { num: '02', titleKey: 'landing.deep.step2.title', descKey: 'landing.deep.step2.desc', icon: BrainCircuit, color: '#8b5cf6' },
+    { num: '03', titleKey: 'landing.deep.step3.title', descKey: 'landing.deep.step3.desc', icon: Lightbulb, color: '#10b981' },
 ];
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
+    const { t: tr } = useLanguage();
     // ── Hero refs ──
     const heroRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress: heroP } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
@@ -265,7 +277,7 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
     const t3 = chapterText(ch3P);
 
     // ── Deep dive step animations ──
-    const deepSteps = DEEP_STEPS.map((_, i) => {
+    const deepSteps = DEEP_STEP_DEFS.map((_, i) => {
         const start = i * 0.28 + 0.05;
         return {
             op: useSpring(useTransform(deepP, [start, start + 0.12, start + 0.25, start + 0.3], [0, 1, 1, i < 2 ? 0 : 1]), SPRING),
@@ -304,9 +316,9 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
                     >
-                        Turn raw data into
+                        {tr('landing.hero.title1')}
                         <br />
-                        <span className="lp-glow-text">strategic intelligence.</span>
+                        <span className="lp-glow-text">{tr('landing.hero.title2')}</span>
                     </motion.h1>
 
                     <motion.p
@@ -315,8 +327,7 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.7, duration: 0.8 }}
                     >
-                        From exploratory analysis to predictive forecasting — one platform
-                        for your entire data lifecycle.
+                        {tr('landing.hero.subtitle')}
                     </motion.p>
 
                     <motion.div
@@ -326,7 +337,7 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                         transition={{ delay: 0.9, duration: 0.6 }}
                     >
                         <button className="lp-btn" onClick={onGetStarted}>
-                            Start Analyzing <ArrowRight size={18} />
+                            {tr('landing.cta.start')} <ArrowRight size={18} />
                         </button>
                     </motion.div>
 
@@ -348,14 +359,12 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
             <section ref={ch1Ref} className="lp-chapter">
                 <div className="lp-chapter-sticky">
                     <motion.div className="lp-ch-text" style={{ opacity: t1.fadeOut }}>
-                        <motion.span className="lp-tag" style={{ opacity: t1.tagOp, color: '#8b5cf6' }}>ANALYTICS STUDIO</motion.span>
+                        <motion.span className="lp-tag" style={{ opacity: t1.tagOp, color: '#8b5cf6' }}>{tr('landing.ch1.tag')}</motion.span>
                         <motion.h2 className="lp-ch-title" style={{ opacity: t1.titleOp, y: t1.titleY }}>
-                            See what others miss.
+                            {tr('landing.ch1.title')}
                         </motion.h2>
                         <motion.p className="lp-ch-desc" style={{ opacity: t1.descOp, y: t1.descY }}>
-                            Six analysis engines work together — real-time SQL,
-                            interactive visualizations, statistical correlation, anomaly
-                            detection, and financial risk modeling — all on your live data.
+                            {tr('landing.ch1.desc')}
                         </motion.p>
                     </motion.div>
                     <div className="lp-ch-visual">
@@ -371,14 +380,12 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
             <section ref={ch2Ref} className="lp-chapter">
                 <div className="lp-chapter-sticky">
                     <motion.div className="lp-ch-text" style={{ opacity: t2.fadeOut }}>
-                        <motion.span className="lp-tag" style={{ opacity: t2.tagOp, color: '#06b6d4' }}>PREDICTIVE INTELLIGENCE</motion.span>
+                        <motion.span className="lp-tag" style={{ opacity: t2.tagOp, color: '#06b6d4' }}>{tr('landing.ch2.tag')}</motion.span>
                         <motion.h2 className="lp-ch-title" style={{ opacity: t2.titleOp, y: t2.titleY }}>
-                            Know what happens next.
+                            {tr('landing.ch2.title')}
                         </motion.h2>
                         <motion.p className="lp-ch-desc" style={{ opacity: t2.descOp, y: t2.descY }}>
-                            Machine learning forecasting, geospatial mapping,
-                            and AutoML optimization — purpose-built for
-                            teams who need to see around corners.
+                            {tr('landing.ch2.desc')}
                         </motion.p>
                     </motion.div>
                     <div className="lp-ch-visual">
@@ -394,14 +401,12 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
             <section ref={ch3Ref} className="lp-chapter">
                 <div className="lp-chapter-sticky">
                     <motion.div className="lp-ch-text" style={{ opacity: t3.fadeOut }}>
-                        <motion.span className="lp-tag" style={{ opacity: t3.tagOp, color: '#f59e0b' }}>BUSINESS INTELLIGENCE</motion.span>
+                        <motion.span className="lp-tag" style={{ opacity: t3.tagOp, color: '#f59e0b' }}>{tr('landing.ch3.tag')}</motion.span>
                         <motion.h2 className="lp-ch-title" style={{ opacity: t3.titleOp, y: t3.titleY }}>
-                            From data to<br />boardroom.
+                            {tr('landing.ch3.title1')}<br />{tr('landing.ch3.title2')}
                         </motion.h2>
                         <motion.p className="lp-ch-desc" style={{ opacity: t3.descOp, y: t3.descY }}>
-                            Executive dashboards, strategic boards, and a visual
-                            architect that aligns your entire organization around
-                            a single source of truth.
+                            {tr('landing.ch3.desc')}
                         </motion.p>
                     </motion.div>
                     <div className="lp-ch-visual">
@@ -423,11 +428,10 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                             y: useSpring(useTransform(processP, [0, 0.12], [40, 0]), SPRING),
                         }}
                     >
-                        <span className="lp-tag" style={{ color: '#a78bfa' }}>HOW IT WORKS</span>
-                        <h2 className="lp-ch-title" style={{ textAlign: 'center' }}>Five steps. Zero friction.</h2>
+                        <span className="lp-tag" style={{ color: '#a78bfa' }}>{tr('landing.process.tag')}</span>
+                        <h2 className="lp-ch-title" style={{ textAlign: 'center' }}>{tr('landing.process.title')}</h2>
                         <p className="lp-ch-desc" style={{ textAlign: 'center', maxWidth: 520 }}>
-                            From raw file to strategic insight — every step is
-                            automated, auditable, and fast.
+                            {tr('landing.process.desc')}
                         </p>
                     </motion.div>
                     <ProcessVisual progress={processP} />
@@ -439,10 +443,10 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                 Clean metrics strip with fade-in
             ═══════════════════════════════════════════════════════ */}
             <section className="lp-trust">
-                <TrustItem icon={<LayoutDashboard size={22} />} value="25+" label="Analysis Tools" idx={0} />
-                <TrustItem icon={<Cpu size={22} />} value="Real-Time" label="Data Processing" idx={1} />
-                <TrustItem icon={<Shield size={22} />} value="Enterprise" label="RBAC & Encryption" idx={2} />
-                <TrustItem icon={<BrainCircuit size={22} />} value="ML-Powered" label="Forecasting & AutoML" idx={3} />
+                <TrustItem icon={<LayoutDashboard size={22} />} value="25+" label={tr('landing.trust.tools')} idx={0} />
+                <TrustItem icon={<Cpu size={22} />} value={tr('landing.trust.realtime')} label={tr('landing.trust.processing')} idx={1} />
+                <TrustItem icon={<Shield size={22} />} value={tr('landing.trust.enterprise')} label={tr('landing.trust.rbac')} idx={2} />
+                <TrustItem icon={<BrainCircuit size={22} />} value={tr('landing.trust.mlPowered')} label={tr('landing.trust.forecasting')} idx={3} />
             </section>
 
             {/* ═══════════════════════════════════════════════════════
@@ -458,13 +462,13 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                             y: useSpring(useTransform(deepP, [0, 0.08], [30, 0]), SPRING),
                         }}
                     >
-                        <span className="lp-tag" style={{ color: '#8b5cf6' }}>DEEP DIVE</span>
+                        <span className="lp-tag" style={{ color: '#8b5cf6' }}>{tr('landing.deep.tag')}</span>
                         <h2 className="lp-ch-title" style={{ textAlign: 'center' }}>
-                            Smart Lens in action.
+                            {tr('landing.deep.title')}
                         </h2>
                     </motion.div>
                     <div className="lp-deep-steps">
-                        {DEEP_STEPS.map((step, i) => {
+                        {DEEP_STEP_DEFS.map((step, i) => {
                             const s = deepSteps[i];
                             const Icon = step.icon;
                             return (
@@ -473,8 +477,8 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
                                         <Icon size={28} />
                                     </motion.div>
                                     <span className="lp-deep-num" style={{ color: step.color }}>{step.num}</span>
-                                    <h3 className="lp-deep-title">{step.title}</h3>
-                                    <p className="lp-deep-desc">{step.desc}</p>
+                                    <h3 className="lp-deep-title">{tr(step.titleKey)}</h3>
+                                    <p className="lp-deep-desc">{tr(step.descKey)}</p>
                                 </motion.div>
                             );
                         })}
@@ -493,9 +497,9 @@ export const LandingView = ({ onGetStarted }: { onGetStarted: () => void }) => {
             <footer className="lp-foot">
                 <div className="lp-foot-inner">
                     <Logo />
-                    <span className="lp-foot-copy">© 2026 Nalyse. All rights reserved.</span>
+                    <span className="lp-foot-copy">{tr('landing.footer.copy')}</span>
                     <div className="lp-foot-links">
-                        <span>Privacy</span><span>Security</span><span>Contact</span>
+                        <span>{tr('landing.footer.privacy')}</span><span>{tr('landing.footer.security')}</span><span>{tr('landing.footer.contact')}</span>
                     </div>
                 </div>
             </footer>
@@ -525,6 +529,7 @@ const TrustItem = ({ icon, value, label, idx }: { icon: React.ReactNode; value: 
 
 // ─── Final CTA (scroll-reveal + glow) ────────────────────────
 const FinalCTA = ({ onGetStarted }: { onGetStarted: () => void }) => {
+    const { t: tr } = useLanguage();
     const ref = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.85', 'start 0.4'] });
     const op = useSpring(useTransform(scrollYProgress, [0, 1], [0, 1]), SPRING);
@@ -532,14 +537,14 @@ const FinalCTA = ({ onGetStarted }: { onGetStarted: () => void }) => {
     return (
         <motion.div ref={ref} className="lp-final-inner" style={{ opacity: op, scale }}>
             <h2 className="lp-final-h2">
-                Ready to see the
+                {tr('landing.final.title1')}
                 <br />
-                <span className="lp-glow-text">difference?</span>
+                <span className="lp-glow-text">{tr('landing.final.title2')}</span>
             </h2>
             <button className="lp-btn lp-btn-final" onClick={onGetStarted}>
-                Start Analyzing — Free <ArrowRight size={20} />
+                {tr('landing.cta.startFree')} <ArrowRight size={20} />
             </button>
-            <p className="lp-final-note">No credit card required.</p>
+            <p className="lp-final-note">{tr('landing.final.note')}</p>
         </motion.div>
     );
 };

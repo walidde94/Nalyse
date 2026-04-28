@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 import { Database } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface FileData {
     id: string;
@@ -20,6 +21,7 @@ interface BiSelectionViewProps {
 }
 
 export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile }: BiSelectionViewProps) => {
+    const { t } = useLanguage();
     const [selectedType, setSelectedType] = useState<string | null>(null);
     const [selectedFileId, setSelectedFileId] = useState<string>('');
     const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -45,8 +47,8 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
         { 
             id: 'sales', 
             icon: <TrendingUp size={24} />, 
-            title: 'Sales & Revenue', 
-            desc: 'Analyze financial performance, pipeline velocity, and regional sales distribution.', 
+            titleKey: 'bi.sales.title', 
+            descKey: 'bi.sales.desc', 
             columns: ['Date', 'Product', 'Revenue', 'Units Sold'],
             color: '#34d399', 
             gradient: 'linear-gradient(135deg, rgba(52,211,153,0.1), rgba(16,185,129,0.1))',
@@ -55,8 +57,8 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
         { 
             id: 'retention', 
             icon: <Users size={24} />, 
-            title: 'Customer Retention', 
-            desc: 'Track churn rates, cohort survival, and user engagement over time.', 
+            titleKey: 'bi.retention.title', 
+            descKey: 'bi.retention.desc', 
             columns: ['User ID', 'Plan', 'Retention Score', 'Last Login'],
             color: '#60a5fa', 
             gradient: 'linear-gradient(135deg, rgba(96,165,250,0.1), rgba(59,130,246,0.1))',
@@ -65,8 +67,8 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
         { 
             id: 'supply', 
             icon: <PackageSearch size={24} />, 
-            title: 'Supply Chain', 
-            desc: 'Monitor inventory levels, supplier performance, and reorder alerts.', 
+            titleKey: 'bi.supply.title', 
+            descKey: 'bi.supply.desc', 
             columns: ['SKU', 'Stock Level', 'Reorder Point', 'Supplier ID'],
             color: '#f59e0b', 
             gradient: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.1))',
@@ -75,8 +77,8 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
         { 
             id: 'marketing', 
             icon: <Megaphone size={24} />, 
-            title: 'Marketing ROI', 
-            desc: 'Evaluate campaign spend, conversion funnels, and cost per acquisition.', 
+            titleKey: 'bi.marketing.title', 
+            descKey: 'bi.marketing.desc', 
             columns: ['Campaign', 'Channel', 'Spend', 'Cost Per Lead'],
             color: '#ec4899', 
             gradient: 'linear-gradient(135deg, rgba(236,72,153,0.1), rgba(219,39,119,0.1))',
@@ -85,8 +87,8 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
         { 
             id: 'product', 
             icon: <Cpu size={24} />, 
-            title: 'Product Analytics', 
-            desc: 'Understand feature usage, session duration, and user pathways.', 
+            titleKey: 'bi.product.title', 
+            descKey: 'bi.product.desc', 
             columns: ['Session ID', 'Feature', 'Active Users', 'Avg Duration'],
             color: '#8b5cf6', 
             gradient: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(124,58,237,0.1))',
@@ -95,8 +97,8 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
         { 
             id: 'executive', 
             icon: <Briefcase size={24} />, 
-            title: 'Executive Summary', 
-            desc: 'High-level macroscopic view of business health, P&L, and strategic targets.', 
+            titleKey: 'bi.executive.title', 
+            descKey: 'bi.executive.desc', 
             columns: ['Month', 'Total Revenue', 'Net Profit', 'OpEx'],
             color: '#eab308', 
             gradient: 'linear-gradient(135deg, rgba(234,179,8,0.1), rgba(202,138,4,0.1))',
@@ -129,10 +131,10 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                             background: 'linear-gradient(135deg, #60a5fa 0%, #8b5cf6 50%, #ec4899 100%)', 
                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' 
                         }}>
-                            BI Intelligence Dashboards
+                            {t('bi.select.title')}
                         </h1>
                         <p style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500, marginTop: '2px' }}>
-                            Select an analytical vector to instantiate your AI-powered visualization canvas.
+                            {t('bi.select.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -146,55 +148,55 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                 position: 'relative',
                 zIndex: 10
             }}>
-                {TEMPLATES.map((t, i) => (
+                {TEMPLATES.map((tmpl, i) => (
                     <motion.div
-                        key={t.id}
+                        key={tmpl.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                         whileHover={{ y: -8, scale: 1.02 }}
-                        onMouseEnter={() => setHoveredCard(t.id)}
+                        onMouseEnter={() => setHoveredCard(tmpl.id)}
                         onMouseLeave={() => setHoveredCard(null)}
-                        onClick={() => setSelectedType(t.id)}
+                        onClick={() => setSelectedType(tmpl.id)}
                         style={{ 
                             padding: '32px', 
                             borderRadius: '20px', 
                             background: 'var(--bg-secondary)', 
-                            border: `1px solid ${hoveredCard === t.id ? t.color : 'var(--border-default)'}`, 
+                            border: `1px solid ${hoveredCard === tmpl.id ? tmpl.color : 'var(--border-default)'}`, 
                             position: 'relative', 
                             overflow: 'hidden', 
                             cursor: 'pointer',
-                            boxShadow: hoveredCard === t.id ? `0 20px 40px -12px ${t.glow}` : '0 10px 30px -10px rgba(0,0,0,0.3)',
+                            boxShadow: hoveredCard === tmpl.id ? `0 20px 40px -12px ${tmpl.glow}` : '0 10px 30px -10px rgba(0,0,0,0.3)',
                             transition: 'border 0.3s ease, box-shadow 0.3s ease'
                         }}
                     >
                         {/* Dynamic Top Border */}
                         <div style={{ 
                             position: 'absolute', top: 0, left: 0, right: 0, height: '3px', 
-                            background: t.color,
-                            opacity: hoveredCard === t.id ? 1 : 0.4,
+                            background: tmpl.color,
+                            opacity: hoveredCard === tmpl.id ? 1 : 0.4,
                             transition: 'opacity 0.3s ease' 
                         }} />
                         
                         {/* Subtle Background Icon */}
                         <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.03, transform: 'scale(4)' }}>
-                            {t.icon}
+                            {tmpl.icon}
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
                             <div style={{ 
                                 width: '48px', height: '48px', borderRadius: '14px', 
-                                background: t.gradient, border: `1px solid ${t.glow}`,
+                                background: tmpl.gradient, border: `1px solid ${tmpl.glow}`,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: t.color
+                                color: tmpl.color
                             }}>
-                                {t.icon}
+                                {tmpl.icon}
                             </div>
                             <div style={{ 
                                 width: '32px', height: '32px', borderRadius: '50%', 
-                                background: hoveredCard === t.id ? t.glow : 'var(--bg-elevated)', 
+                                background: hoveredCard === tmpl.id ? tmpl.glow : 'var(--bg-elevated)', 
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: hoveredCard === t.id ? t.color : 'var(--text-tertiary)',
+                                color: hoveredCard === tmpl.id ? tmpl.color : 'var(--text-tertiary)',
                                 transition: 'all 0.3s ease'
                             }}>
                                 <ChevronRight size={16} />
@@ -202,18 +204,18 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                         </div>
 
                         <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '10px', letterSpacing: '-0.02em' }}>
-                            {t.title}
+                            {t(tmpl.titleKey)}
                         </h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '20px' }}>
-                            {t.desc}
+                            {t(tmpl.descKey)}
                         </p>
 
                         <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
                             <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-                                Required Schema
+                                {t('bi.expectedColumns')}
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                {t.columns.map(col => (
+                                {tmpl.columns.map(col => (
                                     <span key={col} style={{ 
                                         padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
                                         background: 'var(--bg-main)', border: '1px solid var(--border-subtle)',
@@ -264,21 +266,21 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                             onClick={e => e.stopPropagation()}
                         >
                             <div style={{ position: 'relative', padding: '32px 32px 24px', textAlign: 'center' }}>
-                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: TEMPLATES.find(t => t.id === selectedType)?.color }} />
+                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: TEMPLATES.find(tmpl => tmpl.id === selectedType)?.color }} />
                                 
                                 <div style={{ 
                                     width: '64px', height: '64px', borderRadius: '20px', margin: '0 auto 20px',
-                                    background: TEMPLATES.find(t => t.id === selectedType)?.gradient, 
-                                    border: `1px solid ${TEMPLATES.find(t => t.id === selectedType)?.glow}`,
+                                    background: TEMPLATES.find(tmpl => tmpl.id === selectedType)?.gradient, 
+                                    border: `1px solid ${TEMPLATES.find(tmpl => tmpl.id === selectedType)?.glow}`,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: TEMPLATES.find(t => t.id === selectedType)?.color,
-                                    boxShadow: `0 8px 32px ${TEMPLATES.find(t => t.id === selectedType)?.glow}`
+                                    color: TEMPLATES.find(tmpl => tmpl.id === selectedType)?.color,
+                                    boxShadow: `0 8px 32px ${TEMPLATES.find(tmpl => tmpl.id === selectedType)?.glow}`
                                 }}>
-                                    {TEMPLATES.find(t => t.id === selectedType)?.icon}
+                                    {TEMPLATES.find(tmpl => tmpl.id === selectedType)?.icon}
                                 </div>
                                 
                                 <h3 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>
-                                    Initialize {TEMPLATES.find(t => t.id === selectedType)?.title}
+                                    {(() => { const found = TEMPLATES.find(tmpl => tmpl.id === selectedType); return found ? t(found.titleKey) : ''; })()}
                                 </h3>
                                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                                     Provide a dataset matching the required schema to generate your intelligence dashboard instantly.
@@ -306,7 +308,7 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                                                         appearance: 'none', cursor: 'pointer'
                                                     }}
                                                 >
-                                                    <option value="" disabled>Choose a dataset...</option>
+                                                    <option value="" disabled>{t('bi.chooseFile')}</option>
                                                     {files.map(f => (
                                                         <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>
                                                     ))}
@@ -327,7 +329,7 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                                                     transition: 'all 0.2s'
                                                 }}
                                             >
-                                                Analyze
+                                                {t('bi.launchDashboard')}
                                             </motion.button>
                                         </div>
                                     </div>
@@ -335,7 +337,7 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '4px 0' }}>
                                     <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
-                                    <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Or Upload New</span>
+                                    <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('bi.uploadNew')}</span>
                                     <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
                                 </div>
 
