@@ -113,31 +113,36 @@ function sidebarNavLabel(id: string, t: (key: string) => string): string {
         const v = t(tr);
         if (v && v !== tr) return v;
     }
-    const fallbacks: Record<string, string> = {
-        simulation: 'Simulation Engine',
-        lens: 'Smart Lens',
-        diff: 'Version Diff',
-        anomaly: 'Anomaly Detection',
-        financial: 'Financial Risk',
-        forecast: 'Forecasting Engine',
-        spatial: 'Geospatial Intelligence',
-        automl: 'AutoML Intelligence',
-        developer: 'Developer API',
-        webhooks: 'Webhooks & API',
-        embed: 'Embed SDK',
-        canvas: 'Dashboard Canvas',
-        projects: 'Strategic Board',
-        democracy: 'Self-Service Studio',
-        automation: 'Automated Reports',
-        collaboration: 'Collaboration',
-        'shared-workspaces': 'Shared Workspaces',
-        'private-chat': 'Personal Chat',
-        sources: 'Data Connectors',
-        migration: 'Data Migration',
-        organization: 'Organization & RBAC',
-        docs: 'Work Instructions',
+    const fallbackKeyMap: Record<string, string> = {
+        simulation: 'nav.simulation',
+        lens: 'nav.lens',
+        diff: 'nav.diff',
+        anomaly: 'nav.anomaly',
+        financial: 'nav.financial',
+        forecast: 'nav.forecast',
+        spatial: 'nav.spatial',
+        automl: 'nav.automl',
+        developer: 'nav.developer',
+        webhooks: 'nav.webhooks',
+        embed: 'nav.embed',
+        canvas: 'nav.canvas',
+        projects: 'nav.projects',
+        democracy: 'nav.democracy',
+        automation: 'nav.automation',
+        collaboration: 'nav.collaboration',
+        'shared-workspaces': 'nav.sharedWorkspaces',
+        'private-chat': 'nav.privateChat',
+        sources: 'nav.sources',
+        migration: 'nav.migration',
+        organization: 'nav.organization',
+        docs: 'nav.docs',
     };
-    return fallbacks[id] || id;
+    const fbKey = fallbackKeyMap[id];
+    if (fbKey) {
+        const v = t(fbKey);
+        if (v && v !== fbKey) return v;
+    }
+    return id;
 }
 
 function orderedGroupItemIds(group: SidebarGroupKey, prefs: ReturnType<typeof loadLayoutPreferences>): string[] {

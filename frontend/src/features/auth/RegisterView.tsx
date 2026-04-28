@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Lock, User, Check, AlertCircle, Mail, Building2, Eye, EyeOff, Fingerprint, Shield, Sparkles, Zap } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface RegisterViewProps {
     onSwitchToLogin: () => void;
@@ -111,6 +112,7 @@ const InputField = ({ icon: Icon, label, name, type = 'text', placeholder, value
 
 export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onSuccess }) => {
     const { register } = useAuth();
+    const { t } = useLanguage();
     const [currentStep, setCurrentStep] = useState(0); // 0: account, 1: org, 2: password, 3: processing, 4: success
     const [formData, setFormData] = useState({
         email: '', firstName: '', lastName: '', organizationName: '', password: '', confirmPassword: ''
@@ -131,15 +133,15 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
 
     const handleNext = () => {
         if (currentStep === 0) {
-            if (!formData.email || !formData.email.includes('@')) { setError('Please enter a valid email.'); return; }
-            if (!formData.firstName || !formData.lastName) { setError('Full name is required.'); return; }
+            if (!formData.email || !formData.email.includes('@')) { setError(t('auth.register.validEmail')); return; }
+            if (!formData.firstName || !formData.lastName) { setError(t('auth.register.fullNameRequired')); return; }
             setError(''); setCurrentStep(1);
         } else if (currentStep === 1) {
-            if (!formData.organizationName) { setError('Organization name required.'); return; }
+            if (!formData.organizationName) { setError(t('auth.register.orgRequired')); return; }
             setError(''); setCurrentStep(2);
         } else if (currentStep === 2) {
-            if (!formData.password || formData.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-            if (formData.password !== formData.confirmPassword) { setError('Passwords do not match.'); return; }
+            if (!formData.password || formData.password.length < 8) { setError(t('auth.register.passwordMin')); return; }
+            if (formData.password !== formData.confirmPassword) { setError(t('auth.register.passwordMismatch')); return; }
             setError(''); handleRegister();
         }
     };
@@ -151,7 +153,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
             setCurrentStep(4);
             setTimeout(() => onSuccess(), 1400);
         } catch (err: any) {
-            setError(err.message || 'Registration failed. Please try again.');
+            setError(err.message || t('auth.register.registerFailed'));
             setCurrentStep(2);
         }
     };
@@ -209,18 +211,18 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                             background: 'linear-gradient(135deg, #fff 30%, #10b981 60%, #6366f1)',
                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         }}>
-                            Get Started
+                            {t('auth.register.getStarted')}
                         </h1>
                         <p style={{ fontSize: 15, color: 'var(--text-muted)', fontWeight: 500, marginTop: 12, lineHeight: 1.6 }}>
-                            Join thousands of data teams using Nalyse to power their analytics.
+                            {t('auth.register.heroDesc')}
                         </p>
                     </motion.div>
 
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} style={{ display: 'flex', gap: 20, marginTop: 8 }}>
                         {[
-                            { icon: <Zap size={13} />, label: 'Instant Setup' },
-                            { icon: <Shield size={13} />, label: 'Free Tier' },
-                            { icon: <Sparkles size={13} />, label: 'No Credit Card' },
+                            { icon: <Zap size={13} />, label: t('auth.register.badgeSetup') },
+                            { icon: <Shield size={13} />, label: t('auth.register.badgeFree') },
+                            { icon: <Sparkles size={13} />, label: t('auth.register.badgeNoCard') },
                         ].map((badge, i) => (
                             <div key={i} style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
@@ -272,7 +274,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
-                                            Step {currentStep + 1} of {totalSteps}
+                                            {t('auth.register.stepOf').replace('{current}', String(currentStep + 1)).replace('{total}', String(totalSteps))}
                                         </span>
                                         <span style={{ fontSize: 10, fontWeight: 800, color: '#10b981', fontFamily: 'var(--font-mono, monospace)' }}>
                                             {Math.round(progress)}%
@@ -303,19 +305,19 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                         <div style={{ marginBottom: 28 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px rgba(16,185,129,0.5)' }} />
-                                                <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#10b981' }}>Create Account</span>
+                                                <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#10b981' }}>{t('auth.register.createAccount')}</span>
                                             </div>
-                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>Your information</h2>
-                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>Let's start with the basics</p>
+                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>{t('auth.register.yourInfo')}</h2>
+                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>{t('auth.register.startBasics')}</p>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                            <InputField {...commonProps} icon={Mail} label="Email Address" name="email" type="email" placeholder="you@company.com" value={formData.email} onChange={(v: string) => setFormData({ ...formData, email: v })} inputRef={emailRef} />
+                                            <InputField {...commonProps} icon={Mail} label={t('auth.register.emailLabel')} name="email" type="email" placeholder="you@company.com" value={formData.email} onChange={(v: string) => setFormData({ ...formData, email: v })} inputRef={emailRef} />
                                             <div style={{ display: 'flex', gap: 12 }}>
                                                 <div style={{ flex: 1 }}>
-                                                    <InputField {...commonProps} icon={User} label="First Name" name="firstName" placeholder="Jane" value={formData.firstName} onChange={(v: string) => setFormData({ ...formData, firstName: v })} />
+                                                    <InputField {...commonProps} icon={User} label={t('auth.register.firstNameLabel')} name="firstName" placeholder="Jane" value={formData.firstName} onChange={(v: string) => setFormData({ ...formData, firstName: v })} />
                                                 </div>
                                                 <div style={{ flex: 1 }}>
-                                                    <InputField {...commonProps} icon={User} label="Last Name" name="lastName" placeholder="Smith" value={formData.lastName} onChange={(v: string) => setFormData({ ...formData, lastName: v })} />
+                                                    <InputField {...commonProps} icon={User} label={t('auth.register.lastNameLabel')} name="lastName" placeholder="Smith" value={formData.lastName} onChange={(v: string) => setFormData({ ...formData, lastName: v })} />
                                                 </div>
                                             </div>
                                         </div>
@@ -328,12 +330,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                         <div style={{ marginBottom: 28 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px rgba(99,102,241,0.5)' }} />
-                                                <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6366f1' }}>Organization</span>
+                                                <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6366f1' }}>{t('auth.register.orgTag')}</span>
                                             </div>
-                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>Your workspace</h2>
-                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>This will be your team's shared environment</p>
+                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>{t('auth.register.yourWorkspace')}</h2>
+                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>{t('auth.register.workspaceDesc')}</p>
                                         </div>
-                                        <InputField {...commonProps} icon={Building2} label="Organization Name" name="org" placeholder="Acme Corporation" value={formData.organizationName} onChange={(v: string) => setFormData({ ...formData, organizationName: v })} inputRef={orgRef} />
+                                        <InputField {...commonProps} icon={Building2} label={t('auth.register.orgNameLabel')} name="org" placeholder="Acme Corporation" value={formData.organizationName} onChange={(v: string) => setFormData({ ...formData, organizationName: v })} inputRef={orgRef} />
                                         
                                         {/* Enrolled summary */}
                                         <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 12, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -354,26 +356,26 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                         <div style={{ marginBottom: 28 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c084fc', boxShadow: '0 0 10px rgba(192,132,252,0.5)' }} />
-                                                <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#c084fc' }}>Security</span>
+                                                <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#c084fc' }}>{t('auth.register.securityTag')}</span>
                                             </div>
-                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>Secure your account</h2>
-                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>Choose a strong password to protect your data</p>
+                                            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0 }}>{t('auth.register.secureAccount')}</h2>
+                                            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>{t('auth.register.secureDesc')}</p>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                             <div>
-                                                <InputField {...commonProps} icon={Lock} label="Password" name="password" placeholder="Min 8 characters" value={formData.password}
+                                                <InputField {...commonProps} icon={Lock} label={t('auth.register.passwordLabel')} name="password" placeholder={t('auth.register.passwordPlaceholder')} value={formData.password}
                                                     onChange={(v: string) => setFormData({ ...formData, password: v })} inputRef={passwordRef}
                                                     showToggle toggleValue={showPassword} onToggle={() => setShowPassword(!showPassword)} />
                                                 <PasswordStrength password={formData.password} />
                                             </div>
-                                            <InputField {...commonProps} icon={Lock} label="Confirm Password" name="confirmPassword" placeholder="Repeat your password" value={formData.confirmPassword}
+                                            <InputField {...commonProps} icon={Lock} label={t('auth.register.confirmPasswordLabel')} name="confirmPassword" placeholder={t('auth.register.confirmPlaceholder')} value={formData.confirmPassword}
                                                 onChange={(v: string) => setFormData({ ...formData, confirmPassword: v })}
                                                 showToggle toggleValue={showPassword} onToggle={() => setShowPassword(!showPassword)} />
                                             {formData.password && formData.confirmPassword && formData.password === formData.confirmPassword && (
                                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                                                     style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#10b981' }}
                                                 >
-                                                    <Check size={14} /> Passwords match
+                                                    <Check size={14} /> {t('auth.register.passwordsMatch')}
                                                 </motion.div>
                                             )}
                                         </div>
@@ -413,7 +415,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                                 >
                                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)', transform: 'skewX(-20deg) translateX(-100%)', animation: 'sweepShine 4s ease-in-out infinite' }} />
                                     <span style={{ position: 'relative', zIndex: 1 }}>
-                                        {currentStep === 2 ? 'Create Account' : 'Continue'}
+                                        {currentStep === 2 ? t('auth.register.createBtn') : t('auth.register.continueBtn')}
                                     </span>
                                     <ArrowRight size={16} style={{ position: 'relative', zIndex: 1 }} />
                                 </motion.button>
@@ -422,11 +424,11 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                             {/* Switch to login */}
                             <div style={{ marginTop: 20, textAlign: 'center' }}>
                                 <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
-                                    Already have an account?{' '}
+                                    {t('auth.register.alreadyHaveAccount')}{' '}
                                     <button onClick={onSwitchToLogin}
                                         style={{ background: 'none', border: 'none', color: '#6366f1', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: 13 }}
                                     >
-                                        Sign in
+                                        {t('auth.register.signIn')}
                                     </button>
                                 </span>
                             </div>
@@ -465,10 +467,10 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSwitchToLogin, onS
                             </div>
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: currentStep === 4 ? '#10b981' : '#6366f1', marginBottom: 8 }}>
-                                    {currentStep === 3 ? 'Provisioning...' : 'Account Created'}
+                                    {currentStep === 3 ? t('auth.register.provisioning') : t('auth.register.accountCreated')}
                                 </div>
                                 <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
-                                    {currentStep === 3 ? 'Setting up your workspace' : 'Welcome aboard! Redirecting...'}
+                                    {currentStep === 3 ? t('auth.register.settingUp') : t('auth.register.welcomeAboard')}
                                 </div>
                             </div>
                         </motion.div>

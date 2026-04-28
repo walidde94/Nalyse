@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Lock, Mail, Check, AlertCircle, Eye, EyeOff, Fingerprint, Shield, Sparkles } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface LoginViewProps {
     onSwitchToRegister: () => void;
@@ -49,6 +50,7 @@ const OrbitalRings = () => (
 
 export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSuccess }) => {
     const { login } = useAuth();
+    const { t } = useLanguage();
     const [step, setStep] = useState(0); // 0: form, 1: processing, 2: success
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -144,8 +146,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                             Nalyse
                         </h1>
                         <p style={{ fontSize: 15, color: 'var(--text-muted)', fontWeight: 500, marginTop: 12, lineHeight: 1.6, letterSpacing: '0.01em' }}>
-                            Enterprise data intelligence platform.<br />
-                            Transform raw data into actionable insights.
+                            {t('auth.login.heroDesc')}<br />
+                            {t('auth.login.heroSubDesc')}
                         </p>
                     </motion.div>
 
@@ -157,9 +159,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                         style={{ display: 'flex', gap: 24, marginTop: 12 }}
                     >
                         {[
-                            { icon: <Shield size={14} />, label: 'SOC 2 Compliant' },
-                            { icon: <Fingerprint size={14} />, label: 'E2E Encrypted' },
-                            { icon: <Sparkles size={14} />, label: 'AI-Powered' },
+                            { icon: <Shield size={14} />, label: t('auth.login.badgeSoc') },
+                            { icon: <Fingerprint size={14} />, label: t('auth.login.badgeE2e') },
+                            { icon: <Sparkles size={14} />, label: t('auth.login.badgeAi') },
                         ].map((badge, i) => (
                             <div key={i} style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
@@ -214,13 +216,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                 <div style={{ marginBottom: 32 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px rgba(99,102,241,0.5)' }} />
-                                        <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6366f1' }}>Secure Access</span>
+                                        <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6366f1' }}>{t('auth.login.secureAccess')}</span>
                                     </div>
                                     <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.2 }}>
-                                        Welcome back
+                                        {t('auth.login.welcomeBack')}
                                     </h2>
                                     <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 8, fontWeight: 500 }}>
-                                        Sign in to your account to continue
+                                        {t('auth.login.subtitle')}
                                     </p>
                                 </div>
 
@@ -229,7 +231,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                     {/* Email field */}
                                     <div style={{ position: 'relative' }}>
                                         <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: 8 }}>
-                                            Email Address
+                                            {t('auth.login.emailLabel')}
                                         </label>
                                         <div style={{
                                             display: 'flex', alignItems: 'center', gap: 12,
@@ -248,7 +250,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                                 onFocus={() => setFocusedField('email')}
                                                 onBlur={() => setFocusedField(null)}
                                                 onKeyDown={handleKeyDown}
-                                                placeholder="you@company.com"
+                                                placeholder={t('auth.login.emailPlaceholder')}
                                                 style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 14, fontWeight: 500, letterSpacing: '0.01em', textAlign: 'left', padding: 0, margin: 0 }}
                                             />
                                             {email && email.includes('@') && (
@@ -262,7 +264,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                     {/* Password field */}
                                     <div style={{ position: 'relative' }}>
                                         <label style={{ display: 'block', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: 8 }}>
-                                            Password
+                                            {t('auth.login.passwordLabel')}
                                         </label>
                                         <div style={{
                                             display: 'flex', alignItems: 'center', gap: 12,
@@ -281,7 +283,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                                 onFocus={() => setFocusedField('password')}
                                                 onBlur={() => setFocusedField(null)}
                                                 onKeyDown={handleKeyDown}
-                                                placeholder="Enter your password"
+                                                placeholder={t('auth.login.passwordPlaceholder')}
                                                 style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 14, fontWeight: 500, textAlign: 'left', padding: 0, margin: 0 }}
                                             />
                                             <button type="button" onClick={() => setShowPassword(!showPassword)}
@@ -319,7 +321,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                         }}
                                     >
                                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)', transform: 'skewX(-20deg) translateX(-100%)', animation: 'sweepShine 4s ease-in-out infinite' }} />
-                                        <span style={{ position: 'relative', zIndex: 1 }}>Sign In</span>
+                                        <span style={{ position: 'relative', zIndex: 1 }}>{t('auth.login.signIn')}</span>
                                         <ArrowRight size={16} style={{ position: 'relative', zIndex: 1 }} />
                                     </motion.button>
                                 </form>
@@ -327,7 +329,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                 {/* Divider */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '24px 0' }}>
                                     <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
-                                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-disabled)' }}>or</span>
+                                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-disabled)' }}>{t('auth.login.or')}</span>
                                     <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
                                 </div>
 
@@ -344,7 +346,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-default)'; e.currentTarget.style.color = '#fff'; }}
                                     onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                                 >
-                                    Create a new account
+                                    {t('auth.login.createAccount')}
                                     <ArrowRight size={14} />
                                 </button>
                             </div>
@@ -352,7 +354,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                             {/* Bottom info */}
                             <div style={{ marginTop: 24, textAlign: 'center' }}>
                                 <p style={{ fontSize: 11, color: 'var(--text-disabled)', fontWeight: 500 }}>
-                                    Protected by enterprise-grade security · <span style={{ color: 'var(--text-disabled)', fontFamily: 'var(--font-mono, monospace)' }}>v3.0.2</span>
+                                    {t('auth.login.securityNote')} · <span style={{ color: 'var(--text-disabled)', fontFamily: 'var(--font-mono, monospace)' }}>v3.0.2</span>
                                 </p>
                             </div>
                         </motion.div>
