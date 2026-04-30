@@ -16,6 +16,7 @@ import {
     Scatter, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 import { useToast } from '../../components/ui/Toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -89,9 +90,10 @@ const StudioTooltip = ({ active, payload, label }: any) => {
 // ─── Chart Renderer ─────────────────────────────────────────────────────────
 
 const RenderChart = ({ widget, height = 220 }: { widget: ChartWidget; height?: number }) => {
+    const { t: translate } = useLanguage();
     const type = widget.chartType === 'line' ? 'area' : widget.chartType;
     const data = widget.data || [];
-    if (!data.length) return <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3, fontSize: '12px' }}>No data</div>;
+    if (!data.length) return <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3, fontSize: '12px' }}>{translate('studio.noData')}</div>;
 
     return (
         <ResponsiveContainer width="100%" height={height}>
@@ -144,6 +146,7 @@ const RenderChart = ({ widget, height = 220 }: { widget: ChartWidget; height?: n
 
 export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgress }: StudioProps) => {
     const { addToast } = useToast();
+    const { t: translate } = useLanguage();
 
     // Pro gate
     if (userPlan === 'free') {
@@ -154,10 +157,10 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                     <div style={{ width: '72px', height: '72px', borderRadius: '24px', background: 'var(--primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
                         <Sparkles size={40} />
                     </div>
-                    <h2 className="text-h1">Self-Service Studio</h2>
-                    <p className="text-sec">Advanced data exploration and departmental analytics portals are Pro features.</p>
+                    <h2 className="text-h1">{translate('studio.title')}</h2>
+                    <p className="text-sec">{translate('studio.pro.desc')}</p>
                     <button className="btn btn-primary btn-lg w-full glow-btn" onClick={() => (window as any).dispatchEvent(new CustomEvent('navigate-to-settings', { detail: { initialTab: 'subscription' } }))}>
-                        <span className="shimmer-text">Upgrade to Pro</span>
+                        <span className="shimmer-text">{translate('pricing.upgradePro')}</span>
                     </button>
                 </div>
             </div>
@@ -241,11 +244,11 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                 const data = await res.json();
                 setActiveAnalysis(data);
                 if (data.cached) {
-                    addToast(`Neural cache retrieved (${data.id.substring(0, 8)})`, 'success');
+                    addToast(`${translate('studio.cacheRetrieved')} (${data.id.substring(0, 8)})`, 'success');
                 }
-                if (customQuery) addToast(`Strategic query results loaded for "${customQuery}"`, 'success');
+                if (customQuery) addToast(`${translate('studio.queryLoaded')} "${customQuery}"`, 'success');
             } catch (e: any) {
-                addToast(e.message || 'Failed to analyze', 'error');
+                addToast(e.message || translate('common.error'), 'error');
             } finally {
                 setIsLoading(false);
             }
@@ -266,7 +269,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
     const handleExportPDF = async () => {
         const el = document.getElementById('studio-canvas');
         if (!el) return;
-        addToast('Generating PDF...', 'info');
+        addToast(translate('studio.generatingPDF'), 'info');
         try {
             const canvas = await html2canvas(el, { backgroundColor: '#0a0a0c', scale: 2 });
             const pdf = new jsPDF('p', 'mm', 'a4');
@@ -276,8 +279,8 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
             pdf.rect(0, 0, w, pdf.internal.pageSize.getHeight(), 'F');
             pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 5, 5, w - 10, h);
             pdf.save(`Nalyse_Studio_${new Date().toISOString().split('T')[0]}.pdf`);
-            addToast('PDF exported', 'success');
-        } catch { addToast('PDF export failed', 'error'); }
+            addToast(translate('studio.pdfExported'), 'success');
+        } catch { addToast(translate('studio.pdfFailed'), 'error'); }
     };
 
     const togglePin = (id: string) => {
@@ -314,51 +317,51 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                 <div style={S.commandLeft}>
                     <div style={S.logoBox}><Brain size={20} /></div>
                     <div>
-                        <h1 style={S.title}>Self-Service Studio</h1>
-                        <p style={S.subtitle}>Explore, analyze, and share — no code required</p>
+                        <h1 style={S.title}>{translate('studio.title')}</h1>
+                        <p style={S.subtitle}>{translate('studio.subtitle')}</p>
                     </div>
                 </div>
                 <div style={S.commandCenter}>
                     <div style={S.datasetPicker}>
                         <Database size={14} style={{ opacity: 0.4 }} />
                         <select value={selectedFileId} onChange={e => setSelectedFileId(e.target.value)} style={S.datasetSelect}>
-                            <option value="">Select dataset...</option>
+                            <option value="">{translate('studio.selectDataset')}</option>
                             {files.map((f: any) => <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>)}
                         </select>
                     </div>
                     {activeFile && (
                         <div style={S.connectedBadge}>
                             <div style={S.pulseDot} />
-                            <span style={{ fontSize: '10px', fontWeight: 700 }}>CONNECTED</span>
+                            <span style={{ fontSize: '10px', fontWeight: 700 }}>{translate('studio.connected').toUpperCase()}</span>
                             {activeAnalysis && (
                                 <span style={{ fontSize: '10px', opacity: 0.5, marginLeft: '8px' }}>
-                                    {activeAnalysis.summary?.rows?.toLocaleString()} rows × {activeAnalysis.summary?.columns} cols
+                                    {activeAnalysis.summary?.rows?.toLocaleString()} {translate('studio.rows')} × {activeAnalysis.summary?.columns} {translate('studio.cols')}
                                 </span>
                             )}
                         </div>
                     )}
                 </div>
                 <div style={S.commandRight}>
-                    <button onClick={() => fetchAnalysis()} style={S.iconBtn} title="Refresh"><RefreshCw size={15} /></button>
-                    <button onClick={handleExportPDF} style={S.iconBtn} title="Export PDF"><Download size={15} /></button>
-                    <div style={S.securityBadge}><ShieldCheck size={13} /> <span style={{ fontSize: '10px' }}>Encrypted</span></div>
+                    <button onClick={() => fetchAnalysis()} style={S.iconBtn} title={translate('studio.refresh')}><RefreshCw size={15} /></button>
+                    <button onClick={handleExportPDF} style={S.iconBtn} title={translate('studio.export')}><Download size={15} /></button>
+                    <div style={S.securityBadge}><ShieldCheck size={13} /> <span style={{ fontSize: '10px' }}>{translate('studio.encrypted')}</span></div>
                 </div>
             </div>
 
             {/* ── Tab Navigation ── */}
             {activeAnalysis && (
                 <div style={S.tabBar}>
-                    {(['explorer', 'charts', 'schema', 'insights'] as const).map(tab => (
-                        <button key={tab} onClick={() => setActiveView(tab)} style={{ ...S.tabBtn, ...(activeView === tab ? S.tabBtnActive : {}) }}>
-                            {tab === 'explorer' && <Cpu size={13} />}
-                            {tab === 'charts' && <BarChart2 size={13} />}
-                            {tab === 'schema' && <Database size={13} />}
-                            {tab === 'insights' && <Lightbulb size={13} />}
-                            <span style={{ textTransform: 'capitalize' }}>{tab}</span>
-                            {tab === 'insights' && allInsights.length > 0 && (
+                    {(['explorer', 'charts', 'schema', 'insights'] as const).map(tabName => (
+                        <button key={tabName} onClick={() => setActiveView(tabName)} style={{ ...S.tabBtn, ...(activeView === tabName ? S.tabBtnActive : {}) }}>
+                            {tabName === 'explorer' && <Cpu size={13} />}
+                            {tabName === 'charts' && <BarChart2 size={13} />}
+                            {tabName === 'schema' && <Database size={13} />}
+                            {tabName === 'insights' && <Lightbulb size={13} />}
+                            <span style={{ textTransform: 'capitalize' }}>{translate(`studio.tab.${tabName}`)}</span>
+                            {tabName === 'insights' && allInsights.length > 0 && (
                                 <span style={S.tabBadge}>{allInsights.length}</span>
                             )}
-                            {tab === 'charts' && chartWidgets.length > 0 && (
+                            {tabName === 'charts' && chartWidgets.length > 0 && (
                                 <span style={S.tabBadge}>{chartWidgets.length}</span>
                             )}
                         </button>
@@ -371,9 +374,9 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                 {!activeAnalysis && !isLoading && (
                     <div style={S.emptyState}>
                         <div style={S.emptyIcon}><Sparkles size={48} /></div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 700 }}>Select a Dataset to Begin</h2>
+                        <h2 style={{ fontSize: '20px', fontWeight: 700 }}>{translate('studio.empty.title')}</h2>
                         <p style={{ fontSize: '13px', opacity: 0.4, maxWidth: '360px', textAlign: 'center', lineHeight: '1.6' }}>
-                            Choose a dataset from the dropdown above. The studio will instantly generate visualizations, insights, and a full schema explorer.
+                            {translate('studio.empty.desc')}
                         </p>
                     </div>
                 )}
@@ -381,7 +384,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                 {isLoading && (
                     <div style={S.emptyState}>
                         <div className="spinner-lg" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
-                        <p style={{ fontSize: '13px', opacity: 0.5, marginTop: '16px' }}>Analyzing dataset...</p>
+                        <p style={{ fontSize: '13px', opacity: 0.5, marginTop: '16px' }}>{translate('studio.analyzing')}</p>
                     </div>
                 )}
 
@@ -413,7 +416,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                     <input
                                         value={query} onChange={e => setQuery(e.target.value)}
                                         onKeyDown={e => e.key === 'Enter' && handleQuery()}
-                                        placeholder="Ask your data anything... e.g. 'Show revenue by region' or 'What is our churn rate?'"
+                                        placeholder={translate('studio.nlq.placeholder')}
                                         style={S.nlqInput}
                                     />
                                     <button onClick={handleQuery} disabled={isLoading || !query.trim()} style={S.nlqBtn}>
@@ -431,10 +434,10 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                                     <span style={{ fontSize: '11px', fontWeight: 700, opacity: 0.7 }}>{w.title}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '4px' }}>
-                                                    <button onClick={() => togglePin(w.id)} style={{ ...S.miniBtn, color: pinnedCharts.has(w.id) ? '#fbbf24' : undefined }} title="Pin">
+                                                    <button onClick={() => togglePin(w.id)} style={{ ...S.miniBtn, color: pinnedCharts.has(w.id) ? '#fbbf24' : undefined }} title={translate('studio.pin')}>
                                                         <Sparkles size={11} />
                                                     </button>
-                                                    <button onClick={() => setExpandedChart(expandedChart === w.id ? null : w.id)} style={S.miniBtn} title="Expand">
+                                                    <button onClick={() => setExpandedChart(expandedChart === w.id ? null : w.id)} style={S.miniBtn} title={translate('studio.expand')}>
                                                         <Maximize2 size={11} />
                                                     </button>
                                                 </div>
@@ -449,7 +452,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                     <div style={S.summaryCard}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                                             <Brain size={16} style={{ color: 'var(--primary)' }} />
-                                            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.15em', opacity: 0.5 }}>Executive Intelligence</span>
+                                            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.15em', opacity: 0.5 }}>{translate('studio.summary.title')}</span>
                                         </div>
                                         <p style={{ fontSize: '13px', lineHeight: '1.7', opacity: 0.8 }}>{activeAnalysis.executiveReasoning.executiveSummary}</p>
                                         {activeAnalysis.executiveReasoning.strategicAdvice?.length > 0 && (
@@ -468,7 +471,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                 {/* Key Findings row */}
                                 {allInsights.filter(i => i.confidence > 0.85).length > 0 && (
                                     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
-                                        <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.15em', opacity: 0.3 }}>Top Findings</span>
+                                        <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.15em', opacity: 0.3 }}>{translate('studio.findings.title')}</span>
                                         {allInsights.filter(i => i.confidence > 0.85).slice(0, 4).map(ins => (
                                             <div key={ins.id} style={S.findingRow}>
                                                 {severityIcon(ins.severity)}
@@ -483,13 +486,13 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                 <div style={{ marginTop: '12px', background: 'var(--bg-card)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '12px', overflow: 'hidden' }}>
                                     <div style={{ padding: '8px 16px', background: 'rgba(52,211,153,0.05)', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid rgba(52,211,153,0.1)' }}>
                                         <Command size={12} style={{ color: '#34d399' }} />
-                                        <span style={{ fontSize: '10px', color: '#34d399', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Neural Processing Terminal</span>
+                                        <span style={{ fontSize: '10px', color: '#34d399', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{translate('studio.terminal.title')}</span>
                                         <span style={{ fontSize: '10px', opacity: 0.5, marginLeft: 'auto', fontFamily: 'monospace' }}>latency: {(activeAnalysis.processingTimeMs || 0)}ms</span>
                                     </div>
                                     <div style={{ padding: '16px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <span style={{ color: '#34d399', opacity: 0.5 }}>[SYS]</span>
-                                            <span style={{ color: '#fbbf24' }}>Initializing Nalyse Stream Analysis Pipeline v3.0...</span>
+                                            <span style={{ color: '#fbbf24' }}>{translate('studio.terminal.init')}</span>
                                         </div>
                                         {activeAnalysis.processingLog?.map((log: string, idx: number) => (
                                             <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
@@ -499,7 +502,7 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                         ))}
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <span style={{ color: '#34d399', opacity: 0.5 }}>[EOF]</span>
-                                            <span style={{ color: '#34d399' }}>Analysis successfully synced to Neural Canvas.</span>
+                                            <span style={{ color: '#34d399' }}>{translate('studio.terminal.done')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -510,10 +513,10 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                         {activeView === 'charts' && (
                             <motion.div key="charts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column' as const, gap: '16px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '12px', opacity: 0.4 }}>{chartWidgets.length} visualizations generated</span>
+                                    <span style={{ fontSize: '12px', opacity: 0.4 }}>{chartWidgets.length} {translate('studio.charts.count')}</span>
                                     <div style={{ display: 'flex', gap: '4px' }}>
-                                        <button onClick={() => setChartLayout('grid')} style={{ ...S.miniBtn, background: chartLayout === 'grid' ? 'var(--primary-subtle)' : undefined }}>Grid</button>
-                                        <button onClick={() => setChartLayout('list')} style={{ ...S.miniBtn, background: chartLayout === 'list' ? 'var(--primary-subtle)' : undefined }}>List</button>
+                                        <button onClick={() => setChartLayout('grid')} style={{ ...S.miniBtn, background: chartLayout === 'grid' ? 'var(--primary-subtle)' : undefined }}>{translate('studio.layout.grid')}</button>
+                                        <button onClick={() => setChartLayout('list')} style={{ ...S.miniBtn, background: chartLayout === 'list' ? 'var(--primary-subtle)' : undefined }}>{translate('studio.layout.list')}</button>
                                     </div>
                                 </div>
                                 <div style={chartLayout === 'grid' ? S.chartGrid2 : { display: 'flex', flexDirection: 'column' as const, gap: '16px' }}>
@@ -544,19 +547,19 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                 <div style={S.schemaHeader}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <Database size={16} style={{ color: 'var(--primary)' }} />
-                                        <span style={{ fontSize: '14px', fontWeight: 700 }}>Dataset Schema</span>
-                                        <span style={{ fontSize: '11px', opacity: 0.3 }}>({columns.length} columns)</span>
+                                        <span style={{ fontSize: '14px', fontWeight: 700 }}>{translate('studio.schema.title')}</span>
+                                        <span style={{ fontSize: '11px', opacity: 0.3 }}>({columns.length} {translate('studio.columns')})</span>
                                     </div>
                                     <div style={{ position: 'relative' as const }}>
                                         <Search size={13} style={{ position: 'absolute' as const, left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
-                                        <input value={schemaSearch} onChange={e => setSchemaSearch(e.target.value)} placeholder="Search columns..." style={S.schemaSearchInput} />
+                                        <input value={schemaSearch} onChange={e => setSchemaSearch(e.target.value)} placeholder={translate('studio.schema.search')} style={S.schemaSearchInput} />
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px', marginBottom: '8px' }}>
-                                    {['number', 'currency', 'category', 'date', 'text', 'percent'].map(t => {
-                                        const count = columns.filter(c => c.type === t).length;
+                                    {['number', 'currency', 'category', 'date', 'text', 'percent'].map(typeKey => {
+                                        const count = columns.filter(c => c.type === typeKey).length;
                                         if (count === 0) return null;
-                                        return <span key={t} style={S.typeBadge}>{TYPE_ICONS[t]} {t} ({count})</span>;
+                                        return <span key={typeKey} style={S.typeBadge}>{TYPE_ICONS[typeKey]} {typeKey} ({count})</span>;
                                     })}
                                 </div>
                                 <div style={S.schemaGrid}>
@@ -574,16 +577,16 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                             {col.health && (
                                                 <div style={{ display: 'flex', gap: '12px', fontSize: '10px' }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
-                                                        <span style={{ opacity: 0.3, fontWeight: 700 }}>Complete</span>
+                                                        <span style={{ opacity: 0.3, fontWeight: 700 }}>{translate('studio.schema.complete')}</span>
                                                         <span style={{ fontWeight: 800, color: col.health.completeness > 90 ? '#34d399' : col.health.completeness > 70 ? '#fbbf24' : '#ef4444' }}>{col.health.completeness}%</span>
                                                     </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
-                                                        <span style={{ opacity: 0.3, fontWeight: 700 }}>Unique</span>
+                                                        <span style={{ opacity: 0.3, fontWeight: 700 }}>{translate('studio.schema.unique')}</span>
                                                         <span style={{ fontWeight: 800 }}>{col.health.uniqueness}%</span>
                                                     </div>
                                                     {col.health.entropy !== undefined && (
                                                         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
-                                                            <span style={{ opacity: 0.3, fontWeight: 700 }}>Entropy</span>
+                                                            <span style={{ opacity: 0.3, fontWeight: 700 }}>{translate('studio.schema.entropy')}</span>
                                                             <span style={{ fontWeight: 800 }}>{col.health.entropy}</span>
                                                         </div>
                                                     )}
@@ -617,15 +620,15 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <Lightbulb size={16} style={{ color: '#fbbf24' }} />
-                                        <span style={{ fontSize: '14px', fontWeight: 700 }}>AI Insights</span>
-                                        <span style={{ fontSize: '11px', opacity: 0.3 }}>({allInsights.length} discovered)</span>
+                                        <span style={{ fontSize: '14px', fontWeight: 700 }}>{translate('studio.insights.title')}</span>
+                                        <span style={{ fontSize: '11px', opacity: 0.3 }}>({allInsights.length} {translate('studio.insights.discovered')})</span>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
-                                    {insightTypes.map(t => (
-                                        <button key={t} onClick={() => setSelectedInsightType(t)} style={{ ...S.filterChip, ...(selectedInsightType === t ? S.filterChipActive : {}) }}>
-                                            {t === 'all' ? 'All' : t}
-                                            {t !== 'all' && <span style={{ fontSize: '9px', opacity: 0.5 }}>({allInsights.filter(i => i.type === t).length})</span>}
+                                    {insightTypes.map(it => (
+                                        <button key={it} onClick={() => setSelectedInsightType(it)} style={{ ...S.filterChip, ...(selectedInsightType === it ? S.filterChipActive : {}) }}>
+                                            {it === 'all' ? translate('studio.filter.all') : (translate(`studio.insights.type.${it}`) || it)}
+                                            {it !== 'all' && <span style={{ fontSize: '9px', opacity: 0.5 }}>({allInsights.filter(i => i.type === it).length})</span>}
                                         </button>
                                     ))}
                                 </div>
@@ -637,9 +640,9 @@ export const SelfServiceStudio = ({ files, token, apiUrl, userPlan, runWithProgr
                                                 <div style={{ flex: 1 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                                                         <span style={{ ...S.insightType, background: ins.type === 'anomaly' ? 'rgba(239,68,68,0.15)' : ins.type === 'correlation' ? 'rgba(129,140,248,0.15)' : ins.type === 'trend' ? 'rgba(52,211,153,0.15)' : ins.type === 'risk' ? 'rgba(251,191,36,0.15)' : 'var(--bg-surface-hover)' }}>
-                                                            {ins.type}
+                                                            {translate(`studio.insights.type.${ins.type}`) || ins.type}
                                                         </span>
-                                                        <span style={{ fontSize: '9px', opacity: 0.3, fontWeight: 700 }}>{(ins.confidence * 100).toFixed(0)}% confidence</span>
+                                                        <span style={{ fontSize: '9px', opacity: 0.3, fontWeight: 700 }}>{(ins.confidence * 100).toFixed(0)}% {translate('studio.insights.confidence')}</span>
                                                     </div>
                                                     <p style={{ fontSize: '12px', lineHeight: '1.6', opacity: 0.75, margin: 0 }} dangerouslySetInnerHTML={{ __html: ins.description.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text-primary)">$1</strong>') }} />
                                                 </div>

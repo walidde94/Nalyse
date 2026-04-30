@@ -17,6 +17,8 @@ interface TrackPoint {
 const MapContent = ({ bounds }: { bounds: L.LatLngBounds | null }) => {
     const map = useMap();
     useEffect(() => {
+        if (!map) return;
+        map.invalidateSize();
         if (bounds) {
             map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
         }

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, useMap } from 'r
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // Fix for default markers not showing in Leaflet with React
 // (Though we are using CircleMarkers for a premium aesthetic)
@@ -34,6 +35,7 @@ const MapRecenter = ({ bounds }: { bounds: L.LatLngBoundsExpression | null }) =>
 };
 
 export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
+    const { t } = useLanguage();
     const [geoColumns, setGeoColumns] = useState<{ lat: string; lng: string } | null>(null);
     const [measureCol, setMeasureCol] = useState<string | null>(null);
 
@@ -87,8 +89,8 @@ export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
             <div className="flex items-center justify-center p-20 card" style={{ minHeight: '400px', background: 'var(--bg-surface)' }}>
                 <div className="text-center flex-col gap-4">
                     <div style={{ color: 'var(--primary)' }}><MapPin size={48} /></div>
-                    <h3 className="text-h3">No Geo Data Detected</h3>
-                    <p className="text-sec">This dataset doesn't seem to contain lat/lng coordinates.</p>
+                    <h3 className="text-h3">{t('map.noGeo')}</h3>
+                    <p className="text-sec">{t('map.noGeoDesc')}</p>
                 </div>
             </div>
         );
@@ -112,11 +114,11 @@ export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
         <div className="flex-col gap-4 fade-in" style={{ height: '100%', minHeight: '600px' }}>
             <div className="flex justify-between items-center mb-2">
                 <div>
-                    <h3 className="text-h3">Geo-Spatial Intelligence</h3>
-                    <p className="text-sm text-sec">Visualizing distribution across {processedData.length} locations</p>
+                    <h3 className="text-h3">{t('map.title')}</h3>
+                    <p className="text-sm text-sec">{t('map.subtitle').replace('{count}', processedData.length.toString())}</p>
                 </div>
                 <div className="flex gap-2">
-                    <span className="badge badge-primary">Measure: {measureCol || 'Density'}</span>
+                    <span className="badge badge-primary">{t('map.measure').replace('{label}', measureCol || t('map.density'))}</span>
                 </div>
             </div>
 
@@ -172,7 +174,7 @@ export const AnalysisMapView = ({ data }: AnalysisMapViewProps) => {
                             </Tooltip>
                             <Popup>
                                 <div className="flex-col gap-2" style={{ minWidth: '150px' }}>
-                                    <h4 className="font-bold border-b border-subtle pb-1 mb-1">{point.city || point.name || 'Location Data'}</h4>
+                                    <h4 className="font-bold border-b border-subtle pb-1 mb-1">{point.city || point.name || t('map.locationData')}</h4>
                                     {Object.entries(point).map(([k, v]) => {
                                         if (k.startsWith('_') || k === geoColumns.lat || k === geoColumns.lng) return null;
                                         return (

@@ -3,6 +3,7 @@ import { Upload, X, FileText, AlertCircle, CheckCircle2, Loader2 } from 'lucide-
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import './MultiFileUpload.css';
 
 interface UploadedFile {
@@ -19,6 +20,7 @@ interface MultiFileUploadProps {
 }
 
 export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComplete, onAnalyzeClick }) => {
+    const { t } = useLanguage();
     const { token } = useAuth();
     const [files, setFiles] = useState<File[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -54,7 +56,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
 
     const uploadFiles = async () => {
         if (files.length === 0) {
-            setError('Please select at least one file');
+            setError(t('upload.error.select'));
             return;
         }
 
@@ -98,7 +100,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
 
     const handleAnalyze = () => {
         if (uploadedFiles.length < 2) {
-            setError('Please upload at least 2 files to analyze relationships');
+            setError(t('upload.error.min'));
             return;
         }
 
@@ -117,8 +119,8 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
     return (
         <div className="multi-file-upload">
             <div className="upload-header">
-                <h2>Multi-File Upload & Analysis</h2>
-                <p>Upload multiple datasets to analyze relationships and get comprehensive insights</p>
+                <h2>{t('upload.title')}</h2>
+                <p>{t('upload.desc')}</p>
             </div>
 
             {/* Dropzone */}
@@ -126,15 +128,15 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
                 <input {...getInputProps()} />
                 <Upload size={48} />
                 <p className="dropzone-text">
-                    {isDragActive ? 'Drop files here...' : 'Drag & drop files here, or click to select'}
+                    {isDragActive ? t('upload.dropActive') : t('upload.dropIdle')}
                 </p>
-                <p className="dropzone-hint">Supports CSV, JSON, Excel, XML, PDF, HTML files (up to 20 files)</p>
+                <p className="dropzone-hint">{t('upload.supports')}</p>
             </div>
 
             {/* File List */}
             {files.length > 0 && (
                 <div className="file-list">
-                    <h3>Selected Files ({files.length})</h3>
+                    <h3>{t('upload.selected')} ({files.length})</h3>
                     {files.map((file, index) => (
                         <div key={index} className="file-item">
                             <FileText size={20} />
@@ -179,14 +181,14 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
             {success && (
                 <div className="message success">
                     <CheckCircle2 size={20} />
-                    <span>{uploadedFiles.length} file(s) uploaded successfully!</span>
+                    <span>{uploadedFiles.length} {t('upload.success')}</span>
                 </div>
             )}
 
             {/* Uploaded Files */}
             {uploadedFiles.length > 0 && (
                 <div className="uploaded-files">
-                    <h3>Uploaded Files ({uploadedFiles.length})</h3>
+                    <h3>{t('upload.uploaded')} ({uploadedFiles.length})</h3>
                     {uploadedFiles.map((file) => (
                         <div key={file.id} className="uploaded-file-item">
                             <CheckCircle2 size={20} className="success-icon" />
@@ -209,12 +211,12 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
                     {uploading ? (
                         <>
                             <Loader2 size={20} className="spinner" />
-                            Uploading...
+                            {t('upload.uploading')}
                         </>
                     ) : (
                         <>
                             <Upload size={20} />
-                            Upload {files.length > 0 ? `${files.length} File(s)` : 'Files'}
+                            {files.length > 0 ? t('upload.uploadBtn').replace('{count}', files.length.toString()) : t('dashboard.upload')}
                         </>
                     )}
                 </button>
@@ -224,7 +226,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({ onUploadComple
                         onClick={handleAnalyze}
                         className="btn btn-secondary"
                     >
-                        Analyze Relationships
+                        {t('upload.analyze')}
                     </button>
                 )}
             </div>

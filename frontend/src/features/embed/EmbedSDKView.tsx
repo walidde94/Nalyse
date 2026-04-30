@@ -112,17 +112,17 @@ function App() {
                     { id: 'quickstart', label: 'Quick Start Code', icon: <Code2 size={15} /> },
                     { id: 'preview', label: 'Live Preview', icon: <Eye size={15} /> },
                     { id: 'customize', label: 'Customization', icon: <Palette size={15} /> },
-                ].map(t => {
-                    const isActive = activeTab === t.id;
+                ].map(tab => {
+                    const isActive = activeTab === tab.id;
                     return (
-                        <button key={t.id} onClick={() => setActiveTab(t.id as any)} style={{
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} style={{
                             display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '10px',
                             background: isActive ? 'var(--bg-surface)' : 'transparent',
                             border: `1px solid ${isActive ? 'var(--border-color)' : 'transparent'}`,
                             color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                             fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
                         }}>
-                            {t.icon} {t.label}
+                            {tab.icon} {tab.label}
                         </button>
                     );
                 })}

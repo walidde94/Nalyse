@@ -7,6 +7,7 @@ import {
     Zap, RefreshCw, AlertTriangle, Layers, Filter
 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { API_URL } from '../../config';
 
 // ─── Theme Config ──────────────────────────────────────────────
@@ -33,26 +34,26 @@ const MapUpdater = ({ center, zoom }: { center: [number, number], zoom: number }
     useEffect(() => {
         if (!map) return;
         
-        // Force Leaflet to recalculate container size
-        map.invalidateSize();
-        
-        const timeout = setTimeout(() => {
+        // Force Leaflet to recalculate container size safely
+        const frame = requestAnimationFrame(() => {
             try {
+                map.invalidateSize();
                 if (center && !isNaN(center[0]) && !isNaN(center[1])) {
                     map.flyTo(center, zoom, { duration: 1.5 });
                 }
             } catch (e) {
-                console.warn('Leaflet flyTo skipped:', e);
+                console.warn('Leaflet update skipped:', e);
             }
-        }, 200);
+        });
 
-        return () => clearTimeout(timeout);
+        return () => cancelAnimationFrame(frame);
     }, [center, zoom, map]);
     return null;
 };
 
 export const SpatialView = ({ files, token }: Props) => {
     const { addToast } = useToast();
+    const { t } = useLanguage();
     const [selectedFile, setSelectedFile] = useState('');
     const [loading, setLoading] = useState(false);
     const [mapData, setMapData] = useState<SpatialData[]>([]);
@@ -148,10 +149,10 @@ export const SpatialView = ({ files, token }: Props) => {
                     </div>
                     <div>
                         <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #60a5fa 0%, #c084fc 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Geospatial Intelligence
+                            {t('spatial.title')}
                         </h1>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Vector mapping • Density projections • Geographical analytics
+                            {t('spatial.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -165,23 +166,23 @@ export const SpatialView = ({ files, token }: Props) => {
                     <div className="flex items-center gap-4 flex-wrap" style={{ flex: 1 }}>
                         <div style={{ minWidth: '250px', flex: 1 }}>
                             <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Database size={12} /> Target Dataset
+                                <Database size={12} /> {t('spatial.targetDataset')}
                             </label>
                             <select value={selectedFile} onChange={e => setSelectedFile(e.target.value)}
                                 style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${selectedFile ? 'rgba(96,165,250,0.4)' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}>
-                                <option value="">Select a dataset to map…</option>
+                                <option value="">{t('spatial.selectDataset')}</option>
                                 {files.map(f => <option key={f.id} value={f.id}>{(f as any).originalName || f.filename}</option>)}
                             </select>
                         </div>
 
                         <div style={{ minWidth: '150px' }}>
                             <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Layers size={12} /> Render Style
+                                <Layers size={12} /> {t('spatial.renderStyle')}
                             </label>
                             <select value={renderStyle} onChange={e => setRenderStyle(e.target.value as any)}
                                 style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}>
-                                <option value="points">Vector Points</option>
-                                <option value="heat">Proximity Heat</option>
+                                <option value="points">{t('spatial.render.points')}</option>
+                                <option value="heat">{t('spatial.render.heatmap')}</option>
                             </select>
                         </div>
                     </div>
@@ -190,7 +191,7 @@ export const SpatialView = ({ files, token }: Props) => {
                         disabled={loading || !selectedFile}
                         style={{ padding: '10px 24px', height: '40px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #60a5fa, #c084fc)', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', opacity: (!selectedFile) ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(96,165,250,0.25)', whiteSpace: 'nowrap', marginTop: '22px' }}>
                         {loading ? <RefreshCw size={15} className="animate-spin" /> : <Navigation size={15} />}
-                        {loading ? 'Plotting Vectors…' : 'Extract & Plot'}
+                        {loading ? t('spatial.plotting') : t('spatial.extractPlot')}
                     </motion.button>
                 </div>
             </div>
@@ -204,13 +205,13 @@ export const SpatialView = ({ files, token }: Props) => {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             style={{ position: 'absolute', inset: 0, background: 'var(--bg-card)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(192,132,252,0.15)', borderTop: '3px solid #c084fc' }} className="animate-spin" />
-                            <div style={{ marginTop: '16px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c084fc' }}>Scanning Vectors</div>
+                            <div style={{ marginTop: '16px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c084fc' }}>{t('spatial.scanning')}</div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 {/* Leaflet instance */}
-                <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }} zoomControl={false} attributionControl={false}>
+                <MapContainer key={`spatial-map-${center[0]}-${center[1]}`} center={center} zoom={zoom} style={{ height: '100%', width: '100%' }} zoomControl={false} attributionControl={false}>
                     <TileLayer url={MAP_TILES} attribution={MAP_ATTR} />
                     <MapUpdater center={center} zoom={zoom} />
 
@@ -228,7 +229,7 @@ export const SpatialView = ({ files, token }: Props) => {
                             <Popup className="premium-popup">
                                 <div style={{ padding: '4px' }}>
                                     <h4 style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
-                                        Spatial Node {i+1}
+                                        {t('spatial.node')} {i+1}
                                     </h4>
                                     <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
                                         Lat: {d.lat.toFixed(4)} <br/>
@@ -273,8 +274,8 @@ export const SpatialView = ({ files, token }: Props) => {
                     <div style={{ position: 'absolute', inset: 0, zIndex: 400, background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <div style={{ textAlign: 'center', maxWidth: '300px' }}>
                             <MapIcon size={32} style={{ color: 'var(--text-muted)', margin: '0 auto 16px', opacity: 0.5 }} />
-                            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '8px' }}>No Spatial Data</h3>
-                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Select a dataset to automatically parse geographic vectors and plot them on the map.</p>
+                            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '8px' }}>{t('spatial.noSpatialData')}</h3>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{t('spatial.noSpatialDesc')}</p>
                         </div>
                     </div>
                 )}

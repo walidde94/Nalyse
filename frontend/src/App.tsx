@@ -43,7 +43,7 @@ const DashboardView = React.lazy(() => import('./features/dashboard/DashboardVie
 const AnalysisView = React.lazy(() => import('./features/analysis/AnalysisView').then(m => ({ default: m.AnalysisView })));
 const CorrelationView = React.lazy(() => import('./features/analysis/CorrelationView').then(m => ({ default: m.CorrelationView })));
 const SettingsView = React.lazy(() => import('./features/settings/SettingsView').then(m => ({ default: m.SettingsView })));
-const LandingView = React.lazy(() => import('./features/landing/LandingView').then(m => ({ default: m.LandingView })));
+// LandingView removed — replaced by public WelcomePage for unauthenticated users
 const BiSelectionView = React.lazy(() => import('./features/bi/BiSelectionView').then(m => ({ default: m.BiSelectionView })));
 const BiView = React.lazy(() => import('./features/bi/BiView').then(m => ({ default: m.BiView })));
 const MigrationView = React.lazy(() => import('./features/migration/MigrationView').then(m => ({ default: m.MigrationView })));
@@ -72,11 +72,14 @@ const LensVisualizer = React.lazy(() => import('./features/lens/LensVisualizer')
 const EmbedSDKView = React.lazy(() => import('./features/embed/EmbedSDKView').then(m => ({ default: m.EmbedSDKView })));
 const PrivateChatView = React.lazy(() => import('./features/collaboration/PrivateChatView').then(m => ({ default: m.PrivateChatView })));
 const AdminControlCenter = React.lazy(() => import('./features/admin/AdminControlCenter').then(m => ({ default: m.AdminControlCenter })));
+const WelcomePage = React.lazy(() => import('./features/welcome/WelcomePage').then(m => ({ default: m.WelcomePage })));
 
 
 
 // Loading Component
-const PageLoader = () => (
+const PageLoader = () => {
+  const { t } = useLanguage();
+  return (
   <div className="flex items-center justify-center h-full w-full bg-[var(--bg-app)]" style={{ minHeight: '60vh' }}>
     <div className="flex-col items-center gap-6">
       <div className="relative">
@@ -85,15 +88,16 @@ const PageLoader = () => (
           <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
-      <div className="flex-col items-center gap-1">
-        <div className="text-h3 tech-text" style={{ fontSize: '10px', opacity: 0.5 }}>Synthesizing Knowledge</div>
+        <div className="flex-col items-center gap-1">
+        <div className="text-h3 tech-text" style={{ fontSize: '10px', opacity: 0.5 }}>{t('dashboard.synthesizing')}</div>
         <div className="w-32 h-1 bg-[var(--bg-surface)] rounded-full overflow-hidden">
           <div className="h-full bg-[var(--primary)] skeleton-shimmer" style={{ width: '60%' }}></div>
         </div>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // Types
 interface FileData {
@@ -120,7 +124,7 @@ function AppContent() {
   const { t } = useLanguage();
 
   // --- Global State ---
-  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  const [authView, setAuthView] = useState<'login' | 'register' | 'welcome'>('welcome');
 
   // --- Persistent Tab State ---
   const [tabs, setTabs] = useState<TabType[]>(() => {
@@ -141,7 +145,7 @@ function AppContent() {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {}
     }
-    return [{ id: 'landing', title: 'Home', type: 'landing' }];
+    return [{ id: 'dash-default', title: t('nav.dashboard'), type: 'dashboard' }];
   });
 
   const [activeTabId, setActiveTabId] = useState(() => {
@@ -153,7 +157,7 @@ function AppContent() {
         if (u?.id) userActiveTabKey = `activeTab-${u.id}`;
       } catch (e) {}
     }
-    return localStorage.getItem(userActiveTabKey) || 'landing';
+    return localStorage.getItem(userActiveTabKey) || 'dash-default';
   });
 
   // Load user-specific tabs when auth state resolves (fallback in case pre-resolve missed it)
@@ -169,10 +173,20 @@ function AppContent() {
       try {
         const parsed = JSON.parse(storedTabs);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Only update if current tabs are still the initial landing tab
+          // Only update if current tabs are still the initial default tab
           // to avoid racing with user actions or auto-switches
-          setTabs(prev => (prev.length === 1 && prev[0].type === 'landing') ? parsed : prev);
-          if (storedActiveTab) setActiveTabId(prev => prev === 'landing' ? storedActiveTab : prev);
+          setTabs(prev => {
+            if (prev.length === 1 && prev[0].type === 'dashboard') {
+              // Sanitize: filter out any legacy 'landing' tabs
+              const filtered = parsed.filter((t: any) => t.type !== 'landing');
+              if (filtered.length === 0) return prev;
+              return filtered;
+            }
+            return prev;
+          });
+          if (storedActiveTab && storedActiveTab !== 'landing') {
+             setActiveTabId(prev => prev === 'dash-default' ? storedActiveTab : prev);
+          }
         }
       } catch (e) {}
     }
@@ -276,7 +290,7 @@ function AppContent() {
   const handleTourComplete = () => {
     setShowTour(false);
     localStorage.setItem('nalyse_onboarding_completed', 'true');
-    addToast('Onboarding complete. Welcome to the Apex Tier.', 'success');
+    addToast(t('app.onboardingComplete'), 'success');
   };
 
   // --- Checkout Success Handling ---
@@ -290,19 +304,19 @@ function AppContent() {
         try {
           const result = await syncSubscription();
           if (result && (result as any).success) {
-            addToast('Upgrade verified. Neural Pro features are now active.', 'success');
+            addToast(t('settings.billing.upgradeVerified'), 'success');
           } else {
-            addToast('Upgrade pending. Try syncing from Billing settings.', 'warning');
+            addToast(t('settings.billing.upgradePending'), 'warning');
           }
         } catch (error: any) {
-          addToast(`Upgraded, but sync failed: ${error?.message}. Please check Billing & Plans settings.`, 'warning');
+          addToast(`${t('settings.billing.upgradeVerified')}, but sync failed: ${error?.message}.`, 'warning');
         }
         window.history.replaceState({}, '', window.location.pathname);
       };
       finalizeCheckout();
     }
     if (params.get('canceled') === 'true') {
-      addToast('Upgrade process was minimized. Return anytime to complete your evolution.', 'warning');
+      addToast(t('settings.billing.upgradeCanceled'), 'warning');
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [isAuthenticated, addToast, syncSubscription]);
@@ -323,7 +337,7 @@ function AppContent() {
     };
 
     const handleNavigateToSettings = (e: any) => {
-      openTab('settings', 'Settings', e.detail);
+      openTab('settings', t('nav.settings'), e.detail);
     };
 
     const handleForceReapply = () => {
@@ -501,17 +515,17 @@ function AppContent() {
   // --- Tab Management ---
   const openTab = useCallback((type: TabType['type'], title: string, data?: any) => {
     // Smart Duplicate Prevention
-    const existing = tabs.find(t => {
-      if (t.type !== type) return false;
-      if (['dashboard', 'settings', 'correlate', 'landing', 'democracy', 'shared-workspaces'].includes(type)) return true;
-      if (type === 'bi' && !data && !t.data) return true; // BI Menu singleton
-      if (t.title === title) return true; // Match by title (e.g. filename)
+    const existing = tabs.find(tab => {
+      if (tab.type !== type) return false;
+      if (['dashboard', 'settings', 'correlate', 'democracy', 'shared-workspaces'].includes(type)) return true;
+      if (type === 'bi' && !data && !tab.data) return true; // BI Menu singleton
+      if (tab.title === title) return true; // Match by title (e.g. filename)
       return false;
     });
 
     if (existing) {
       if (data && existing.data !== data) {
-        setTabs(prev => prev.map(t => t.id === existing.id ? { ...t, data } : t));
+        setTabs(prev => prev.map(tab => tab.id === existing.id ? { ...tab, data } : tab));
       }
       setActiveTabId(existing.id);
       return;
@@ -525,7 +539,7 @@ function AppContent() {
     };
 
     let newTabs = [...tabs];
-    if (tabs.length === 1 && tabs[0].type === 'landing' && type === 'dashboard') {
+    if (tabs.length === 1 && tabs[0].id === 'dash-default' && type === 'dashboard') {
       newTabs = [];
     }
 
@@ -534,18 +548,18 @@ function AppContent() {
   }, [tabs]);
 
   const updateTab = (id: string, updates: Partial<TabType>) => {
-    setTabs(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+    setTabs(prev => prev.map(tab => tab.id === id ? { ...tab, ...updates } : tab));
   };
 
   const closeTab = useCallback((id: string) => {
-    const newTabs = tabs.filter(t => t.id !== id);
+    const newTabs = tabs.filter(tab => tab.id !== id);
     if (newTabs.length === 0) {
       if (isAuthenticated) {
-        setTabs([{ id: 'dash-default', title: 'Dashboard', type: 'dashboard' }]);
+        setTabs([{ id: 'dash-default', title: t('nav.dashboard'), type: 'dashboard' }]);
         setActiveTabId('dash-default');
       } else {
-        setTabs([{ id: 'landing', title: 'Home', type: 'landing' }]);
-        setActiveTabId('landing');
+        setTabs([{ id: 'dash-default', title: t('nav.dashboard'), type: 'dashboard' }]);
+        setActiveTabId('dash-default');
       }
     } else {
       setTabs(newTabs);
@@ -556,7 +570,7 @@ function AppContent() {
   }, [tabs, activeTabId, isAuthenticated]);
 
   const closeOtherTabs = useCallback((id: string) => {
-    const tabToKeep = tabs.find(t => t.id === id);
+    const tabToKeep = tabs.find(tab => tab.id === id);
     if (tabToKeep) {
       setTabs([tabToKeep]);
       setActiveTabId(id);
@@ -564,22 +578,22 @@ function AppContent() {
   }, [tabs]);
 
   const closeTabsToRight = useCallback((id: string) => {
-    const index = tabs.findIndex(t => t.id === id);
+    const index = tabs.findIndex(tab => tab.id === id);
     if (index !== -1) {
       const newTabs = tabs.slice(0, index + 1);
       setTabs(newTabs);
-      if (!newTabs.some(t => t.id === activeTabId)) {
+      if (!newTabs.some(tab => tab.id === activeTabId)) {
         setActiveTabId(id);
       }
     }
   }, [tabs, activeTabId]);
 
   const closeTabsToLeft = useCallback((id: string) => {
-    const index = tabs.findIndex(t => t.id === id);
+    const index = tabs.findIndex(tab => tab.id === id);
     if (index !== -1) {
       const newTabs = tabs.slice(index);
       setTabs(newTabs);
-      if (!newTabs.some(t => t.id === activeTabId)) {
+      if (!newTabs.some(tab => tab.id === activeTabId)) {
         setActiveTabId(id);
       }
     }
@@ -587,11 +601,11 @@ function AppContent() {
 
   const closeAllTabs = useCallback(() => {
     if (isAuthenticated) {
-      setTabs([{ id: 'dash-default', title: 'Dashboard', type: 'dashboard' }]);
+      setTabs([{ id: 'dash-default', title: t('nav.dashboard'), type: 'dashboard' }]);
       setActiveTabId('dash-default');
     } else {
-      setTabs([{ id: 'landing', title: 'Home', type: 'landing' }]);
-      setActiveTabId('landing');
+      setTabs([{ id: 'dash-default', title: t('nav.dashboard'), type: 'dashboard' }]);
+      setActiveTabId('dash-default');
     }
   }, [isAuthenticated]);
 
@@ -642,10 +656,13 @@ function AppContent() {
       const userTabsKey = user?.id ? `tabs-${user.id}` : 'tabs-initial';
       const hasStoredTabs = !!localStorage.getItem(userTabsKey);
       
-      if (!hasStoredTabs && tabs.length === 1 && tabs[0].type === 'landing') {
-        setTabs([{ id: 'dash-main', title: 'Dashboard', type: 'dashboard' }]);
+      if (!hasStoredTabs && tabs.length === 1 && tabs[0].id === 'dash-default') {
+        setTabs([{ id: 'dash-main', title: t('nav.dashboard'), type: 'dashboard' }]);
         setActiveTabId('dash-main');
       }
+    } else {
+      // Ensure we go back to welcome page on logout
+      setAuthView('welcome');
     }
   }, [isAuthenticated, fetchFiles, fetchGroups]);
 
@@ -699,7 +716,7 @@ function AppContent() {
 
   const handleUpload = async (filesOrFile: File[] | File) => {
     if (!token) {
-      addToast('Please login to upload files', 'error');
+      addToast(t('auth.loginRequired'), 'error');
       return;
     }
 
@@ -771,7 +788,7 @@ function AppContent() {
       // Stage 2: Complete
       setAnalysisStage(2);
       setAnalysisStatus('completed');
-      addToast(`${successCount} dataset${successCount > 1 ? 's' : ''} uploaded. Click \"Process\" to analyze.`, 'success');
+      addToast(t('app.uploadSuccess').replace('{count}', String(successCount)), 'success');
 
     } catch (err: any) {
       setAnalysisStatus('error');
@@ -805,7 +822,7 @@ function AppContent() {
           metadata: { type: 'bi', useCase: type }
         });
       } catch (e: any) {
-        addToast(e.message || 'Error processing file', 'error');
+        addToast(e.message || t('app.error.process'), 'error');
       }
     });
   };
@@ -821,9 +838,9 @@ function AppContent() {
         
         if (!analyzeRes.ok) {
            if (errorBody.error === 'FILE_NOT_FOUND' || analyzeRes.status === 422) {
-             throw new Error(errorBody.message || 'Dataset file is missing from the server. Please re-upload the file from the Dashboard.');
+             throw new Error(errorBody.message || t('app.error.missingDataset'));
            }
-           throw new Error(errorBody.error || 'Failed to load dataset');
+           throw new Error(errorBody.error || t('app.error.loadDataset'));
         }
 
         openTab('bi', `BI: ${type}`, {
@@ -831,7 +848,7 @@ function AppContent() {
           metadata: { type: 'bi', useCase: type }
         });
       } catch (e: any) {
-        addToast(e.message || 'Error processing file', 'error');
+        addToast(e.message || t('app.error.process'), 'error');
       }
     });
   };
@@ -842,7 +859,7 @@ function AppContent() {
         const res = await fetch(`${API_URL}/api/bi/${type}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
-        if (!res.ok) throw new Error('Failed to load BI data');
+        if (!res.ok) throw new Error(t('app.error.loadBI'));
         const biData = await res.json();
 
         openTab('bi', `Demo: ${type}`, {
@@ -850,7 +867,7 @@ function AppContent() {
           metadata: { type: 'bi', useCase: type }
         });
       } catch (e: any) {
-        addToast('Error loading BI data', 'error');
+        addToast(t('app.error.loadBI'), 'error');
       }
     });
   };
@@ -875,10 +892,10 @@ function AppContent() {
           throw new Error(msg);
         }
         const data = await res.json();
-        openTab('analysis' as any, file.originalName || file.filename || 'Analysis', data);
+        openTab('analysis' as any, file.originalName || file.filename || t('analysis.tabs.overview'), data);
         return;
       } catch (e: any) {
-        addToast(e.message || 'Failed to load cached analysis', 'error');
+        addToast(e.message || t('app.error.loadCached'), 'error');
         return;
       }
     }
@@ -889,7 +906,7 @@ function AppContent() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
-        let msg = 'Neural analysis encountered a structural fault.';
+        let msg = t('app.error.neuralFault');
         try { const err = await res.json(); msg = err.message || err.error || msg; } catch (_) {}
         throw new Error(msg);
       }
@@ -902,7 +919,7 @@ function AppContent() {
       // Background sync
       fetchFiles();
 
-      return { type: 'analysis', title: file.originalName || file.filename || 'Analysis', data };
+      return { type: 'analysis', title: file.originalName || file.filename || t('analysis.tabs.overview'), data };
     });
   };
 
@@ -931,7 +948,7 @@ function AppContent() {
       // Revert Optimistic Update
       console.error(e);
       setFiles(prev => prev.map(f => f.id === file.id ? { ...f, isFavorite: wasFavorite } : f));
-      addToast('Failed to update favorite status', 'error');
+      addToast(t('app.error.loadDataset'), 'error');
     }
   };
 
@@ -945,10 +962,10 @@ function AppContent() {
       if (res.ok) {
         const updatedFile = await res.json();
         setFiles(prev => prev.map(f => f.id === id ? { ...f, isArchived: updatedFile.isArchived } : f));
-        addToast(updatedFile.isArchived ? 'Dataset archived' : 'Dataset restored', 'success');
+        addToast(updatedFile.isArchived ? t('app.archive.archived') : t('app.archive.restored'), 'success');
       }
     } catch (e) {
-      addToast('Critical sync failure in neural archive.', 'error');
+      addToast(t('app.archive.error'), 'error');
     }
   }, [token, addToast]);
 
@@ -966,10 +983,10 @@ function AppContent() {
       if (res.ok) {
         await fetchFiles();
         await fetchGroups();
-        addToast('File grouping updated', 'success');
+        addToast(t('app.group.updated'), 'success');
       }
     } catch (e) {
-      addToast('Failed to update file group', 'error');
+      addToast(t('app.group.error'), 'error');
     }
   };
 
@@ -986,13 +1003,13 @@ function AppContent() {
       });
       if (res.ok) {
         await fetchFiles();
-        addToast('File shared to workspace', 'success');
+        addToast(t('app.workspace.shared'), 'success');
       } else {
         const err = await res.json();
-        addToast(err.error || 'Failed to update workspace access', 'error');
+        addToast(err.error || t('app.workspace.error'), 'error');
       }
     } catch (e) {
-      addToast('Failed to connect to API', 'error');
+      addToast(t('app.api.error'), 'error');
     }
   };
 
@@ -1009,10 +1026,10 @@ function AppContent() {
       });
       if (res.ok) {
         await fetchGroups();
-        addToast('Group created', 'success');
+        addToast(t('app.group.created'), 'success');
       }
     } catch (e) {
-      addToast('Failed to create group', 'error');
+      addToast(t('app.group.createError'), 'error');
     }
   };
 
@@ -1026,34 +1043,34 @@ function AppContent() {
       if (res.ok) {
         await fetchFiles(); // Files might be ungrouped
         await fetchGroups();
-        addToast('Group deleted', 'success');
+        addToast(t('app.group.deleted'), 'success');
       } else {
         const err = await res.json().catch(() => ({}));
-        addToast(err.error || 'Failed to delete group', 'error');
+        addToast(err.error || t('app.group.deleteError'), 'error');
       }
     } catch (e) {
-      addToast('Failed to delete group', 'error');
+      addToast(t('app.group.deleteError'), 'error');
     }
   };
 
   const handleDeleteFile = async (file: FileData) => {
     if (!token) return;
-    if (!confirm(`Delete "${file.originalName || file.filename}"?`)) return;
+    if (!confirm(t('app.delete.confirm').replace('{name}', file.originalName || file.filename))) return;
     try {
       await fetch(`${API_URL}/api/files/${file.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       setFiles(files.filter(f => f.id !== file.id));
-      addToast('File deleted', 'success');
+      addToast(t('app.delete.success'), 'success');
     } catch (e) {
-      addToast('Delete failed', 'error');
+      addToast(t('app.delete.error'), 'error');
     }
   };
 
   const handleDeleteMultiple = async (ids: string[]) => {
     if (!token) return;
-    if (!confirm(`Delete ${ids.length} files?`)) return;
+    if (!confirm(t('app.deleteMultiple.confirm').replace('{count}', ids.length.toString()))) return;
     try {
       for (const id of ids) {
         await fetch(`${API_URL}/api/files/${id}`, {
@@ -1062,9 +1079,9 @@ function AppContent() {
         });
       }
       setFiles(f => f.filter(file => !ids.includes(file.id)));
-      addToast('Files deleted', 'success');
+      addToast(t('app.deleteMultiple.success'), 'success');
     } catch (e) {
-      addToast('Delete failed', 'error');
+      addToast(t('app.delete.error'), 'error');
     }
   };
 
@@ -1086,38 +1103,38 @@ function AppContent() {
       });
       const shareData = await shareRes.json();
       navigator.clipboard.writeText(shareData.link);
-      addToast('Link copied to clipboard!', 'success');
+      addToast(t('app.share.success'), 'success');
     } catch (e) {
-      addToast('Share failed', 'error');
+      addToast(t('app.share.error'), 'error');
     }
   };
 
   // --- Command Palette ---
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const staticCommands = [
-    { id: 'dash', label: 'Go to Dashboard', icon: <LayoutDashboard size={18} />, action: () => openTab('dashboard', 'Dashboard'), category: 'Navigation', keywords: ['home', 'main', 'start', 'index'] },
-    { id: 'settings', label: 'Open Settings', icon: <Settings size={18} />, action: () => openTab('settings', 'Settings'), category: 'Navigation', keywords: ['preferences', 'config', 'options', 'account', 'profile'] },
-    { id: 'upload', label: 'Upload New File', icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', 'Dashboard'); document.getElementById('file-input')?.click(); }, category: 'Actions', keywords: ['import', 'add', 'dataset', 'csv', 'data'] },
-    { id: 'theme', label: `Switch to ${theme === 'dark' ? 'Light' : theme === 'light' ? 'Custom' : 'Dark'} Mode`, icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance', keywords: ['color', 'style', 'dark', 'light', 'ui', 'theme'] },
-    { id: 'logout', label: 'Logout', icon: <LogOut size={18} />, action: logout, category: 'Account', keywords: ['sign out', 'exit', 'leave'] },
-    ...(user?.role === 'SystemAdmin' || user?.role === 'PlatformAdmin' ? [{ id: 'admin', label: 'Admin Control Center', icon: <Shield size={18} />, action: () => openTab('admin', 'Admin Control Center'), category: 'Navigation', keywords: ['platform', 'control', 'manage', 'organizations', 'users'] }] : []),
+    { id: 'dash', label: t('app.cmd.dashboard'), icon: <LayoutDashboard size={18} />, action: () => openTab('dashboard', t('nav.dashboard')), category: t('dashboard.navigation'), keywords: ['home', 'main', 'start', 'index'] },
+    { id: 'settings', label: t('app.cmd.settings'), icon: <Settings size={18} />, action: () => openTab('settings', t('nav.settings')), category: t('dashboard.navigation'), keywords: ['preferences', 'config', 'options', 'account', 'profile'] },
+    { id: 'upload', label: t('app.cmd.upload'), icon: <CloudUpload size={18} />, action: () => { openTab('dashboard', t('nav.dashboard')); document.getElementById('file-input')?.click(); }, category: 'Actions', keywords: ['import', 'add', 'dataset', 'csv', 'data'] },
+    { id: 'theme', label: t('app.cmd.theme'), icon: <Palette size={18} />, action: handleThemeToggle, category: 'Appearance', keywords: ['color', 'style', 'dark', 'light', 'ui', 'theme'] },
+    { id: 'logout', label: t('app.cmd.logout'), icon: <LogOut size={18} />, action: logout, category: 'Account', keywords: ['sign out', 'exit', 'leave'] },
+    ...(user?.role === 'SystemAdmin' || user?.role === 'PlatformAdmin' ? [{ id: 'admin', label: t('app.cmd.admin'), icon: <Shield size={18} />, action: () => openTab('admin', t('app.cmd.admin')), category: t('dashboard.navigation'), keywords: ['platform', 'control', 'manage', 'organizations', 'users'] }] : []),
     
     // Core Engines
-    { id: 'simulation', label: 'Open Simulation Engine', icon: <Cpu size={18} />, action: () => openTab('simulation', 'Simulation Engine'), category: 'Engines', keywords: ['run', 'execute', 'model', 'test', 'scenario', 'monte carlo'] },
-    { id: 'forecast', label: 'Open Forecasting Engine', icon: <Activity size={18} />, action: () => openTab('forecast', 'Forecasting Engine'), category: 'Engines', keywords: ['predict', 'future', 'trend', 'time series'] },
-    { id: 'automl', label: 'Open AutoML Intelligence', icon: <Cpu size={18} />, action: () => openTab('automl', 'AutoML Intelligence'), category: 'Engines', keywords: ['ai', 'machine learning', 'predictive', 'train', 'neural network'] },
-    { id: 'spatial', label: 'Open Geospatial Intelligence', icon: <Target size={18} />, action: () => openTab('spatial', 'Geospatial Intelligence'), category: 'Engines', keywords: ['map', 'location', 'geography', 'coordinates', 'earth'] },
+    { id: 'simulation', label: t('app.cmd.simulation'), icon: <Cpu size={18} />, action: () => openTab('simulation', t('nav.simulation')), category: 'Engines', keywords: ['run', 'execute', 'model', 'test', 'scenario', 'monte carlo'] },
+    { id: 'forecast', label: t('app.cmd.forecast'), icon: <Activity size={18} />, action: () => openTab('forecast', t('nav.forecast')), category: 'Engines', keywords: ['predict', 'future', 'trend', 'time series'] },
+    { id: 'automl', label: t('app.cmd.automl'), icon: <Cpu size={18} />, action: () => openTab('automl', t('nav.automl')), category: 'Engines', keywords: ['ai', 'machine learning', 'predictive', 'train', 'neural network'] },
+    { id: 'spatial', label: t('app.cmd.spatial'), icon: <Target size={18} />, action: () => openTab('spatial', t('nav.spatial')), category: 'Engines', keywords: ['map', 'location', 'geography', 'coordinates', 'earth'] },
     
     // Analytics
-    { id: 'analysis', label: 'Open Analysis', icon: <BarChart3 size={18} />, action: () => openTab('bi', 'Analysis'), category: 'Analytics', keywords: ['chart', 'graph', 'plot', 'visualize', 'data', 'bi'] },
-    { id: 'lens', label: 'Open Smart Lens', icon: <Target size={18} />, action: () => openTab('lens', 'Smart Lens'), category: 'Analytics', keywords: ['focus', 'zoom', 'detail', 'inspect', 'discover'] },
-    { id: 'correlate', label: 'Open Correlation', icon: <Network size={18} />, action: () => openTab('correlate', 'Correlation'), category: 'Analytics', keywords: ['relationship', 'connection', 'matrix', 'dependency'] },
-    { id: 'diff', label: 'Open Version Diff', icon: <Workflow size={18} />, action: () => openTab('diff', 'Version Diff'), category: 'Analytics', keywords: ['compare', 'changes', 'history', 'delta'] },
-    { id: 'anomaly', label: 'Open Anomaly Detection', icon: <ShieldAlert size={18} />, action: () => openTab('anomaly', 'Anomaly Detection'), category: 'Analytics', keywords: ['outlier', 'fraud', 'spike', 'warning', 'deviation'] },
-    { id: 'financial', label: 'Open Financial Risk', icon: <Activity size={18} />, action: () => openTab('financial', 'Financial Risk'), category: 'Analytics', keywords: ['money', 'revenue', 'loss', 'exposure', 'finance'] },
+    { id: 'analysis', label: t('app.cmd.analysis'), icon: <BarChart3 size={18} />, action: () => openTab('bi', t('analysis.tabs.overview')), category: 'Analytics', keywords: ['chart', 'graph', 'plot', 'visualize', 'data', 'bi'] },
+    { id: 'lens', label: t('app.cmd.lens'), icon: <Target size={18} />, action: () => openTab('lens', t('nav.lens')), category: 'Analytics', keywords: ['focus', 'zoom', 'detail', 'inspect', 'discover'] },
+    { id: 'correlate', label: t('app.cmd.correlate'), icon: <Network size={18} />, action: () => openTab('correlate', t('nav.correlation')), category: 'Analytics', keywords: ['relationship', 'connection', 'matrix', 'dependency'] },
+    { id: 'diff', label: t('app.cmd.diff'), icon: <Workflow size={18} />, action: () => openTab('diff', t('nav.diff')), category: 'Analytics', keywords: ['compare', 'changes', 'history', 'delta'] },
+    { id: 'anomaly', label: t('app.cmd.anomaly'), icon: <ShieldAlert size={18} />, action: () => openTab('anomaly', t('nav.anomaly')), category: 'Analytics', keywords: ['outlier', 'fraud', 'spike', 'warning', 'deviation'] },
+    { id: 'financial', label: t('app.cmd.financial'), icon: <Activity size={18} />, action: () => openTab('financial', t('nav.financial')), category: 'Analytics', keywords: ['money', 'revenue', 'loss', 'exposure', 'finance'] },
     
     // Developer
-    { id: 'developer', label: 'Open Developer API', icon: <Code size={18} />, action: () => openTab('developer', 'Developer API'), category: 'Developer', keywords: ['code', 'endpoint', 'json', 'rest', 'programmatic', 'dev'] },
+    { id: 'developer', label: t('app.cmd.developer'), icon: <Code size={18} />, action: () => openTab('developer', t('nav.developer')), category: 'Developer', keywords: ['code', 'endpoint', 'json', 'rest', 'programmatic', 'dev'] },
   ];
 
   const fileCommands = files.map(f => ({
@@ -1148,7 +1165,7 @@ function AppContent() {
       <div className="flex items-center justify-center h-screen w-full" style={{ background: 'var(--bg-app)' }}>
         <div className="flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-h2 opacity-50">Authenticating...</div>
+          <div className="text-h2 opacity-50">{t('app.authenticating')}</div>
         </div>
       </div>
     );
@@ -1157,7 +1174,12 @@ function AppContent() {
   if (!isAuthenticated) {
     return (
       <Suspense fallback={<PageLoader />}>
-        {authView === 'login' ? (
+        {authView === 'welcome' ? (
+          <WelcomePage
+            onLogin={() => setAuthView('login')}
+            onSignup={() => setAuthView('register')}
+          />
+        ) : authView === 'login' ? (
           <LoginView onSwitchToRegister={() => setAuthView('register')} onSuccess={() => { }} />
         ) : (
           <RegisterView onSwitchToLogin={() => setAuthView('login')} onSuccess={() => { }} />
@@ -1167,7 +1189,7 @@ function AppContent() {
   }
 
   // Active Tab
-  const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
+  const activeTab = tabs.find(tab => tab.id === activeTabId) || tabs[0];
   const currentViewType = activeTab?.type || 'dashboard';
 
   return (
@@ -1182,13 +1204,13 @@ function AppContent() {
           if (path === 'settings') {
             openTab(
               'settings',
-              'Settings',
+              t('nav.settings'),
               options?.settingsTab ? { initialTab: options.settingsTab } : undefined
             );
           } else if (path === 'shared-workspaces') {
-            openTab('shared-workspaces', 'Shared Workspaces', options);
+            openTab('shared-workspaces', t('nav.sharedWorkspaces'), options);
           } else if (path === 'private-chat') {
-            openTab('private-chat', 'Personal Chat', options);
+            openTab('private-chat', t('nav.privateChat'), options);
           } else {
             // Generic fallback for any other path
             const title = path.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -1200,22 +1222,23 @@ function AppContent() {
 
       <RootLayout
         currentView={currentViewType}
-        openedViews={tabs.map(t => t.type)}
+        openedViews={tabs.map(tab => tab.type)}
         isMobileMenuOpen={isMobileMenuOpen}
         onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
         onViewChange={(viewInfo) => {
           const id = typeof viewInfo === 'string' ? viewInfo : viewInfo.id;
           const data = typeof viewInfo === 'string' ? undefined : viewInfo.data;
 
-          const title = id === 'diff' ? 'Version Diff' :
-
-              id === 'logistics' ? 'Road Intelligence' :
-                id === 'agentic' ? 'Agentic Systems' :
-                  id === 'democracy' ? 'Self-Service Studio' :
-                    id === 'canvas' ? 'Dashboard Canvas' :
-                        id === 'lens' ? 'Smart Lens' :
-                    id === 'shared-workspaces' ? 'Shared Workspaces' :
-                    id === 'admin' ? 'Admin Control Center' :
+          const title = id === 'diff' ? t('nav.diff') :
+              id === 'logistics' ? t('app.view.roadIntel') :
+                id === 'agentic' ? t('app.view.agentic') :
+                  id === 'democracy' ? t('nav.democracy') :
+                    id === 'canvas' ? t('app.view.canvas') :
+                        id === 'lens' ? t('nav.lens') :
+                    id === 'shared-workspaces' ? t('nav.sharedWorkspaces') :
+                    id === 'admin' ? t('app.cmd.admin') :
+                    id === 'dashboard' ? t('nav.dashboard') :
+                    id === 'settings' ? t('nav.settings') :
                     id.charAt(0).toUpperCase() + id.slice(1);
           openTab(id, title, data);
         }}
@@ -1238,9 +1261,7 @@ function AppContent() {
             {tabs.map(tab => (
               <div key={tab.id} style={{ display: tab.id === activeTabId ? 'block' : 'none', height: '100%', position: 'relative' }}>
 
-                {tab.type === 'landing' && (
-                  <LandingView onGetStarted={() => openTab('dashboard', t('nav.workspace'))} />
-                )}
+
 
                 {tab.type === 'dashboard' && (
                   <DashboardView

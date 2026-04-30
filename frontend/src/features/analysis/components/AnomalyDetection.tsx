@@ -25,6 +25,7 @@ import {
     Scatter,
     ComposedChart
 } from 'recharts';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface AnomalyDetectionProps {
     data: any[];
@@ -45,6 +46,7 @@ interface AnomalyResult {
 }
 
 export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema }) => {
+    const { t } = useLanguage();
     const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
     const [sensitivity, setSensitivity] = useState<number>(2.5); // Z-score threshold
 
@@ -88,7 +90,7 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                          Object.keys(schema).find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('title')) ||
                          Object.keys(schema)[0];
 
-        const mappedChartData = validData.map((item, index) => {
+        const mappedChartData = validData.map((item) => {
             const val = Number(item[selectedMetric]);
             const zScore = stdDev > 0 ? Math.abs((val - mean) / stdDev) : 0;
             const isAnomaly = zScore > sensitivity;
@@ -138,8 +140,8 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center h-full opacity-50">
                 <ShieldAlert size={48} className="mb-4 text-emerald-500" />
-                <h3 className="text-xl font-bold mb-2">No Numeric Data Available</h3>
-                <p className="text-sm">Automated anomaly detection requires numeric columns to perform statistical analysis.</p>
+                <h3 className="text-xl font-bold mb-2">{t('anomaly.noNumeric')}</h3>
+                <p className="text-sm">{t('anomaly.noNumericDesc')}</p>
             </div>
         );
     }
@@ -160,10 +162,10 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     </div>
                     <div>
                         <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #ef4444 0%, #f59e0b 50%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            AI Anomaly Detection
+                            {t('anomaly.title')}
                         </h1>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Automated Statistical Outlier Identification & Insight Generation
+                            {t('anomaly.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -174,14 +176,14 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #ef4444, #f59e0b, #34d399)' }} />
                 <div className="flex items-center gap-2" style={{ marginBottom: '16px' }}>
                     <Search size={15} style={{ color: 'var(--text-muted)' }} />
-                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>Detection Configuration</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>{t('anomaly.config')}</span>
                 </div>
                 
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap' }}>
                     {/* Target Metric */}
                     <div style={{ flex: 2, minWidth: '220px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444' }} /> Target Metric
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444' }} /> {t('anomaly.target')}
                         </label>
                         <select 
                             value={selectedMetric || ''} 
@@ -198,7 +200,7 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     <div style={{ flex: 1, minWidth: '240px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} /> Sensitivity 
+                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} /> {t('anomaly.sensitivity')} 
                             </span>
                             <span style={{ color: 'var(--text-muted)' }}>Z &gt; {sensitivity.toFixed(1)}</span>
                         </label>
@@ -220,11 +222,11 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     style={{ padding: '20px', borderRadius: '16px', background: 'var(--bg-surface)', border: `1px solid ${anomalies.length > 0 ? 'rgba(245,158,11,0.3)' : 'rgba(52,211,153,0.3)'}`, display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: anomalies.length > 0 ? '#f59e0b' : '#34d399' }}>
                         {anomalies.length > 0 ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
-                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Detected Anomalies</span>
+                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('anomaly.detected')}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                         <span style={{ fontSize: '32px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{anomalies.length}</span>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Requiring Review</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>{t('anomaly.requiringReview')}</span>
                     </div>
                 </motion.div>
 
@@ -232,7 +234,7 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     style={{ padding: '20px', borderRadius: '16px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6366f1' }}>
                         <Target size={16} />
-                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Baseline Mean</span>
+                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('anomaly.baselineMean')}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                         <span style={{ fontSize: '28px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{stats ? formatValue(stats.mean) : '0'}</span>
@@ -243,7 +245,7 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     style={{ padding: '20px', borderRadius: '16px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#34d399' }}>
                         <Activity size={16} />
-                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Standard Dev (σ)</span>
+                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('anomaly.stdDev')}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                         <span style={{ fontSize: '28px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>±{stats ? formatValue(stats.stdDev) : '0'}</span>
@@ -254,20 +256,20 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     style={{ padding: '20px', borderRadius: '16px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ec4899' }}>
                         <BrainCircuit size={16} />
-                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>AI Assessment</span>
+                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('anomaly.assessment')}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%' }}>
                         {anomalies.length === 0 ? (
                             <div style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', color: '#34d399', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <ShieldAlert size={14} /> Normal Variance
+                                <ShieldAlert size={14} /> {t('anomaly.normal')}
                             </div>
                         ) : anomalies.length > 5 ? (
                             <div style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Zap size={14} /> High Volatility
+                                <Zap size={14} /> {t('anomaly.volatility')}
                             </div>
                         ) : (
                             <div style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <AlertTriangle size={14} /> Isolated Outliers
+                                <AlertTriangle size={14} /> {t('anomaly.isolated')}
                             </div>
                         )}
                     </div>
@@ -282,18 +284,18 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                         <div>
                             <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Activity size={16} style={{ color: '#6366f1' }} /> Metric Volatility Map
+                                <Activity size={16} style={{ color: '#6366f1' }} /> {t('anomaly.mapTitle')}
                             </h3>
                             <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
-                                {selectedMetric} Distribution Tracking
+                                {t('anomaly.distribution').replace('{metric}', selectedMetric || '')}
                             </p>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.5)' }} /> Baseline Trend
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.5)' }} /> {t('anomaly.baselineTrend')}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 8px rgba(245,158,11,0.6)' }} /> Detected Anomaly
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 8px rgba(245,158,11,0.6)' }} /> {t('anomaly.detectedAnomaly')}
                             </div>
                         </div>
                     </div>
@@ -363,7 +365,7 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                     <div style={{ padding: '20px', borderBottom: '1px solid var(--border-default)' }}>
                         <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <AlertTriangle size={15} style={{ color: '#f59e0b' }} />
-                            Anomaly Manifest
+                            {t('anomaly.manifest')}
                         </h3>
                     </div>
                     
@@ -377,8 +379,8 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                                     <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(52,211,153,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', border: '1px solid rgba(52,211,153,0.2)' }}>
                                         <CheckCircle2 size={28} style={{ color: '#34d399' }} />
                                     </div>
-                                    <p style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>No Anomalies Found</p>
-                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Data points are within normal statistical variance.</p>
+                                    <p style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>{t('anomaly.noAnomalies')}</p>
+                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('anomaly.normalDesc')}</p>
                                 </motion.div>
                             ) : (
                                 anomalies.map((anomaly, idx) => {
@@ -402,19 +404,19 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                                                     {anomaly.labelInfo || `Record #${idx+1}`}
                                                 </div>
                                                 <div style={{ fontSize: '9px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.05em', color: colorPrimary, background: colorBg }}>
-                                                    {anomaly.severity}
+                                                    {anomaly.severity === 'critical' ? t('anomaly.critical') : anomaly.severity === 'warning' ? t('anomaly.warning') : t('anomaly.info')}
                                                 </div>
                                             </div>
 
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                                                 <div>
-                                                    <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Value</div>
+                                                    <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{t('anomaly.value')}</div>
                                                     <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
                                                         {formatValue(anomaly.value)}
                                                     </div>
                                                 </div>
                                                 <div style={{ textAlign: 'right' }}>
-                                                    <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Deviation</div>
+                                                    <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{t('anomaly.deviation')}</div>
                                                     <div style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: devPct > 0 ? '#34d399' : '#ef4444' }}>
                                                         {devPct > 0 ? '+' : ''}{devPct.toFixed(1)}%
                                                     </div>
@@ -424,7 +426,7 @@ export const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ data, schema
                                             <div style={{ paddingTop: '12px', borderTop: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
                                                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Z-Score: {anomaly.zScore.toFixed(2)}</span>
                                                 <button style={{ background: 'none', border: 'none', padding: 0, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '10px' }}>
-                                                    Inspect <ArrowRight size={12} />
+                                                    {t('anomaly.inspect')} <ArrowRight size={12} />
                                                 </button>
                                             </div>
                                         </motion.div>

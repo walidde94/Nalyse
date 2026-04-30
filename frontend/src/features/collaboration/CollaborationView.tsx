@@ -143,18 +143,18 @@ export const CollaborationView = ({ token }: CollaborationViewProps) => {
                     { id: 'dashboards', label: 'Shared Dashboards', icon: <FileText size={15} />, count: dashboards.length },
                     { id: 'activity', label: 'Live Activity', icon: <Activity size={15} />, count: activity.length },
                     { id: 'threads', label: 'Discussion Threads', icon: <MessageSquare size={15} />, count: comments.length },
-                ].map(t => {
-                    const isActive = activeSection === t.id;
+                ].map(tab => {
+                    const isActive = activeSection === tab.id;
                     return (
-                        <button key={t.id} onClick={() => setActiveSection(t.id as any)} style={{
+                        <button key={tab.id} onClick={() => setActiveSection(tab.id as any)} style={{
                             display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '10px',
                             background: isActive ? 'var(--border-default)' : 'transparent',
                             border: `1px solid ${isActive ? 'var(--border-default)' : 'transparent'}`,
                             color: isActive ? '#fff' : 'var(--text-muted)',
                             fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
                         }}>
-                            {t.icon} {t.label}
-                            <span style={{ background: isActive ? 'rgba(52, 211, 153, 0.2)' : 'var(--bg-surface-hover)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, color: isActive ? '#34d399' : 'var(--text-muted)' }}>{t.count}</span>
+                            {tab.icon} {tab.label}
+                            <span style={{ background: isActive ? 'rgba(52, 211, 153, 0.2)' : 'var(--bg-surface-hover)', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, color: isActive ? '#34d399' : 'var(--text-muted)' }}>{tab.count}</span>
                         </button>
                     );
                 })}

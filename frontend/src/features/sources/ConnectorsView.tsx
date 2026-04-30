@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
 import { useToast } from '../../components/ui/Toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { AnalysisView } from '../analysis/AnalysisView';
 import {
     Zap, AlertCircle, RefreshCw, Database, Terminal, Shield, CreditCard, Cloud, Users, BarChart,
@@ -20,20 +21,20 @@ interface RemoteSource {
 }
 
 /* ─── Connector Metadata ────────────────────────────────────── */
-const CONNECTOR_META: Record<string, { label: string; color: string; gradient: string; icon: any; description: string }> = {
-    stripe:            { label: 'Stripe',            color: '#635BFF', gradient: 'linear-gradient(135deg, #635BFF, #7C3AED)', icon: CreditCard, description: 'Payments, subscriptions, invoices & revenue data' },
-    salesforce:        { label: 'Salesforce',        color: '#00A1E0', gradient: 'linear-gradient(135deg, #00A1E0, #0EA5E9)', icon: Cloud,      description: 'CRM pipeline, leads, contacts & opportunities' },
-    hubspot:           { label: 'HubSpot',           color: '#FF7A59', gradient: 'linear-gradient(135deg, #FF7A59, #F97316)', icon: Users,      description: 'Marketing automation, contacts & deal flow' },
-    google_analytics:  { label: 'Google Analytics',  color: '#E37400', gradient: 'linear-gradient(135deg, #E37400, #F59E0B)', icon: BarChart,   description: 'Traffic, sessions, conversions & audience data' },
-    postgresql:        { label: 'PostgreSQL',        color: '#336791', gradient: 'linear-gradient(135deg, #336791, #3B82F6)', icon: Database,   description: 'Direct SQL access to your PostgreSQL tables' },
-    mysql:             { label: 'MySQL',             color: '#E48E00', gradient: 'linear-gradient(135deg, #E48E00, #F59E0B)', icon: Database,   description: 'Direct SQL access to your MySQL tables' },
-    rest_api:          { label: 'REST API',          color: '#10b981', gradient: 'linear-gradient(135deg, #10b981, #34d399)', icon: Terminal,   description: 'Pull any JSON API endpoint into Nalyse' },
-    s3_bucket:         { label: 'S3 Bucket',         color: '#FF9900', gradient: 'linear-gradient(135deg, #FF9900, #F97316)', icon: Server,     description: 'Connect S3-compatible object storage' },
-};
+/* ─── Connector Metadata Helper ────────────────────────────── */
+const getConnectorMeta = (t: (key: string) => string) => ({
+    stripe:            { label: 'Stripe',            color: '#635BFF', gradient: 'linear-gradient(135deg, #635BFF, #7C3AED)', icon: CreditCard, description: t('connectors.meta.stripe.desc') || 'Payments, subscriptions, invoices & revenue data' },
+    salesforce:        { label: 'Salesforce',        color: '#00A1E0', gradient: 'linear-gradient(135deg, #00A1E0, #0EA5E9)', icon: Cloud,      description: t('connectors.meta.salesforce.desc') || 'CRM pipeline, leads, contacts & opportunities' },
+    hubspot:           { label: 'HubSpot',           color: '#FF7A59', gradient: 'linear-gradient(135deg, #FF7A59, #F97316)', icon: Users,      description: t('connectors.meta.hubspot.desc') || 'Marketing automation, contacts & deal flow' },
+    google_analytics:  { label: 'Google Analytics',  color: '#E37400', gradient: 'linear-gradient(135deg, #E37400, #F59E0B)', icon: BarChart,   description: t('connectors.meta.ga.desc') || 'Traffic, sessions, conversions & audience data' },
+    postgresql:        { label: 'PostgreSQL',        color: '#336791', gradient: 'linear-gradient(135deg, #336791, #3B82F6)', icon: Database,   description: t('connectors.meta.postgres.desc') || 'Direct SQL access to your PostgreSQL tables' },
+    mysql:             { label: 'MySQL',             color: '#E48E00', gradient: 'linear-gradient(135deg, #E48E00, #F59E0B)', icon: Database,   description: t('connectors.meta.mysql.desc') || 'Direct SQL access to your MySQL tables' },
+    rest_api:          { label: 'REST API',          color: '#10b981', gradient: 'linear-gradient(135deg, #10b981, #34d399)', icon: Terminal,   description: t('connectors.meta.rest.desc') || 'Pull any JSON API endpoint into Nalyse' },
+    s3_bucket:         { label: 'S3 Bucket',         color: '#FF9900', gradient: 'linear-gradient(135deg, #FF9900, #F97316)', icon: Server,     description: t('connectors.meta.s3.desc') || 'Connect S3-compatible object storage' },
+});
 
 /* ─── Connector Card ────────────────────────────────────────── */
-const ConnectorCard = ({ source, onEdit, onDelete, onGoLive }: { source: RemoteSource; onEdit: () => void; onDelete: () => void; onGoLive: () => void }) => {
-    const meta = CONNECTOR_META[source.type] || CONNECTOR_META.rest_api;
+const ConnectorCard = ({ source, onEdit, onDelete, onGoLive, t, meta }: { source: RemoteSource; onEdit: () => void; onDelete: () => void; onGoLive: () => void; t: any; meta: any }) => {
     const Icon = meta.icon;
 
     return (
@@ -100,7 +101,7 @@ const ConnectorCard = ({ source, onEdit, onDelete, onGoLive }: { source: RemoteS
                         transition={{ duration: 2, repeat: Infinity }}
                         style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }}
                     />
-                    <span style={{ fontSize: '10px', fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Connected & Healthy</span>
+                    <span style={{ fontSize: '10px', fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('connectors.status.healthy')}</span>
                 </div>
 
                 {/* Divider */}
@@ -120,12 +121,12 @@ const ConnectorCard = ({ source, onEdit, onDelete, onGoLive }: { source: RemoteS
                             textTransform: 'uppercase', letterSpacing: '0.06em'
                         }}
                     >
-                        <Zap size={13} style={{ fill: '#fff' }} /> Go Live
+                        <Zap size={13} style={{ fill: '#fff' }} /> {t('connectors.action.goLive')}
                     </motion.button>
                     <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>Last Sync</div>
+                        <div style={{ fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>{t('connectors.lastSync')}</div>
                         <div style={{ fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                            {source.lastSyncedAt ? new Date(source.lastSyncedAt).toLocaleTimeString() : 'Never'}
+                            {source.lastSyncedAt ? new Date(source.lastSyncedAt).toLocaleTimeString() : t('connectors.never')}
                         </div>
                     </div>
                 </div>
@@ -135,8 +136,7 @@ const ConnectorCard = ({ source, onEdit, onDelete, onGoLive }: { source: RemoteS
 };
 
 /* ─── Available Connector Picker Card ───────────────────────── */
-const AvailableConnectorCard = ({ type, onClick }: { type: string; onClick: () => void }) => {
-    const meta = CONNECTOR_META[type];
+const AvailableConnectorCard = ({ type, onClick, t, meta }: { type: string; onClick: () => void; t: any; meta: any }) => {
     if (!meta) return null;
     const Icon = meta.icon;
 
@@ -165,7 +165,7 @@ const AvailableConnectorCard = ({ type, onClick }: { type: string; onClick: () =
                 <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{meta.description}</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: 700, color: meta.color }}>
-                Configure <ChevronRight size={12} />
+                {t('common.configure')} <ChevronRight size={12} />
             </div>
         </motion.button>
     );
@@ -174,11 +174,14 @@ const AvailableConnectorCard = ({ type, onClick }: { type: string; onClick: () =
 /* ═══════════════════════════════════════════════════════════════ */
 export const ConnectorsView = ({ token, isActive = true }: { token: string; isActive?: boolean }) => {
     const { addToast } = useToast();
+    const { t } = useLanguage();
     const [sources, setSources] = useState<RemoteSource[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
     const [editingSource, setEditingSource] = useState<RemoteSource | null>(null);
     const [showPicker, setShowPicker] = useState(false);
+
+    const CONNECTOR_META = getConnectorMeta(t);
 
     // Form State
     const [newName, setNewName] = useState('');
@@ -202,7 +205,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
             });
             if (res.ok) setSources(await res.json());
         } catch (e) {
-            addToast('Failed to load connectors', 'error');
+            addToast(t('connectors.loadError') || 'Failed to load connectors', 'error');
         } finally {
             setLoading(false);
         }
@@ -244,12 +247,12 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
             if (res.ok) {
                 await fetchSources();
                 resetForm();
-                addToast(editingSource ? 'Connector updated' : 'Connector established — data pipeline is live!', 'success');
+                addToast(editingSource ? t('connectors.updateSuccess') : t('connectors.saveSuccess'), 'success');
             } else {
-                addToast('Failed to save connector', 'error');
+                addToast(t('connectors.saveError') || 'Failed to save connector', 'error');
             }
         } catch (e) {
-            addToast('Operation failed', 'error');
+            addToast(t('common.error') || 'Operation failed', 'error');
         } finally {
             setLoading(false);
         }
@@ -268,14 +271,14 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Disconnect this data source? All live analysis will be stopped.')) return;
+        if (!confirm(t('connectors.deleteConfirm') || 'Disconnect this data source? All live analysis will be stopped.')) return;
         try {
             const res = await fetch(`${API_URL}/api/sources/${id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (res.ok) { addToast('Source disconnected', 'success'); fetchSources(); }
-        } catch (e) { addToast('Failed to delete source', 'error'); }
+            if (res.ok) { addToast(t('connectors.deleteSuccess'), 'success'); fetchSources(); }
+        } catch (e) { addToast(t('connectors.deleteError') || 'Failed to delete source', 'error'); }
     };
 
     const runLiveAnalysis = useCallback(async (id?: string, name?: string) => {
@@ -321,13 +324,13 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <button onClick={() => { setActiveAnalysis(null); setAutoSync(false); }}
                             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: '10px', padding: '8px 16px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-                            ← Back
+                            ← {t('connectors.back')}
                         </button>
                         <h2 style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Radio size={14} style={{ color: '#34d399' }} /> Live: {activeSourceName}
+                            <Radio size={14} style={{ color: '#34d399' }} /> {t('connectors.live')} {activeSourceName}
                         </h2>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-                            <span style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>Auto-Sync</span>
+                            <span style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>{t('connectors.autoSync')}</span>
                             <div
                                 onClick={() => setAutoSync(!autoSync)}
                                 style={{
@@ -346,7 +349,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                         {isRefreshing && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
                                 <Loader2 size={12} className="animate-spin" style={{ color: '#3b82f6' }} />
-                                <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6' }}>Syncing...</span>
+                                <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6' }}>{t('connectors.syncing')}</span>
                             </div>
                         )}
                     </div>
@@ -361,7 +364,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             opacity: isRefreshing ? 0.5 : 1
                         }}
                     >
-                        <RefreshCw size={13} /> Refresh
+                        <RefreshCw size={13} /> {t('connectors.refresh')}
                     </motion.button>
                 </header>
                 <div style={{ flex: 1, overflow: 'auto' }}>
@@ -402,16 +405,16 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <h1 style={{ fontSize: '26px', fontWeight: 900, margin: 0, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                    Live Data Connectors
+                                    {t('connectors.title')}
                                 </h1>
                                 <span style={{
                                     padding: '3px 10px', borderRadius: '20px', fontSize: '9px', fontWeight: 900,
                                     textTransform: 'uppercase', letterSpacing: '0.12em',
                                     background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)'
-                                }}>Phase 6</span>
+                                }}>{t('connectors.phase6')}</span>
                             </div>
                             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '4px 0 0', fontWeight: 500, maxWidth: '500px' }}>
-                                1-click integrations for Stripe, Salesforce, HubSpot & more. Data flows automatically every hour.
+                                {t('connectors.heroDesc')}
                             </p>
                         </div>
                     </div>
@@ -419,13 +422,13 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <div style={{ textAlign: 'center', padding: '12px 20px', borderRadius: '14px', background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}>
                             <div style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{sources.length}</div>
-                            <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginTop: '2px' }}>Active</div>
+                            <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginTop: '2px' }}>{t('connectors.active')}</div>
                         </div>
                         <div style={{ textAlign: 'center', padding: '12px 20px', borderRadius: '14px', background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}>
                             <div style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: '#34d399' }}>
                                 {sources.filter(s => s.lastSyncedAt).length}
                             </div>
-                            <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginTop: '2px' }}>Synced</div>
+                            <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginTop: '2px' }}>{t('connectors.synced')}</div>
                         </div>
 
                         <motion.button
@@ -439,7 +442,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                                 boxShadow: '0 8px 24px -4px rgba(59,130,246,0.35)',
                             }}
                         >
-                            <Plus size={16} /> New Connector
+                            <Plus size={16} /> {t('connectors.new')}
                         </motion.button>
                     </div>
                 </div>
@@ -461,8 +464,8 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899)' }} />
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                             <div>
-                                <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Choose a Platform</h3>
-                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0', fontWeight: 500 }}>Select a SaaS platform or database to connect</p>
+                                <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>{t('connectors.choosePlatform')}</h3>
+                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0', fontWeight: 500 }}>{t('connectors.chooseDesc')}</p>
                             </div>
                             <button onClick={() => setShowPicker(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '8px' }}>
                                 <X size={18} />
@@ -473,6 +476,8 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                                 <AvailableConnectorCard
                                     key={type}
                                     type={type}
+                                    t={t}
+                                    meta={CONNECTOR_META[type as keyof typeof CONNECTOR_META]}
                                     onClick={() => {
                                         setNewType(type as RemoteSource['type']);
                                         setNewName('');
@@ -515,7 +520,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                                 </div>
                                 <div>
                                     <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
-                                        {editingSource ? `Edit ${meta.label}` : `Connect ${meta.label}`}
+                                        {editingSource ? `${t('common.edit')} ${meta.label}` : `${t('connectors.establish')} ${meta.label}`}
                                     </h3>
                                     <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '2px 0 0' }}>{meta.description}</p>
                                 </div>
@@ -530,11 +535,11 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: meta.color, display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: meta.color, boxShadow: `0 0 8px ${meta.color}` }} />
-                                    Integration Name
+                                    {t('connectors.integrationName')}
                                 </label>
                                 <input
                                     value={newName} onChange={e => setNewName(e.target.value)}
-                                    placeholder={`e.g. Acme Corp ${meta.label}`}
+                                    placeholder={`${t('connectors.placeholder.name')} ${meta.label}`}
                                     style={{
                                         padding: '12px 16px', borderRadius: '12px',
                                         background: 'var(--bg-card)', border: '1px solid var(--border-default)',
@@ -547,7 +552,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>Platform</label>
+                                <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>{t('connectors.platform')}</label>
                                 <select value={newType} onChange={e => setNewType(e.target.value as any)} style={{
                                     padding: '12px 16px', borderRadius: '12px',
                                     background: 'var(--bg-card)', border: '1px solid var(--border-default)',
@@ -571,11 +576,11 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             {['stripe', 'salesforce', 'hubspot', 'google_analytics'].includes(newType) && (
                                 <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: meta.color, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Shield size={10} style={{ color: '#34d399' }} /> Secret API Key / OAuth Token
+                                        <Shield size={10} style={{ color: '#34d399' }} /> {t('connectors.apiKey')}
                                     </label>
                                     <input
                                         type="password" value={newApiKey} onChange={e => setNewApiKey(e.target.value)}
-                                        placeholder="sk_live_..."
+                                        placeholder={t('connectors.placeholder.apiKey')}
                                         style={{
                                             padding: '12px 16px', borderRadius: '12px',
                                             background: 'var(--bg-card)', border: '1px solid var(--border-default)',
@@ -584,7 +589,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                                     />
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                                         <Shield size={11} style={{ color: '#34d399' }} />
-                                        <span style={{ fontSize: '10px', color: '#34d399', fontWeight: 600 }}>AES-256 encrypted before storage</span>
+                                        <span style={{ fontSize: '10px', color: '#34d399', fontWeight: 600 }}>{t('connectors.encrypted')}</span>
                                     </div>
                                 </div>
                             )}
@@ -592,20 +597,20 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             {newType === 'rest_api' && (
                                 <>
                                     <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: meta.color }}>Endpoint URL</label>
-                                        <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://api.example.com/v1/data"
+                                        <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: meta.color }}>{t('connectors.endpoint')}</label>
+                                        <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={t('connectors.placeholder.endpoint')}
                                             style={{ padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none' }}
                                         />
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>Bearer Token (optional)</label>
-                                        <input type="password" value={newApiKey} onChange={e => setNewApiKey(e.target.value)} placeholder="Bearer ..."
+                                        <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>{t('connectors.bearer')}</label>
+                                        <input type="password" value={newApiKey} onChange={e => setNewApiKey(e.target.value)} placeholder={t('connectors.placeholder.bearer')}
                                             style={{ padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none' }}
                                         />
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>Root Data Key (optional)</label>
-                                        <input value={newRootKey} onChange={e => setNewRootKey(e.target.value)} placeholder="e.g. results, products, data"
+                                        <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)' }}>{t('connectors.rootKey')}</label>
+                                        <input value={newRootKey} onChange={e => setNewRootKey(e.target.value)} placeholder={t('connectors.placeholder.rootKey')}
                                             style={{ padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none' }}
                                         />
                                     </div>
@@ -614,8 +619,8 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
 
                             {['postgresql', 'mysql'].includes(newType) && (
                                 <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: meta.color }}>Database Host</label>
-                                    <input value={newHost} onChange={e => setNewHost(e.target.value)} placeholder="e.g. db.example.com"
+                                    <label style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: meta.color }}>{t('connectors.host')}</label>
+                                    <input value={newHost} onChange={e => setNewHost(e.target.value)} placeholder={t('connectors.placeholder.host')}
                                         style={{ padding: '12px 16px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none' }}
                                     />
                                 </div>
@@ -635,7 +640,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             }}
                         >
                             {loading ? <Loader2 size={16} className="animate-spin" /> : <Wifi size={16} />}
-                            {loading ? 'Authenticating…' : (editingSource ? 'Save Changes' : 'Establish Secure Connection')}
+                            {loading ? t('common.processing') : (editingSource ? t('connectors.save') : t('connectors.establish'))}
                         </motion.button>
                     </motion.div>
                 )}
@@ -648,6 +653,8 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                         <ConnectorCard
                             key={s.id}
                             source={s}
+                            t={t}
+                            meta={CONNECTOR_META[s.type] || CONNECTOR_META.rest_api}
                             onEdit={() => handleEdit(s)}
                             onDelete={() => handleDelete(s.id)}
                             onGoLive={() => { setAutoSync(true); runLiveAnalysis(s.id, s.name); }}
@@ -671,12 +678,12 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                     <div style={{
                         display: 'flex', justifyContent: 'center', marginBottom: '20px', position: 'relative', zIndex: 1
                     }}>
-                        {['stripe', 'salesforce', 'hubspot', 'google_analytics'].map((t, i) => {
-                            const m = CONNECTOR_META[t];
+                        {['stripe', 'salesforce', 'hubspot', 'google_analytics'].map((type, i) => {
+                            const m = CONNECTOR_META[type as keyof typeof CONNECTOR_META];
                             const Icon = m.icon;
                             return (
                                 <motion.div
-                                    key={t}
+                                    key={type}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
@@ -692,9 +699,9 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             );
                         })}
                     </div>
-                    <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', position: 'relative', zIndex: 1 }}>No Active Connectors</h3>
+                    <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', position: 'relative', zIndex: 1 }}>{t('connectors.noActive')}</h3>
                     <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 auto 20px', lineHeight: 1.7, position: 'relative', zIndex: 1 }}>
-                        Connect Stripe, Salesforce, HubSpot, or any database to stream live data directly into the Nalyse AI engine.
+                        {t('connectors.noActiveDesc')}
                     </p>
                     <motion.button
                         whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
@@ -708,7 +715,7 @@ export const ConnectorsView = ({ token, isActive = true }: { token: string; isAc
                             position: 'relative', zIndex: 1
                         }}
                     >
-                        <Cable size={16} /> Connect Your First Source
+                        <Cable size={16} /> {t('connectors.connectFirst')}
                     </motion.button>
                 </motion.div>
             )}

@@ -9,6 +9,7 @@ import {
     GripVertical, Settings2, Sparkles, Plus, Play,
     CheckCircle2, AlertTriangle, Layers, XCircle, Database
 } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { 
     BarChart, Bar, LineChart as RechartsLine, Line, 
     PieChart as RechartsPie, Pie, ScatterChart as RechartsScatter, Scatter,
@@ -59,14 +60,15 @@ const ChartIcon = ({ type }: { type: ChartType }) => {
 export const LensVisualizer: React.FC = () => {
     const { token } = useAuth();
     const { addToast } = useToast();
+    const { t } = useLanguage();
     const [datasets, setDatasets] = useState<any[]>([]);
     const [selectedDatasetId, setSelectedDatasetId] = useState<string>('');
     const [datasetData, setDatasetData] = useState<any[]>([]);
     const [fields, setFields] = useState<Field[]>([]);
     const [zones, setZones] = useState<DropZone[]>([
-        { id: 'xAxis', label: 'X-Axis / Category', field: null, accepts: [] },
-        { id: 'yAxis', label: 'Y-Axis / Measure', field: null, accepts: ['number'] },
-        { id: 'breakdown', label: 'Breakdown / Series', field: null, accepts: ['string'] }
+        { id: 'xAxis', label: t('lens.xAxis'), field: null, accepts: [] },
+        { id: 'yAxis', label: t('lens.yAxis'), field: null, accepts: ['number'] },
+        { id: 'breakdown', label: t('lens.breakdown'), field: null, accepts: ['string'] }
     ]);
     const [draggedField, setDraggedField] = useState<Field | null>(null);
     const [selectedChartOverride, setSelectedChartOverride] = useState<ChartType | null>(null);
@@ -225,9 +227,9 @@ export const LensVisualizer: React.FC = () => {
                     <div style={{ padding: '24px', borderRadius: '24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', marginBottom: '24px' }}>
                         <Database size={48} style={{ color: 'var(--primary)' }} />
                     </div>
-                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Select Data Source</h3>
+                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>{t('lens.emptyTitle')}</h3>
                     <p style={{ fontSize: '14px', maxWidth: '320px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                        Choose a dataset from the registry on the left to begin building visualizations.
+                        {t('lens.emptyDesc')}
                     </p>
                 </div>
             );
@@ -344,10 +346,10 @@ export const LensVisualizer: React.FC = () => {
                     </div>
                     <div>
                         <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #818cf8 0%, #34d399 50%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
-                            Smart Lens Engine
+                            {t('lens.title')}
                         </h1>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, margin: '4px 0 0 0' }}>
-                            Drag-and-drop visual builder · Auto-detect field types · AI chart suggestions
+                            {t('lens.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -358,13 +360,13 @@ export const LensVisualizer: React.FC = () => {
                 <div style={{ width: '280px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', borderRadius: '18px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Data Registry</div>
+                            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('lens.registry')}</div>
                             <select 
                                 value={selectedDatasetId}
                                 onChange={(e) => setSelectedDatasetId(e.target.value)}
                                 style={{ width: '100%', background: 'var(--bg-main)', border: '1px solid var(--border-default)', padding: '8px 12px', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px' }}
                             >
-                                <option value="">Select a Dataset...</option>
+                                <option value="">{t('lens.selectDataset')}</option>
                                 {datasets.map(d => (
                                     <option key={d.id} value={d.id}>{d.originalName || d.filename}</option>
                                 ))}
@@ -448,7 +450,7 @@ export const LensVisualizer: React.FC = () => {
                                         {zone.id === 'xAxis' && <BarChart3 size={20} />}
                                         {zone.id === 'yAxis' && <Calculator size={20} />}
                                         {zone.id === 'breakdown' && <Layers size={20} />}
-                                        <span style={{ color: draggedField ? 'var(--primary-light)' : 'inherit' }}>Drop field here</span>
+                                        <span style={{ color: draggedField ? 'var(--primary-light)' : 'inherit' }}>{t('lens.dropzone')}</span>
                                     </div>
                                 )}
                             </div>
@@ -507,7 +509,7 @@ export const LensVisualizer: React.FC = () => {
                     {/* Footer Actions */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                         <button onClick={() => { setZones(prev => prev.map(z => ({...z, field: null}))); setDraggedField(null); setSelectedChartOverride(null); }} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', padding: '10px 24px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} className="hover:bg-white/5">
-                            Clear Canvas
+                            {t('lens.clear')}
                         </button>
                         <button 
                             disabled={!activeChart} 
@@ -592,7 +594,7 @@ export const LensVisualizer: React.FC = () => {
                             }}
                             style={{ background: 'linear-gradient(135deg, #818cf8, #34d399)', border: 'none', color: '#fff', padding: '10px 24px', borderRadius: '12px', fontSize: '13px', fontWeight: 700, cursor: activeChart ? 'pointer' : 'not-allowed', opacity: activeChart ? 1 : 0.4, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}
                         >
-                            <Layers size={15} /> Save to Dashboard
+                            <Layers size={15} /> {t('lens.save')}
                         </button>
                     </div>
                 </div>

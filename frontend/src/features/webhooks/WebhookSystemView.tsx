@@ -194,18 +194,18 @@ export const WebhookSystemView = ({ token }: { token?: string }) => {
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '24px', position: 'relative', zIndex: 1, overflowX: 'auto', paddingBottom: '4px' }}>
-                {tabs.map(t => {
-                    const active = activeTab === t.id;
+                {tabs.map(tab => {
+                    const active = activeTab === tab.id;
                     return (
-                        <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
                             display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px',
                             background: active ? 'var(--bg-surface)' : 'transparent',
                             border: `1px solid ${active ? 'var(--border-color)' : 'transparent'}`,
                             color: active ? 'var(--text-primary)' : 'var(--text-muted)',
                             fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap',
                         }}>
-                            {t.icon} {t.label}
-                            {t.count !== undefined && <span style={{ background: active ? 'rgba(245,158,11,0.2)' : 'var(--bg-card)', padding: '2px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, color: active ? '#f59e0b' : 'var(--text-muted)' }}>{t.count}</span>}
+                            {tab.icon} {tab.label}
+                            {tab.count !== undefined && <span style={{ background: active ? 'rgba(245,158,11,0.2)' : 'var(--bg-card)', padding: '2px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, color: active ? '#f59e0b' : 'var(--text-muted)' }}>{tab.count}</span>}
                         </button>
                     );
                 })}

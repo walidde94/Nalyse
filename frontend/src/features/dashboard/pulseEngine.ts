@@ -4,7 +4,7 @@ export interface PulseMetrics {
     anomalies: number;
     roi: string;
     efficiencyTrend: string;
-    projects: number;
+    findings: number;
     modelHealth: string;
     // New real computed metrics
     avgFileSizeKB: number;
@@ -89,7 +89,7 @@ export const calculatePulse = (files: any[]): PulseMetrics => {
 
     const avgFileSizeKB = totalFiles > 0 ? (totalSizeMB * 1024) / totalFiles : 0;
 
-    const projects = favoriteCount || Math.min(totalFiles, 1);
+    const findings = favoriteCount || Math.min(totalFiles, 1);
 
     if (totalFiles === 0) {
         return {
@@ -98,7 +98,7 @@ export const calculatePulse = (files: any[]): PulseMetrics => {
             anomalies: 0,
             roi: "—",
             efficiencyTrend: "—",
-            projects: 0,
+            findings: 0,
             modelHealth: "No Data",
             avgFileSizeKB: 0,
             totalSizeMB: 0,
@@ -116,7 +116,7 @@ export const calculatePulse = (files: any[]): PulseMetrics => {
         anomalies: suspiciousFiles,
         roi: "Estimated per Session",
         efficiencyTrend: totalSizeMB > 0 ? `+${Math.min(25, (totalSizeMB / 10)).toFixed(1)}%` : "—",
-        projects,
+        findings,
         modelHealth: suspiciousFiles > 0 ? "Review Needed" : "Stable",
         avgFileSizeKB,
         totalSizeMB,

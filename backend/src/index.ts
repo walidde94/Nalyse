@@ -35,7 +35,6 @@ import biRoutes from './routes/bi';
 import organizationRoutes from './routes/organization';
 import apiKeyRoutes from './routes/apikeys';
 import groupRoutes from './routes/groups';
-import projectRoutes from './routes/projects';
 import v1Routes from './routes/v1';
 import sourceRoutes from './routes/sources';
 import agentRoutes from './routes/agents';
@@ -134,7 +133,6 @@ app.use('/api/bi', biRoutes);
 app.use('/api/organization', organizationRoutes);
 app.use('/api/apikeys', apiKeyRoutes);
 app.use('/api/groups', groupRoutes);
-app.use('/api/projects', projectRoutes);
 app.use('/api/v1', externalApiLimiter, v1Routes);
 app.use('/api/sources', sourceRoutes);
 

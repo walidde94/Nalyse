@@ -5,6 +5,7 @@ import {
     ArrowRight, Copy, Check, Search, Zap, Eye, Clock,
     Sparkles, AlertTriangle, Target, Play, Pause
 } from 'lucide-react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 /* ─────────────────────────────────────────────────────────
    Types
@@ -181,6 +182,7 @@ const TypeReveal = ({ text, delay = 0 }: { text: string; delay?: number }) => {
    Main Component
    ───────────────────────────────────────────────────────── */
 export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit, onNavigateToData }: NexusAuditTrailProps) => {
+    const { t } = useLanguage();
     const [isReplaying, setIsReplaying] = useState(false);
     const [replayIndex, setReplayIndex] = useState(-1);
     const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
@@ -283,11 +285,11 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     </div>
                     <div className="nxt-header-text">
                         <h3 className="nxt-title">
-                            Nexus Engine <span className="text-gradient">Audit Trail</span>
+                            {t('audit.title').split('Audit Trail')[0]} <span className="text-gradient">Audit Trail</span>
                         </h3>
                         <div className="nxt-subtitle-row">
                             <div className="nxt-live-dot" />
-                            <span>Algorithmic Traceability</span>
+                            <span>{t('audit.subtitle')}</span>
                             <span className="nxt-sep">•</span>
                             <span className="nxt-version">v3.2</span>
                         </div>
@@ -304,7 +306,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     <button
                         className={`nxt-action-btn ${isReplaying ? 'nxt-active' : ''}`}
                         onClick={() => setIsReplaying(!isReplaying)}
-                        title={isReplaying ? 'Stop Replay' : 'Replay Trace'}
+                        title={isReplaying ? t('audit.stopReplay') : t('audit.replayTrace')}
                     >
                         {isReplaying ? <Pause size={13} /> : <Play size={13} />}
                     </button>
@@ -325,7 +327,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                             <Search size={13} className="nxt-search-icon" />
                             <input
                                 type="text"
-                                placeholder="Search audit entries..."
+                                placeholder={t('audit.searchPlaceholder')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="nxt-search-input"
@@ -345,7 +347,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     <div className="nxt-stat-icon" style={{ color: 'var(--primary)' }}><Clock size={13} /></div>
                     <div className="nxt-stat-content">
                         <span className="nxt-stat-value"><AnimatedNumber value={totalTime} suffix="ms" /></span>
-                        <span className="nxt-stat-label">Total Time</span>
+                        <span className="nxt-stat-label">{t('audit.totalTime')}</span>
                     </div>
                 </div>
                 <div className="nxt-stat-divider" />
@@ -353,7 +355,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     <div className="nxt-stat-icon" style={{ color: 'var(--success)' }}><Zap size={13} /></div>
                     <div className="nxt-stat-content">
                         <span className="nxt-stat-value"><AnimatedNumber value={entries.length} /></span>
-                        <span className="nxt-stat-label">Steps</span>
+                        <span className="nxt-stat-label">{t('audit.steps')}</span>
                     </div>
                 </div>
                 <div className="nxt-stat-divider" />
@@ -361,7 +363,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     <div className="nxt-stat-icon" style={{ color: 'var(--accent)' }}><Eye size={13} /></div>
                     <div className="nxt-stat-content">
                         <span className="nxt-stat-value"><AnimatedNumber value={discoveryCount} /></span>
-                        <span className="nxt-stat-label">Discoveries</span>
+                        <span className="nxt-stat-label">{t('audit.discoveries')}</span>
                     </div>
                 </div>
                 {outlierTotal > 0 && (
@@ -371,7 +373,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                             <div className="nxt-stat-icon" style={{ color: 'var(--warning)' }}><AlertTriangle size={13} /></div>
                             <div className="nxt-stat-content">
                                 <span className="nxt-stat-value nxt-outlier-val"><AnimatedNumber value={outlierTotal} /></span>
-                                <span className="nxt-stat-label">Outliers</span>
+                                <span className="nxt-stat-label">{t('audit.outliers')}</span>
                             </div>
                         </div>
                     </>
@@ -384,7 +386,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     className={`nxt-chip ${!filterType ? 'nxt-chip-active' : ''}`}
                     onClick={() => setFilterType(null)}
                 >
-                    All
+                    {t('audit.all')}
                 </button>
                 {filterBadges.map(label => (
                     <button
@@ -514,7 +516,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                                             >
                                                 <div className="nxt-outlier-pulse" />
                                                 <Target size={12} />
-                                                <span>Isolate <strong>{entry.outlierCount}</strong> outliers in</span>
+                                                <span>{t('audit.isolateOutliers').replace('{count}', entry.outlierCount || '0')}</span>
                                                 <span className="nxt-outlier-col">{entry.outlierColumn}</span>
                                                 <ArrowRight size={12} />
                                             </motion.button>
@@ -530,7 +532,7 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                 {visibleEntries.length === 0 && (
                     <div className="nxt-empty">
                         <Search size={18} />
-                        <span>No matching entries found</span>
+                        <span>{t('audit.noMatching')}</span>
                     </div>
                 )}
             </div>
@@ -548,12 +550,12 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                         {showFullAudit ? (
                             <>
                                 <ChevronUp size={14} />
-                                <span>Collapse Trace</span>
+                                <span>{t('audit.collapse')}</span>
                             </>
                         ) : (
                             <>
-                                <span>Show Complete Trace</span>
-                                <span className="nxt-expand-count">{processingLog.length} steps</span>
+                                <span>{t('audit.showComplete')}</span>
+                                <span className="nxt-expand-count">{t('audit.stepsCount').replace('{count}', processingLog.length.toString())}</span>
                                 <ChevronDown size={14} />
                             </>
                         )}
@@ -804,253 +806,110 @@ export const NexusAuditTrail = ({ processingLog, showFullAudit, setShowFullAudit
                     z-index: 3; pointer-events: none;
                 }
                 .nxt-timeline-line {
-                    position: absolute;
-                    left: 43px;
-                    top: 24px;
-                    bottom: 16px;
-                    width: 2px;
-                    background: var(--border-subtle);
-                    z-index: 1;
+                    position: absolute; left: 45px; top: 0; bottom: 0;
+                    width: 2px; background: var(--border-subtle);
+                    opacity: 0.3; z-index: 1;
                 }
                 .nxt-timeline-progress {
-                    position: absolute;
-                    left: 43px;
-                    top: 24px;
-                    width: 2px;
-                    background: linear-gradient(180deg, var(--primary), var(--accent), var(--success));
+                    position: absolute; left: 45px; top: 0;
+                    width: 2px; background: linear-gradient(to bottom, var(--primary), var(--accent));
+                    box-shadow: 0 0 10px var(--primary-glow);
                     z-index: 2;
-                    box-shadow: 0 0 8px var(--primary-glow);
                 }
-
-                /* ── Entries ── */
                 .nxt-entries {
                     position: relative;
                     z-index: 4;
                     display: flex;
                     flex-direction: column;
+                    gap: 12px;
                 }
                 .nxt-entry {
                     display: flex;
-                    gap: 16px;
-                    padding: 14px 0;
-                    position: relative;
-                    cursor: default;
-                    transition: background 0.2s;
-                    border-radius: 12px;
-                    margin: 0 -8px;
-                    padding-left: 8px;
-                    padding-right: 8px;
+                    gap: 20px;
+                    padding: 8px 0;
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
-                .nxt-entry-hovered {
-                    background: rgba(255,255,255,0.015);
-                }
-                .nxt-entry-active {
-                    background: var(--primary-subtle) !important;
-                }
-
-                /* ── Node ── */
                 .nxt-node-col {
-                    width: 34px;
-                    flex-shrink: 0;
-                    display: flex;
-                    justify-content: center;
-                    padding-top: 2px;
+                    width: 44px; flex-shrink: 0;
+                    display: flex; justify-content: center; position: relative; z-index: 2;
                 }
                 .nxt-node {
-                    width: 34px;
-                    height: 34px;
-                    border-radius: 10px;
-                    border: 1.5px solid;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+                    width: 32px; height: 32px; border-radius: 10px;
+                    background: var(--bg-surface);
+                    border: 1px solid;
+                    display: flex; align-items: center; justify-content: center;
                     position: relative;
-                    background: var(--bg-card);
-                    transition: all 0.3s;
-                    z-index: 2;
-                }
-                .nxt-entry-hovered .nxt-node {
-                    transform: scale(1.12);
                 }
                 .nxt-ripple {
-                    position: absolute;
-                    inset: -4px;
-                    border-radius: 14px;
-                    border: 2px solid;
-                    pointer-events: none;
+                    position: absolute; inset: 0; border-radius: 10px;
+                    border: 2px solid; pointer-events: none;
                 }
-
-                /* ── Body ── */
-                .nxt-entry-body {
-                    flex: 1;
-                    min-width: 0;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                }
+                .nxt-entry-body { flex: 1; min-width: 0; }
                 .nxt-entry-meta {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
+                    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
                 }
                 .nxt-badge {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 5px;
-                    padding: 2px 8px;
-                    border-radius: 5px;
-                    font-size: 9px;
-                    font-weight: 900;
-                    letter-spacing: 0.1em;
-                    border: 1px solid;
+                    display: flex; align-items: center; gap: 6px;
+                    padding: 2px 8px; border-radius: 6px; border: 1px solid;
+                    font-size: 9px; font-weight: 800; letter-spacing: 0.05em;
                 }
-                .nxt-badge-dot {
-                    width: 5px; height: 5px; border-radius: 50%;
-                    box-shadow: 0 0 6px currentColor;
-                }
+                .nxt-badge-dot { width: 4px; height: 4px; border-radius: 50%; }
                 .nxt-timestamp {
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    font-size: 10px;
-                    font-weight: 700;
-                    font-family: var(--font-mono);
-                    color: var(--text-muted);
-                    opacity: 0.45;
+                    font-size: 9px; font-family: var(--font-mono); color: var(--text-tertiary);
+                    display: flex; align-items: center; gap: 4px;
                 }
                 .nxt-copy-btn {
-                    width: 22px; height: 22px; border-radius: 6px;
-                    background: var(--bg-surface); border: 1px solid var(--border-subtle);
-                    color: var(--text-muted); cursor: pointer;
-                    display: flex; align-items: center; justify-content: center;
-                    transition: all 0.15s;
-                    margin-left: auto;
+                    background: none; border: none; padding: 0; color: var(--text-muted);
+                    cursor: pointer; display: flex; align-items: center; justify-content: center;
+                    transition: color 0.2s;
                 }
-                .nxt-copy-btn:hover { background: var(--primary-subtle); color: var(--primary); border-color: var(--primary); }
+                .nxt-copy-btn:hover { color: var(--primary); }
                 .nxt-entry-text {
-                    font-size: 13px;
-                    font-weight: 500;
-                    color: var(--text-primary);
-                    opacity: 0.8;
-                    line-height: 1.6;
-                    transition: opacity 0.2s;
+                    font-size: 13px; font-weight: 500; color: var(--text-primary);
+                    line-height: 1.5; letter-spacing: -0.01em;
                 }
-                .nxt-entry-hovered .nxt-entry-text { opacity: 1; }
-                .nxt-cursor {
-                    color: var(--primary);
-                    animation: nxt-blink 0.7s step-end infinite;
-                    font-weight: 300;
-                }
+                .nxt-cursor { display: inline-block; width: 6px; height: 14px; background: var(--primary); margin-left: 2px; vertical-align: middle; animation: nxt-blink 0.8s infinite; }
                 @keyframes nxt-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 
-                /* ── Outlier Button ── */
                 .nxt-outlier-btn {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 7px;
-                    padding: 8px 16px;
-                    border-radius: 10px;
-                    background: linear-gradient(135deg, var(--bg-surface), var(--bg-card));
-                    border: 1px solid var(--border-highlight);
-                    color: var(--text-primary);
-                    font-size: 11px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    position: relative;
-                    margin-top: 4px;
-                    align-self: flex-start;
-                    overflow: hidden;
-                }
-                .nxt-outlier-btn::before {
-                    content: '';
-                    position: absolute;
-                    left: 0;
-                    top: 0; bottom: 0;
-                    width: 3px;
-                    background: linear-gradient(180deg, var(--accent), var(--primary));
-                    border-radius: 3px 0 0 3px;
-                }
-                .nxt-outlier-btn:hover {
-                    border-color: var(--accent);
-                    box-shadow: 0 4px 20px -4px var(--accent-glow), inset 0 0 30px -20px var(--accent-glow);
+                    margin-top: 12px;
+                    display: inline-flex; align-items: center; gap: 8px;
+                    padding: 8px 14px; border-radius: 10px;
+                    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.05));
+                    border: 1px solid rgba(239, 68, 68, 0.15);
+                    color: var(--text-primary); font-size: 11px; font-weight: 600;
+                    cursor: pointer; position: relative; overflow: hidden;
                 }
                 .nxt-outlier-pulse {
-                    width: 6px; height: 6px; border-radius: 50%;
-                    background: var(--accent);
-                    box-shadow: 0 0 10px var(--accent);
-                    animation: nxt-breathe 2s ease-in-out infinite;
+                    position: absolute; top: 0; left: 0; width: 4px; bottom: 0;
+                    background: var(--warning); opacity: 0.6;
                 }
-                .nxt-outlier-col {
-                    font-weight: 900;
-                    color: var(--accent);
-                    font-family: var(--font-mono);
-                }
+                .nxt-outlier-col { color: var(--warning); font-family: var(--font-mono); font-weight: 800; }
 
-                /* ── Empty ── */
                 .nxt-empty {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 40px;
-                    color: var(--text-muted);
-                    opacity: 0.4;
-                    font-size: 12px;
-                    font-weight: 600;
+                    padding: 40px; text-align: center; color: var(--text-muted);
+                    display: flex; flex-direction: column; align-items: center; gap: 12px;
+                    font-size: 13px; font-weight: 600; opacity: 0.5;
                 }
 
-                /* ── Expand Button ── */
+                /* ── Expand ── */
                 .nxt-expand-btn {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    padding: 14px 24px;
-                    background: var(--bg-card);
-                    border: 1px solid var(--border-subtle);
-                    border-top: none;
-                    border-radius: 0 0 20px 20px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    color: var(--text-muted);
-                    width: 100%;
+                    display: flex; align-items: center; gap: 12px;
+                    padding: 0 24px; height: 44px; width: 100%;
+                    background: var(--bg-card); border: 1px solid var(--border-subtle);
+                    border-top: none; border-radius: 0 0 20px 20px;
+                    cursor: pointer; color: var(--text-muted);
+                    font-size: 11px; font-weight: 800; text-transform: uppercase;
+                    letter-spacing: 0.1em; transition: all 0.2s;
                 }
-                .nxt-expand-btn:hover {
-                    color: var(--primary);
-                    background: var(--bg-elevated);
-                }
-                .nxt-expand-line {
-                    flex: 1;
-                    height: 1px;
-                    background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
-                }
-                .nxt-expand-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    font-size: 10px;
-                    font-weight: 900;
-                    text-transform: uppercase;
-                    letter-spacing: 0.1em;
-                    white-space: nowrap;
-                }
-                .nxt-expand-count {
-                    padding: 2px 8px;
-                    border-radius: 4px;
-                    background: var(--primary-subtle);
-                    color: var(--primary);
-                    font-size: 9px;
-                }
+                .nxt-expand-btn:hover { color: var(--text-primary); background: var(--bg-surface); }
+                .nxt-expand-line { flex: 1; height: 1px; background: var(--border-subtle); opacity: 0.4; }
+                .nxt-expand-content { display: flex; align-items: center; gap: 10px; }
+                .nxt-expand-count { font-family: var(--font-mono); font-weight: 600; opacity: 0.5; }
 
-                /* ── Mobile ── */
-                @media (max-width: 640px) {
-                    .nxt-stats { padding: 10px 14px; flex-wrap: wrap; gap: 10px; }
-                    .nxt-stat { padding: 0 8px; }
-                    .nxt-timeline-wrap { padding: 16px 14px 8px; }
-                    .nxt-header { padding: 14px 16px 12px; }
-                    .nxt-timeline-line, .nxt-timeline-progress { left: 31px; }
-                    .nxt-title { font-size: 16px; }
-                }
+                /* Premium highlighting */
+                .nxt-entry-active { background: linear-gradient(90deg, var(--primary-subtle) 0%, transparent 100%); }
+                .nxt-entry-hovered .nxt-entry-text { color: var(--primary); }
             `}</style>
         </div>
     );

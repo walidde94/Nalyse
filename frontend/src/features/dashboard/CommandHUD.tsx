@@ -11,6 +11,7 @@ import {
     Layers,
     ChevronDown,
 } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 /* ──────────────────────────────────────────────────────────
    AMBIENT STATUS STRIP — Top of dashboard
@@ -18,6 +19,7 @@ import {
    ────────────────────────────────────────────────────────── */
 
 export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: number; storageUsed: string }) => {
+    const { t } = useLanguage();
     const [uptime, setUptime] = useState(0);
 
     useEffect(() => {
@@ -44,7 +46,7 @@ export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: numb
             <div className="strip-inner">
                 <div className="strip-item">
                     <Database size={11} />
-                    <span className="strip-label">DATASETS</span>
+                    <span className="strip-label">{t('nav.datasets')}</span>
                     <span className="strip-value">{fileCount}</span>
                 </div>
 
@@ -52,7 +54,7 @@ export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: numb
 
                 <div className="strip-item">
                     <Layers size={11} />
-                    <span className="strip-label">STORAGE</span>
+                    <span className="strip-label">{t('nav.storage')}</span>
                     <span className="strip-value">{storageUsed} MB</span>
                 </div>
 
@@ -60,7 +62,7 @@ export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: numb
 
                 <div className="strip-item">
                     <Clock size={11} />
-                    <span className="strip-label">SESSION</span>
+                    <span className="strip-label">{t('nav.session')}</span>
                     <span className="strip-value mono">{formatUptime(uptime)}</span>
                 </div>
             </div>
@@ -72,8 +74,10 @@ export const AmbientStatusStrip = ({ fileCount, storageUsed }: { fileCount: numb
    RADIAL PERFORMANCE GAUGE — Animated SVG ring gauge
    ────────────────────────────────────────────────────────── */
 
-export const PerformanceGauge = ({ value = 94, label = 'System Health', onClick }: { value?: number; label?: string; onClick?: () => void }) => {
+export const PerformanceGauge = ({ value = 94, label, onClick }: { value?: number; label?: string; onClick?: () => void }) => {
+    const { t } = useLanguage();
     const radius = 58;
+    const displayLabel = label || t('nav.systemHealth');
     const stroke = 6;
     const circumference = 2 * Math.PI * radius;
     const progress = ((100 - value) / 100) * circumference;
@@ -143,7 +147,7 @@ export const PerformanceGauge = ({ value = 94, label = 'System Health', onClick 
                     {value}
                 </motion.span>
                 <span className="gauge-unit">%</span>
-                <span className="gauge-label">{label}</span>
+                <span className="gauge-label">{displayLabel}</span>
             </div>
         </motion.div>
     );
@@ -217,13 +221,14 @@ export const OrbitalMetric = ({ label, value, subValue, color, icon, trend, inde
 export const QuickActionsBar = ({ onUpload, onViewReport, onUpgrade, fileCount }: {
     onUpload: () => void;
     onViewReport: () => void;
-    onUpgrade: () => void;
+    onUpgrade?: () => void;
     fileCount: number;
 }) => {
+    const { t } = useLanguage();
     const actions = [
-        { label: 'Upload Dataset', icon: Database, color: 'var(--primary)', action: onUpload, shortcut: '⌘U' },
-        { label: 'View Report', icon: BarChart3, color: 'var(--accent)', action: onViewReport, shortcut: '⌘R' },
-        { label: 'Upgrade Plan', icon: Sparkles, color: 'var(--warning)', action: onUpgrade, shortcut: '⌘P' },
+        { label: t('nav.uploadDataset'), icon: Database, color: 'var(--primary)', action: onUpload, shortcut: '⌘U' },
+        { label: t('nav.viewReport'), icon: BarChart3, color: 'var(--accent)', action: onViewReport, shortcut: '⌘R' },
+        { label: t('nav.upgradePlan'), icon: Sparkles, color: 'var(--warning)', action: onUpgrade, shortcut: '⌘P' },
     ];
 
     return (
@@ -301,6 +306,7 @@ const getEventTokens = (type: string) => {
 };
 
 export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
+    const { t } = useLanguage();
     const [isExpanded, setIsExpanded] = useState(true);
 
     const events: TimelineEvent[] = useMemo(() => {
@@ -310,19 +316,19 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
             evts.push({
                 id: `upload-${f.id}`,
                 type: 'upload',
-                title: `Dataset Ingested`,
+                title: t('nav.datasetIngested'),
                 description: f.originalName || f.filename,
                 time: new Date(f.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                status: 'Indexed'
+                status: t('nav.indexed')
             });
             if (i < 3) {
                 evts.push({
                     id: `analysis-${f.id}`,
                     type: 'analysis',
-                    title: 'Neural Mapping Complete',
+                    title: t('nav.neuralMappingComplete'),
                     description: `Schema inference for ${(f.originalName || f.filename).split('.')[0]}`,
                     time: new Date(f.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    status: 'Complete'
+                    status: t('nav.complete')
                 });
             }
         });
@@ -353,12 +359,12 @@ export const IntelligenceTimeline = ({ files }: { files: any[] }) => {
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Activity size={15} style={{ color: 'var(--primary)' }} />
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Intelligence Feed</span>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('nav.intelligenceFeed')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.1)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                         <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 8px var(--danger-glow)' }} />
-                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.05em' }}>LIVE</span>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.05em' }}>{t('nav.live')}</span>
                     </div>
                     <motion.div
                         animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -458,8 +464,8 @@ export const LiveClock = () => {
             <div className="clock-time">
                 {timeStr}
             </div>
-            <div className="clock-date">
-                {time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
+            <div style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-tertiary)', letterSpacing: '0.1em' }}>
+                {time.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
             </div>
         </div>
     );

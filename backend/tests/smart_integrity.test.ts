@@ -6,7 +6,6 @@ import { Organization } from '../src/entities/Organization';
 import { User } from '../src/entities/User';
 import { Group } from '../src/entities/Group';
 import { File } from '../src/entities/File';
-import { Project } from '../src/entities/Project';
 import jwt from 'jsonwebtoken';
 
 describe('Nalyse Smart Integrity & Multi-Tenant Suite', () => {
@@ -73,27 +72,6 @@ describe('Nalyse Smart Integrity & Multi-Tenant Suite', () => {
         });
     });
 
-    describe('2. Project Leakage Prevention', () => {
-        it('should NOT allow User B to update User A\'s project status', async () => {
-            const projectRepo = AppDataSource.getRepository(Project);
-            const projectA = await projectRepo.save(projectRepo.create({
-                title: 'Secret Alpha Strategy',
-                description: '...',
-                objective: '...',
-                ownerId: userA.id
-            }));
-
-            const res = await request(app)
-                .patch(`/api/projects/${projectA.id}/status`)
-                .set('Authorization', `Bearer ${tokenB}`)
-                .send({ status: 'cancelled' });
-
-            expect(res.status).toBe(404); // Or 403
-
-            const verify = await projectRepo.findOneBy({ id: projectA.id });
-            expect(verify?.status).toBe('active');
-        });
-    });
 
     describe('3. Resource Exhaustion (B-35 Simulation)', () => {
         it('should reject extremely large analysis requests (DoS check)', async () => {

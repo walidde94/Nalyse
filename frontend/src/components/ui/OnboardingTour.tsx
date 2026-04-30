@@ -62,19 +62,13 @@ export const OnboardingTour = ({ onComplete }: { onComplete: () => void }) => {
       target: "#tour-bi-link"
     },
     {
-      title: "6. The Strategic Board",
-      content: "The system's autonomous nerve center. While you are offline, our AI agents scan for anomalies, fraud patterns, and emerging opportunities. Check this board daily for 'Pre-Emptive Signals' that require executive attention.",
-      icon: <LayoutGrid size={32} className="text-info-custom" />,
-      target: "#tour-sb-link"
-    },
-    {
-      title: "7. Spatial Road Intelligence",
+      title: "6. Spatial Road Intelligence",
       content: "Specialized for logistics and global trade. Map your supply chain routes in 3D. Identify 'High-Friction Corridors' and optimize your routing logic based on real-world latency data piped through our spatial engine.",
       icon: <BrainCircuit size={32} className="text-accent-custom" />,
       target: "#tour-logistics-link"
     },
     {
-      title: "8. Institutional API Layer",
+      title: "7. Institutional API Layer",
       content: "For engineering teams: Every feature in Nalyse is available via our REST API. Seamlessly integrate our AI synthesis engine into your own internal apps or customer-facing portals.",
       icon: <Settings size={32} className="text-secondary" />,
       target: "#tour-dev-link"

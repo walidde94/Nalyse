@@ -11,6 +11,7 @@ import {
     ArrowDownRight, Minus, ChevronRight, Layers, BarChart3, Shield,
     Sparkles, Eye, Bell, Lightbulb, ArrowRight, X, Clock, Cpu
 } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../components/ui/Toast';
 import { API_URL } from '../../config';
 import {
@@ -85,6 +86,7 @@ interface Props { files: { id: string; filename: string; size: number; createdAt
 
 export const AnomalyDetectionView = ({ files, token }: Props) => {
     const { addToast } = useToast();
+    const { t } = useLanguage();
     const [selectedFileId, setSelectedFileId] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadStep, setLoadStep] = useState(0);
@@ -166,10 +168,10 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
                     </div>
                     <div>
                         <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #ef4444 0%, #f59e0b 50%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Neural Anomaly Detection
+                            {t('anomaly.neuralTitle')}
                         </h1>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            AI-Powered KPI Monitoring · Statistical Detection · Explainable Alerts · Smart Recommendations
+                            {t('anomaly.neuralSubtitle')}
                         </p>
                     </div>
                 </div>
@@ -180,17 +182,17 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #ef4444, #f59e0b, #34d399)' }} />
                 <div className="flex items-center gap-2" style={{ marginBottom: '16px' }}>
                     <Cpu size={15} style={{ color: 'var(--text-muted)' }} />
-                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>Detection Configuration</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>{t('anomaly.config')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap' }}>
                     {/* File Select */}
                     <div style={{ flex: 2, minWidth: '220px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444' }} /> Dataset
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444' }} /> {t('anomaly.dataset')}
                         </label>
                         <select value={selectedFileId} onChange={e => setSelectedFileId(e.target.value)}
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${selectedFileId ? '#ef444444' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}>
-                            <option value="">Choose dataset…</option>
+                            <option value="">{t('lens.selectDataset')}</option>
                             {files.map(f => <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>)}
                         </select>
                     </div>
@@ -198,11 +200,11 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
                     {/* Method */}
                     <div style={{ flex: 1, minWidth: '140px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }} /> Method
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }} /> {t('anomaly.method')}
                         </label>
                         <select value={method} onChange={e => setMethod(e.target.value as any)}
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}>
-                            <option value="auto">Auto (Ensemble)</option>
+                            <option value="auto">{t('anomaly.autoEnsemble')}</option>
                             <option value="zscore">Z-Score</option>
                             <option value="iqr">IQR</option>
                         </select>
@@ -211,7 +213,7 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
                     {/* Sensitivity */}
                     <div style={{ flex: 1, minWidth: '140px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} /> Sensitivity
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} /> {t('anomaly.sensitivity')}
                         </label>
                         <div style={{ display: 'flex', gap: '4px' }}>
                             {[1, 2, 3, 4, 5].map(s => (
@@ -228,7 +230,7 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
                         disabled={loading || !selectedFileId}
                         style={{ padding: '10px 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ef4444, #f59e0b)', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', opacity: !selectedFileId ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 24px rgba(239,68,68,0.25)', whiteSpace: 'nowrap' as any, flexShrink: 0 }}>
                         {loading ? <RefreshCw size={15} className="animate-spin" /> : <ShieldAlert size={15} />}
-                        {loading ? 'Detecting…' : 'Run Detection'}
+                        {loading ? t('common.detecting') || 'Detecting…' : t('anomaly.run')}
                     </motion.button>
                 </div>
             </div>
@@ -471,9 +473,9 @@ export const AnomalyDetectionView = ({ files, token }: Props) => {
                         <div style={{ width: '88px', height: '88px', borderRadius: '28px', background: 'linear-gradient(135deg, rgba(239,68,68,0.08), rgba(245,158,11,0.08))', border: '1px solid rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                             <ShieldAlert size={40} style={{ color: '#ef4444', opacity: 0.5 }} />
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>Anomaly Detection Engine</h3>
+                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>{t('anomaly.engineTitle')}</h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                            Select a <strong style={{ color: '#ef4444' }}>dataset</strong>, configure detection parameters, then click <strong>Run Detection</strong> to identify anomalies with statistical confidence scoring.
+                            {t('anomaly.engineDesc')}
                         </p>
                     </div>
                 </div>

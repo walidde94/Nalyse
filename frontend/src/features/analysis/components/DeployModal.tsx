@@ -40,14 +40,6 @@ export const DeployModal = ({ isOpen, onClose, analysis, onDeploy }: DeployModal
             color: '#8b5cf6',
             available: false // Enterprise feature
         },
-        {
-            id: 'board',
-            name: 'Strategic Board',
-            description: 'Add to project management',
-            icon: Share2,
-            color: '#f59e0b',
-            available: true
-        }
     ];
 
     const handleDeploy = async () => {

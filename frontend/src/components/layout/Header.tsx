@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             const typeValue = isMention ? 'mention' : 'message';
 
             setToastData({
-                title: isMention ? 'You were mentioned' : `Message from ${msg.author?.firstName || 'User'}`,
+                title: isMention ? t('header.mentioned') : `${t('header.messageFrom')} ${msg.author?.firstName || 'User'}`,
                 message: preview,
                 author: msg.author,
                 type: typeValue as any
@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
             const preview = msg.content || 'Sent an image';
 
             setToastData({
-                title: `Direct message from ${msg.sender.firstName || 'User'}`,
+                title: `${t('header.dmFrom')} ${msg.sender.firstName || 'User'}`,
                 message: preview,
                 author: msg.sender,
                 type: 'dm',
@@ -144,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     boxShadow: `0 0 8px ${isMidnight ? 'var(--primary-glow)' : 'rgba(16, 185, 129, 0.5)'}`,
                                     flexShrink: 0,
                                     animation: 'pulseStatus 2s infinite ease-in-out',
-                                }} title="Connected" />
+                                }} title={t('header.connected')} />
                             </div>
                         </div>
                     </div>
@@ -178,7 +178,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                         }}
                     >
                         <Search size={14} className="search-icon" style={{ opacity: 0.6, flexShrink: 0, transition: 'all 0.3s' }} />
-                        <span style={{ flex: 1, textAlign: 'left', transition: 'all 0.3s' }}>Search commands, users...</span>
+                        <span style={{ flex: 1, textAlign: 'left', transition: 'all 0.3s' }}>{t('header.searchPlaceholder')}</span>
                         <kbd style={{
                             fontSize: '11px',
                             fontWeight: 600,
@@ -244,7 +244,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                         textTransform: 'uppercase',
                                         letterSpacing: '0.05em'
                                     }}>
-                                        {Object.keys(activeUsers).length} ONLINE
+                                        {Object.keys(activeUsers).length} {t('header.online')}
                                     </span>
                                 )}
                             </span>
@@ -288,8 +288,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     <div style={{ position: 'relative' }}>
                         <button
                             className="hdr-icon-btn"
-                            onClick={() => onNavigate?.('private-chat', { title: 'Personal Chat' } as any)}
-                            title="Personal neural chats"
+                            onClick={() => onNavigate?.('private-chat', { title: t('header.personalChat') } as any)}
+                            title={t('header.personalChat')}
                         >
                             <Send size={16} />
                             {dmUnreadCount > 0 && (
@@ -413,7 +413,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                 overflowY: 'auto'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                    <h3 style={{ fontSize: '12px', fontWeight: 700, margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Notifications</h3>
+                                    <h3 style={{ fontSize: '12px', fontWeight: 700, margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{t('header.notifications')}</h3>
                                     {unreadCount > 0 && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
@@ -421,14 +421,14 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                             background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.15)', color: '#38bdf8',
                                             fontSize: '10px', fontWeight: 700, cursor: 'pointer', padding: '3px 8px',
                                             borderRadius: '6px', transition: 'all 0.2s',
-                                        }}>Mark read</button>
+                                        }}>{t('header.markRead')}</button>
                                     )}
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     {notifications.length === 0 ? (
                                         <div style={{ padding: '20px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, fontWeight: 500 }}>
-                                            You're all caught up!
+                                            {t('header.allCaughtUp')}
                                         </div>
                                     ) : (
                                         notifications.map(n => {
@@ -503,7 +503,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                     <button
                         onClick={onThemeToggle}
                         className="hdr-icon-btn"
-                        title={`Switch to ${theme === 'dark' ? 'Light' : theme === 'light' ? 'Custom' : 'Dark'} mode`}
+                        title={`${t('header.switchMode')} ${theme === 'dark' ? 'Light' : theme === 'light' ? 'Custom' : 'Dark'} mode`}
                     >
                         <div style={{
                             transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -670,9 +670,9 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                     {[
-                                        ...(user?.role === 'SystemAdmin' || user?.role === 'PlatformAdmin' ? [{ title: 'Admin Control Center', icon: Shield, color: '#ef4444', tabId: 'admin' as any }] : []),
-                                        { title: 'Profile & Security', icon: Fingerprint, color: 'var(--accent)', tabId: 'settings', settingsTab: 'profile' as const },
-                                        { title: 'Settings', icon: Settings, color: 'var(--primary)', tabId: 'settings', settingsTab: 'profile' as const }
+                                        ...(user?.role === 'SystemAdmin' || user?.role === 'PlatformAdmin' ? [{ title: t('header.adminCenter'), icon: Shield, color: '#ef4444', tabId: 'admin' as any }] : []),
+                                        { title: t('header.profileSecurity'), icon: Fingerprint, color: 'var(--accent)', tabId: 'settings', settingsTab: 'profile' as const },
+                                        { title: t('nav.settings'), icon: Settings, color: 'var(--primary)', tabId: 'settings', settingsTab: 'profile' as const }
                                     ].map((item, i) => (
                                         <button
                                             key={i}
@@ -727,7 +727,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle, onMenuTogg
                                     }}
                                 >
                                     <LogOut size={15} />
-                                    <span>Sign Out</span>
+                                    <span>{t('header.signOut')}</span>
                                 </button>
                             </div>
                         )}

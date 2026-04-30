@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../config';
 import { useToast } from '../../components/ui/Toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface AdminStats {
   totalOrganizations: number;
@@ -108,6 +109,7 @@ interface LoginLog {
 }
 
 export const AdminControlCenter: React.FC = () => {
+  const { t } = useLanguage();
   const { token, user } = useAuth();
   const { addToast } = useToast();
   const [activeSection, setActiveSection] = useState<'overview' | 'organizations' | 'users' | 'active-users' | 'workspaces' | 'login-logs' | 'security' | 'config' | 'health'>('overview');
@@ -469,10 +471,10 @@ export const AdminControlCenter: React.FC = () => {
   const renderOverview = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
       {[
-        { label: 'Total Organizations', value: stats?.totalOrganizations, growth: stats?.orgGrowth, icon: Building2, color: '#6366f1' },
-        { label: 'Total Users', value: stats?.totalUsers, growth: stats?.userGrowth, icon: Users, color: '#8b5cf6' },
-        { label: 'Active Workspaces', value: stats?.activeWorkspaces, growth: stats?.workspaceGrowth, icon: Layout, color: '#ec4899' },
-        { label: 'AI Jobs Processed', value: stats?.aiAnalysisJobs, growth: stats?.aiJobsGrowth, icon: Cpu, color: '#f59e0b' },
+        { label: t('admin.stats.totalOrgs'), value: stats?.totalOrganizations, growth: stats?.orgGrowth, icon: Building2, color: '#6366f1' },
+        { label: t('admin.stats.totalUsers'), value: stats?.totalUsers, growth: stats?.userGrowth, icon: Users, color: '#8b5cf6' },
+        { label: t('admin.stats.activeWorkspaces'), value: stats?.activeWorkspaces, growth: stats?.workspaceGrowth, icon: Layout, color: '#ec4899' },
+        { label: t('admin.stats.aiJobs'), value: stats?.aiAnalysisJobs, growth: stats?.aiJobsGrowth, icon: Cpu, color: '#f59e0b' },
       ].map((stat, i) => (
         <motion.div 
           key={i}
@@ -508,25 +510,25 @@ export const AdminControlCenter: React.FC = () => {
       <div style={{ gridColumn: '1 / -1', marginTop: '40px' }}>
         <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)' }}>
           <Activity size={24} color="#10b981" />
-          System Health Matrix
+          {t('admin.health.title')}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
           <div className="admin-card glass-panel">
-            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>API Latency</div>
+            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>{t('admin.health.latency')}</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
               <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>{stats?.systemHealth?.latency || 24}ms</span>
-              <span style={{ color: '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>OPTIMAL</span>
+              <span style={{ color: '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>{t('admin.health.optimal')}</span>
             </div>
             <div style={{ width: '100%', height: '6px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '10px', marginTop: '32px', overflow: 'hidden' }}>
               <div style={{ width: '100%', height: '100%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
             </div>
           </div>
           <div className="admin-card glass-panel">
-            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>System CPU Load</div>
+            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>{t('admin.health.cpu')}</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
               <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>{stats?.systemHealth?.cpuLoad || 12}%</span>
               <span style={{ color: (stats?.systemHealth?.cpuLoad || 0) > 80 ? '#ef4444' : '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>
-                {(stats?.systemHealth?.cpuLoad || 0) > 80 ? 'HIGH' : (stats?.systemHealth?.cpuLoad || 0) > 50 ? 'MODERATE' : 'OPTIMAL'}
+                {(stats?.systemHealth?.cpuLoad || 0) > 80 ? t('admin.health.high') : (stats?.systemHealth?.cpuLoad || 0) > 50 ? t('admin.health.moderate') : t('admin.health.optimal')}
               </span>
             </div>
             <div style={{ width: '100%', height: '6px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '10px', marginTop: '32px', overflow: 'hidden' }}>
@@ -534,11 +536,11 @@ export const AdminControlCenter: React.FC = () => {
             </div>
           </div>
           <div className="admin-card glass-panel">
-            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>Memory Usage</div>
+            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', marginBottom: '20px' }}>{t('admin.health.memory')}</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
               <span style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1, color: 'var(--text-primary)' }}>{stats?.systemHealth?.memoryUsage || 45}%</span>
               <span style={{ color: (stats?.systemHealth?.memoryUsage || 0) > 85 ? '#ef4444' : '#10b981', fontSize: '14px', fontWeight: 800, marginBottom: '6px' }}>
-                {(stats?.systemHealth?.memoryUsage || 0) > 85 ? 'CRITICAL' : 'STABLE'}
+                {(stats?.systemHealth?.memoryUsage || 0) > 85 ? t('admin.health.critical') : t('admin.health.stable')}
               </span>
             </div>
             <div style={{ width: '100%', height: '6px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '10px', marginTop: '32px', overflow: 'hidden' }}>
@@ -558,7 +560,7 @@ export const AdminControlCenter: React.FC = () => {
             <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               type="text" 
-              placeholder="Search organizations..." 
+              placeholder={t('admin.orgs.search')} 
               style={{ width: '100%', height: '100%', padding: '0 16px 0 42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -569,36 +571,36 @@ export const AdminControlCenter: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
+            <option value="all">{t('admin.orgs.allStatus')}</option>
+            <option value="active">{t('admin.orgs.active')}</option>
+            <option value="suspended">{t('admin.orgs.suspended')}</option>
           </select>
           <select 
             value={tierFilter} 
             onChange={(e) => setTierFilter(e.target.value)}
             style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
           >
-            <option value="all">All Tiers</option>
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-            <option value="enterprise">Enterprise</option>
+            <option value="all">{t('admin.orgs.tier.all')}</option>
+            <option value="free">{t('admin.orgs.tier.free')}</option>
+            <option value="pro">{t('admin.orgs.tier.pro')}</option>
+            <option value="enterprise">{t('admin.orgs.tier.enterprise')}</option>
           </select>
         </div>
         <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }} onClick={handleCreateOrganization}>
           <UserPlus size={18} />
-          Create Organization
+          {t('admin.orgs.create')}
         </button>
       </div>
       <div style={{ overflowX: 'auto', width: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
             <tr>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Organization</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tier</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Usage</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Created</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Actions</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.orgs.table.org')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.orgs.table.status')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.orgs.table.tier')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.orgs.table.usage')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.orgs.table.created')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>{t('dashboard.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -616,14 +618,14 @@ export const AdminControlCenter: React.FC = () => {
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <span style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: org.isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: org.isActive ? '#10b981' : '#ef4444', border: `1px solid ${org.isActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}` }}>
-                    {org.isActive ? 'ACTIVE' : 'SUSPENDED'}
+                    {org.isActive ? t('admin.orgs.active').toUpperCase() : t('admin.orgs.suspended').toUpperCase()}
                   </span>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', textTransform: 'capitalize', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>{org.subscriptionTier}</td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}><strong>{org._count.users}</strong> Users</span>
-                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}><strong>{org._count.workspaces}</strong> Workspaces</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}><strong>{org._count.users}</strong> {t('org.stats.members')}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}><strong>{org._count.workspaces}</strong> {t('org.stats.workspaces')}</span>
                   </div>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(org.createdAt).toLocaleDateString()}</td>
@@ -646,7 +648,7 @@ export const AdminControlCenter: React.FC = () => {
               </tr>
             ))}
             {organizations.length === 0 && (
-               <tr><td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No organizations found</td></tr>
+               <tr><td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>{t('admin.orgs.empty')}</td></tr>
             )}
           </tbody>
         </table>
@@ -662,7 +664,7 @@ export const AdminControlCenter: React.FC = () => {
             <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               type="text" 
-              placeholder="Search users globally..." 
+              placeholder={t('admin.users.search')} 
               style={{ width: '100%', height: '100%', padding: '0 16px 0 42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', outline: 'none', fontSize: '14px', fontWeight: 500, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -673,47 +675,47 @@ export const AdminControlCenter: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">{t('admin.orgs.allStatus')}</option>
+            <option value="active">{t('admin.orgs.active')}</option>
+            <option value="inactive">{t('dashboard.offline')}</option>
           </select>
           <select 
             value={roleFilter} 
             onChange={(e) => setRoleFilter(e.target.value)}
             style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
           >
-            <option value="all">All Roles</option>
-            <option value="member">Member</option>
-            <option value="PlatformAdmin">Platform Admin</option>
-            <option value="SystemAdmin">System Admin</option>
+            <option value="all">{t('admin.users.allRoles')}</option>
+            <option value="member">{t('org.members.role.member')}</option>
+            <option value="PlatformAdmin">{t('admin.users.role.platformAdmin')}</option>
+            <option value="SystemAdmin">{t('admin.users.role.systemAdmin')}</option>
           </select>
           <select 
             value={tierFilter} 
             onChange={(e) => setTierFilter(e.target.value)}
             style={{ padding: '0 12px', height: '42px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, outline: 'none', cursor: 'pointer' }}
           >
-            <option value="all">All Tiers</option>
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-            <option value="enterprise">Enterprise</option>
+            <option value="all">{t('admin.orgs.tier.all')}</option>
+            <option value="free">{t('admin.orgs.tier.free')}</option>
+            <option value="pro">{t('admin.orgs.tier.pro')}</option>
+            <option value="enterprise">{t('admin.orgs.tier.enterprise')}</option>
           </select>
         </div>
         <button className="premium-btn" style={{ height: '42px', padding: '0 20px', boxSizing: 'border-box' }} onClick={handleInviteUser}>
           <UserPlus size={18} />
-          Invite User
+          {t('admin.users.invite')}
         </button>
       </div>
       <div style={{ overflowX: 'auto', width: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
             <tr>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>User</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Role</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tier</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Organization</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Last Login</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Actions</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.users.table.user')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('org.members.table.role')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.orgs.table.tier')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.orgs.table.org')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.orgs.table.status')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.users.table.lastLogin')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>{t('dashboard.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -749,7 +751,7 @@ export const AdminControlCenter: React.FC = () => {
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>{u.organization?.name || '---'}</td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <span style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: u.isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: u.isActive ? '#10b981' : '#ef4444', border: `1px solid ${u.isActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}` }}>
-                    {u.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    {u.isActive ? t('admin.orgs.active').toUpperCase() : t('dashboard.offline').toUpperCase()}
                   </span>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never'}</td>
@@ -783,24 +785,24 @@ export const AdminControlCenter: React.FC = () => {
                       >
                         <button onClick={() => handleToggleUserStatus(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                            <Activity size={14} color={u.isActive ? '#ef4444' : '#10b981'} />
-                           {u.isActive ? 'Suspend User' : 'Activate User'}
+                           {u.isActive ? t('admin.users.suspend') : t('admin.users.activate')}
                         </button>
                         <button onClick={() => handleUpdateUserRole(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                            <Edit2 size={14} color="var(--text-secondary)" />
-                           Change Role
+                           {t('admin.users.changeRole')}
                         </button>
                         <button onClick={() => handleResetPassword(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                            <Key size={14} color="#f59e0b" />
-                           Reset Password
+                           {t('admin.users.resetPass')}
                         </button>
                         <button onClick={() => handleForceLogout(u.id, u.email)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                            <LogOut size={14} color="#6366f1" />
-                           Force Logout
+                           {t('admin.users.forceLogout')}
                         </button>
                         <div style={{ height: '1px', background: 'var(--border-subtle)' }} />
                         <button onClick={() => handleDeleteUser(u)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', fontWeight: 600, textAlign: 'left', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                            <Trash2 size={14} color="#ef4444" />
-                           Delete User
+                           {t('admin.users.delete')}
                         </button>
                       </motion.div>
                     )}
@@ -809,7 +811,7 @@ export const AdminControlCenter: React.FC = () => {
               </tr>
             ))}
              {users.length === 0 && (
-               <tr><td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No users found</td></tr>
+               <tr><td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>{t('admin.users.empty')}</td></tr>
             )}
           </tbody>
         </table>
@@ -820,17 +822,17 @@ export const AdminControlCenter: React.FC = () => {
   const renderWorkspaces = () => (
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Active Workspaces</h3>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>{t('admin.workspaces.title')}</h3>
       </div>
       <div style={{ overflowX: 'auto', width: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
             <tr>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Workspace</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Organization</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Members</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Assets</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Created</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.workspaces.table.workspace')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.workspaces.table.org')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.workspaces.table.members')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.workspaces.table.assets')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.workspaces.table.created')}</th>
             </tr>
           </thead>
           <tbody>
@@ -838,18 +840,18 @@ export const AdminControlCenter: React.FC = () => {
               <tr key={ws.id} className="table-row-hover">
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{ws.name}</td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-secondary)' }}>{ws.organization?.name || '---'}</td>
-                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-secondary)' }}>{ws._count.members} Members</td>
+                <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-secondary)' }}>{t('admin.workspaces.membersCount').replace('{count}', String(ws._count.members))}</td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{ws._count.dashboards} Dashboards</span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{ws._count.files} Files</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('admin.workspaces.dashboardsCount').replace('{count}', String(ws._count.dashboards))}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('admin.workspaces.filesCount').replace('{count}', String(ws._count.files))}</span>
                   </div>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(ws.createdAt).toLocaleDateString()}</td>
               </tr>
             ))}
             {workspaces.length === 0 && (
-               <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No workspaces found</td></tr>
+               <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>{t('admin.workspaces.empty')}</td></tr>
             )}
           </tbody>
         </table>
@@ -861,7 +863,7 @@ export const AdminControlCenter: React.FC = () => {
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>User Login History</h3>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{t('admin.loginLogs.title')}</h3>
           <button 
             onClick={async () => {
               if (!window.confirm('Generate 15 sample login entries for testing?')) return;
@@ -883,7 +885,7 @@ export const AdminControlCenter: React.FC = () => {
             style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 800, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '8px', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <Database size={12} />
-            SEED DATA
+            {t('admin.loginLogs.seed')}
           </button>
         </div>
         {fetchError && (
@@ -896,11 +898,11 @@ export const AdminControlCenter: React.FC = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
             <tr>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>User</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>IP Address</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Platform / Device</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Time</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.loginLogs.table.user')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.loginLogs.table.status')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.loginLogs.table.ip')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.loginLogs.table.device')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.loginLogs.table.time')}</th>
             </tr>
           </thead>
           <tbody>
@@ -926,7 +928,7 @@ export const AdminControlCenter: React.FC = () => {
                       color: log.action === 'LOGIN' ? '#22c55e' : '#ef4444',
                       border: `1px solid ${log.action === 'LOGIN' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
                     }}>
-                      {log.action === 'LOGIN' ? 'SUCCESS' : 'FAILED'}
+                      {log.action === 'LOGIN' ? t('admin.loginLogs.success') : t('admin.loginLogs.failed')}
                     </span>
                     {log.action === 'LOGIN_FAILED' && (
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
@@ -958,7 +960,7 @@ export const AdminControlCenter: React.FC = () => {
               </tr>
             ))}
             {loginLogs.length === 0 && (
-               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No login logs found</td></tr>
+               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>{t('admin.loginLogs.empty')}</td></tr>
             )}
           </tbody>
         </table>
@@ -969,16 +971,16 @@ export const AdminControlCenter: React.FC = () => {
   const renderSecurity = () => (
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Platform Audit Logs</h3>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>{t('admin.security.title')}</h3>
       </div>
       <div style={{ overflowX: 'auto', width: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
             <tr>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Action</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>User</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Resource</th>
-              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Time</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.security.table.action')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.security.table.user')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.security.table.resource')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.security.table.time')}</th>
             </tr>
           </thead>
           <tbody>
@@ -993,7 +995,7 @@ export const AdminControlCenter: React.FC = () => {
               </tr>
             ))}
             {auditLogs.length === 0 && (
-               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No audit logs found</td></tr>
+               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>{t('admin.security.empty')}</td></tr>
             )}
           </tbody>
         </table>
@@ -1005,10 +1007,10 @@ export const AdminControlCenter: React.FC = () => {
     <div className="admin-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Live User Sessions</h3>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{t('admin.liveSessions.title')}</h3>
           <span style={{ fontSize: '11px', fontWeight: 700, padding: '4px 10px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderRadius: '20px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
             <span className="pulse-anim" style={{ display: 'inline-block', width: '6px', height: '6px', background: '#22c55e', borderRadius: '50%', marginRight: '8px' }}></span>
-            ACTUAL ACTIVITY (LAST 15M)
+            {t('admin.liveSessions.activity')}
           </span>
         </div>
       </div>
@@ -1016,11 +1018,11 @@ export const AdminControlCenter: React.FC = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
             <tr>
-              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</th>
-              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Organization</th>
-              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</th>
-              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Activity</th>
-              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.liveSessions.user')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.liveSessions.org')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.liveSessions.role')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.liveSessions.lastActivity')}</th>
+              <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>{t('admin.liveSessions.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -1038,7 +1040,7 @@ export const AdminControlCenter: React.FC = () => {
                   </div>
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-primary)' }}>
-                  {u.organization?.name || 'No Organization'}
+                  {u.organization?.name || t('admin.liveSessions.noOrg')}
                 </td>
                 <td style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <span style={{ fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '8px', background: u.role === 'admin' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.05)', color: u.role === 'admin' ? 'var(--primary)' : 'var(--text-secondary)', textTransform: 'uppercase' }}>
@@ -1061,7 +1063,7 @@ export const AdminControlCenter: React.FC = () => {
               </tr>
             ))}
             {activeUsers.length === 0 && (
-               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No users active in the last 15 minutes</td></tr>
+               <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>{t('admin.liveSessions.empty')}</td></tr>
             )}
           </tbody>
         </table>
@@ -1080,16 +1082,16 @@ export const AdminControlCenter: React.FC = () => {
               <div style={{ padding: '12px', background: 'linear-gradient(135deg, #ef4444, #b91c1c)', borderRadius: '14px', color: 'white', boxShadow: '0 8px 24px rgba(239,68,68,0.3)' }}>
                 <Shield size={28} />
               </div>
-              <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-1px', margin: 0, background: 'linear-gradient(to right, var(--text-primary), var(--text-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Admin Control Center</h1>
+              <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-1px', margin: 0, background: 'linear-gradient(to right, var(--text-primary), var(--text-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{t('admin.title')}</h1>
             </div>
-            <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: 0 }}>Operational governance & platform synchronization</p>
+            <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-muted)', margin: 0 }}>{t('admin.subtitle')}</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
              <div style={{ padding: '8px 16px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} className="pulse-anim"></div>
-               <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px' }}>Platform Sync: Active</span>
+               <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.sync.active')}</span>
              </div>
-             <button onClick={() => { fetchStats(); fetchOrganizations(); fetchUsers(); fetchLoginLogs(); }} className="icon-btn-large" title="Refresh Data">
+             <button onClick={() => { fetchStats(); fetchOrganizations(); fetchUsers(); fetchLoginLogs(); }} className="icon-btn-large" title={t('admin.refresh')}>
                 <RefreshCcw size={20} />
              </button>
           </div>
@@ -1101,15 +1103,15 @@ export const AdminControlCenter: React.FC = () => {
         {/* Sidebar Nav */}
         <div style={{ width: '280px', flex: 'none', borderRight: '1px solid var(--border-subtle)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', background: 'var(--bg-surface)' }}>
           {[
-            { id: 'overview', label: 'Platform Overview', icon: Layout },
-            { id: 'organizations', label: 'Organizations', icon: Building2 },
-            { id: 'users', label: 'User Management', icon: Users },
-            { id: 'workspaces', label: 'Workspace Hub', icon: Database },
-            { id: 'login-logs', label: 'Login History', icon: Clock },
-            { id: 'active-users', label: 'Live Sessions', icon: Activity },
-            { id: 'security', label: 'Security & Audit', icon: Shield },
-            { id: 'config', label: 'System Config', icon: Settings },
-            { id: 'health', label: 'Infrastructure', icon: Activity },
+            { id: 'overview', label: t('admin.nav.overview'), icon: Layout },
+            { id: 'organizations', label: t('admin.nav.orgs'), icon: Building2 },
+            { id: 'users', label: t('admin.nav.users'), icon: Users },
+            { id: 'workspaces', label: t('admin.nav.workspaces'), icon: Database },
+            { id: 'login-logs', label: t('admin.nav.loginHistory'), icon: Clock },
+            { id: 'active-users', label: t('admin.nav.liveSessions'), icon: Activity },
+            { id: 'security', label: t('admin.nav.securityAudit'), icon: Shield },
+            { id: 'config', label: t('admin.nav.systemConfig'), icon: Settings },
+            { id: 'health', label: t('admin.nav.infrastructure'), icon: Activity },
           ].map((item) => (
             <button
               key={item.id}
@@ -1147,10 +1149,10 @@ export const AdminControlCenter: React.FC = () => {
             <div style={{ padding: '16px', background: 'rgba(239,68,68,0.05)', borderRadius: '16px', border: '1px solid rgba(239,68,68,0.1)' }}>
                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#ef4444' }}>
                  <AlertTriangle size={14} />
-                 <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Emergency Controls</span>
+                 <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('admin.emergency.title')}</span>
                </div>
                <button className="btn-danger w-full" style={{ padding: '10px', fontSize: '12px', fontWeight: 800, borderRadius: '8px' }}>
-                 LOCK DOWN PLATFORM
+                 {t('admin.emergency.lockdown')}
                </button>
             </div>
           </div>
@@ -1176,8 +1178,8 @@ export const AdminControlCenter: React.FC = () => {
               {(activeSection === 'config' || activeSection === 'health') && (
                 <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                    <Activity size={48} style={{ marginBottom: '16px', opacity: 0.2 }} />
-                   <h3 style={{ margin: 0, fontWeight: 700 }}>Section under heavy construction</h3>
-                   <p style={{ fontSize: '13px' }}>The Neural Operations team is finalizing this module.</p>
+                   <h3 style={{ margin: 0, fontWeight: 700 }}>{t('admin.construction.title')}</h3>
+                   <p style={{ fontSize: '13px' }}>{t('admin.construction.desc')}</p>
                 </div>
               )}
             </motion.div>

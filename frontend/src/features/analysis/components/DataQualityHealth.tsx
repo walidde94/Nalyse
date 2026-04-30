@@ -5,6 +5,7 @@ import {
     Database, Hash, Type, Calendar, ToggleLeft, TrendingUp,
     Eye, Fingerprint, BarChart3
 } from 'lucide-react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface DataQualityProps {
     data: any[];
@@ -60,6 +61,8 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export const DataQualityHealth = ({ data, columns }: DataQualityProps) => {
+    const { t } = useLanguage();
+    
     const qualityData = useMemo((): {
         columns: ColumnQuality[];
         overallScore: number;
@@ -93,17 +96,17 @@ export const DataQualityHealth = ({ data, columns }: DataQualityProps) => {
 
             // Detect issues
             const issues: string[] = [];
-            if (completeness < 0.5) issues.push('High null rate');
-            if (completeness < 0.95 && completeness >= 0.5) issues.push('Missing values');
-            if (uniqueness === 1 && nonNullCount > 10) issues.push('Potential ID column');
-            if (uniqueness < 0.01 && nonNullCount > 10) issues.push('Low cardinality');
+            if (completeness < 0.5) issues.push(t('quality.highNullRate'));
+            if (completeness < 0.95 && completeness >= 0.5) issues.push(t('quality.missingValues'));
+            if (uniqueness === 1 && nonNullCount > 10) issues.push(t('quality.potentialId'));
+            if (uniqueness < 0.01 && nonNullCount > 10) issues.push(t('quality.lowCardinality'));
             if (type === 'number') {
                 const nums = values.filter(v => !isNaN(Number(v))).map(Number);
                 if (nums.length > 3) {
                     const mean = nums.reduce((s, n) => s + n, 0) / nums.length;
                     const std = Math.sqrt(nums.reduce((s, n) => s + Math.pow(n - mean, 2), 0) / nums.length);
                     const outliers = nums.filter(n => Math.abs(n - mean) > 3 * std).length;
-                    if (outliers > 0) issues.push(`${outliers} outlier${outliers > 1 ? 's' : ''}`);
+                    if (outliers > 0) issues.push(t('quality.outliersFound').replace('{count}', outliers.toString()));
                 }
             }
 
@@ -135,7 +138,7 @@ export const DataQualityHealth = ({ data, columns }: DataQualityProps) => {
             completeness,
             typeBreakdown
         };
-    }, [data, columns]);
+    }, [data, columns, t]);
 
     if (!data || data.length === 0) return null;
 
@@ -143,9 +146,9 @@ export const DataQualityHealth = ({ data, columns }: DataQualityProps) => {
         qualityData.overallScore >= 70 ? '#f59e0b' :
             qualityData.overallScore >= 50 ? '#f97316' : '#ef4444';
 
-    const scoreLabel = qualityData.overallScore >= 90 ? 'Excellent' :
-        qualityData.overallScore >= 70 ? 'Good' :
-            qualityData.overallScore >= 50 ? 'Fair' : 'Needs Attention';
+    const scoreLabel = qualityData.overallScore >= 90 ? t('quality.excellent') :
+        qualityData.overallScore >= 70 ? t('quality.good') :
+            qualityData.overallScore >= 50 ? t('quality.fair') : t('quality.needsAttention');
 
     return (
         <motion.div
@@ -177,10 +180,10 @@ export const DataQualityHealth = ({ data, columns }: DataQualityProps) => {
                     </div>
                     <div>
                         <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-                            Data Quality Health
+                            {t('quality.title')}
                         </h3>
                         <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, marginTop: '2px' }}>
-                            Automated quality assessment · {qualityData.totalRecords.toLocaleString()} records · {columns.length} columns
+                            {t('quality.subtitle').replace('{records}', qualityData.totalRecords.toLocaleString()).replace('{columns}', columns.length.toString())}
                         </p>
                     </div>
                 </div>
@@ -210,7 +213,7 @@ export const DataQualityHealth = ({ data, columns }: DataQualityProps) => {
                             {qualityData.overallScore}
                         </span>
                         <span style={{ fontSize: '7px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>
-                            Score
+                            {t('quality.scoreLabel')}
                         </span>
                     </div>
                 </div>
@@ -222,10 +225,10 @@ export const DataQualityHealth = ({ data, columns }: DataQualityProps) => {
                 borderBottom: '1px solid var(--border-subtle)'
             }}>
                 {[
-                    { label: 'Quality Score', value: `${qualityData.overallScore}%`, sub: scoreLabel, color: scoreColor, icon: <ShieldCheck size={14} /> },
-                    { label: 'Completeness', value: `${(qualityData.completeness * 100).toFixed(1)}%`, sub: `${qualityData.totalNulls} nulls`, color: qualityData.completeness >= 0.95 ? '#34d399' : '#f59e0b', icon: <Database size={14} /> },
-                    { label: 'Issues Found', value: qualityData.columns.reduce((s, c) => s + c.issues.length, 0).toString(), sub: qualityData.columns.filter(c => c.issues.length > 0).length + ' columns', color: qualityData.columns.some(c => c.issues.length > 0) ? '#f59e0b' : '#34d399', icon: <AlertTriangle size={14} /> },
-                    { label: 'Data Types', value: Object.keys(qualityData.typeBreakdown).length.toString(), sub: Object.entries(qualityData.typeBreakdown).map(([k, v]) => `${v} ${k}`).join(', '), color: '#6366f1', icon: <Fingerprint size={14} /> }
+                    { label: t('quality.score'), value: `${qualityData.overallScore}%`, sub: scoreLabel, color: scoreColor, icon: <ShieldCheck size={14} /> },
+                    { label: t('quality.completeness'), value: `${(qualityData.completeness * 100).toFixed(1)}%`, sub: t('quality.nulls').replace('{count}', qualityData.totalNulls.toString()), color: qualityData.completeness >= 0.95 ? '#34d399' : '#f59e0b', icon: <Database size={14} /> },
+                    { label: t('quality.issuesFound'), value: qualityData.columns.reduce((s, c) => s + c.issues.length, 0).toString(), sub: t('quality.columns').replace('{count}', qualityData.columns.filter(c => c.issues.length > 0).length.toString()), color: qualityData.columns.some(c => c.issues.length > 0) ? '#f59e0b' : '#34d399', icon: <AlertTriangle size={14} /> },
+                    { label: t('quality.dataTypes'), value: Object.keys(qualityData.typeBreakdown).length.toString(), sub: Object.entries(qualityData.typeBreakdown).map(([k, v]) => `${v} ${k}`).join(', '), color: '#6366f1', icon: <Fingerprint size={14} /> }
                 ].map((stat, i) => (
                     <div key={i} style={{
                         padding: '14px 16px',
@@ -253,7 +256,7 @@ export const DataQualityHealth = ({ data, columns }: DataQualityProps) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
                     <Eye size={12} style={{ color: 'var(--text-secondary)' }} />
                     <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)' }}>
-                        Column Health Overview
+                        {t('quality.healthOverview')}
                     </span>
                 </div>
 

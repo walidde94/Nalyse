@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { API_URL } from '../../../config';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 // ─── Types ───────────────────────────────────────────────────
 interface ForecastPoint {
@@ -64,6 +65,7 @@ const ForecastTooltip = ({ active, payload, label }: any) => {
 
 // ─── Main Component ──────────────────────────────────────────
 export const PredictiveForecasting = ({ data, schema }: Props) => {
+    const { t } = useLanguage();
     const { token } = useAuth();
     const [selectedMetric, setSelectedMetric] = useState('');
     const [forecastPeriods, setForecastPeriods] = useState(10);
@@ -157,6 +159,14 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
 
     const trendColor = result?.trend === 'up' ? '#34d399' : result?.trend === 'down' ? '#f87171' : '#94a3b8';
 
+    const loadingSteps = useMemo(() => [
+        t('forecast.ingesting'),
+        t('forecast.smoothing'),
+        t('forecast.training'),
+        t('forecast.generating'),
+        t('bi.processing')
+    ], [t]);
+
     return (
         <div style={{ height: '100%', overflowY: 'auto', padding: 24 }}>
             {/* ── Header ── */}
@@ -173,7 +183,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <h2 style={{ fontSize: 22, fontWeight: 900, margin: 0, background: 'linear-gradient(135deg, #34d399, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                Predictive Forecasting
+                                {t('forecast.title')}
                             </h2>
                             <span style={{
                                 padding: '2px 8px', borderRadius: 99, fontSize: 9, fontWeight: 900,
@@ -183,7 +193,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                             }}>Phase 3</span>
                         </div>
                         <p style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500, margin: 0 }}>
-                            AI-powered time series forecasting with confidence intervals, trend detection, and risk analysis.
+                            {t('forecast.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -200,11 +210,11 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                     {/* Metric select */}
                     <div style={{ flex: 2, minWidth: 200 }}>
                         <label style={{ fontSize: 10, fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} /> Metric to Forecast
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} /> {t('forecast.target')}
                         </label>
                         <select value={selectedMetric} onChange={e => setSelectedMetric(e.target.value)}
                             style={{ width: '100%', padding: '10px 14px', borderRadius: 10, background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 500 }}>
-                            <option value="">Choose a numeric column…</option>
+                            <option value="">{t('forecast.chooseNumeric')}</option>
                             {numericCols.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                     </div>
@@ -212,7 +222,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                     {/* Periods */}
                     <div style={{ flex: 1, minWidth: 140 }}>
                         <label style={{ fontSize: 10, fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }} /> Forecast Periods
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }} /> {t('forecast.periods')}
                         </label>
                         <div style={{ display: 'flex', gap: 4 }}>
                             {[5, 10, 15, 20, 30].map(p => (
@@ -244,7 +254,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                         }}
                     >
                         {loading ? <Loader2 size={15} className="animate-spin" /> : <BrainCircuit size={15} />}
-                        {loading ? 'Forecasting…' : 'Generate Forecast'}
+                        {loading ? t('forecast.solving') : t('forecast.train')}
                     </motion.button>
                 </div>
             </div>
@@ -256,7 +266,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                         style={{ padding: '48px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
                         <div style={{ width: 72, height: 72, borderRadius: '50%', border: '3px solid rgba(52,211,153,0.15)', borderTop: '3px solid #34d399' }} className="animate-spin" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            {['Analyzing historical patterns…', 'Detecting seasonality…', 'Training forecast model…', 'Computing confidence intervals…', 'Generating insights…'].map((s, i) => (
+                            {loadingSteps.map((s, i) => (
                                 <motion.div key={s} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.6 }}
                                     style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
                                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#34d399' }} />
@@ -271,9 +281,9 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
             {/* ── Error ── */}
             {error && !loading && (
                 <div style={{ padding: 16, borderRadius: 14, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: '#ef4444', fontSize: 13, marginBottom: 16 }}>
-                    <strong>Error:</strong> {error}
+                    <strong>{t('overlay.status.error')}:</strong> {error}
                     <button onClick={runForecast} style={{ display: 'block', marginTop: 8, padding: '6px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                        Retry
+                        {t('overlay.btn.retry')}
                     </button>
                 </div>
             )}
@@ -285,10 +295,10 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                     {/* KPI Cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
                         {[
-                            { label: 'Trend', value: result.trend.toUpperCase(), icon: result.trend === 'up' ? ArrowUpRight : result.trend === 'down' ? ArrowDownRight : Minus, color: trendColor },
-                            { label: 'Trend %', value: `${result.trendPct >= 0 ? '+' : ''}${result.trendPct.toFixed(1)}%`, icon: TrendingUp, color: trendColor },
-                            { label: 'Model Accuracy', value: `${result.accuracy}%`, icon: Target, color: result.accuracy >= 80 ? '#34d399' : result.accuracy >= 60 ? '#fbbf24' : '#ef4444' },
-                            { label: 'Seasonality', value: result.seasonality, icon: Calendar, color: '#8b5cf6' },
+                            { label: t('forecast.trend'), value: result.trend.toUpperCase(), icon: result.trend === 'up' ? ArrowUpRight : result.trend === 'down' ? ArrowDownRight : Minus, color: trendColor },
+                            { label: t('dashboard.growth'), value: `${result.trendPct >= 0 ? '+' : ''}${result.trendPct.toFixed(1)}%`, icon: TrendingUp, color: trendColor },
+                            { label: t('forecast.fit'), value: `${result.accuracy}%`, icon: Target, color: result.accuracy >= 80 ? '#34d399' : result.accuracy >= 60 ? '#fbbf24' : '#ef4444' },
+                            { label: t('forecast.seasonality'), value: result.seasonality, icon: Calendar, color: '#8b5cf6' },
                         ].map((kpi, i) => (
                             <motion.div key={kpi.label} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }}
                                 style={{
@@ -312,7 +322,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                         border: '1px solid rgba(52,211,153,0.12)',
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, color: '#34d399', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                            <Sparkles size={12} /> AI Forecast Summary
+                            <Sparkles size={12} /> {t('forecast.summary')}
                         </div>
                         <p style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.7, margin: 0, fontWeight: 500 }}>{result.summary}</p>
                     </div>
@@ -324,7 +334,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                         padding: '20px 16px 8px',
                     }}>
                         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <TrendingUp size={16} style={{ color: '#34d399' }} /> {selectedMetric} — Historical + Forecast
+                            <TrendingUp size={16} style={{ color: '#34d399' }} /> {selectedMetric} — {t('forecast.historical')} + {t('forecast.projection')}
                         </h3>
                         <ResponsiveContainer width="100%" height={340}>
                             <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 30 }}>
@@ -347,12 +357,12 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                                 <YAxis stroke="rgba(255,255,255,0.12)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v} />
                                 <Tooltip content={<ForecastTooltip />} />
                                 {/* Confidence band */}
-                                <Area type="monotone" dataKey="upperBound" name="Upper Bound" stroke="none" fill="url(#fg-conf)" strokeWidth={0} dot={false} />
-                                <Area type="monotone" dataKey="lowerBound" name="Lower Bound" stroke="rgba(52,211,153,0.15)" fill="none" strokeWidth={1} strokeDasharray="4 4" dot={false} />
+                                <Area type="monotone" dataKey="upperBound" name={t('forecast.ci')} stroke="none" fill="url(#fg-conf)" strokeWidth={0} dot={false} />
+                                <Area type="monotone" dataKey="lowerBound" name={t('forecast.ci')} stroke="rgba(52,211,153,0.15)" fill="none" strokeWidth={1} strokeDasharray="4 4" dot={false} />
                                 {/* Historical */}
-                                <Area type="monotone" dataKey="actual" name="Historical" stroke="#818cf8" fill="url(#fg-hist)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2, fill: '#818cf8' }} />
+                                <Area type="monotone" dataKey="actual" name={t('forecast.historical')} stroke="#818cf8" fill="url(#fg-hist)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2, fill: '#818cf8' }} />
                                 {/* Forecast */}
-                                <Area type="monotone" dataKey="forecast" name="Forecast" stroke="#34d399" fill="url(#fg-pred)" strokeWidth={2.5} strokeDasharray="6 3" dot={false} activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2, fill: '#34d399' }} />
+                                <Area type="monotone" dataKey="forecast" name={t('forecast.projection')} stroke="#34d399" fill="url(#fg-pred)" strokeWidth={2.5} strokeDasharray="6 3" dot={false} activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2, fill: '#34d399' }} />
                                 <Legend wrapperStyle={{ fontSize: 11, fontWeight: 600, paddingTop: 8 }} />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -362,7 +372,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
                         <div style={{ padding: '16px 18px', borderRadius: 14, background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.1)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, color: '#ef4444', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                <AlertTriangle size={12} /> Risks
+                                <AlertTriangle size={12} /> {t('forecast.risks')}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                 {result.risks.map((r, i) => (
@@ -374,7 +384,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                         </div>
                         <div style={{ padding: '16px 18px', borderRadius: 14, background: 'rgba(52,211,153,0.04)', border: '1px solid rgba(52,211,153,0.1)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, color: '#34d399', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                <Zap size={12} /> Opportunities
+                                <Zap size={12} /> {t('forecast.opportunities')}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                 {result.opportunities.map((o, i) => (
@@ -394,7 +404,7 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                         color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600,
                     }}>
                         <Info size={13} style={{ color: '#818cf8' }} />
-                        Methodology & Assumptions
+                        {t('forecast.methodology')}
                         {showMethodology ? <ChevronUp size={13} style={{ marginLeft: 'auto' }} /> : <ChevronDown size={13} style={{ marginLeft: 'auto' }} />}
                     </button>
                     <AnimatePresence>
@@ -423,9 +433,9 @@ export const PredictiveForecasting = ({ data, schema }: Props) => {
                         }}>
                             <TrendingUp size={36} style={{ color: '#34d399', opacity: 0.5 }} />
                         </div>
-                        <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>Forecast the Future</h3>
+                        <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>{t('forecast.launch')}</h3>
                         <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                            Select a <strong style={{ color: '#34d399' }}>numeric metric</strong>, choose how many periods to predict, then click <strong>Generate Forecast</strong>. The AI will analyze trends, detect seasonality, and produce predictions with confidence intervals.
+                            {t('forecast.launchDesc')}
                         </p>
                     </div>
                 </div>

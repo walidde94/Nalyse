@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import alasql from 'alasql';
 import { useAuth } from '../../contexts/AuthContext';
@@ -209,6 +210,7 @@ import { ArchitectNode } from '../../components/layout/ArchitectNode';
 import { DiagnosticOverlay } from '../../components/layout/DiagnosticOverlay';
 
 export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, onUpdate }: AnalysisViewProps) => {
+    const { t } = useLanguage();
     const { token } = useAuth();
     const { addToast } = useToast();
     const { socket } = useChat();
@@ -322,7 +324,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
     const activeFiltersList = [
         ...Object.entries(globalFilters).flatMap(([col, vals]) => {
             if (col === '_global_search') {
-                return vals.map(v => ({ type: 'query', value: v, label: `Search: "${v}"` }));
+                return vals.map(v => ({ type: 'query', value: v, label: t('analysis.searchLabel').replace('{query}', v) }));
             }
             if (col.startsWith('_op_')) {
                 // Handle operator filters: _op_FieldName_Operator
@@ -333,8 +335,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
             }
             return vals.map(v => ({ type: 'filter', column: col, value: v, label: `${col}: ${v}` }));
         }),
-        ...(activeDrillDown ? [{ type: 'drilldown', column: activeDrillDown.column, value: activeDrillDown.value, label: `Drill-down: ${activeDrillDown.column} = ${activeDrillDown.value}` }] : []),
-        ...(dateRange.column ? [{ type: 'range', column: dateRange.column, value: `${new Date(dateRange.start!).toLocaleDateString()} - ${new Date(dateRange.end!).toLocaleDateString()}`, label: `Time: ${new Date(dateRange.start!).toLocaleDateString()} - ${new Date(dateRange.end!).toLocaleDateString()}` }] : [])
+        ...(activeDrillDown ? [{ type: 'drilldown', column: activeDrillDown.column, value: activeDrillDown.value, label: t('analysis.drilldownLabel').replace('{column}', activeDrillDown.column).replace('{value}', String(activeDrillDown.value)) }] : []),
+        ...(dateRange.column ? [{ type: 'range', column: dateRange.column, value: `${new Date(dateRange.start!).toLocaleDateString()} - ${new Date(dateRange.end!).toLocaleDateString()}`, label: t('analysis.timeRangeLabel').replace('{start}', new Date(dateRange.start!).toLocaleDateString()).replace('{end}', new Date(dateRange.end!).toLocaleDateString()) }] : [])
     ] as any[];
 
     const handleRemoveFilter = (f: any) => {
@@ -612,7 +614,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 const trend = calculateTrend(currentRevenue, previousRevenue);
 
                 metrics.push({
-                    label: 'Total Revenue',
+                    label: t('analysis.metrics.totalRevenue'),
                     value: `$${(currentRevenue / 1000000).toFixed(2)}M`,
                     trend: trend,
                     color: 'var(--success)',
@@ -620,19 +622,19 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 });
             }
         }
-
+ 
         if (hasCustomer && localData.length > 0) {
             const custCol = columns.find(c => /customer|user|client|account|id/i.test(c));
             const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
-
+ 
             if (custCol) {
                 const { current, previous } = splitByTimePeriod(dateCol || '');
                 const currentCustomers = new Set(current.map(row => row[custCol]).filter(Boolean)).size;
                 const previousCustomers = new Set(previous.map(row => row[custCol]).filter(Boolean)).size;
                 const trend = calculateTrend(currentCustomers, previousCustomers);
-
+ 
                 metrics.push({
-                    label: 'Active Customers',
+                    label: t('analysis.metrics.activeCustomers'),
                     value: currentCustomers.toLocaleString(),
                     trend: trend,
                     color: 'var(--primary)',
@@ -640,11 +642,11 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 });
             }
         }
-
+ 
         if (hasStatus && localData.length > 0) {
             const statusCol = columns.find(c => /status|state|active|churn/i.test(c));
             const dateCol = columns.find(c => /date|time|created|updated/i.test(c));
-
+ 
             if (statusCol) {
                 const { current, previous } = splitByTimePeriod(dateCol || '');
                 const currentActiveCount = current.filter(row => {
@@ -653,16 +655,16 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 }).length;
                 const currentHealthScore = current.length > 0 ? ((currentActiveCount / current.length) * 100).toFixed(1) : '0';
                 const currentHealthNum = parseFloat(currentHealthScore);
-
+ 
                 const previousActiveCount = previous.filter(row => {
                     const status = String(row[statusCol]).toLowerCase();
                     return status.includes('active') || status.includes('true') || status === '1';
                 }).length;
                 const previousHealthNum = previous.length > 0 ? (previousActiveCount / previous.length) * 100 : 0;
                 const trend = calculateTrend(currentHealthNum, previousHealthNum);
-
+ 
                 metrics.push({
-                    label: 'Customer Health',
+                    label: t('analysis.metrics.customerHealth'),
                     value: `${currentHealthScore}%`,
                     trend: trend,
                     color: currentHealthNum > 85 ? 'var(--success)' : currentHealthNum > 70 ? 'var(--warning)' : 'var(--error)',
@@ -670,12 +672,12 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 });
             }
         }
-
+ 
         if (metrics.length === 0) {
             metrics = [
-                { label: 'Data Volume', value: localData.length.toLocaleString(), trend: 'Records', color: 'var(--primary)', icon: 'D' },
-                { label: 'Data Dimensions', value: columns.length.toString(), trend: 'Attributes', color: 'var(--info)', icon: 'A' },
-                { label: 'Engine Integrity', value: `${analysis.dataHealth?.score || 100}%`, trend: 'Optimal', color: 'var(--success)', icon: 'E' }
+                { label: t('analysis.metrics.dataVolume'), value: localData.length.toLocaleString(), trend: t('analysis.metrics.records'), color: 'var(--primary)', icon: 'D' },
+                { label: t('analysis.metrics.dataDimensions'), value: columns.length.toString(), trend: t('analysis.metrics.attributes'), color: 'var(--info)', icon: 'A' },
+                { label: t('analysis.metrics.engineIntegrity'), value: `${analysis.dataHealth?.score || 100}%`, trend: t('analysis.metrics.optimal'), color: 'var(--success)', icon: 'E' }
             ];
         }
         return metrics;
@@ -711,30 +713,6 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     addToast(`Posting to ${options.slackChannel}...`, 'info');
                     // TODO: Implement Slack webhook
                     setTimeout(() => addToast('Posted to Slack', 'success'), 1000);
-                    break;
-
-                case 'board':
-                    addToast('Deploying to Strategic Board...', 'info');
-                    const response = await fetch(`${API_URL}/api/projects`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            title: `Strategic Project: ${analysis.type}`,
-                            description: reasoning.executiveSummary || 'Actionable intelligence derived from enterprise analysis.',
-                            objective: 'AI_STRATEGIC_PULSE',
-                            actions: actions.length > 0 ? actions : ['Execute optimization matrix tasks'],
-                            impact: 'High'
-                        })
-                    });
-
-                    if (response.ok) {
-                        addToast('Strategy deployed to Strategic Board', 'success');
-                    } else {
-                        addToast('Deployment failed', 'error');
-                    }
                     break;
             }
         } catch (e) {
@@ -1081,7 +1059,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
             <div className="w-full h-full flex items-center justify-center opacity-20">
                 <div className="flex flex-col items-center gap-4">
                     <Grid size={48} />
-                    <span className="text-xs font-black uppercase tracking-widest">No Manifested Data</span>
+                    <span className="text-xs font-black uppercase tracking-widest">{t('analysis.noData')}</span>
                 </div>
             </div>
         );
@@ -1093,7 +1071,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
         if (type === 'worldmap') {
             return (
                 <div className="w-full h-full" style={{ height: '500px', width: '100%', display: 'block' }}>
-                    <WorldMapChart data={data} title="Geospatial Intelligence Preview" />
+                    <WorldMapChart data={data} title={t('analysis.geospatialPreview')} />
                 </div>
             );
         }
@@ -1382,12 +1360,12 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             value={currentType}
                             onChange={(e) => setChartConfig(prev => ({ ...prev, [index]: e.target.value }))}
                         >
-                            <option value="bar">Bar Chart</option>
-                            <option value="line">Line Chart</option>
-                            <option value="area">Area Graph</option>
-                            <option value="pie">Pie Chart</option>
-                            <option value="scatter">Scatter Plot</option>
-                            <option value="worldmap">World Map</option>
+                            <option value="bar">{t('analysis.chart.bar')}</option>
+                            <option value="line">{t('analysis.chart.line')}</option>
+                            <option value="area">{t('analysis.chart.area')}</option>
+                            <option value="pie">{t('analysis.chart.pie')}</option>
+                            <option value="scatter">{t('analysis.chart.scatter')}</option>
+                            <option value="worldmap">{t('analysis.chart.worldmap')}</option>
                         </select>
                         <div className="flex rounded-lg p-1 gap-1" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '2px', borderRadius: '8px' }}>
                             <button
@@ -1401,7 +1379,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             <button
                                 className="btn btn-secondary btn-icon"
                                 style={{ borderRadius: '10px' }}
-                                title="Export Analysis"
+                                title={t('analysis.actions.export')}
                                 onClick={() => exportToPDF(analysis, `analysis-report-${analysis.id || 'export'}`)}
                             >
                                 <Share2 size={16} />
@@ -1416,7 +1394,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             <button
                                 className="btn btn-ghost btn-icon"
                                 style={{ width: '28px', height: '28px', padding: 0, color: 'var(--text-secondary)' }}
-                                onClick={() => alert(`AI Insight: ${(displayData[displayData.length - 1]?.value > displayData[0]?.value) ? 'Uptrend Detected 📈' : 'Stable Trend ➡️'}`)}
+                                onClick={() => alert(`${t('analysis.aiInsightLabel')}: ${(displayData[displayData.length - 1]?.value > displayData[0]?.value) ? t('analysis.uptrendDetected') : t('analysis.stableTrend')}`)}
                             >
                                 <BrainCircuit size={16} />
                             </button>
@@ -1500,7 +1478,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 <XAxis
                                     type="number"
                                     dataKey="x"
-                                    name="X-Axis"
+                                    name={t('analysis.xAxis')}
                                     stroke="transparent"
                                     tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                                     dy={10}
@@ -1509,7 +1487,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 <YAxis
                                     type="number"
                                     dataKey="y"
-                                    name="Y-Axis"
+                                    name={t('analysis.yAxis')}
                                     stroke="transparent"
                                     tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                                     tickFormatter={(val) => typeof val === 'number' ? val.toLocaleString() : val}
@@ -1605,14 +1583,14 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 }}>
                     {!isSidebarCollapsed && (
                         <div className="flex-col">
-                            <h2 className="text-h2 tracking-tight-titles" style={{ fontSize: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Analysis Studio</h2>
+                            <h2 className="text-h2 tracking-tight-titles" style={{ fontSize: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('nav.group.analytics')}</h2>
                             <p className="label-premium" style={{ opacity: 0.6 }}>{analysis.type}</p>
                         </div>
                     )}
                     <button
                         onClick={() => setSidebarCollapsed(!isSidebarCollapsed)}
                         className="btn btn-icon btn-ghost btn-sm"
-                        title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                        title={isSidebarCollapsed ? t('nav.expand') : t('nav.collapse')}
                     >
                         {isSidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
                     </button>
@@ -1633,7 +1611,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             color: 'var(--text-tertiary)',
                             marginBottom: '8px'
                         }}>
-                            View Mode
+                            {t('nav.viewMode')}
                         </div>
                         <div className="flex-col gap-2">
                             <button
@@ -1653,7 +1631,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     <Presentation size={18} />
                                 </span>
                                 <span className="font-semibold" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
-                                    Executive
+                                    {t('nav.viewMode.executive')}
                                 </span>
                                 {viewMode === 'executive' && (
                                     <motion.div
@@ -1681,7 +1659,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     <Terminal size={18} />
                                 </span>
                                 <span className="font-semibold" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
-                                    Analyst
+                                    {t('nav.viewMode.analyst')}
                                 </span>
                                 {viewMode === 'analyst' && (
                                     <motion.div
@@ -1699,31 +1677,31 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 <div className="flex-col gap-6" style={{ marginTop: '24px', padding: '0 12px', overflowY: 'auto' }}>
                     {[
                         {
-                            title: 'Data Analysis',
+                            title: t('nav.group.analytics'),
                             items: [
-                                { id: 'ai', icon: <Sparkles size={18} />, label: 'AI Query', roles: ['executive', 'analyst'], badge: 'NEW' },
-                                { id: 'overview', icon: <LayoutTemplate size={18} />, label: 'Overview', roles: ['executive', 'analyst'] },
-                                { id: 'builder', icon: <PenTool size={18} />, label: 'Visual Builder', roles: ['executive', 'analyst'] },
-                                { id: 'graph', icon: <Network size={18} />, label: 'Graph View', roles: ['analyst'] },
-                                { id: 'data', icon: <Grid size={18} />, label: 'Data Grid', roles: ['analyst'] },
-                                { id: 'sql', icon: <Terminal size={18} />, label: 'SQL Runner', roles: ['analyst'] },
+                                { id: 'ai', icon: <Sparkles size={18} />, label: t('analysis.tabs.ai'), roles: ['executive', 'analyst'], badge: 'NEW' },
+                                { id: 'overview', icon: <LayoutTemplate size={18} />, label: t('analysis.tabs.overview'), roles: ['executive', 'analyst'] },
+                                { id: 'builder', icon: <PenTool size={18} />, label: t('analysis.tabs.builder'), roles: ['executive', 'analyst'] },
+                                { id: 'graph', icon: <Network size={18} />, label: t('analysis.tabs.graph'), roles: ['analyst'] },
+                                { id: 'data', icon: <Grid size={18} />, label: t('analysis.tabs.data'), roles: ['analyst'] },
+                                { id: 'sql', icon: <Terminal size={18} />, label: t('analysis.tabs.sql'), roles: ['analyst'] },
                             ]
                         },
                         {
-                            title: 'Data Science',
+                            title: t('nav.group.predictive'),
                             items: [
-                                { id: 'anomaly', icon: <Activity size={18} />, label: 'Anomaly Det.', roles: ['executive', 'analyst'], badge: 'AI' },
-                                { id: 'advanced', icon: <Cpu size={18} />, label: 'Advanced Stats', roles: ['analyst'] },
-                                { id: 'forecast', icon: <TrendingUp size={18} />, label: 'Forecasting', roles: ['executive', 'analyst'], badge: 'NEW' },
-                                { id: 'insights', icon: <Lightbulb size={18} />, label: 'AI Insights', roles: ['executive', 'analyst'] },
-                                { id: 'map', icon: <Map size={18} />, label: 'Geo Mapping', roles: ['analyst'] },
-                                { id: 'python', icon: <Brackets size={18} />, label: 'Python Lab', roles: ['analyst'] },
+                                { id: 'anomaly', icon: <Activity size={18} />, label: t('analysis.tabs.anomaly'), roles: ['executive', 'analyst'], badge: 'AI' },
+                                { id: 'advanced', icon: <Cpu size={18} />, label: t('analysis.tabs.advanced'), roles: ['analyst'] },
+                                { id: 'forecast', icon: <TrendingUp size={18} />, label: t('analysis.tabs.forecast'), roles: ['executive', 'analyst'], badge: 'NEW' },
+                                { id: 'insights', icon: <Lightbulb size={18} />, label: t('analysis.tabs.insights'), roles: ['executive', 'analyst'] },
+                                { id: 'map', icon: <Map size={18} />, label: t('analysis.tabs.map'), roles: ['analyst'] },
+                                { id: 'python', icon: <Brackets size={18} />, label: t('analysis.tabs.python'), roles: ['analyst'] },
                             ]
                         },
                         {
-                            title: 'Business Intelligence',
+                            title: t('nav.group.bi'),
                             items: [
-                                { id: 'presentation', icon: <Presentation size={18} />, label: 'Present Mode', roles: ['executive', 'analyst'] },
+                                { id: 'presentation', icon: <Presentation size={18} />, label: t('analysis.tabs.presentation'), roles: ['executive', 'analyst'] },
                             ]
                         }
                     ].map(group => {
@@ -1845,10 +1823,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                         className="btn btn-secondary w-full"
                         onClick={onClose}
                         style={{ justifyContent: isSidebarCollapsed ? 'center' : 'flex-start', padding: '12px' }}
-                        title={isSidebarCollapsed ? "Back to Files" : ""}
+                        title={isSidebarCollapsed ? t('nav.backToFiles') : ""}
                     >
                         <ArrowLeft size={16} className={!isSidebarCollapsed ? "mr-2" : ""} />
-                        {!isSidebarCollapsed && "Back to Files"}
+                        {!isSidebarCollapsed && t('nav.backToFiles')}
                     </button>
                 </div>
             </div>
@@ -1883,23 +1861,23 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 }}
                             >
                                 <ArrowLeft size={16} className="group-hover/back:-translate-x-1 transition-transform" />
-                                <span className="label-premium !opacity-100 !text-[12px]">Back</span>
+                                <span className="label-premium !opacity-100 !text-[12px]">{t('nav.backToFiles')}</span>
                             </button>
                             <div className="flex items-center gap-2 mr-4 group cursor-default">
                                 <div className="w-5 h-5 bg-[var(--primary)] rounded flex items-center justify-center text-white font-black active-press transition-transform group-hover:scale-110">N</div>
-                                <span className="label-premium hidden sm:inline" style={{ color: 'var(--text-primary)' }}>STRATEGIC ANALYTICS</span>
+                                <span className="label-premium hidden sm:inline" style={{ color: 'var(--text-primary)' }}>{t('nav.strategicAnalytics')}</span>
                             </div>
                             <div className="flex items-center gap-4 opacity-50 hidden sm:flex">
-                                <span className="label-premium">WORKSPACE</span>
+                                <span className="label-premium">{t('nav.workspace.label')}</span>
                                 <div className="w-1 h-1 rounded-full bg-current opacity-20"></div>
-                                <span className="label-premium text-[var(--text-primary)]">CORE ANALYZER</span>
+                                <span className="label-premium text-[var(--text-primary)]">{t('nav.coreAnalyzer')}</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-                            <span className="label-premium opacity-40 hidden md:inline">VERSION: 2.1.0-E</span>
+                            <span className="label-premium opacity-40 hidden md:inline">{t('nav.version')}: 2.1.0-E</span>
                             <div className="flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded border border-success/20">
                                 <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-[0_0_5px_var(--success)]"></div>
-                                <span className="label-premium !opacity-100 italic animate-breathe">LIVE</span>
+                                <span className="label-premium !opacity-100 italic animate-breathe">{t('nav.live')}</span>
                             </div>
                         </div>
                     </div>
@@ -1921,8 +1899,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 <FileText size={20} />
                             </div>
                             <div>
-                                <h2 className="text-h3" style={{ fontSize: '18px', marginBottom: '2px' }}>Analysis Report</h2>
-                                <p className="text-sm text-secondary" style={{ fontSize: '12px' }}>Generated {new Date().toLocaleDateString()}</p>
+                                <h2 className="text-h3" style={{ fontSize: '18px', marginBottom: '2px' }}>{t('nav.reportTitle')}</h2>
+                                <p className="text-sm text-secondary" style={{ fontSize: '12px' }}>{t('nav.generatedOn')} {new Date().toLocaleDateString()}</p>
                             </div>
                         </div>
 
@@ -1943,7 +1921,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 }}
                             >
                                 <FileDown size={14} className="mr-1" />
-                                CSV
+                                {t('nav.downloadCSV')}
                             </button>
 
                             <button
@@ -1951,7 +1929,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 onClick={() => exportToPDF(analysis, 'Nalyse_Report')}
                             >
                                 <Download size={14} className="mr-1" />
-                                Download PDF
+                                {t('analysis.actions.downloadPDF')}
                             </button>
 
                             <button
@@ -1960,7 +1938,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 style={{ position: 'relative' }}
                             >
                                 <MessageCircle size={14} className="mr-1" />
-                                Comments
+                                {t('nav.comments')}
                                 {Object.values(commentCounts).reduce((a, b) => a + b, 0) > 0 && (
                                     <span style={{
                                         position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18,
@@ -2029,8 +2007,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                         {activeTab === 'overview' && (
                             <div className="flex-col gap-6 fade-in">
                                 <div className="hidden-on-screen" style={{ display: 'none', marginBottom: '20px' }}>
-                                    <h1 style={{ fontSize: '24px', color: 'var(--text-primary)' }}>Nalyse Intelligence Report</h1>
-                                    <p style={{ color: '#ccc' }}>Generated on {new Date().toLocaleString()}</p>
+                                    <h1 style={{ fontSize: '24px', color: 'var(--text-primary)' }}>{t('nav.strategicAnalytics')}</h1>
+                                    <p style={{ color: '#ccc' }}>{t('nav.generatedOn')} {new Date().toLocaleString()}</p>
                                 </div>
 
                                 {/* AI Insight Engine — auto-detect patterns in the dataset */}
@@ -2042,7 +2020,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     const sections = [
                                         {
                                             id: 'an-metrics',
-                                            label: 'Strategic Analytics Matrix',
+                                            label: t('analysis.priorityMatrix'),
                                             component: (
                                                 <div className="flex-responsive gap-4">
                                                     {memoizedMetrics.map((metric, idx) => (
@@ -2076,14 +2054,14 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         },
                                         {
                                             id: 'an-findings',
-                                            label: 'Intelligence Pulse',
+                                            label: t('analysis.findings.title'),
                                             component: analysis.keyFindings && analysis.keyFindings.length > 0 ? (
                                                 <div className="card" style={{ border: '1px solid var(--border-highlight)' }}>
                                                     <div className="flex items-center gap-3 mb-4">
                                                         <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(210, 153, 34, 0.1)', color: 'var(--warning)' }}>
                                                             <BrainCircuit size={20} />
                                                         </div>
-                                                        <h3 className="text-h3" style={{ color: 'var(--text-primary)' }}>Strategic Findings</h3>
+                                                        <h3 className="text-h3" style={{ color: 'var(--text-primary)' }}>{t('analysis.findings.title')}</h3>
                                                     </div>
                                                     <div className="grid gap-3" style={{ gridTemplateColumns: '1fr' }}>
                                                         {analysis.keyFindings.slice(0, 5).map((insight: any, i: number) => (
@@ -2097,7 +2075,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         },
                                         {
                                             id: 'an-charts',
-                                            label: 'Synthesis Grid',
+                                            label: t('analysis.synthesisGrid'),
                                             component: (
                                                 <div className="grid gap-6" style={{ display: layoutMode === 'grid' ? 'grid' : 'flex', flexDirection: 'column', gridTemplateColumns: layoutMode === 'grid' ? 'repeat(auto-fit, minmax(450px, 1fr))' : '1fr', gap: '24px' }}>
                                                     {analysis.options?.map((opt: any, i: number) => renderChart(opt, i, memoizedChartsData[i]))}
@@ -2107,7 +2085,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         // Deep Intelligence Section (ML / Forecast / Regression)
                                         ...((analysis.mlAnalysis || analysis.forecast || analysis.regressionModel) ? [{
                                             id: 'an-deep-intel',
-                                            label: 'Deep Intelligence',
+                                            label: t('analysis.deepIntelligence'),
                                             component: (
                                                 <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
                                                     {/* K-Means Clustering Card */}
@@ -2124,7 +2102,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                     <Layers size={18} />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Segment Discovery</h4>
+                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('analysis.tabs.advanced')}</h4>
                                                                     <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>K-Means Clustering</span>
                                                                 </div>
                                                                 <div style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: '20px', background: 'rgba(168,85,247,0.12)', color: '#a855f7', fontSize: '11px', fontWeight: 700 }}>
@@ -2132,7 +2110,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-2 mb-3">
-                                                                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Silhouette Score:</span>
+                                                                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('analysis.ml.clustering')}:</span>
                                                                 <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                                     <div style={{ width: `${Math.max(0, analysis.mlAnalysis.kmeansResult.silhouetteScore * 100)}%`, height: '100%', borderRadius: '3px', background: analysis.mlAnalysis.kmeansResult.silhouetteScore > 0.5 ? '#34d399' : analysis.mlAnalysis.kmeansResult.silhouetteScore > 0.25 ? '#fbbf24' : '#f87171', transition: 'width 1s ease' }} />
                                                                 </div>
@@ -2163,7 +2141,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                     <TrendingUp size={18} />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Predictive Forecast</h4>
+                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('analysis.forecast.engine')}</h4>
                                                                     <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{analysis.forecast.column}</span>
                                                                 </div>
                                                                 <div style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: '20px', background: analysis.forecast.metrics.trend === 'increasing' ? 'rgba(52,211,153,0.12)' : analysis.forecast.metrics.trend === 'decreasing' ? 'rgba(248,113,113,0.12)' : 'rgba(251,191,36,0.12)', color: analysis.forecast.metrics.trend === 'increasing' ? '#34d399' : analysis.forecast.metrics.trend === 'decreasing' ? '#f87171' : '#fbbf24', fontSize: '11px', fontWeight: 700 }}>
@@ -2172,11 +2150,11 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                             </div>
                                                             <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                                                 <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-surface-hover)' }}>
-                                                                    <div className="text-xs" style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Confidence</div>
+                                                                    <div className="text-xs" style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>{t('analysis.findings.confidence')}</div>
                                                                     <div className="font-mono font-bold" style={{ color: 'var(--text-primary)', fontSize: '18px' }}>{analysis.forecast.metrics.confidence.toFixed(0)}%</div>
                                                                 </div>
                                                                 <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-surface-hover)' }}>
-                                                                    <div className="text-xs" style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Reliability</div>
+                                                                    <div className="text-xs" style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>{t('analysis.ml.reliability')}</div>
                                                                     <div className="font-bold" style={{ color: analysis.forecast.metrics.modelReliability === 'High' ? '#34d399' : analysis.forecast.metrics.modelReliability === 'Medium' ? '#fbbf24' : '#f87171', fontSize: '18px' }}>{analysis.forecast.metrics.modelReliability}</div>
                                                                 </div>
                                                             </div>
@@ -2198,7 +2176,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                     <Activity size={18} />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Regression Model</h4>
+                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('analysis.tabs.advanced')}</h4>
                                                                     <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{analysis.regressionModel.dependentVar} ← {analysis.regressionModel.independentVar}</span>
                                                                 </div>
                                                             </div>
@@ -2239,7 +2217,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                     <AlertCircle size={18} />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Anomaly Detection</h4>
+                                                                    <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('analysis.tabs.anomaly')}</h4>
                                                                     <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Distribution-Aware Outliers</span>
                                                                 </div>
                                                                 <div style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: '20px', background: 'rgba(251,146,60,0.12)', color: '#fb923c', fontSize: '11px', fontWeight: 700 }}>
@@ -2272,7 +2250,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                 <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>
                                                                     <Network size={18} />
                                                                 </div>
-                                                                <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Top Correlations</h4>
+                                                                <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('analysis.ml.correlation')}</h4>
                                                             </div>
                                                             <div className="flex-col gap-2">
                                                                 {analysis.mlAnalysis.correlationMatrix.entries
@@ -2324,7 +2302,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
 
                         {activeTab === 'insights' && (
                             <div className="flex-col gap-4 fade-in">
-                                <h2 className="text-h2">All Automated Insights</h2>
+                                <h2 className="text-h2">{t('analysis.automatedInsights')}</h2>
                                 <div className="flex-col gap-4">
                                     {analysis.aiInsights.map((insight: any, i: number) => {
                                         const isAnomaly = insight.type === 'anomaly';
@@ -2402,10 +2380,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         <div className="flex-col">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xl font-bold font-data text-[var(--text-primary)]">{filteredData.length.toLocaleString()}</span>
-                                                <span className="text-[10px] font-black tracking-widest text-[var(--text-secondary)] opacity-40 uppercase">Total Records</span>
+                                                <span className="text-[10px] font-black tracking-widest text-[var(--text-secondary)] opacity-40 uppercase">{t('analysis.totalRecords')}</span>
                                             </div>
                                             {filteredData.length !== localData.length && (
-                                                <span className="text-[9px] font-bold text-[var(--primary)] uppercase tracking-tight">Active Filtered View</span>
+                                                <span className="text-[9px] font-bold text-[var(--primary)] uppercase tracking-tight">{t('analysis.activeFilteredView')}</span>
                                             )}
                                         </div>
 
@@ -2415,7 +2393,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-20"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                                             <input
                                                 type="text"
-                                                placeholder="Instant column search..."
+                                                placeholder={t('analysis.instantSearch')}
                                                 className="bg-transparent border-none outline-none text-xs font-bold text-[var(--text-primary)] w-64 placeholder:opacity-20"
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -2425,7 +2403,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
 
                                     <div className="flex items-center gap-3">
                                         <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-xl border border-white/5">
-                                            <span className="text-[9px] font-bold uppercase tracking-widest opacity-20">Limit</span>
+                                            <span className="text-[9px] font-bold uppercase tracking-widest opacity-20">{t('analysis.limit')}</span>
                                             <select
                                                 className="bg-transparent border-none text-[11px] font-black text-[var(--text-primary)] outline-none cursor-pointer focus:ring-0"
                                                 value={gridPageSize}
@@ -2488,7 +2466,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     {filteredData.length === 0 && (
                                         <div className="flex flex-col items-center justify-center py-20 opacity-20">
                                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="mb-4"><path d="M4 7V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3" /><path d="M9 2v4" /><path d="M15 2v4" /><path d="M12 18v4" /><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" /><path d="M9 22v-4" /><path d="M15 22v-4" /><path d="M2 13h20" /><path d="M2 9h20" /></svg>
-                                            <span className="text-sm font-bold tracking-widest uppercase">No matching telemetry documents</span>
+                                            <span className="text-sm font-bold tracking-widest uppercase">{t('analysis.noMatchingData')}</span>
                                         </div>
                                     )}
                                 </div>
@@ -2514,7 +2492,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             <div className="flex-col gap-4 fade-in" style={{ height: '100%', minHeight: '80vh' }}>
                                 <div className="card flex-col gap-4">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-h3">SQL Query Editor</h3>
+                                        <h3 className="text-h3">{t('analysis.sqlEditor')}</h3>
                                         <div className="text-sm text-secondary">Table name: <code>?</code></div>
                                     </div>
                                     <textarea
@@ -2525,13 +2503,13 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     />
                                     <div className="flex justify-between items-center">
                                         {queryError ? <span style={{ color: 'var(--danger)' }}>{queryError}</span> : <span></span>}
-                                        <button className="btn btn-primary" onClick={runQuery}>Run Query</button>
+                                        <button className="btn btn-primary" onClick={runQuery}>{t('analysis.runQuery')}</button>
                                     </div>
                                 </div>
 
                                 {queryResult.length > 0 && (
                                     <div className="card flex-col" style={{ padding: 0, overflow: 'hidden', flex: 1 }}>
-                                        <div className="p-4 border-bottom"><h4 className="text-h3">Results</h4></div>
+                                        <div className="p-4 border-bottom"><h4 className="text-h3">{t('analysis.results')}</h4></div>
                                         <div style={{ overflow: 'auto', flex: 1 }}>
                                             <table className="data-table">
                                                 <thead>
@@ -2585,14 +2563,14 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
 
                                     <div className="flex items-center gap-2" style={{ marginBottom: '20px' }}>
                                         <Database size={15} style={{ color: 'var(--text-muted)' }} />
-                                        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>Visual Architect</span>
+                                        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>{t('analysis.visualArchitect')}</span>
                                     </div>
 
                                     <div style={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
                                         {/* Dimension */}
                                         <div style={{ flex: 1, minWidth: '220px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#818cf8', boxShadow: `0 0 8px #818cf8` }} /> Dimension (X-Axis)
+                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#818cf8', boxShadow: `0 0 8px #818cf8` }} /> {t('analysis.dimensionLabel')}
                                             </label>
                                             <select
                                                 id="va-dim-select"
@@ -2600,7 +2578,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                 value={builderConfig.xAxis}
                                                 onChange={e => setBuilderConfig(prev => ({ ...prev, xAxis: e.target.value }))}
                                             >
-                                                <option value="">Choose dimension…</option>
+                                                <option value="">{t('analysis.chooseDimension')}</option>
                                                 {(dimensions.length > 0 ? dimensions : Object.keys(localData[0] || {})).map(c => <option key={c} value={c}>{c}</option>)}
                                             </select>
                                         </div>
@@ -2608,7 +2586,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         {/* Measure */}
                                         <div style={{ flex: 1, minWidth: '220px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: `0 0 8px #34d399` }} /> Measure (Y-Axis)
+                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: `0 0 8px #34d399` }} /> {t('analysis.measureLabel')}
                                             </label>
                                             <select
                                                 id="va-meas-select"
@@ -2616,11 +2594,11 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                 value={builderConfig.yAxis}
                                                 onChange={e => setBuilderConfig(prev => ({ ...prev, yAxis: e.target.value }))}
                                             >
-                                                <option value="">Choose quantitative target…</option>
-                                                <optgroup label="Quantitative (Numeric)">
+                                                <option value="">{t('analysis.chooseMeasure')}</option>
+                                                <optgroup label={t('analysis.quantitative')}>
                                                     {measures.map(c => <option key={c} value={c}>{c}</option>)}
                                                 </optgroup>
-                                                <optgroup label="Qualitative (Counts)">
+                                                <optgroup label={t('analysis.qualitative')}>
                                                     {dimensions.map(c => <option key={c} value={c}>{c}</option>)}
                                                 </optgroup>
                                             </select>
@@ -2650,7 +2628,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         {/* Presentation Type */}
                                         <div style={{ flex: 1, minWidth: '320px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <BarChart3 size={12} /> Presentation
+                                                <BarChart3 size={12} /> {t('analysis.presentation')}
                                             </label>
                                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                                 {['bar', 'line', 'area', 'pie', 'donut', 'scatter', 'worldmap'].map(type => (
@@ -2669,22 +2647,22 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         <div style={{ display: 'flex', gap: '16px', minWidth: '240px' }}>
                                             <div style={{ flex: 2 }}>
                                                 <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    Sort Order
+                                                    {t('analysis.sortOrder')}
                                                 </label>
                                                 <select
                                                     style={{ width: '100%', padding: '10px 14px', height: '36px', borderRadius: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 500, outline: 'none', cursor: 'pointer' }}
                                                     value={(builderConfig as any).sortBy || 'valueDesc'}
                                                     onChange={e => setBuilderConfig(prev => ({ ...prev, sortBy: e.target.value as any }))}
                                                 >
-                                                    <option value="valueDesc">Value (High to Low)</option>
-                                                    <option value="valueAsc">Value (Low to High)</option>
-                                                    <option value="labelAsc">Label (A–Z)</option>
-                                                    <option value="labelDesc">Label (Z–A)</option>
+                                                    <option value="valueDesc">{t('analysis.valueHighToLow')}</option>
+                                                    <option value="valueAsc">{t('analysis.valueLowToHigh')}</option>
+                                                    <option value="labelAsc">{t('analysis.labelAZ')}</option>
+                                                    <option value="labelDesc">{t('analysis.labelZA')}</option>
                                                 </select>
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    Limit
+                                                    {t('analysis.limit')}
                                                 </label>
                                                 <select
                                                     style={{ width: '100%', padding: '10px 14px', height: '36px', borderRadius: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 500, outline: 'none', cursor: 'pointer' }}
@@ -2719,7 +2697,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                 <div className="flex justify-between items-start">
                                                     <div className="flex flex-col gap-3">
                                                         <div className="flex items-center gap-3">
-                                                            <span className="px-2.5 py-1 rounded bg-primary/20 text-primary text-[10px] font-black tracking-widest uppercase border border-primary/20">Draft Active</span>
+                                                            <span className="px-2.5 py-1 rounded bg-primary/20 text-primary text-[10px] font-black tracking-widest uppercase border border-primary/20">{t('analysis.draftActive')}</span>
                                                             <span className="text-[10px] opacity-30 font-bold tracking-[0.2em]">INTEL_V.2.0</span>
                                                             <div className="h-px w-10 bg-white/10" />
                                                             <div className="flex gap-4 text-[9px] font-black uppercase tracking-[0.2em] opacity-50">
@@ -2728,19 +2706,19 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                             </div>
                                                         </div>
                                                         <h4 className="text-4xl font-data tracking-tighter group cursor-default leading-none">
-                                                            {builderConfig.aggregation} <span className="text-primary group-hover:text-purple-400 transition-colors">OF</span> {builderConfig.yAxis} <span className="opacity-20 mx-3">/</span> <span className="text-tertiary">BY {builderConfig.xAxis}</span>
+                                                            {builderConfig.aggregation} <span className="text-primary group-hover:text-purple-400 transition-colors">{t('analysis.builder.of')}</span> {builderConfig.yAxis} <span className="opacity-20 mx-3">/</span> <span className="text-tertiary">{t('analysis.builder.by')} {builderConfig.xAxis}</span>
                                                         </h4>
                                                     </div>
                                                     <div className="flex gap-3">
                                                         <button
-                                                            title="Raw Data"
+                                                            title={t('analysis.rawData')}
                                                             className={`btn btn-icon !w-10 !h-10 transition-all ${showRawData ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                                                             onClick={() => setShowRawData(!showRawData)}
                                                         >
                                                             <Database size={16} />
                                                         </button>
                                                         <button
-                                                            title="Add to Presentation"
+                                                            title={t('analysis.addToPresentation')}
                                                             className="btn btn-icon btn-primary !w-10 !h-10 shadow-glow-primary hover:scale-110"
                                                             onClick={() => {
                                                                 const newOpt = {
@@ -2754,7 +2732,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                         ...analysis,
                                                                         options: [...(analysis.options || []), newOpt]
                                                                     });
-                                                                    addToast('Chart added to strategic presentation', 'success');
+                                                                    addToast(t('analysis.chartAdded'), 'success');
                                                                 }
                                                             }}
                                                         >
@@ -2774,8 +2752,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                 <div className="w-10 h-10 rounded-full bg-primary/20 animate-ping" />
                                                             </div>
                                                             <div className="flex flex-col items-center gap-1">
-                                                                <span className="text-sm font-black uppercase tracking-[0.3em] text-primary">Computing Reality</span>
-                                                                <span className="text-[11px] font-bold opacity-60">Architecting Visual Intelligence...</span>
+                                                                <span className="text-sm font-black uppercase tracking-[0.3em] text-primary">{t('analysis.computingReality')}</span>
+                                                                <span className="text-[11px] font-bold opacity-60">{t('analysis.architectingIntelligence')}</span>
                                                             </div>
                                                         </div>
                                                     )}
@@ -2792,8 +2770,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                     <PaletteIcon size={40} className="text-primary drop-shadow-glow" />
                                                 </div>
                                                 <div className="flex-col gap-2">
-                                                    <h3 className="text-h1 tracking-tighter">Drafting Surface</h3>
-                                                    <p className="label-premium !opacity-60">Select both a Dimension and a Measure to manifest your visualization.</p>
+                                                    <h3 className="text-h1 tracking-tighter">{t('analysis.draftingSurface')}</h3>
+                                                    <p className="label-premium !opacity-60">{t('analysis.draftingDesc')}</p>
                                                 </div>
                                                 <div className="flex gap-4 mt-2">
                                                     <div className="flex-col items-center gap-1 opacity-20">
@@ -2824,7 +2802,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                 <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-1.5 h-6 bg-primary rounded-full" />
-                                                        <h4 className="text-sm font-black uppercase tracking-widest text-primary">Processed Result Set</h4>
+                                                        <h4 className="text-sm font-black uppercase tracking-widest text-primary">{t('analysis.processedResultSet')}</h4>
                                                     </div>
                                                     <div className="text-[10px] font-mono opacity-40">
                                                         SHOWN: {Math.min(50, builderData.length)} / TOTAL: {builderData.length}
@@ -2931,12 +2909,12 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '10px 16px', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
                         >
                             {isPlaying ? <span className="text-xl leading-none">⏸</span> : <span className="text-xl leading-none">▶</span>}
-                            {isPlaying ? 'Pause' : 'Play'}
+                            {isPlaying ? t('analysis.pause') : t('analysis.play')}
                         </button>
                         <button onClick={() => setActiveTab('overview')} style={{
                             background: 'var(--danger-glow)', border: '1px solid var(--danger)', borderRadius: '12px', padding: '10px 20px', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', backdropFilter: 'blur(10px)', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(255,0,0,0.1)'
                         }}>
-                            <span className="text-xl leading-none">✕</span> Exit Presentation
+                            <span className="text-xl leading-none">✕</span> {t('analysis.exitPresentation')}
                         </button>
                     </div>
 
@@ -2997,7 +2975,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     className="btn-secondary"
                                     style={{ padding: '12px 24px', fontSize: '16px' }}
                                 >
-                                    Close View
+                                    {t('analysis.closeView')}
                                 </button>
                             </div>
 
@@ -3149,7 +3127,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '6px', cursor: 'pointer', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '12px', textAlign: 'left', width: '100%' }}
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
-                                Drill Down
+                                {t('analysis.drillDownAction')}
                             </button>
                             <button
                                 className="hover-bg transition-colors"
@@ -3160,7 +3138,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '6px', cursor: 'pointer', background: 'none', border: 'none', color: 'var(--primary)', fontSize: '12px', textAlign: 'left', width: '100%' }}
                             >
                                 <MessageCircle size={14} />
-                                Add Comment
+                                {t('analysis.addComment')}
                             </button>
                         </motion.div>
                     </>

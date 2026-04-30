@@ -17,7 +17,7 @@ export const DEFAULT_ITEMS: Record<SidebarGroupKey, readonly string[]> = {
     decision: ['simulation'],
     analytics: ['dashboard', 'lens', 'correlate', 'diff', 'anomaly', 'financial'],
     predictive: ['forecast', 'spatial', 'automl', 'developer', 'webhooks', 'embed'],
-    bi: ['canvas', 'bi', 'projects'],
+    bi: ['canvas', 'bi'],
     selfservice: ['democracy', 'automation', 'shared-workspaces'],
 };
 

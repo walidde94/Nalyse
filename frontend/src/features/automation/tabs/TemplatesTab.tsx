@@ -19,8 +19,8 @@ export const TemplatesTab = ({ onDeployed }: { onDeployed: () => void }) => {
             .then(r => r.json()).then(setTemplates).catch(() => {});
     }, [token]);
 
-    const categories = ['all', ...new Set(templates.map(t => t.category))];
-    const filtered = filter === 'all' ? templates : templates.filter(t => t.category === filter);
+    const categories = ['all', ...new Set(templates.map(tpl => tpl.category))];
+    const filtered = filter === 'all' ? templates : templates.filter(tpl => tpl.category === filter);
 
     const handleDeploy = async (tpl: any) => {
         setDeploying(tpl.id);

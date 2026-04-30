@@ -15,8 +15,11 @@ import {
     ArrowRight,
     RefreshCw,
     X,
-    Sparkles
+    Sparkles,
+    Database,
+    Network
 } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ProcessingOverlayProps {
     isVisible: boolean;
@@ -28,76 +31,6 @@ interface ProcessingOverlayProps {
     onRetry?: () => void;
     onClose?: () => void;
 }
-
-const ANALYSIS_STAGES = [
-    {
-        id: 0,
-        label: "Uploading Assets",
-        desc: "Transmitting encrypted knowledge vectors to the secure elastic vault.",
-        icon: CloudUpload,
-        color: "#3b82f6",
-        audit: "AES-256 Protocol // Active"
-    },
-    {
-        id: 1,
-        label: "Validating Schema",
-        desc: "Normalizing dimensions and purifying dataset entities for analysis.",
-        icon: ShieldCheck,
-        color: "#10b981",
-        audit: "Dimensional Integrity // Verified"
-    },
-    {
-        id: 2,
-        label: "Neural Processing",
-        desc: "Synthesizing causality patterns and identifying institutional trends.",
-        icon: BrainCircuit,
-        color: "#8b5cf6",
-        audit: "Cognitive Engine // Processing"
-    },
-    {
-        id: 3,
-        label: "Strategy Generation",
-        desc: "Manifesting executive findings and strategic ROI frameworks.",
-        icon: Zap,
-        color: "#f59e0b",
-        audit: "Reasoning Phase // 88% Complete"
-    },
-    {
-        id: 4,
-        label: "Knowledge Manifest",
-        desc: "Neural synthesis complete. The strategic surface is now available.",
-        icon: BarChart3,
-        color: "#ec4899",
-        audit: "Surface Ready // Manifested"
-    }
-];
-
-const UPLOAD_STAGES = [
-    {
-        id: 0,
-        label: "Transmitting Data",
-        desc: "Encrypting and transmitting dataset to the secure elastic vault.",
-        icon: CloudUpload,
-        color: "#3b82f6",
-        audit: "AES-256 Transfer // Active"
-    },
-    {
-        id: 1,
-        label: "Indexing Dataset",
-        desc: "Registering data topology and building structural metadata.",
-        icon: ShieldCheck,
-        color: "#10b981",
-        audit: "Schema Indexed // Verified"
-    },
-    {
-        id: 2,
-        label: "Dataset Secured",
-        desc: "Your dataset is now available in the workspace. Click Process to analyze.",
-        icon: CheckCircle2,
-        color: "#10b981",
-        audit: "Vault Sealed // Ready"
-    }
-];
 
 /* ---------- Floating Particles ---------- */
 const Particles = React.memo(({ count = 40, color = '#3b82f6' }: { count?: number; color?: string }) => {
@@ -172,6 +105,21 @@ const OrbitalRings = ({ status }: { status: string }) => {
     );
 };
 
+/* ---------- Configuration & Stages ---------- */
+const ANALYSIS_STAGES_CONFIG = [
+    { id: 'init', labelKey: 'overlay.analysis.stage0.label', auditKey: 'overlay.analysis.stage0.audit', descKey: 'overlay.analysis.stage0.desc', icon: Activity, color: '#3b82f6' },
+    { id: 'scan', labelKey: 'overlay.analysis.stage1.label', auditKey: 'overlay.analysis.stage1.audit', descKey: 'overlay.analysis.stage1.desc', icon: Database, color: '#8b5cf6' },
+    { id: 'map', labelKey: 'overlay.analysis.stage2.label', auditKey: 'overlay.analysis.stage2.audit', descKey: 'overlay.analysis.stage2.desc', icon: Network, color: '#a855f7' },
+    { id: 'anomaly', labelKey: 'overlay.analysis.stage3.label', auditKey: 'overlay.analysis.stage3.audit', descKey: 'overlay.analysis.stage3.desc', icon: ShieldCheck, color: '#ef4444' },
+    { id: 'insight', labelKey: 'overlay.analysis.stage4.label', auditKey: 'overlay.analysis.stage4.audit', descKey: 'overlay.analysis.stage4.desc', icon: BrainCircuit, color: '#10b981' }
+];
+
+const UPLOAD_STAGES_CONFIG = [
+    { id: 'transmit', labelKey: 'overlay.upload.stage0.label', auditKey: 'overlay.upload.stage0.audit', descKey: 'overlay.upload.stage0.desc', icon: CloudUpload, color: '#3b82f6' },
+    { id: 'index', labelKey: 'overlay.upload.stage1.label', auditKey: 'overlay.upload.stage1.audit', descKey: 'overlay.upload.stage1.desc', icon: Zap, color: '#8b5cf6' },
+    { id: 'secure', labelKey: 'overlay.upload.stage2.label', auditKey: 'overlay.upload.stage2.audit', descKey: 'overlay.upload.stage2.desc', icon: ShieldCheck, color: '#10b981' }
+];
+
 export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
     isVisible,
     stage,
@@ -182,7 +130,13 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
     onRetry,
     onClose
 }) => {
-    const STAGES = mode === 'upload' ? UPLOAD_STAGES : ANALYSIS_STAGES;
+    const { t } = useLanguage();
+    const STAGES = (mode === 'upload' ? UPLOAD_STAGES_CONFIG : ANALYSIS_STAGES_CONFIG).map(s => ({
+        ...s,
+        label: t(s.labelKey),
+        audit: t(s.auditKey),
+        desc: t(s.descKey)
+    }));
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -191,7 +145,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
     }, []);
 
     const formatErrorMessage = useCallback((err?: string) => {
-        if (!err) return 'A structural anomaly was detected in the data stream.';
+        if (!err) return t('overlay.error.default');
         try {
             const parsed = typeof err === 'string' && err.includes('{"error":')
                 ? JSON.parse(err.substring(err.indexOf('{')))
@@ -269,7 +223,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                     style={{ background: accentColor, boxShadow: `0 0 12px ${accentColor}` }}
                                 />
                                 <span className="po-header-label">
-                                    {status === 'error' ? 'CORE ERROR DETECTED' : status === 'completed' ? (mode === 'upload' ? 'UPLOAD COMPLETE' : 'PROCESSING FINALIZED') : (mode === 'upload' ? 'SECURE UPLOAD ACTIVE' : 'NEURAL CORE ACTIVE')}
+                                    {status === 'error' ? t('overlay.status.error') : status === 'completed' ? (mode === 'upload' ? t('overlay.status.uploadComplete') : t('overlay.status.processComplete')) : (mode === 'upload' ? t('overlay.status.uploadActive') : t('overlay.status.processActive'))}
                                 </span>
                             </div>
                             <div className="po-header-right">
@@ -278,7 +232,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                 )}
                                 <Activity size={13} style={{ opacity: 0.25 }} />
                                 <Lock size={13} style={{ opacity: 0.25 }} />
-                                <button onClick={onClose} className="po-close-btn" title="Close">
+                                <button onClick={onClose} className="po-close-btn" title={t('dashboard.close')}>
                                     <X size={15} />
                                 </button>
                             </div>
@@ -342,7 +296,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                     transition={{ delay: 0.1, duration: 0.4 }}
                                     className="po-title"
                                 >
-                                    {status === 'error' ? 'Request Blocked' : status === 'completed' ? (mode === 'upload' ? 'Upload Complete' : 'Neural Link Ready') : currentStage.label}
+                                    {status === 'error' ? t('overlay.title.error') : status === 'completed' ? (mode === 'upload' ? t('overlay.status.uploadComplete') : t('overlay.title.ready')) : currentStage.label}
                                 </motion.h2>
                                 <motion.p
                                     key={`desc-${status}-${stage}`}
@@ -355,8 +309,8 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                         ? formatErrorMessage(errorDetails)
                                         : status === 'completed'
                                             ? (mode === 'upload'
-                                                ? 'Your dataset has been securely ingested. Click "Process" from the dashboard to begin analysis.'
-                                                : 'Dataset synthesis complete. Strategic intelligence has been manifested in your workspace.')
+                                                ? t('overlay.desc.uploadReady')
+                                                : t('overlay.desc.processReady'))
                                             : currentStage.desc
                                     }
                                 </motion.p>
@@ -395,12 +349,12 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                                     <span className="po-stage-label">{s.label}</span>
                                                     {(isCurrent || isErrorLine) && (
                                                         <span className={`po-stage-audit ${isErrorLine ? 'po-audit-error' : ''}`}>
-                                                            {isErrorLine ? 'HALTED // FAULT_DETECTED' : s.audit}
+                                                            {isErrorLine ? t('overlay.stage.halted') : s.audit}
                                                         </span>
                                                     )}
                                                 </div>
                                                 {isFinished && (
-                                                    <span className="po-stage-check-label">Done</span>
+                                                    <span className="po-stage-check-label">{t('overlay.done')}</span>
                                                 )}
                                             </motion.div>
                                         );
@@ -418,14 +372,14 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                 >
                                     {(mode === 'upload'
                                         ? [
-                                            { label: 'Status', value: 'Indexed', color: '#10b981' },
-                                            { label: 'Integrity', value: '100%', color: '#3b82f6' },
-                                            { label: 'Vault', value: 'Secure', color: '#8b5cf6' },
+                                            { label: t('overlay.stat.status'), value: t('nav.indexed'), color: '#10b981' },
+                                            { label: t('overlay.stat.integrity'), value: '100%', color: '#3b82f6' },
+                                            { label: t('overlay.stat.vault'), value: t('overlay.stat.secure'), color: '#8b5cf6' },
                                         ]
                                         : [
-                                            { label: 'Stages', value: '5/5', color: '#10b981' },
-                                            { label: 'Integrity', value: '100%', color: '#3b82f6' },
-                                            { label: 'Link', value: 'Secure', color: '#8b5cf6' },
+                                            { label: t('overlay.stat.stages'), value: '5/5', color: '#10b981' },
+                                            { label: t('overlay.stat.integrity'), value: '100%', color: '#3b82f6' },
+                                            { label: t('overlay.stat.link'), value: t('overlay.stat.secure'), color: '#8b5cf6' },
                                         ]
                                     ).map((stat) => (
                                         <div key={stat.label} className="po-stat-chip">
@@ -440,7 +394,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                             {status === 'processing' && (
                                 <div className="po-bottom-progress">
                                     <div className="po-bp-meta">
-                                        <span className="po-bp-label">{mode === 'upload' ? 'Upload Progress' : 'Cognitive Completion'}</span>
+                                        <span className="po-bp-label">{mode === 'upload' ? t('overlay.progress.upload') : t('overlay.progress.cognitive')}</span>
                                         <span className="po-bp-pct" style={{ color: accentColor }}>{progressPct}%</span>
                                     </div>
                                     <div className="po-bp-track">
@@ -468,11 +422,11 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                             whileTap={{ scale: 0.98 }}
                                         >
                                             <Sparkles size={18} />
-                                            <span>{mode === 'upload' ? 'Return to Dashboard' : 'Manifest Analysis'}</span>
+                                            <span>{mode === 'upload' ? t('overlay.btn.return') : t('overlay.btn.manifest')}</span>
                                             <ArrowRight size={18} />
                                         </motion.button>
                                         <button onClick={onClose} className="po-btn po-btn-ghost">
-                                            Dismiss Dashboard
+                                            {t('overlay.btn.dismiss')}
                                         </button>
                                     </>
                                 ) : status === 'error' ? (
@@ -484,14 +438,14 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                                             whileTap={{ scale: 0.98 }}
                                         >
                                             <RefreshCw size={18} />
-                                            <span>Retry Transfer</span>
+                                            <span>{t('overlay.btn.retry')}</span>
                                         </motion.button>
                                         <button onClick={onClose} className="po-btn po-btn-ghost">
-                                            Abort Operation
+                                            {t('overlay.btn.abort')}
                                         </button>
                                     </>
                                 ) : (
-                                    <p className="po-hint">{mode === 'upload' ? 'Transmitting data securely — please wait' : 'Do not close this panel during neural synthesis'}</p>
+                                    <p className="po-hint">{mode === 'upload' ? t('overlay.hint.upload') : t('overlay.hint.process')}</p>
                                 )}
                             </div>
                         </div>
@@ -500,18 +454,18 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
                         <div className="po-footer">
                             <div className="po-footer-meta">
                                 <div className="po-footer-item">
-                                    <span className="po-footer-key">Instance</span>
+                                    <span className="po-footer-key">{t('overlay.footer.instance')}</span>
                                     <span className="po-footer-val">nalyse_0.1.0_x</span>
                                 </div>
                                 <div className="po-footer-divider" />
                                 <div className="po-footer-item po-footer-hide-mobile">
-                                    <span className="po-footer-key">Neural Link</span>
-                                    <span className="po-footer-val po-footer-val-green">ENCRYPTED</span>
+                                    <span className="po-footer-key">{t('overlay.footer.neuralLink')}</span>
+                                    <span className="po-footer-val po-footer-val-green">{t('overlay.footer.encrypted')}</span>
                                 </div>
                             </div>
                             <div className="po-footer-badge">
                                 <ShieldCheck size={12} />
-                                <span>Vault Secure</span>
+                                <span>{t('overlay.vaultSecure')}</span>
                             </div>
                         </div>
                     </motion.div>

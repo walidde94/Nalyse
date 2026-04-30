@@ -58,7 +58,7 @@ export class PulseService {
             revenueGrowth: `${growth}% new data`,
             anomalies: failedTasks,
             roi: '$0.00',
-            projects: findings,
+            findings: findings,
             fileCount: files.length
         };
     }

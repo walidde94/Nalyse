@@ -13,24 +13,24 @@ export class ApiKey {
     @Column({ unique: true })
     key: string; // Stored as plain string for this demo, usually hashed.
 
-    @Column({ default: true })
+    @Column({ name: 'is_active', default: true })
     isActive: boolean;
 
-    @Column({ default: 1000 }) // Rate limit per hour
+    @Column({ name: 'requests_per_hour', default: 1000 }) // Rate limit per hour
     requestsPerHour: number;
 
-    @Column({ type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamp', nullable: true })
+    @Column({ name: 'last_used_at', type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamp', nullable: true })
     lastUsedAt: Date;
 
-    @Column()
+    @Column({ name: 'owner_id' })
     ownerId: string;
 
     @ManyToOne(() => User)
     owner: User;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 }

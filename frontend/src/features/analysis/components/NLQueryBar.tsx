@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import alasql from 'alasql';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { API_URL } from '../../../config';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -110,6 +111,7 @@ const ResultSkeleton = () => (
 // ─── Main Component ──────────────────────────────────────────────
 export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inline = false }: NLQueryBarProps) => {
     const { token } = useAuth();
+    const { t } = useLanguage();
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [query, setQuery] = useState('');
@@ -302,7 +304,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                     height: '400px',
                     minHeight: '400px'
                 }}>
-                    <WorldMapChart data={mapData} title={entry.result?.chartTitle || 'Geospatial Intelligence'} />
+                    <WorldMapChart data={mapData} title={entry.result?.chartTitle || t('nlq.geospatial')} />
                 </div>
             );
         }
@@ -444,7 +446,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                         background: 'var(--bg-surface)', border: 'none', borderTop: '1px solid var(--border-default)',
                         color: 'var(--text-tertiary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'color 0.15s',
                     }}>
-                        {isExpanded ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> Show all {entry.data.length} rows</>}
+                        {isExpanded ? <><ChevronUp size={12} /> {t('nlq.showLess')}</> : <><ChevronDown size={12} /> {t('nlq.showAll').replace('{count}', entry.data.length.toString())}</>}
                     </button>
                 )}
             </div>
@@ -483,16 +485,16 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                             }}>
                                 <BrainCircuit size={32} color="#fff" />
                             </div>
-                            <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px' }}>Ask Your Data Anything</h2>
+                            <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px' }}>{t('nlq.title')}</h2>
                             <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>
-                                Type a question in plain English. The AI interprets your intent, writes the query, executes it {datasetId ? "natively on ClickHouse" : `on ${data.length.toLocaleString()} rows`}, and picks the perfect visualization.
+                                {t('nlq.desc').replace('{context}', datasetId ? t('nlq.contextClickHouse') : t('nlq.contextRows').replace('{count}', data.length.toLocaleString()))}
                             </p>
                         </div>
 
                         {/* Smart example queries */}
                         <div style={{ marginBottom: 20 }}>
                             <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-tertiary)', marginBottom: 10, paddingLeft: 4 }}>
-                                Try asking
+                                {t('nlq.tryAsking')}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 8 }}>
                                 {smartExamples.map((eq, i) => (
@@ -526,7 +528,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
                         }}>
                             <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginBottom: 10 }}>
-                                Available columns ({Object.keys(schema).length})
+                                {t('nlq.availableColumns').replace('{count}', Object.keys(schema).length.toString())}
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                 {Object.entries(schema).map(([col, type]) => (
@@ -676,7 +678,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                                             {/* Follow-up suggestions */}
                                             {entry.result.suggestions && entry.result.suggestions.length > 0 && (
                                                 <div style={{ padding: '0 16px 16px' }}>
-                                                    <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginBottom: 8 }}>Follow-up</div>
+                                                    <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-tertiary)', marginBottom: 8 }}>{t('nlq.followUp')}</div>
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                                         {entry.result.suggestions.map((s, i) => (
                                                             <button key={i} onClick={() => { setQuery(s); runQuery(s); }}
@@ -726,7 +728,7 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder='Ask your data anything… e.g. "What product generates the most revenue?"'
+                        placeholder={t('nlq.placeholder')}
                         rows={1}
                         disabled={conversation.some(e => e.isLoading)}
                         style={{
@@ -758,9 +760,9 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                 </form>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '0 4px', fontSize: 11, color: 'var(--text-tertiary)' }}>
                     <kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>Enter</kbd>
-                    <span>Send</span>
+                    <span>{t('chat.send')}</span>
                     <kbd style={{ padding: '1px 5px', borderRadius: 4, background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>Shift+Enter</kbd>
-                    <span>New line</span>
+                    <span>{t('chat.newLine')}</span>
                     {conversation.length > 0 && (
                         <button onClick={() => setConversation([])} style={{
                             marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4,
@@ -768,11 +770,11 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
                             border: '1px solid var(--border-subtle)', cursor: 'pointer',
                             color: 'var(--text-tertiary)', fontSize: 11, fontWeight: 600,
                         }}>
-                            <RefreshCw size={10} /> Clear
+                            <RefreshCw size={10} /> {t('common.clear')}
                         </button>
                     )}
                     <span style={{ marginLeft: conversation.length > 0 ? 0 : 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Sparkles size={9} style={{ color: '#6366f1' }} /> Powered by Nexus AI
+                        <Sparkles size={9} style={{ color: '#6366f1' }} /> {t('nlq.poweredBy')}
                     </span>
                 </div>
             </div>
@@ -801,5 +803,3 @@ export const NLQueryBar = ({ data = [], datasetId, schema, isOpen, onClose, inli
         </div>
     );
 };
-
-export default NLQueryBar;

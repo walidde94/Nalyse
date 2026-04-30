@@ -1,7 +1,7 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Terminal, Cpu, Database, Trash2, AlertCircle, CheckCircle2, Loader2, Brackets } from 'lucide-react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface PythonStudioProps {
     data: any[];
@@ -14,6 +14,7 @@ declare global {
 }
 
 export const PythonStudio = ({ data }: PythonStudioProps) => {
+    const { t } = useLanguage();
     const [code, setCode] = useState(`# Python Intelligence Lab
 # The 'data' variable contains your current analysis dataset as a list of dictionaries.
 # 
@@ -57,7 +58,7 @@ run_analysis()
                     setIsPyodideLoading(false);
                 } catch (e) {
                     console.error("Failed to initialize pyodide", e);
-                    setError("Failed to initialize Python Environment. Please check your connection.");
+                    setError(t('python.errorInit'));
                     setIsPyodideLoading(false);
                 }
                 return;
@@ -75,7 +76,7 @@ run_analysis()
                     setIsPyodideLoading(false);
                 } catch (e) {
                     console.error("Failed to initialize pyodide", e);
-                    setError("Failed to initialize Python Environment.");
+                    setError(t('python.errorInitGeneric'));
                     setIsPyodideLoading(false);
                 }
             };
@@ -83,7 +84,7 @@ run_analysis()
         };
 
         loadPy();
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (outputRef.current) {
@@ -138,17 +139,17 @@ run_analysis()
                         <Cpu size={24} className={isPyodideLoading ? 'text-primary' : 'text-primary shadow-glow-primary'} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight-titles">Python Intelligence Lab</h2>
+                        <h2 className="text-xl font-bold tracking-tight-titles">{t('python.title')}</h2>
                         <div className="flex items-center gap-2 mt-1">
                             {isPyodideLoading ? (
                                 <div className="flex items-center gap-2">
                                     <Loader2 size={12} className="animate-spin text-primary" />
-                                    <span className="label-premium opacity-40">Allocating Neural Resources...</span>
+                                    <span className="label-premium opacity-40">{t('python.allocating')}</span>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                                    <span className="label-premium !text-success">V0.25.0 Runtime Ready</span>
+                                    <span className="label-premium !text-success">{t('python.ready').replace('{version}', 'V0.25.0')}</span>
                                 </div>
                             )}
                         </div>
@@ -160,7 +161,7 @@ run_analysis()
                         className="btn btn-secondary btn-sm hover-lift active-press"
                         onClick={() => setCode('')}
                     >
-                        <Trash2 size={14} className="mr-2 opacity-60" /> Clear
+                        <Trash2 size={14} className="mr-2 opacity-60" /> {t('python.clear')}
                     </button>
                     <button
                         className="btn btn-primary btn-sm hover-lift active-press shadow-glow-primary px-6"
@@ -172,7 +173,7 @@ run_analysis()
                         ) : (
                             <Play size={16} className="mr-2" />
                         )}
-                        Execute Script
+                        {t('python.execute')}
                     </button>
                 </div>
             </div>
@@ -204,7 +205,7 @@ run_analysis()
                                 spellCheck={false}
                                 className="flex-1 bg-transparent p-5 font-data text-sm outline-none resize-none leading-6 w-full h-full"
                                 style={{ color: '#e2e8f0', caretColor: 'var(--primary)' }}
-                                placeholder="Write your Python script here..."
+                                placeholder={t('python.editorPlaceholder')}
                             />
                         </div>
                     </div>
@@ -216,7 +217,7 @@ run_analysis()
                     <div className="card flex-col p-0 overflow-hidden" style={{ minHeight: '300px', flex: 1, background: '#020617', border: '1px solid var(--border-default)', borderRadius: '20px shadow-2xl' }}>
                         <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2 bg-white/[0.02]">
                             <Terminal size={14} className="text-success" />
-                            <span className="label-premium opacity-60">Intelligence Console</span>
+                            <span className="label-premium opacity-60">{t('python.console')}</span>
                         </div>
                         <div
                             ref={outputRef}
@@ -226,7 +227,7 @@ run_analysis()
                             {output.length === 0 && (
                                 <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] opacity-20 select-none">
                                     <Database size={40} className="mb-2" />
-                                    <p>Awaiting Execution Output</p>
+                                    <p>{t('python.awaiting')}</p>
                                 </div>
                             )}
                             {output.map((line, i) => (
@@ -261,7 +262,7 @@ run_analysis()
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <CheckCircle2 size={16} className="text-success" />
-                                    <span className="label-premium">Return Object</span>
+                                    <span className="label-premium">{t('python.returnObject')}</span>
                                 </div>
                                 <span className="text-[10px] font-mono opacity-40">JSON_PREVIEW</span>
                             </div>

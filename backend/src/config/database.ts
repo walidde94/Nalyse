@@ -296,7 +296,13 @@ async function ensureAuditLogTable() {
             `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS is_preset boolean DEFAULT false`,
             `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS is_built_in boolean DEFAULT false`,
             `ALTER TABLE analysis_configurations ADD COLUMN IF NOT EXISTS owner_id uuid`,
-            `CREATE TABLE IF NOT EXISTS platform_audit_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL, action text NOT NULL, resource text NOT NULL, resource_id text, details jsonb, ip_address text, created_at timestamp with time zone DEFAULT now())`
+            `CREATE TABLE IF NOT EXISTS platform_audit_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL, action text NOT NULL, resource text NOT NULL, resource_id text, details jsonb, ip_address text, created_at timestamp with time zone DEFAULT now())`,
+            `CREATE TABLE IF NOT EXISTS api_keys (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, key text UNIQUE NOT NULL, owner_id text NOT NULL)`,
+            `ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true`,
+            `ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS requests_per_hour int DEFAULT 1000`,
+            `ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS last_used_at timestamp with time zone`,
+            `ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS created_at timestamp with time zone DEFAULT now()`,
+            `ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT now()`
         ];
 
         for (const query of healingQueries) {
@@ -320,7 +326,6 @@ import { Organization } from '../entities/Organization';
 import { File } from '../entities/File';
 import { Analysis } from '../entities/Analysis';
 import { Group } from '../entities/Group';
-import { Project } from '../entities/Project';
 import { ApiKey } from '../entities/ApiKey';
 import { RemoteSource } from '../entities/RemoteSource';
 import { Agent } from '../entities/Agent';
@@ -329,7 +334,7 @@ import { AgentLog } from '../entities/AgentLog';
 import { Report } from '../entities/Report';
 import { Dashboard } from '../entities/Dashboard';
 
-const entities = [User, Organization, File, Analysis, Group, Project, ApiKey, RemoteSource, Agent, AgentTask, AgentLog, Report, Dashboard];
+const entities = [User, Organization, File, Analysis, Group, ApiKey, RemoteSource, Agent, AgentTask, AgentLog, Report, Dashboard];
 
 const isTest = process.env.NODE_ENV === 'test';
 const isProd = process.env.NODE_ENV === 'production';
@@ -474,9 +479,13 @@ export const initializeDatabase = async () => {
 const finalOptions = getOptions();
 if (finalOptions.url && (!process.env.DATABASE_URL || process.env.DATABASE_URL.length < 10)) {
     process.env.DATABASE_URL = finalOptions.url;
+} else if (isTest && !process.env.DATABASE_URL) {
+    // Provide a dummy SQLite URL for Prisma during tests if none provided
+    // This prevents Prisma from crashing on initialization even if not used in the test
+    process.env.DATABASE_URL = "file:./test.db";
 }
 
-let prismaUrl = finalOptions.url;
+let prismaUrl = finalOptions.url || process.env.DATABASE_URL;
 if (prismaUrl) {
     if (prismaUrl.includes('pgbouncer=false')) {
         prismaUrl = prismaUrl.replace('pgbouncer=false', 'pgbouncer=true');

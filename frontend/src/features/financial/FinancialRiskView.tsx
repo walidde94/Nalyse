@@ -12,6 +12,7 @@ import {
     Gauge, Landmark, Scale, Wallet, LineChart, Lightbulb, Eye,
     ChevronRight, Sparkles, Bell
 } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../components/ui/Toast';
 import { API_URL } from '../../config';
 import {
@@ -88,6 +89,7 @@ interface Props { files: { id: string; filename: string; size: number; createdAt
 
 export const FinancialRiskView = ({ files, token }: Props) => {
     const { addToast } = useToast();
+    const { t } = useLanguage();
     const [selectedFileId, setSelectedFileId] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadStep, setLoadStep] = useState(0);
@@ -177,10 +179,10 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                     </div>
                     <div>
                         <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #818cf8 0%, #34d399 50%, #f59e0b 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Financial Risk Intelligence
+                            {t('financial.title')}
                         </h1>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Cashflow Forecasting · Insolvency Risk Scoring · Stress Testing · Ratio Analysis · Executive Insights
+                            {t('financial.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -191,16 +193,16 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #818cf8, #34d399, #f59e0b)' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                     <Cpu size={15} style={{ color: 'var(--text-muted)' }} />
-                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>Financial Dataset</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>{t('financial.dataset')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap' }}>
                     <div style={{ flex: 2, minWidth: '260px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#818cf8', boxShadow: '0 0 8px #818cf8' }} /> Dataset
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#818cf8', boxShadow: '0 0 8px #818cf8' }} /> {t('anomaly.dataset')}
                         </label>
                         <select value={selectedFileId} onChange={e => setSelectedFileId(e.target.value)}
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${selectedFileId ? '#818cf844' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}>
-                            <option value="">Choose financial dataset…</option>
+                            <option value="">{t('financial.datasetPlaceholder')}</option>
                             {files.map(f => <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>)}
                         </select>
                     </div>
@@ -208,7 +210,7 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                         disabled={loading || !selectedFileId}
                         style={{ padding: '10px 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #818cf8, #34d399)', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', opacity: !selectedFileId ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 24px rgba(99,102,241,0.25)', whiteSpace: 'nowrap' as any, flexShrink: 0 }}>
                         {loading ? <RefreshCw size={15} className="animate-spin" /> : <Landmark size={15} />}
-                        {loading ? 'Analyzing…' : 'Run Financial Analysis'}
+                        {loading ? t('common.analyzing') : t('financial.run')}
                     </motion.button>
                 </div>
             </div>
@@ -242,7 +244,7 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                         <div style={{ flex: 1, minWidth: '250px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                                 <Brain size={16} style={{ color: '#818cf8' }} />
-                                <span style={{ fontSize: '13px', fontWeight: 700 }}>Executive Summary</span>
+                                <span style={{ fontSize: '13px', fontWeight: 700 }}>{t('financial.executiveSummary')}</span>
                                 <StatusBadge status={result.riskScore.riskClass} />
                             </div>
                             {result.explanations.slice(0, 2).map((exp, i) => (
@@ -266,11 +268,11 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                     {/* ─── Section Tabs ──────────────────────────────── */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px' }}>
                         {([
-                            { id: 'overview' as const, label: 'KPI Overview', icon: <Target size={14} /> },
-                            { id: 'forecast' as const, label: 'Cashflow Forecast', icon: <LineChart size={14} /> },
-                            { id: 'risk' as const, label: 'Risk Analysis', icon: <Shield size={14} /> },
-                            { id: 'stress' as const, label: 'Stress Testing', icon: <Zap size={14} /> },
-                            { id: 'recommendations' as const, label: 'Recommendations', icon: <Lightbulb size={14} />, count: result.recommendations.length },
+                            { id: 'overview' as const, label: t('financial.kpiOverview'), icon: <Target size={14} /> },
+                            { id: 'forecast' as const, label: t('financial.cashflowForecast'), icon: <LineChart size={14} /> },
+                            { id: 'risk' as const, label: t('financial.riskAnalysis'), icon: <Shield size={14} /> },
+                            { id: 'stress' as const, label: t('financial.stressTesting'), icon: <Zap size={14} /> },
+                            { id: 'recommendations' as const, label: t('financial.recommendations'), icon: <Lightbulb size={14} />, count: result.recommendations.length },
                         ]).map(tab => (
                             <button key={tab.id} onClick={() => setActiveSection(tab.id)}
                                 style={{ padding: '8px 16px', borderRadius: '10px', border: activeSection === tab.id ? '1px solid var(--primary)' : '1px solid var(--border-default)', background: activeSection === tab.id ? 'var(--primary-subtle)' : 'var(--bg-secondary)', color: activeSection === tab.id ? 'var(--primary)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
@@ -534,9 +536,9 @@ export const FinancialRiskView = ({ files, token }: Props) => {
                         <div style={{ width: '88px', height: '88px', borderRadius: '28px', background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(52,211,153,0.08))', border: '1px solid rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                             <Landmark size={40} style={{ color: '#818cf8', opacity: 0.5 }} />
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>Financial Risk Intelligence</h3>
+                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>{t('financial.emptyTitle')}</h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                            Upload a financial dataset with <strong style={{ color: '#818cf8' }}>revenue, costs, and balance sheet data</strong>, then run analysis to get cashflow forecasts, insolvency risk scores, ratio analysis, and stress test scenarios.
+                            {t('financial.emptyDesc')}
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
                             {['Cashflow Forecast', 'Altman Z-Score', 'Ratio Analysis', 'Stress Testing', 'Risk Scoring'].map(tag => (

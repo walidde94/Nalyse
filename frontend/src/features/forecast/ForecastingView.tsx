@@ -10,7 +10,25 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 import { API_URL } from '../../config';
-import { InsightPanel } from '../../components/ui/InsightPanel';
+import { useLanguage } from '../../contexts/LanguageContext';
+
+const StaticInsightPanel = ({ title, type, icon, description }: { title: string, type: 'success' | 'warning', icon: React.ReactNode, description: string }) => {
+    const isSuccess = type === 'success';
+    const color = isSuccess ? '#10b981' : '#f59e0b';
+    const bg = isSuccess ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)';
+    const border = isSuccess ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.25)';
+    return (
+        <div style={{ padding: '16px 20px', borderRadius: '14px', background: bg, border: `1px solid ${border}`, display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: `${color}15`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: color }}>
+                {icon}
+            </div>
+            <div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{title}</div>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>{description}</p>
+            </div>
+        </div>
+    );
+};
 
 // ─── Theme Colors ──────────────────────────────────────────────
 const HISTORICAL_COLOR = '#818cf8';
@@ -44,15 +62,13 @@ const ForecastTooltip = ({ active, payload, label }: any) => {
     );
 };
 
-// ─── Components ──────────────────────────────────────────────
-const LOAD_STEPS = ['Ingesting historical data…', 'Applying smoothing filters…', 'Training regression model…', 'Generating forecast horizon…'];
-
 interface Props {
     files: { id: string; filename: string; size: number; createdAt: string }[];
     token: string;
 }
 
 export const ForecastingView = ({ files, token }: Props) => {
+    const { t } = useLanguage();
     const { addToast } = useToast();
     const [selectedFile, setSelectedFile] = useState('');
     const [targetColumn, setTargetColumn] = useState('');
@@ -65,6 +81,13 @@ export const ForecastingView = ({ files, token }: Props) => {
     const [forecastData, setForecastData] = useState<any[]>([]);
     const [modelMetrics, setModelMetrics] = useState<any>(null);
     const [availableColumns, setAvailableColumns] = useState<{name: string, type: string}[]>([]);
+
+    const LOAD_STEPS = useMemo(() => [
+        t('forecast.ingesting'),
+        t('forecast.smoothing'),
+        t('forecast.training'),
+        t('forecast.generating')
+    ], [t]);
 
     // Fetch schema when file changes
     const handleFileChange = async (fileId: string) => {
@@ -92,252 +115,300 @@ export const ForecastingView = ({ files, token }: Props) => {
 
     const runForecast = useCallback(async () => {
         if (!selectedFile || !targetColumn) {
-            addToast('Select a dataset and target metric.', 'error');
+            addToast(t('forecast.launchDesc'), 'error');
             return;
         }
 
         setLoading(true);
         setLoadStep(0);
+        
+        // Simulated loading steps
+        const stepInterval = setInterval(() => {
+            setLoadStep(prev => (prev < 3 ? prev + 1 : prev));
+        }, 800);
 
         try {
-            // Send request to real backend engine
-            const response = await fetch(`${API_URL}/api/files/${selectedFile}/forecast`, {
+            const res = await fetch(`${API_URL}/api/files/${selectedFile}/forecast`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}` 
+                    Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    targetColumn,
-                    timeColumn,
-                    modelType,
-                    periods: forecastPeriods
+                    target: targetColumn,
+                    time: timeColumn,
+                    periods: parseInt(forecastPeriods),
+                    type: modelType
                 })
             });
 
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || 'Forecasting failed on the server');
-            }
-
-            const result = await response.json();
-
-            // Artificial delay just for the UI loading animation to feel substantial/premium
-            for (let i = 0; i < LOAD_STEPS.length; i++) {
-                setLoadStep(i);
-                await new Promise(r => setTimeout(r, 300));
-            }
-
-            setForecastData(result.data);
-            setModelMetrics(result.metrics);
-
-            addToast('Predictive model trained successfully', 'success');
-
-        } catch (e: any) {
-            if (e.message === 'FILE_NOT_FOUND') {
-                addToast('Server storage reset. Please re-upload this dataset to enable Forecasting.', 'error');
+            if (res.ok) {
+                const data = await res.json();
+                setForecastData(data.points);
+                setModelMetrics(data.metrics);
+                addToast(t('forecast.success'), 'success');
             } else {
-                addToast(e.message || 'Forecasting failed', 'error');
+                throw new Error('Forecast failed');
             }
+        } catch (e) {
+            addToast(t('forecast.error'), 'error');
         } finally {
+            clearInterval(stepInterval);
             setLoading(false);
         }
-    }, [selectedFile, targetColumn, forecastPeriods, modelType, addToast]);
+    }, [selectedFile, targetColumn, timeColumn, forecastPeriods, modelType, token, addToast, t]);
 
     return (
-        <div style={{ height: '100%', overflowY: 'auto', padding: 'clamp(16px, 3vw, 32px)' }}>
-            
-            {/* ─── Header ────────────────────────────────────────── */}
-            <div style={{ marginBottom: '28px' }}>
-                <div className="flex items-center gap-3" style={{ marginBottom: '6px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(52,211,153,0.2))', border: '1px solid rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Calculator size={24} style={{ color: '#818cf8' }} />
+        <div className="view-container" style={{ padding: '24px', height: '100%', overflowY: 'auto' }}>
+            <div style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <div style={{ 
+                        width: '40px', height: '40px', borderRadius: '12px', 
+                        background: 'linear-gradient(135deg, #818cf8, #34d399)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'
+                    }}>
+                        <TrendingUp size={24} />
                     </div>
-                    <div>
-                        <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #818cf8 0%, #34d399 50%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Enterprise Forecasting Engine
-                        </h1>
-                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Train predictive models • Generate future trajectory bands • Automated regression math
-                        </p>
-                    </div>
+                    <h1 style={{ fontSize: '24px', fontWeight: 900, margin: 0 }}>{t('forecast.title')}</h1>
                 </div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '800px', margin: 0 }}>
+                    {t('forecast.subtitle')}
+                </p>
             </div>
 
-            {/* ─── Configuration Panel ───────────────────────────── */}
-            <div style={{ padding: '24px', borderRadius: '18px', marginBottom: '24px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #818cf8, #34d399, #fbbf24)' }} />
-                
-                <div className="flex items-center gap-2" style={{ marginBottom: '16px' }}>
-                    <Sliders size={15} style={{ color: 'var(--text-muted)' }} />
-                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>Model Parameters</span>
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'flex-end' }}>
-                    {/* Dataset Selection */}
-                    <div>
-                        <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'block' }}>
-                            Dataset
-                        </label>
-                        <select value={selectedFile} onChange={e => handleFileChange(e.target.value)}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${selectedFile ? 'rgba(129,140,248,0.4)' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}>
-                            <option value="">Select dataset…</option>
-                            {files.map(f => <option key={f.id} value={f.id}>{(f as any).originalName || f.filename}</option>)}
-                        </select>
-                    </div>
-
-                    {/* Target Metric */}
-                    <div>
-                        <label style={{ fontSize: '10px', fontWeight: 800, color: FORECAST_COLOR, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Target size={12} /> Target Metric (Y)
-                        </label>
-                        <select value={targetColumn} onChange={e => setTargetColumn(e.target.value)} disabled={!availableColumns.length}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid var(--border-default)`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500, opacity: availableColumns.length ? 1 : 0.5 }}>
-                            <option value="">Choose numeric column…</option>
-                            {availableColumns.filter(c => c.type === 'numeric').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                        </select>
-                    </div>
-
-                    {/* Time Dimension */}
-                    <div>
-                        <label style={{ fontSize: '10px', fontWeight: 800, color: HISTORICAL_COLOR, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Calendar size={12} /> Time Dimension (X)
-                        </label>
-                        <select value={timeColumn} onChange={e => setTimeColumn(e.target.value)} disabled={!availableColumns.length}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid var(--border-default)`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500, opacity: availableColumns.length ? 1 : 0.5 }}>
-                            <option value="">Row sequence (default)</option>
-                            {availableColumns.map(c => <option key={c.name} value={c.name}>{c.name} ({c.type})</option>)}
-                        </select>
-                    </div>
-
-                    {/* Model Type */}
-                    <div>
-                        <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'block' }}>
-                            Algorithm
-                        </label>
-                        <select value={modelType} onChange={e => setModelType(e.target.value)}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid var(--border-default)`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}>
-                            <option value="linear">Linear Regression (OLS)</option>
-                            <option value="exponential">Exponential Smoothing</option>
-                            <option value="arima">ARIMA (Auto-tuned)</option>
-                        </select>
-                    </div>
-
-                    {/* Forecast Horizon */}
-                    <div>
-                        <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'block' }}>
-                            Forecast Periods
-                        </label>
-                        <input type="number" min="1" max="100" value={forecastPeriods} onChange={e => setForecastPeriods(e.target.value)}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}
-                        />
-                    </div>
-
-                    {/* Run Button */}
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={runForecast}
-                        disabled={loading || !selectedFile || !targetColumn}
-                        style={{ padding: '10px 24px', height: '40px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #818cf8, #34d399)', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', opacity: (!selectedFile || !targetColumn) ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(129,140,248,0.25)', whiteSpace: 'nowrap' }}>
-                        {loading ? <RefreshCw size={15} className="animate-spin" /> : <Zap size={15} />}
-                        {loading ? 'Solving Model…' : 'Train & Forecast'}
-                    </motion.button>
-                </div>
-            </div>
-
-            {/* ─── Animated Loading ───────────────────────────────── */}
-            <AnimatePresence>
-                {loading && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                        style={{ padding: '40px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-                        <div style={{ width: '60px', height: '60px', borderRadius: '50%', border: '3px solid rgba(52,211,153,0.15)', borderTop: '3px solid #34d399' }} className="animate-spin" />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '280px' }}>
-                            {LOAD_STEPS.map((step, i) => (
-                                <motion.div key={step} initial={{ opacity: 0, x: -10 }} animate={{ opacity: i <= loadStep ? 1 : 0.3, x: 0 }}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 600, color: i <= loadStep ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
-                                    {i < loadStep ? <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)' }} /> : i === loadStep ? <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 10px #34d399' }} /> : <div style={{ width: 6, height: 6, borderRadius: '50%', border: '1px solid var(--border-default)' }} />}
-                                    {step}
-                                </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* ─── Results Chart ──────────────────────────────────── */}
-            {!loading && forecastData.length > 0 && modelMetrics && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                    
-                    {/* AI Insight Panel for forecast data */}
-                    <InsightPanel data={forecastData} context="forecasting" compact={true} maxInsights={3} />
-
-                    {/* Score Cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-                        {[
-                            { label: 'R² (Model Fit)', val: modelMetrics.rSquared, color: '#818cf8', icon: <Activity size={16} /> },
-                            { label: 'RMSE (Error)', val: modelMetrics.rmse, color: '#f472b6', icon: <TrendingUp size={16} /> },
-                            { label: 'Forecast Target', val: `${forecastPeriods} steps`, color: '#34d399', icon: <Target size={16} /> },
-                            { label: 'Confidence', val: modelMetrics.confidence, color: '#fbbf24', icon: <Shield size={16} /> }
-                        ].map((m, i) => (
-                            <div key={i} style={{ background: 'var(--bg-secondary)', borderRadius: '14px', padding: '16px', border: '1px solid var(--border-default)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: m.color }}>
-                                    {m.icon} <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{m.label}</span>
-                                </div>
-                                <div style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{m.val}</div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Chart Container */}
-                    <div style={{ background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-default)', overflow: 'hidden' }}>
-                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <Brain size={18} style={{ color: '#34d399' }} />
-                                <span style={{ fontSize: '14px', fontWeight: 700 }}>Trajectory Projection: <span style={{ color: 'var(--text-secondary)' }}>{targetColumn}</span></span>
-                            </div>
-                            <span className="badge badge-sm" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399', borderColor: 'rgba(52,211,153,0.2)' }}>
-                                {modelType.toUpperCase()}
-                            </span>
-                        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px' }}>
+                {/* Controls */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="bento-card" style={{ padding: '20px' }}>
+                        <h3 style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', marginBottom: '16px', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Sliders size={14} /> {t('forecast.parameters')}
+                        </h3>
                         
-                        <div style={{ height: '450px', padding: '20px' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={forecastData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
-                                    <XAxis dataKey="period" stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-                                    <YAxis stroke='var(--text-disabled)' tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
-                                    <Tooltip content={<ForecastTooltip />} />
-                                    <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600, paddingTop: '10px' }} />
-                                    
-                                    {/* Confidence Interval Area */}
-                                    <Area type="monotone" dataKey="confidenceBounds" stroke="none" fill={FORECAST_AREA} name="95% Confidence Interval" />
-                                    
-                                    {/* Historical Data */}
-                                    <Line type="monotone" dataKey="actual" stroke={HISTORICAL_COLOR} strokeWidth={3} dot={{ r: 2, fill: HISTORICAL_COLOR, strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} name="Historical Data" />
-                                    
-                                    {/* Forecast Data */}
-                                    <Line type="monotone" dataKey="forecast" stroke={FORECAST_COLOR} strokeWidth={3} strokeDasharray="6 6" dot={{ r: 3, fill: FORECAST_COLOR, strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} name="Forecast Projection" />
-                                </ComposedChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                </motion.div>
-            )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>{t('forecast.dataset')}</label>
+                                <select 
+                                    value={selectedFile} 
+                                    onChange={(e) => handleFileChange(e.target.value)}
+                                    style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '10px', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px' }}
+                                >
+                                    <option value="">{t('forecast.chooseDataset')}</option>
+                                    {files.map(f => <option key={f.id} value={f.id}>{f.filename}</option>)}
+                                </select>
+                            </div>
 
-            {/* ─── Empty State ───────────────────────────────────── */}
-            {!loading && forecastData.length === 0 && (
-                <div style={{ padding: '80px 0', display: 'flex', justifyContent: 'center' }}>
-                    <div style={{ textAlign: 'center', maxWidth: '420px' }}>
-                        <div style={{ width: '88px', height: '88px', borderRadius: '28px', background: 'linear-gradient(135deg, rgba(129,140,248,0.08), rgba(52,211,153,0.08))', border: '1px solid rgba(52,211,153,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                            <TrendingUp size={40} style={{ color: '#34d399', opacity: 0.8 }} />
+                            <div>
+                                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>{t('forecast.target')}</label>
+                                <select 
+                                    value={targetColumn} 
+                                    onChange={(e) => setTargetColumn(e.target.value)}
+                                    disabled={!selectedFile}
+                                    style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '10px', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px' }}
+                                >
+                                    <option value="">{t('forecast.chooseNumeric')}</option>
+                                    {availableColumns.filter(c => c.type === 'numeric').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>{t('forecast.time')}</label>
+                                <select 
+                                    value={timeColumn} 
+                                    onChange={(e) => setTimeColumn(e.target.value)}
+                                    disabled={!selectedFile}
+                                    style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '10px', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px' }}
+                                >
+                                    <option value="">{t('forecast.rowSequence')}</option>
+                                    {availableColumns.filter(c => c.type === 'date').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>{t('forecast.periods')}</label>
+                                <input 
+                                    type="number" 
+                                    value={forecastPeriods} 
+                                    onChange={(e) => setForecastPeriods(e.target.value)}
+                                    style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', padding: '10px', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px' }}
+                                />
+                            </div>
+
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={runForecast}
+                                disabled={loading || !selectedFile || !targetColumn}
+                                style={{
+                                    width: '100%', padding: '12px', borderRadius: '10px', border: 'none',
+                                    background: 'linear-gradient(135deg, #818cf8, #6366f1)', color: '#fff',
+                                    fontWeight: 700, fontSize: '13px', cursor: 'pointer', marginTop: '8px',
+                                    opacity: (loading || !selectedFile || !targetColumn) ? 0.6 : 1,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                }}
+                            >
+                                {loading ? <RefreshCw size={16} className="animate-spin" /> : <Zap size={16} />}
+                                {loading ? t('forecast.solving') : t('forecast.train')}
+                            </motion.button>
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>Launch Forecasting Engine</h3>
-                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                            Select a dataset and a numeric target column. Nalyse will automatically calculate statistical models and project a confidence-bounded future trajectory.
-                        </p>
                     </div>
+
+                    {modelMetrics && (
+                        <div className="bento-card" style={{ padding: '20px', background: 'rgba(52,211,153,0.03)', border: '1px solid rgba(52,211,153,0.1)' }}>
+                            <h3 style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#10b981', marginBottom: '16px', letterSpacing: '0.1em' }}>Model Performance</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div>
+                                    <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{t('forecast.fit')}</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 900, color: '#10b981' }}>{modelMetrics.r2.toFixed(3)}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{t('forecast.error')}</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 900 }}>{modelMetrics.rmse.toLocaleString()}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
+
+                {/* Main Content */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div className="bento-card" style={{ padding: '24px', flex: 1, minHeight: '400px', position: 'relative' }}>
+                        <AnimatePresence mode="wait">
+                            {loading ? (
+                                <motion.div 
+                                    key="loading"
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}
+                                >
+                                    <div className="loader-ring" />
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{LOAD_STEPS[loadStep]}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Step {loadStep + 1} of 4</div>
+                                    </div>
+                                </motion.div>
+                            ) : forecastData.length > 0 ? (
+                                <motion.div 
+                                    key="chart"
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    style={{ height: '100%' }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                        <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>{t('forecast.trajectory')} {targetColumn}</h3>
+                                        <div style={{ display: 'flex', gap: '16px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: HISTORICAL_COLOR }} />
+                                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('forecast.historical')}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: FORECAST_COLOR }} />
+                                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('forecast.projection')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <ResponsiveContainer width="100%" height={400}>
+                                        <ComposedChart data={forecastData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+                                            <XAxis 
+                                                dataKey="label" 
+                                                stroke="var(--text-muted)" 
+                                                fontSize={10} 
+                                                tickLine={false} 
+                                                axisLine={false}
+                                                tick={{ fill: 'var(--text-muted)' }}
+                                            />
+                                            <YAxis 
+                                                stroke="var(--text-muted)" 
+                                                fontSize={10} 
+                                                tickLine={false} 
+                                                axisLine={false}
+                                                tick={{ fill: 'var(--text-muted)' }}
+                                                tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
+                                            />
+                                            <Tooltip content={<ForecastTooltip />} />
+                                            
+                                            {/* Confidence Interval Area */}
+                                            <Area 
+                                                type="monotone" 
+                                                dataKey="confidenceBounds" 
+                                                fill={FORECAST_AREA} 
+                                                stroke="none" 
+                                                activeDot={false}
+                                                name={t('forecast.ci')}
+                                            />
+                                            
+                                            {/* Historical Line */}
+                                            <Line 
+                                                type="monotone" 
+                                                dataKey="historical" 
+                                                stroke={HISTORICAL_COLOR} 
+                                                strokeWidth={3} 
+                                                dot={false}
+                                                activeDot={{ r: 6, strokeWidth: 0 }}
+                                                name={t('forecast.historical')}
+                                            />
+                                            
+                                            {/* Forecast Line */}
+                                            <Line 
+                                                type="monotone" 
+                                                dataKey="forecast" 
+                                                stroke={FORECAST_COLOR} 
+                                                strokeWidth={3} 
+                                                strokeDasharray="5 5"
+                                                dot={false}
+                                                activeDot={{ r: 6, strokeWidth: 0 }}
+                                                name={t('forecast.projection')}
+                                            />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </motion.div>
+                            ) : (
+                                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', gap: '16px' }}>
+                                    <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Calculator size={32} style={{ opacity: 0.3 }} />
+                                    </div>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>{t('forecast.launch')}</div>
+                                        <p style={{ fontSize: '13px', maxWidth: '400px', margin: 0, lineHeight: 1.6 }}>
+                                            {t('forecast.launchDesc')}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {forecastData.length > 0 && !loading && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <StaticInsightPanel 
+                                title="AI Trajectory Insight"
+                                type="success"
+                                icon={<Brain size={16} />}
+                                description={`Based on historical patterns in ${targetColumn}, our model projects a ${modelType === 'linear' ? 'steady' : 'curvilinear'} trend over the next ${forecastPeriods} periods with a confidence score of ${(modelMetrics.r2 * 100).toFixed(1)}%.`}
+                            />
+                            <StaticInsightPanel 
+                                title="Risk Threshold"
+                                type="warning"
+                                icon={<Shield size={16} />}
+                                description={`The RMSE of ${modelMetrics.rmse.toFixed(0)} indicates moderate variance. External factors not present in the historical dataset may impact accuracy as we move further into the horizon.`}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <style>{`
+                .loader-ring {
+                    width: 48px;
+                    height: 48px;
+                    border: 3px solid var(--border-subtle);
+                    border-top-color: var(--primary);
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };
-
-export default ForecastingView;

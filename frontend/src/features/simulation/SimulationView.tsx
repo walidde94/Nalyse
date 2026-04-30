@@ -12,6 +12,7 @@ import {
     Lightbulb, Gauge, FlaskConical, GitCompareArrows
 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { API_URL } from '../../config';
 import {
     type SimulationResult, type SimulationInput, type Product, type ScenarioAdjustment,
@@ -71,18 +72,21 @@ const SimTooltip = ({ active, payload, label }: any) => {
 };
 
 const RiskBadge = ({ level }: { level: string }) => {
+    const { t } = useLanguage();
     const colors: Record<string, string> = { low: '#34d399', medium: '#fbbf24', high: '#fb923c', critical: '#f87171' };
     const c = colors[level] || '#94a3b8';
+    // Map level to translation key if needed, but level is usually status code like 'low'
     return <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: c, background: `${c}15`, border: `1px solid ${c}30` }}>{level}</span>;
 };
 
-const LOAD_STEPS = ['Parsing input data…', 'Running profit simulation…', 'Optimizing product mix…', 'Executing Monte Carlo (5K iterations)…', 'Modeling scenarios…', 'Running sensitivity analysis…', 'Generating AI recommendations…', 'Building executive summary…'];
+const LOAD_STEPS_KEYS = ['simulation.steps.step0', 'simulation.steps.step1', 'simulation.steps.step2', 'simulation.steps.step3', 'simulation.steps.step4', 'simulation.steps.step5', 'simulation.steps.step6', 'simulation.steps.step7'];
 
 /* ═══════════════════════════════════════════════════════════ */
 interface Props { files: { id: string; filename: string; size: number; createdAt: string; originalName?: string }[]; token: string; }
 
 export const SimulationView = ({ files, token }: Props) => {
     const { addToast } = useToast();
+    const { t } = useLanguage();
     const [selectedFileId, setSelectedFileId] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadStep, setLoadStep] = useState(0);
@@ -142,10 +146,10 @@ export const SimulationView = ({ files, token }: Props) => {
             setLoadStep(6); await new Promise(r => setTimeout(r, 100));
             setLoadStep(7); await new Promise(r => setTimeout(r, 100));
             setResult(simResult);
-            addToast(`Simulation complete — ${products.length} products from test dataset`, 'success');
-        } catch (e: any) { addToast(e.message || 'Failed to load test data', 'error'); }
+            addToast(`${t('dashboard.simulationComplete')} — ${products.length} ${t('dashboard.productsAnalyzed')}`, 'success');
+        } catch (e: any) { addToast(e.message || t('dashboard.simulationFailed'), 'error'); }
         finally { setLoading(false); }
-    }, [addToast, overheadRate, taxRate, laborCost, mcIterations, parseCSVText]);
+    }, [addToast, t, overheadRate, taxRate, laborCost, mcIterations, parseCSVText]);
 
     const runSim = useCallback(async () => {
         setLoading(true); setLoadStep(0); setResult(null);
@@ -184,10 +188,10 @@ export const SimulationView = ({ files, token }: Props) => {
             const simResult = runFullSimulation(input);
             setLoadStep(7); await new Promise(r => setTimeout(r, 150));
             setResult(simResult);
-            addToast(`Simulation complete — ${products.length} products analyzed`, 'success');
-        } catch (e: any) { addToast(e.message || 'Simulation failed', 'error'); }
+            addToast(`${t('dashboard.simulationComplete')} — ${products.length} ${t('dashboard.productsAnalyzed')}`, 'success');
+        } catch (e: any) { addToast(e.message || t('dashboard.simulationFailed'), 'error'); }
         finally { setLoading(false); }
-    }, [selectedFileId, token, addToast, overheadRate, taxRate, laborCost, mcIterations]);
+    }, [selectedFileId, token, addToast, t, overheadRate, taxRate, laborCost, mcIterations]);
 
     /* ─── Derived chart data ─────────────────────────────── */
     const profitHeatmap = useMemo(() => result?.baseline.products.map(p => ({
@@ -244,10 +248,10 @@ export const SimulationView = ({ files, token }: Props) => {
                     </div>
                     <div>
                         <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #818cf8 0%, #fbbf24 50%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            AI Decision Simulation Engine
+                            {t('simulation.title')}
                         </h1>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Profit Simulation · Optimization · Monte Carlo · Scenario Modeling · AI Recommendations
+                            {t('simulation.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -258,34 +262,34 @@ export const SimulationView = ({ files, token }: Props) => {
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #818cf8, #fbbf24, #34d399)' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                     <Cpu size={15} style={{ color: 'var(--text-muted)' }} />
-                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>Simulation Configuration</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>{t('simulation.config.title')}</span>
                     <div style={{ flex: 1 }} />
                     <button onClick={() => setShowParams(!showParams)}
                         style={{ padding: '4px 12px', borderRadius: '8px', border: '1px solid var(--border-default)', background: showParams ? 'rgba(129,140,248,0.1)' : 'transparent', color: showParams ? '#818cf8' : 'var(--text-muted)', fontSize: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Settings2 size={12} /> Parameters
+                        <Settings2 size={12} /> {t('simulation.config.parameters')}
                     </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap' }}>
                     <div style={{ flex: 2, minWidth: '260px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#818cf8', boxShadow: '0 0 8px #818cf8' }} /> Data Source
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#818cf8', boxShadow: '0 0 8px #818cf8' }} /> {t('simulation.config.dataSource')}
                         </label>
                         <select value={selectedFileId} onChange={e => { setSelectedFileId(e.target.value); }}
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${selectedFileId ? '#818cf844' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500 }}>
-                            <option value="">Choose dataset…</option>
+                            <option value="">{t('simulation.config.chooseDataset')}</option>
                             {files.map(f => <option key={f.id} value={f.id}>{(f as any).originalName || f.filename}</option>)}
                         </select>
                     </div>
                     <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                         onClick={loadTestData}
                         style={{ padding: '10px 20px', borderRadius: '12px', border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.08)', color: '#34d399', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' as any, flexShrink: 0 }}>
-                        <Layers size={14} /> Test Data (100 Products)
+                        <Layers size={14} /> {t('simulation.config.testData')}
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={runSim}
                         disabled={loading || !selectedFileId}
                         style={{ padding: '10px 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #818cf8, #34d399)', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', opacity: !selectedFileId ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 24px rgba(129,140,248,0.25)', whiteSpace: 'nowrap' as any, flexShrink: 0 }}>
                         {loading ? <RefreshCw size={15} className="animate-spin" /> : <Play size={15} />}
-                        {loading ? 'Simulating…' : 'Run Simulation'}
+                        {loading ? t('simulation.config.simulating') : t('simulation.config.runSim')}
                     </motion.button>
                 </div>
                 {/* Expandable Parameters */}
@@ -295,10 +299,10 @@ export const SimulationView = ({ files, token }: Props) => {
                             style={{ overflow: 'hidden', marginTop: '16px', borderTop: '1px solid var(--border-default)', paddingTop: '16px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
                                 {[
-                                    { label: 'Overhead Rate', val: overheadRate, set: setOverheadRate, unit: '%', min: 0, max: 30, step: 0.5 },
-                                    { label: 'Tax Rate', val: taxRate, set: setTaxRate, unit: '%', min: 0, max: 50, step: 1 },
-                                    { label: 'Labor $/Unit', val: laborCost, set: setLaborCost, unit: '$', min: 0, max: 50, step: 0.5 },
-                                    { label: 'MC Iterations', val: mcIterations, set: setMcIterations, unit: '', min: 1000, max: 50000, step: 1000 },
+                                    { label: t('simulation.params.overhead'), val: overheadRate, set: setOverheadRate, unit: '%', min: 0, max: 30, step: 0.5 },
+                                    { label: t('simulation.params.tax'), val: taxRate, set: setTaxRate, unit: '%', min: 0, max: 50, step: 1 },
+                                    { label: t('simulation.params.labor'), val: laborCost, set: setLaborCost, unit: '$', min: 0, max: 50, step: 0.5 },
+                                    { label: t('simulation.params.iterations'), val: mcIterations, set: setMcIterations, unit: '', min: 1000, max: 50000, step: 1000 },
                                 ].map(p => (
                                     <div key={p.label}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -323,11 +327,11 @@ export const SimulationView = ({ files, token }: Props) => {
                         style={{ padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
                         <div style={{ width: '72px', height: '72px', borderRadius: '50%', border: '3px solid rgba(129,140,248,0.15)', borderTop: '3px solid #818cf8' }} className="animate-spin" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '320px' }}>
-                            {LOAD_STEPS.map((step, i) => (
-                                <motion.div key={step} initial={{ opacity: 0, x: -10 }} animate={{ opacity: i <= loadStep ? 1 : 0.3, x: 0 }} transition={{ delay: i * 0.08 }}
+                            {LOAD_STEPS_KEYS.map((key, i) => (
+                                <motion.div key={key} initial={{ opacity: 0, x: -10 }} animate={{ opacity: i <= loadStep ? 1 : 0.3, x: 0 }} transition={{ delay: i * 0.08 }}
                                     style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', fontWeight: 600, color: i <= loadStep ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                                     {i < loadStep ? <CheckCircle2 size={14} style={{ color: '#34d399' }} /> : i === loadStep ? <RefreshCw size={14} className="animate-spin" style={{ color: '#818cf8' }} /> : <div style={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid var(--border-default)' }} />}
-                                    {step}
+                                    {t(key)}
                                 </motion.div>
                             ))}
                         </div>
@@ -345,16 +349,16 @@ export const SimulationView = ({ files, token }: Props) => {
                         <div style={{ flex: 1, minWidth: '250px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                                 <Brain size={16} style={{ color: '#818cf8' }} />
-                                <span style={{ fontSize: '13px', fontWeight: 700 }}>Executive Summary</span>
+                                <span style={{ fontSize: '13px', fontWeight: 700 }}>{t('simulation.summary.title')}</span>
                             </div>
                             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>{result.executiveSummary}</p>
                         </div>
                         <div style={{ display: 'flex', gap: '20px', flexShrink: 0, flexWrap: 'wrap' }}>
                             {[
-                                { label: 'Revenue', val: fmtCurrency(result.baseline.totalRevenue), color: '#818cf8' },
-                                { label: 'Profit', val: fmtCurrency(result.baseline.totalProfit), color: result.baseline.totalProfit >= 0 ? '#34d399' : '#f87171' },
-                                { label: 'Margin', val: `${result.baseline.netMargin.toFixed(1)}%`, color: result.baseline.netMargin > 10 ? '#34d399' : '#fbbf24' },
-                                { label: 'Opt. Gain', val: `+${result.optimization.improvementPct.toFixed(1)}%`, color: '#a78bfa' },
+                                { label: t('simulation.stats.revenue'), val: fmtCurrency(result.baseline.totalRevenue), color: '#818cf8' },
+                                { label: t('simulation.summary.profit'), val: fmtCurrency(result.baseline.totalProfit), color: result.baseline.totalProfit >= 0 ? '#34d399' : '#f87171' },
+                                { label: t('simulation.stats.margin'), val: `${result.baseline.netMargin.toFixed(1)}%`, color: result.baseline.netMargin > 10 ? '#34d399' : '#fbbf24' },
+                                { label: t('simulation.summary.optGain'), val: `+${result.optimization.improvementPct.toFixed(1)}%`, color: '#a78bfa' },
                             ].map((s, i) => (
                                 <div key={i} style={{ textAlign: 'center' }}>
                                     <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: s.color }}>{s.val}</div>
@@ -367,12 +371,12 @@ export const SimulationView = ({ files, token }: Props) => {
                     {/* ─── Section Tabs ──────────────────────────────── */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px' }}>
                         {([
-                            { id: 'overview' as const, label: 'Profit Analysis', icon: <Target size={14} />, count: result.baseline.products.length },
-                            { id: 'scenarios' as const, label: 'Scenario Modeling', icon: <GitCompareArrows size={14} />, count: result.scenarios.length },
-                            { id: 'montecarlo' as const, label: 'Monte Carlo', icon: <Activity size={14} /> },
-                            { id: 'forecast' as const, label: 'Forecast', icon: <TrendingUp size={14} /> },
-                            { id: 'sensitivity' as const, label: 'Sensitivity', icon: <Gauge size={14} /> },
-                            { id: 'recommendations' as const, label: 'AI Insights', icon: <Lightbulb size={14} />, count: result.recommendations.length },
+                            { id: 'overview' as const, label: t('simulation.tab.overview'), icon: <Target size={14} />, count: result.baseline.products.length },
+                            { id: 'scenarios' as const, label: t('simulation.tab.scenarios'), icon: <GitCompareArrows size={14} />, count: result.scenarios.length },
+                            { id: 'montecarlo' as const, label: t('simulation.tab.montecarlo'), icon: <Activity size={14} /> },
+                            { id: 'forecast' as const, label: t('simulation.tab.forecast'), icon: <TrendingUp size={14} /> },
+                            { id: 'sensitivity' as const, label: t('simulation.tab.sensitivity'), icon: <Gauge size={14} /> },
+                            { id: 'recommendations' as const, label: t('simulation.tab.recommendations'), icon: <Lightbulb size={14} />, count: result.recommendations.length },
                         ]).map(tab => (
                             <button key={tab.id} onClick={() => setActiveSection(tab.id)}
                                 style={{ padding: '8px 16px', borderRadius: '10px', border: activeSection === tab.id ? '1px solid var(--primary)' : '1px solid var(--border-default)', background: activeSection === tab.id ? 'var(--primary-subtle)' : 'var(--bg-secondary)', color: activeSection === tab.id ? 'var(--primary)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
@@ -397,11 +401,11 @@ export const SimulationView = ({ files, token }: Props) => {
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
                                             <div>
-                                                <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', fontWeight: 700 }}>NET PROFIT</div>
+                                                <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', fontWeight: 700 }}>{t('simulation.stats.netProfit')}</div>
                                                 <div style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: p.netProfit >= 0 ? '#34d399' : '#f87171' }}>{fmtCurrency(p.netProfit)}</div>
                                             </div>
                                             <div style={{ textAlign: 'right' }}>
-                                                <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', fontWeight: 700 }}>MARGIN</div>
+                                                <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', fontWeight: 700 }}>{t('simulation.stats.margin')}</div>
                                                 <div style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{p.netMargin.toFixed(1)}%</div>
                                             </div>
                                         </div>
@@ -411,8 +415,8 @@ export const SimulationView = ({ files, token }: Props) => {
                                                 style={{ height: '100%', borderRadius: '2px', background: p.capacityUtilization > 85 ? '#f87171' : p.capacityUtilization > 60 ? '#fbbf24' : '#34d399' }} />
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '10px', color: 'var(--text-tertiary)' }}>
-                                            <span>Capacity: {p.capacityUtilization.toFixed(0)}%</span>
-                                            <span>Revenue: {fmtCurrency(p.revenue)}</span>
+                                            <span>{t('simulation.stats.capacity')}: {p.capacityUtilization.toFixed(0)}%</span>
+                                            <span>{t('simulation.stats.revenue')}: {fmtCurrency(p.revenue)}</span>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -649,12 +653,12 @@ export const SimulationView = ({ files, token }: Props) => {
                         <div style={{ width: '88px', height: '88px', borderRadius: '28px', background: 'linear-gradient(135deg, rgba(129,140,248,0.08), rgba(52,211,153,0.08))', border: '1px solid rgba(129,140,248,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                             <FlaskConical size={40} style={{ color: '#818cf8', opacity: 0.5 }} />
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>AI Decision Simulation Engine</h3>
+                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>{t('simulation.empty.title')}</h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                            Select an uploaded dataset with <strong style={{ color: '#818cf8' }}>product, pricing, and cost data</strong> and click <strong style={{ color: '#34d399' }}>Run Simulation</strong>, or load the built-in <strong style={{ color: '#34d399' }}>100-product test dataset</strong> to run a full profitability analysis with Monte Carlo risk modeling, scenario comparison, and AI-powered optimization.
+                            {t('simulation.empty.desc')}
                         </p>
                         <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '12px', lineHeight: 1.6 }}>
-                            Configurable parameters: overhead rate, tax rate, labor cost per unit, Monte Carlo iterations (up to 50K). Click <strong>Parameters</strong> in the control panel to adjust.
+                            {t('simulation.empty.hint')}
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
                             {['Profit Simulation', 'LP Optimization', 'Monte Carlo', 'Scenario Modeling', 'Sensitivity', 'AI Insights', '10K+ Iterations', 'Configurable Params'].map(tag => (

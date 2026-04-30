@@ -49,3 +49,8 @@ lerna-debug.log*
 # OS files
 Thumbs.db
 Desktop.ini
+
+# Agent & Temporary
+brain/
+**/scratch/
+.gemini/

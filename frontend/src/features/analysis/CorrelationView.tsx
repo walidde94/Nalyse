@@ -3,6 +3,7 @@ import alasql from 'alasql';
 
 import { Link2, BarChart3, Sparkles } from 'lucide-react';
 import { InsightPanel } from '../../components/ui/InsightPanel';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 import { API_URL } from '../../config';
 
@@ -14,6 +15,7 @@ interface CorrelationViewProps {
 }
 
 export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, userPlan, onUpgradeRequested }) => {
+    const { t } = useLanguage();
     const [selectedIdA, setSelectedIdA] = useState<string>('');
     const [selectedIdB, setSelectedIdB] = useState<string>('');
 
@@ -25,11 +27,11 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
                         <Sparkles size={32} />
                     </div>
                     <div className="flex-col gap-2">
-                        <h2 className="text-h2">Correlation Engine</h2>
-                        <p className="text-sec">Advanced multi-dataset joins and relationship discovery are Pro features.</p>
+                        <h2 className="text-h2">{t('correlation.title')}</h2>
+                        <p className="text-sec">{t('correlation.proFeature')}</p>
                     </div>
                     <button className="btn btn-primary btn-lg w-full" onClick={onUpgradeRequested}>
-                        <span className="shimmer-text">Upgrade to Pro</span>
+                        <span className="shimmer-text">{t('nav.upgradePro')}</span>
                     </button>
                 </div>
             </div>
@@ -57,7 +59,7 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
             if (target === 'A') setDataA(json.sampleData || []);
             else setDataB(json.sampleData || []);
         } catch (e) {
-            setError('Failed to load file data');
+            setError(t('correlation.joinFailed'));
         } finally {
             setLoading(false);
         }
@@ -65,7 +67,7 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
 
     const runCorrelation = () => {
         if (!dataA.length || !dataB.length || !joinKeyA || !joinKeyB) {
-            setError('Please select files and join keys');
+            setError(t('correlation.configure'));
             return;
         }
 
@@ -75,9 +77,9 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
         try {
             const res = alasql(`SELECT a.*, b.* FROM ? AS a JOIN ? AS b ON a.[${joinKeyA}] = b.[${joinKeyB}] LIMIT 100`, [dataA, dataB]);
             setResults(res as any[]);
-            if ((res as any[]).length === 0) setError('No matching records found');
+            if ((res as any[]).length === 0) setError(t('correlation.noMatches'));
         } catch (e: any) {
-            setError('Join failed: ' + e.message);
+            setError(t('correlation.joinFailed') + ': ' + e.message);
         } finally {
             setLoading(false);
         }
@@ -91,11 +93,11 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
 
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-h2">Correlation Engine</h2>
-                    <p className="text-sec">Join two datasets to find commonalities and relationships.</p>
+                    <h2 className="text-h2">{t('correlation.title')}</h2>
+                    <p className="text-sec">{t('correlation.subtitle')}</p>
                 </div>
                 <button className="btn btn-primary btn-lg" onClick={runCorrelation} disabled={loading || !joinKeyA || !joinKeyB}>
-                    {loading ? 'Processing...' : 'Run Correlation'}
+                    {loading ? t('correlation.processing') : t('correlation.run')}
                 </button>
             </div>
 
@@ -105,25 +107,25 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
                 {/* Source A */}
                 <div className="flex-col gap-4">
                     <div className="flex-col gap-2">
-                        <label className="text-sm font-bold">Primary Index (Left)</label>
+                        <label className="text-sm font-bold">{t('correlation.primary')}</label>
                         <select
                             className="input"
                             value={selectedIdA}
                             onChange={(e) => { setSelectedIdA(e.target.value); loadFile(e.target.value, 'A'); }}
                         >
-                            <option value="">Select File...</option>
+                            <option value="">{t('correlation.selectFile')}</option>
                             {files.map(f => <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>)}
                         </select>
                     </div>
 
                     {dataA.length > 0 && (
                         <div className="flex-col gap-2 fade-in">
-                            <label className="text-sm">Join Key</label>
+                            <label className="text-sm">{t('correlation.joinKey')}</label>
                             <select className="input" value={joinKeyA} onChange={e => setJoinKeyA(e.target.value)}>
-                                <option value="">Select Field...</option>
+                                <option value="">{t('correlation.selectField')}</option>
                                 {columnsA.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
-                            <div className="text-sm text-tertiary">{dataA.length} records loaded</div>
+                            <div className="text-sm text-tertiary">{t('correlation.recordsLoaded').replace('{count}', String(dataA.length))}</div>
                         </div>
                     )}
                 </div>
@@ -137,25 +139,25 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
                 {/* Source B */}
                 <div className="flex-col gap-4">
                     <div className="flex-col gap-2">
-                        <label className="text-sm font-bold">Secondary Index (Right)</label>
+                        <label className="text-sm font-bold">{t('correlation.secondary')}</label>
                         <select
                             className="input"
                             value={selectedIdB}
                             onChange={(e) => { setSelectedIdB(e.target.value); loadFile(e.target.value, 'B'); }}
                         >
-                            <option value="">Select File...</option>
+                            <option value="">{t('correlation.selectFile')}</option>
                             {files.map(f => <option key={f.id} value={f.id}>{f.originalName || f.filename}</option>)}
                         </select>
                     </div>
 
                     {dataB.length > 0 && (
                         <div className="flex-col gap-2 fade-in">
-                            <label className="text-sm">Join Key</label>
+                            <label className="text-sm">{t('correlation.joinKey')}</label>
                             <select className="input" value={joinKeyB} onChange={e => setJoinKeyB(e.target.value)}>
-                                <option value="">Select Field...</option>
+                                <option value="">{t('correlation.selectField')}</option>
                                 {columnsB.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
-                            <div className="text-sm text-tertiary">{dataB.length} records loaded</div>
+                            <div className="text-sm text-tertiary">{t('correlation.recordsLoaded').replace('{count}', String(dataB.length))}</div>
                         </div>
                     )}
                 </div>
@@ -176,15 +178,15 @@ export const CorrelationView: React.FC<CorrelationViewProps> = ({ files, token, 
 
             <div className="card flex-col" style={{ flex: 1, minHeight: '400px', padding: 0, overflow: 'hidden' }}>
                 <div className="p-4 border-bottom flex justify-between items-center bg-surface">
-                    <h3 className="text-h3">Results Preview</h3>
-                    {results.length > 0 && <span className="text-sm font-mono text-gradient">{results.length} matches found</span>}
+                    <h3 className="text-h3">{t('correlation.resultsPreview')}</h3>
+                    {results.length > 0 && <span className="text-sm font-mono text-gradient">{t('correlation.matchesFound').replace('{count}', String(results.length))}</span>}
                 </div>
 
                 <div style={{ flex: 1, overflow: 'auto' }}>
                     {results.length === 0 ? (
                         <div className="flex items-center justify-center h-full text-secondary flex-col gap-2">
                             <span style={{ opacity: 0.5 }}><BarChart3 size={32} /></span>
-                            Configure join settings above to see results.
+                            {t('correlation.configure')}
                         </div>
                     ) : (
                         <table className="data-table">

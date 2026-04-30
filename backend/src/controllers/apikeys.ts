@@ -12,7 +12,10 @@ export const listApiKeys = async (req: AuthRequest, res: Response) => {
         res.json(keys);
     } catch (error) {
         console.error('List API keys error:', error);
-        res.status(500).json({ error: 'Failed to list keys' });
+        if (error instanceof Error) {
+            console.error('Stack trace:', error.stack);
+        }
+        res.status(500).json({ error: 'Failed to list keys', details: error instanceof Error ? error.message : String(error) });
     }
 };
 

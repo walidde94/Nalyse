@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Lock, Mail, Check, AlertCircle, Eye, EyeOff, Fingerprint, Shield, Sparkles } from 'lucide-react';
-import { Logo } from '../../components/common/Logo';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Logo } from '../../components/common/Logo';
 
 interface LoginViewProps {
     onSwitchToRegister: () => void;
@@ -67,8 +67,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
 
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
-        if (!email || !email.includes('@')) { setError('Please enter a valid email address.'); return; }
-        if (!password || password.length < 4) { setError('Password must be at least 4 characters.'); return; }
+        if (!email || !email.includes('@')) { setError(t('auth.validEmail')); return; }
+        if (!password || password.length < 4) { setError(t('auth.passwordLength')); return; }
         setError('');
         setStep(1);
         try {
@@ -76,7 +76,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
             setStep(2);
             setTimeout(() => onSuccess(), 1200);
         } catch (err: any) {
-            setError(err.message || 'Authentication failed. Please try again.');
+            setError(err.message || t('auth.authFailed'));
             setStep(0);
         }
     };
@@ -392,10 +392,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSwitchToRegister, onSucc
                             </div>
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: step === 2 ? '#10b981' : '#6366f1', marginBottom: 8 }}>
-                                    {step === 1 ? 'Authenticating...' : 'Access Granted'}
+                                    {step === 1 ? t('auth.authenticating') : t('auth.accessGranted')}
                                 </div>
                                 <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
-                                    {step === 1 ? 'Verifying your credentials' : 'Redirecting to dashboard...'}
+                                    {step === 1 ? t('auth.verifying') : t('auth.redirecting')}
                                 </div>
                             </div>
                         </motion.div>

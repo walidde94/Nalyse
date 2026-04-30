@@ -1,59 +1,60 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/Toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { API_URL } from '../../config';
 
-const PLANS = [
+const getPlans = (t: (key: string) => string) => [
     {
         id: 'free',
-        name: 'Starter',
+        name: t('pricing.plans.starter.name'),
         price: '$0',
         period: '',
-        description: 'Perfect for individual data explorers',
+        description: t('pricing.plans.starter.desc'),
         features: [
-            '100MB Storage',
-            'Basic Visualizations',
-            'Standard AI Insights',
-            '5 Datasets limit',
-            'Community Support'
+            t('pricing.features.storage100'),
+            t('pricing.features.vis'),
+            t('pricing.features.ai'),
+            t('pricing.features.datasets5'),
+            t('pricing.features.community')
         ],
-        cta: 'Active Plan',
+        cta: t('pricing.activePlan'),
         isCurrent: true,
         highlight: false
     },
     {
         id: 'pro',
-        name: 'Professional',
+        name: t('pricing.plans.pro.name'),
         price: '$29',
         period: '/mo',
-        description: 'Advanced tools for power users and analysts',
+        description: t('pricing.plans.pro.desc'),
         features: [
-            '10GB Storage',
-            'SQL Query Engine',
-            'Correlation Analysis',
-            'Unlimited Datasets',
-            'Priority Support',
-            'Shareable Live Reports'
+            t('pricing.features.storage10'),
+            t('pricing.features.sql'),
+            t('pricing.features.correlation'),
+            t('pricing.features.unlimited'),
+            t('pricing.features.priority'),
+            t('pricing.features.live')
         ],
-        cta: 'Upgrade to Pro',
+        cta: t('pricing.upgradePro'),
         isCurrent: false,
         highlight: true
     },
     {
         id: 'enterprise',
-        name: 'Enterprise',
-        price: 'Custom',
+        name: t('pricing.plans.enterprise.name'),
+        price: t('pricing.plans.enterprise.price') || 'Custom',
         period: '',
-        description: 'Dedicated resources for large scale teams',
+        description: t('pricing.plans.enterprise.desc'),
         features: [
-            'Unlimited Storage',
-            'Team Collaboration',
-            'Audit Logs & SSO',
-            'White-label Reporting',
-            'Dedicated Account Manager',
-            'Custom API Access'
+            t('pricing.features.storageInf'),
+            t('pricing.features.collab'),
+            t('pricing.features.audit'),
+            t('pricing.features.white'),
+            t('pricing.features.manager'),
+            t('pricing.features.api')
         ],
-        cta: 'Contact Sales',
+        cta: t('pricing.contactSales'),
         isCurrent: false,
         highlight: false
     }
@@ -62,7 +63,10 @@ const PLANS = [
 export const PricingView = ({ onClose }: { onClose: () => void }) => {
     const { user, token, syncSubscription, refreshProfile, requestSubscriptionCancellation } = useAuth();
     const { addToast } = useToast();
+    const { t, language } = useLanguage();
     const [loading, setLoading] = useState<string | null>(null);
+
+    const PLANS = getPlans(t);
 
     const currentPlan = (user as any)?.organization?.plan || 'free';
 
@@ -75,29 +79,29 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
         try {
             const result = await syncSubscription();
             if (result && result.success) {
-                addToast(result.message || 'Plan status synchronized', 'success');
+                addToast(result.message || t('pricing.syncSuccess') || 'Plan status synchronized', 'success');
             } else if (result && !result.success) {
-                addToast(result.message || 'You are still on the Starter plan.', 'warning');
+                addToast(result.message || t('pricing.syncWarning') || 'You are still on the Starter plan.', 'warning');
             } else {
-                addToast('Sync failed locally. Please refresh.', 'error');
+                addToast(t('pricing.syncError') || 'Sync failed locally. Please refresh.', 'error');
             }
         } catch (error: any) {
-            addToast(`Sync error: ${error.message || 'Unknown error'}`, 'error');
+            addToast(`${t('pricing.syncError')}: ${error.message || 'Unknown error'}`, 'error');
         }
         setLoading(null);
     };
 
     const handleCancel = async () => {
-        if (!window.confirm('Are you sure you want to cancel your Professional subscription? You will keep your features until the end of the current billing cycle.')) {
+        if (!window.confirm(t('pricing.cancelConfirm') || 'Are you sure you want to cancel your Professional subscription? You will keep your features until the end of the current billing cycle.')) {
             return;
         }
 
         setLoading('cancel');
         const success = await requestSubscriptionCancellation();
         if (success) {
-            addToast('Subscription cancellation requested. It will end at the close of your current period.', 'success');
+            addToast(t('pricing.cancelSuccess') || 'Subscription cancellation requested. It will end at the close of your current period.', 'success');
         } else {
-            addToast('Cancellation failed. Please use the Billing Portal.', 'error');
+            addToast(t('pricing.cancelError') || 'Cancellation failed. Please use the Billing Portal.', 'error');
         }
         setLoading(null);
     };
@@ -158,14 +162,14 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
             }
         } catch (error) {
             console.error(error);
-            addToast('Failed to open billing portal', 'error');
+            addToast(t('pricing.portalError') || 'Failed to open billing portal', 'error');
             setLoading(null);
         }
     };
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
-        return new Intl.DateTimeFormat('en-US', {
+        return new Intl.DateTimeFormat(language === 'de' ? 'de-DE' : 'en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -198,7 +202,7 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
     };
 
     const handleRefundRequest = async () => {
-        if (!window.confirm('Request a refund for your latest Professional charge? This will immediately revert your account to the Starter plan.')) {
+        if (!window.confirm(t('pricing.refundConfirm') || 'Request a refund for your latest Professional charge? This will immediately revert your account to the Starter plan.')) {
             return;
         }
 
@@ -209,13 +213,13 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
-                addToast('Refund processed successfully. Your account has been downgraded.', 'success');
+                addToast(t('pricing.refundSuccess') || 'Refund processed successfully. Your account has been downgraded.', 'success');
                 await syncSubscription();
             } else {
-                addToast('Refund failed. Please contact support@nalyse.ai', 'error');
+                addToast(t('pricing.refundError') || 'Refund failed. Please contact support@nalyse.ai', 'error');
             }
         } catch (e) {
-            addToast('An error occurred during refund request.', 'error');
+            addToast(t('pricing.refundError') || 'An error occurred during refund request.', 'error');
         }
         setLoading(null);
     };
@@ -223,9 +227,9 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
     return (
         <div style={{ padding: '64px 24px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '48px' }} className="fade-in">
             <div style={{ textAlign: 'center', width: '100%' }}>
-                <h1 className="text-h1" style={{ marginBottom: '16px' }}>Simple, transparent pricing</h1>
+                <h1 className="text-h1" style={{ marginBottom: '16px' }}>{t('pricing.title')}</h1>
                 <p className="text-sec" style={{ fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
-                    Choose the plan that's right for your data needs. No hidden fees.
+                    {t('pricing.subtitle')}
                 </p>
 
                 {currentPlan === 'pro' && (
@@ -244,12 +248,12 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                     }}>
                         <div style={{ display: 'flex', gap: '48px', textAlign: 'left' }}>
                             <div>
-                                <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Member Since</p>
+                                <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>{t('pricing.memberSince')}</p>
                                 <p style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{formatDate(org?.subscriptionStartedAt)}</p>
                             </div>
                             <div>
                                 <p style={{ fontSize: '12px', fontWeight: 600, color: isCancelled ? 'var(--danger)' : 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                                    {isCancelled ? 'Subscription Ends' : 'Next Billing Date'}
+                                    {isCancelled ? t('pricing.subEnds') : t('pricing.nextBilling')}
                                 </p>
                                 <p style={{ fontSize: '15px', fontWeight: 700, color: isCancelled ? 'var(--danger)' : 'var(--text-primary)' }}>{formatDate(org?.currentPeriodEnd)}</p>
                             </div>
@@ -257,7 +261,7 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
 
                         <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
                             <button onClick={handleManageSubscription} className="btn btn-secondary" style={{ flex: 1 }} disabled={!!loading}>
-                                {loading === 'portal' ? 'Loading Portal...' : 'Manage Billing'}
+                                {loading === 'portal' ? t('common.loading') : t('pricing.manageBilling')}
                             </button>
                             {!isCancelled && (
                                 <button
@@ -271,14 +275,14 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                                     }}
                                     disabled={!!loading}
                                 >
-                                    {loading === 'cancel' ? 'Processing...' : 'Cancel Plan'}
+                                    {loading === 'cancel' ? t('analysis.query.processing') : t('pricing.cancelPlan')}
                                 </button>
                             )}
                         </div>
 
                         {isCancelled && (
                             <p style={{ fontSize: '13px', color: 'var(--danger)', fontWeight: 600, marginTop: '8px' }}>
-                                Your access will remain active until {formatDate(org?.currentPeriodEnd)}.
+                                {t('pricing.cancelDesc').replace('{date}', formatDate(org?.currentPeriodEnd))}
                             </p>
                         )}
 
@@ -296,7 +300,7 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                                 }}
                                 disabled={!!loading}
                             >
-                                {loading === 'refund' ? 'Refund in progress...' : 'Request refund for latest charge'}
+                                {loading === 'refund' ? t('analysis.query.processing') : t('pricing.refundRequest')}
                             </button>
                         )}
                     </div>
@@ -318,7 +322,7 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                             }}
                             disabled={!!loading}
                         >
-                            {loading === 'sync' ? 'Syncing...' : 'Already subscribed? Click here to sync status'}
+                            {loading === 'sync' ? t('connectors.syncing') : t('pricing.syncStatus')}
                         </button>
                     </div>
                 )}
@@ -341,11 +345,11 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                     let action = () => handleUpgrade(plan.id);
 
                     if (isCurrentPlan) {
-                        buttonText = 'Active Plan';
+                        buttonText = t('pricing.activePlan');
                         isDisabled = true;
                     } else if (currentPlan === 'pro' && isPlanFree) {
                         // Downgrade logic could go here, or handled via portal
-                        buttonText = 'Downgrade via Portal';
+                        buttonText = t('pricing.downgradePortal') || 'Downgrade via Portal';
                         action = handleManageSubscription;
                         isDisabled = false;
                     }
@@ -378,7 +382,7 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                                     fontSize: '12px',
                                     fontWeight: 700
                                 }}>
-                                    MOST POPULAR
+                                    {t('pricing.popular')}
                                 </div>
                             )}
                             <h3 className="text-h3" style={{ fontSize: '24px', marginBottom: '8px' }}>{plan.name}</h3>
@@ -395,11 +399,11 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
                                 disabled={isDisabled || !!loading}
                                 onClick={action}
                             >
-                                {loading === plan.id ? 'Processing...' : buttonText}
+                                {loading === plan.id ? t('analysis.query.processing') : buttonText}
                             </button>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <p style={{ fontWeight: 700, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>Includes:</p>
+                                <p style={{ fontWeight: 700, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>{t('pricing.includes')}</p>
                                 {plan.features.map((feature, i) => (
                                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '15px' }}>
                                         <span style={{ color: 'var(--success)' }}>✓</span>
@@ -414,16 +418,16 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
 
             {transactions.length > 0 && (
                 <div style={{ width: '100%', marginTop: '32px' }}>
-                    <h2 className="text-h2" style={{ marginBottom: '24px', fontSize: '20px' }}>Transaction History</h2>
+                    <h2 className="text-h2" style={{ marginBottom: '24px', fontSize: '20px' }}>{t('pricing.history')}</h2>
                     <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
                                 <tr style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border-default)' }}>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Invoice</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Date</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Amount</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Status</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Receipt</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t('pricing.invoice')}</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t('pricing.date')}</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t('pricing.amount')}</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t('pricing.status')}</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t('pricing.receipt')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -459,7 +463,7 @@ export const PricingView = ({ onClose }: { onClose: () => void }) => {
             )}
 
             <p className="text-sec">
-                Need more? <button style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'underline' }}>Contact us</button> for custom limits and enterprise features.
+                {t('pricing.needMore')} <button style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'underline' }}>{t('pricing.contactUs')}</button> {t('pricing.customLimits')}
             </p>
         </div>
     );

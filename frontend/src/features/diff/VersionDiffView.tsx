@@ -12,6 +12,7 @@ import {
     Shield, AlertTriangle, Download, Sparkles, Hash, Type, Calendar
 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { API_URL } from '../../config';
 import type { DiffMetric, ChartDiff, ColumnDiff, DiffSummary } from './diffHelpers';
 import {
@@ -82,6 +83,7 @@ interface Props { files: { id: string; filename: string; size: number; createdAt
 
 export const VersionDiffView = ({ files, token }: Props) => {
     const { addToast } = useToast();
+    const { t } = useLanguage();
     const [baselineId, setBaselineId] = useState('');
     const [comparisonId, setComparisonId] = useState('');
     const [loading, setLoading] = useState(false);
@@ -164,10 +166,10 @@ export const VersionDiffView = ({ files, token }: Props) => {
                     </div>
                     <div>
                         <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #818cf8 0%, #34d399 50%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Version Diff Engine
+                            {t('diff.title')}
                         </h1>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Deep structural comparison · KPI deltas · Schema analysis · Visual overlays
+                            {t('diff.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -178,17 +180,17 @@ export const VersionDiffView = ({ files, token }: Props) => {
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #818cf8, #34d399, #fbbf24)' }} />
                 <div className="flex items-center gap-2" style={{ marginBottom: '16px' }}>
                     <Database size={15} style={{ color: 'var(--text-muted)' }} />
-                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>Select Versions to Compare</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>{t('diff.baseline')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap' }}>
                     {/* Baseline */}
                     <div style={{ flex: 1, minWidth: '200px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: BASELINE_COLOR, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: BASELINE_COLOR, boxShadow: `0 0 8px ${BASELINE_COLOR}` }} /> Baseline (A)
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: BASELINE_COLOR, boxShadow: `0 0 8px ${BASELINE_COLOR}` }} /> {t('diff.baseline')}
                         </label>
                         <select id="diff-baseline-select" value={baselineId} onChange={e => setBaselineId(e.target.value)}
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${baselineId ? BASELINE_COLOR + '44' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500, transition: 'border-color 0.2s' }}>
-                            <option value="">Choose baseline…</option>
+                            <option value="">{t('diff.baselinePlaceholder')}</option>
                             {files.map(f => <option key={f.id} value={f.id} disabled={f.id === comparisonId}>{(f as any).originalName || f.filename} — {new Date(f.createdAt).toLocaleDateString()}</option>)}
                         </select>
                     </div>
@@ -202,11 +204,11 @@ export const VersionDiffView = ({ files, token }: Props) => {
                     {/* Comparison */}
                     <div style={{ flex: 1, minWidth: '200px' }}>
                         <label style={{ fontSize: '10px', fontWeight: 800, color: COMPARISON_COLOR, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: COMPARISON_COLOR, boxShadow: `0 0 8px ${COMPARISON_COLOR}` }} /> Comparison (B)
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: COMPARISON_COLOR, boxShadow: `0 0 8px ${COMPARISON_COLOR}` }} /> {t('diff.comparison')}
                         </label>
                         <select id="diff-comparison-select" value={comparisonId} onChange={e => setComparisonId(e.target.value)}
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${comparisonId ? COMPARISON_COLOR + '44' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500, transition: 'border-color 0.2s' }}>
-                            <option value="">Choose comparison…</option>
+                            <option value="">{t('diff.comparisonPlaceholder')}</option>
                             {files.map(f => <option key={f.id} value={f.id} disabled={f.id === baselineId}>{(f as any).originalName || f.filename} — {new Date(f.createdAt).toLocaleDateString()}</option>)}
                         </select>
                     </div>
@@ -216,7 +218,7 @@ export const VersionDiffView = ({ files, token }: Props) => {
                         disabled={loading || !baselineId || !comparisonId}
                         style={{ padding: '10px 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #818cf8, #34d399)', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', opacity: (!baselineId || !comparisonId) ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 24px rgba(129,140,248,0.25)', whiteSpace: 'nowrap' as any, flexShrink: 0 }}>
                         {loading ? <RefreshCw size={15} className="animate-spin" /> : <GitCompareArrows size={15} />}
-                        {loading ? 'Analyzing…' : 'Run Diff'}
+                        {loading ? t('common.analyzing') || 'Analyzing…' : t('diff.run')}
                     </motion.button>
                 </div>
             </div>
@@ -491,9 +493,9 @@ export const VersionDiffView = ({ files, token }: Props) => {
                         <div style={{ width: '88px', height: '88px', borderRadius: '28px', background: 'linear-gradient(135deg, rgba(129,140,248,0.08), rgba(52,211,153,0.08))', border: '1px solid rgba(129,140,248,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                             <GitCompareArrows size={40} style={{ color: '#818cf8', opacity: 0.5 }} />
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>Compare Data Versions</h3>
+                        <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>{t('diff.emptyTitle')}</h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                            Select a <strong style={{ color: BASELINE_COLOR }}>baseline</strong> and a <strong style={{ color: COMPARISON_COLOR }}>comparison</strong> file, then click <strong>Run Diff</strong> to see KPI deltas, chart overlays, schema diffs, and radar analysis.
+                            {t('diff.emptyDesc')}
                         </p>
                     </div>
                 </div>

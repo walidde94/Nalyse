@@ -16,7 +16,7 @@ import { useArchitect } from '../../contexts/ArchitectContext';
 import { ArchitectNode } from './ArchitectNode';
 
 import {
-    Home,
+    // Home icon removed — landing nav item deprecated
     TrendingUp,
     BrainCircuit,
     LayoutDashboard,
@@ -88,7 +88,6 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
     embed: <Boxes size={16} strokeWidth={2} />,
     canvas: <Layers size={16} strokeWidth={2} />,
     bi: <BarChart3 size={16} strokeWidth={2} />,
-    projects: <Briefcase size={16} strokeWidth={2} />,
     democracy: <Sparkles size={16} strokeWidth={2} />,
     automation: <Activity size={16} strokeWidth={2} />,
     collaboration: <MessageSquare size={16} strokeWidth={2} />,
@@ -101,17 +100,49 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
     docs: <FileCheck size={16} strokeWidth={2} />,
 };
 
+const TOUR_ID_MAP: Record<string, string> = {
+    dashboard: 'tour-ws-link',
+    sources: 'tour-connectors-link',
+    democracy: 'tour-nexus-ai',
+    correlate: 'tour-correlate-link',
+    bi: 'tour-bi-link',
+    logistics: 'tour-logistics-link',
+    developer: 'tour-dev-link'
+};
+
 function sidebarNavLabel(id: string, t: (key: string) => string): string {
     const keyMap: Record<string, string> = {
-        dashboard: 'nav.workspace',
+        dashboard: 'nav.dashboard',
+        workspace: 'nav.workspace',
         correlate: 'nav.correlation',
         bi: 'nav.bi',
         settings: 'nav.settings',
+        home: 'nav.home',
+        simulation: 'nav.simulation',
+        lens: 'nav.lens',
+        diff: 'nav.diff',
+        anomaly: 'nav.anomaly',
+        financial: 'nav.financial',
+        forecast: 'nav.forecast',
+        spatial: 'nav.spatial',
+        automl: 'nav.automl',
+        developer: 'nav.developer',
+        webhooks: 'nav.webhooks',
+        embed: 'nav.embed',
+        canvas: 'nav.canvas',
+        democracy: 'nav.democracy',
+        automation: 'nav.automation',
+        collaboration: 'nav.collaboration',
+        'shared-workspaces': 'nav.sharedWorkspaces',
+        'private-chat': 'nav.privateChat',
+        sources: 'nav.sources',
+        migration: 'nav.migration',
+        organization: 'nav.organization',
+        docs: 'nav.docs',
     };
     const tr = keyMap[id];
     if (tr) {
-        const v = t(tr);
-        if (v && v !== tr) return v;
+        return t(tr);
     }
     const fallbackKeyMap: Record<string, string> = {
         simulation: 'nav.simulation',
@@ -243,7 +274,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
             }}
         >
             {/* Brand + collapse */}
-            <ArchitectNode id="sb-brand" label="Command Identity">
+            <ArchitectNode id="sb-brand" label={t('nav.id')}>
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -288,7 +319,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                         type="button"
                         onClick={() => persistCollapsed(!collapsed)}
                         className="desktop-only"
-                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        title={collapsed ? t('nav.expand') : t('nav.collapse')}
                         style={{
                             width: 26,
                             height: 26,
@@ -323,21 +354,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                     zIndex: 2,
                 }}
             >
-                {/* Home */}
-                <NavItem
-                    id="landing"
-                    label={t('nav.home')}
-                    icon={<Home size={16} strokeWidth={2} />}
-                    isActive={currentView === 'landing'}
-                    isOpened={openedViews.includes('landing')}
-                    collapsed={collapsed}
-                    hovered={hoveredItem === 'landing'}
-                    sectorAccent="#94a3b8"
-                    sectorGlow="rgba(148, 163, 184, 0.25)"
-                    onHover={setHoveredItem}
-                    onClick={() => onViewChange('landing')}
-                />
-
                 {/* Navigation Groups */}
                 <Reorder.Group
                     axis="y"
@@ -363,7 +379,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                             >
                                 <ArchitectNode
                                     id={`sb-sector-${groupKey}`}
-                                    label={`${GROUP_TITLES[groupKey]} Sector`}
+                                    label={`${t(`nav.group.${groupKey}`)} Sector`}
                                     onRemove={() => handleHideGroup(groupKey)}
                                 >
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -400,7 +416,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                                     color: 'var(--text-muted)',
                                                     flex: 1,
                                                 }}>
-                                                    {GROUP_TITLES[groupKey]}
+                                                    {t(`nav.group.${groupKey}`)}
                                                 </span>
                                                 <span style={{
                                                     color: 'var(--text-muted)',
@@ -438,6 +454,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                                 sectorGlow={theme.glow}
                                                 onHover={setHoveredItem}
                                                 onClick={() => onViewChange(itemId)}
+                                                tourId={TOUR_ID_MAP[itemId]}
                                             />
                                         ))}
                                     </div>
@@ -487,6 +504,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                         ? window.open('/NALYSE_WORK_INSTRUCTIONS.html', '_blank')
                                         : onViewChange(fid)
                                 }
+                                tourId={TOUR_ID_MAP[fid]}
                             />
                         );
                     })}
@@ -494,7 +512,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
 
             {/* Upgrade CTA (non-pro users only) */}
             {!isPro && (
-                <ArchitectNode id="sb-upgrade" label="Upgrade Core">
+                <ArchitectNode id="sb-upgrade" label={t('nav.upgradePro')}>
                     <div style={{ padding: '8px', position: 'relative', zIndex: 2 }}>
                         <div
                             style={{
@@ -535,10 +553,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                         <span style={{
                                             fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
                                             color: 'var(--primary)',
-                                        }}>Upgrade to Pro</span>
+                                        }}>{t('nav.upgradePro')}</span>
                                     </div>
                                     <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4, margin: 0 }}>
-                                        50GB storage & unlimited datasets
+                                        {t('nav.upgradeDesc')}
                                     </p>
                                 </>
                             ) : (
@@ -592,6 +610,7 @@ interface NavItemProps {
     sectorGlow: string;
     onHover: (id: string | null) => void;
     onClick: () => void;
+    tourId?: string;
 }
 
 const NavItem: React.FC<NavItemProps> = memo(function NavItem({
@@ -606,9 +625,10 @@ const NavItem: React.FC<NavItemProps> = memo(function NavItem({
     sectorGlow,
     onHover,
     onClick,
+    tourId,
 }) {
     return (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} id={tourId}>
             <button
                 type="button"
                 onClick={onClick}

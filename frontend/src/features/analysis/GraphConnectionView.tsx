@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import { Network, Search } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // ----------------------------------------------------------------------
 // Types
@@ -82,6 +83,7 @@ function getLinkColor(type: 'correlation' | 'dependency' | 'frequency'): string 
 // ----------------------------------------------------------------------
 
 export const GraphConnectionView = ({ data, dimensions, measures, onClose }: GraphConnectionViewProps) => {
+    const { t } = useLanguage();
     // Refs
     const svgRef = useRef<SVGSVGElement>(null);
     const containerRef = useRef<SVGGElement>(null);
@@ -506,8 +508,8 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                         <Network size={20} />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Data Connection Graph</h1>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{graphData.nodes.length} columns, {graphData.links.length} relationships</div>
+                        <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>{t('graph.title')}</h1>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('graph.subtitle').replace('{nodes}', graphData.nodes.length.toString()).replace('{links}', graphData.links.length.toString())}</div>
                     </div>
                 </div>
 
@@ -524,7 +526,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                                 const match = graphData.nodes.find(n => n.label.toLowerCase().includes(e.target.value.toLowerCase()));
                                 if (match && e.target.value.length > 2) setSelectedNode(match);
                             }}
-                            placeholder="Find column..."
+                            placeholder={t('graph.searchPlaceholder')}
                             style={{
                                 background: 'var(--bg-surface-hover)',
                                 border: '1px solid var(--border-default)',
@@ -539,11 +541,11 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                     </div>
 
                     <button onClick={handleExport} className="hover-btn" style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '8px 12px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px' }}>
-                        📥 Export SVG
+                        📥 {t('graph.export')}
                     </button>
 
                     <button onClick={onClose} style={{ background: '#ef4444', border: 'none', borderRadius: '8px', padding: '8px 16px', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
-                        Close
+                        {t('common.close')}
                     </button>
                 </div>
             </div>
@@ -558,7 +560,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                 borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px'
             }}>
                 <div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Layout</div>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('graph.layout')}</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                         {(['force', 'radial', 'hierarchical', 'grid'] as const).map(l => (
                             <button
@@ -579,7 +581,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
 
                 <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa' }}>LINK THRESHOLD</span>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa' }}>{t('graph.threshold')}</span>
                         <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{Math.round(linkStrengthThreshold * 100)}%</span>
                     </div>
                     <input type="range" min="0.05" max="0.9" step="0.05" value={linkStrengthThreshold} onChange={e => setLinkStrengthThreshold(parseFloat(e.target.value))} style={{ width: '100%', accentColor: '#6366f1' }} />
@@ -587,7 +589,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
 
                 <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa' }}>ANIMATION SPEED</span>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa' }}>{t('graph.animationSpeed')}</span>
                         <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{animationSpeed}x</span>
                     </div>
                     <input type="range" min="0.5" max="3" step="0.5" value={animationSpeed} onChange={e => setAnimationSpeed(parseFloat(e.target.value))} style={{ width: '100%', accentColor: '#ec4899' }} />
@@ -596,7 +598,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', cursor: 'pointer', background: 'var(--bg-surface-hover)', padding: '6px 10px', borderRadius: '8px', flex: 1 }}>
                         <input type="checkbox" checked={showLabels} onChange={e => setShowLabels(e.target.checked)} style={{ accentColor: '#6366f1' }} />
-                        Labels
+                        {t('graph.labels')}
                     </label>
                     <button
                         onClick={() => {
@@ -605,7 +607,7 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
                         }}
                         style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'transparent', color: 'var(--text-primary)', fontSize: '11px', cursor: 'pointer' }}
                     >
-                        Reset
+                        {t('graph.reset')}
                     </button>
                 </div>
             </div>
@@ -625,11 +627,11 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '8px' }}>
-                            <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Uniqueness</div>
+                            <div style={{ fontSize: '11px', color: '#a1a1aa' }}>{t('graph.uniqueness')}</div>
                             <div style={{ fontSize: '16px', fontWeight: 600 }}>{(selectedNode || hoveredNode)?.value}</div>
                         </div>
                         <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '8px' }}>
-                            <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Connections</div>
+                            <div style={{ fontSize: '11px', color: '#a1a1aa' }}>{t('graph.connections')}</div>
                             <div style={{ fontSize: '16px', fontWeight: 600, color: '#ec4899' }}>
                                 {graphData.links.filter(l => l.source === (selectedNode || hoveredNode) || l.target === (selectedNode || hoveredNode)).length}
                             </div>
@@ -640,8 +642,8 @@ export const GraphConnectionView = ({ data, dimensions, measures, onClose }: Gra
 
             {/* Legend (Minimal) */}
             <div style={{ position: 'absolute', bottom: '24px', right: '24px', display: 'flex', gap: '16px', fontSize: '12px', background: 'var(--bg-elevated)', padding: '8px 16px', borderRadius: '20px', backdropFilter: 'blur(4px)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }} /> Measure</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} /> Dimension</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }} /> {t('graph.measure')}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} /> {t('graph.dimension')}</div>
             </div>
 
         </div>

@@ -1431,13 +1431,13 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                     }}>
                         <div style={{ padding: '0 24px', flexShrink: 0, borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
                             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '12px 0', alignItems: 'center' }}>
-                                {tabs.map(t => {
-                                    const isActive = activeTab === t.id;
-                                    const Icon = t.icon;
+                                {tabs.map(tab => {
+                                    const isActive = activeTab === tab.id;
+                                    const Icon = tab.icon;
                                     return (
                                         <button
-                                            key={t.id}
-                                            onClick={() => setActiveTab(t.id)}
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 12,
                                                 background: isActive ? 'var(--primary)' : 'transparent',
@@ -1446,13 +1446,13 @@ export const SharedWorkspacesView = ({ onOpenFile, onOpenDashboard, initialTab }
                                                 fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
                                             }}
                                         >
-                                            <Icon size={14} /> {t.label}
+                                            <Icon size={14} /> {tab.label}
                                             <span style={{ 
                                                 background: isActive ? 'var(--text-disabled)' : 'var(--bg-app)', 
                                                 padding: '1px 6px', borderRadius: 8, fontSize: 10, fontWeight: 800, 
                                                 color: isActive ? '#fff' : 'var(--text-muted)' 
                                             }}>
-                                                {t.count || 0}
+                                                {tab.count || 0}
                                             </span>
                                         </button>
                                     );

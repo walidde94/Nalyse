@@ -4,7 +4,6 @@ import { Organization } from '../src/entities/Organization';
 import { File } from '../src/entities/File';
 import { Analysis } from '../src/entities/Analysis';
 import { Group } from '../src/entities/Group';
-import { Project } from '../src/entities/Project';
 import { ApiKey } from '../src/entities/ApiKey';
 import { RemoteSource } from '../src/entities/RemoteSource';
 import { AppDataSource } from '../src/config/database';

@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Lock, User, Check, AlertCircle, Mail, Building2, Eye, EyeOff, Fingerprint, Shield, Sparkles, Zap } from 'lucide-react';
-import { Logo } from '../../components/common/Logo';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Logo } from '../../components/common/Logo';
 
 interface RegisterViewProps {
     onSwitchToLogin: () => void;
@@ -49,6 +49,7 @@ const OrbitalRings = () => (
 
 // Password strength meter
 const PasswordStrength = ({ password }: { password: string }) => {
+    const { t } = useLanguage();
     const getStrength = (pw: string) => {
         let score = 0;
         if (pw.length >= 8) score++;
@@ -59,7 +60,7 @@ const PasswordStrength = ({ password }: { password: string }) => {
         return score;
     };
     const strength = getStrength(password);
-    const labels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
+    const labels = ['', t('auth.pw.weak'), t('auth.pw.fair'), t('auth.pw.good'), t('auth.pw.strong'), t('auth.pw.excellent')];
     const colors = ['', '#ef4444', '#f59e0b', '#eab308', '#10b981', '#10b981'];
     if (!password) return null;
     return (

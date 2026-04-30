@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-    LayoutDashboard, TrendingUp, Users, PackageSearch, 
-    Megaphone, Cpu, Briefcase, ChevronRight, Upload, Play, Beaker, Star
+    Plus, Star, LayoutDashboard, TrendingUp, Users, PackageSearch, 
+    Megaphone, Cpu, Briefcase, ChevronRight, Upload, Play, Beaker,
+    Database
 } from 'lucide-react';
 
-import { Database } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface FileData {
@@ -182,7 +182,7 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                         <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.03, transform: 'scale(4)' }}>
                             {tmpl.icon}
                         </div>
-
+ 
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
                             <div style={{ 
                                 width: '48px', height: '48px', borderRadius: '14px', 
@@ -202,14 +202,14 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                                 <ChevronRight size={16} />
                             </div>
                         </div>
-
+ 
                         <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '10px', letterSpacing: '-0.02em' }}>
                             {t(tmpl.titleKey)}
                         </h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '20px' }}>
                             {t(tmpl.descKey)}
                         </p>
-
+ 
                         <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
                             <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
                                 {t('bi.expectedColumns')}
@@ -283,7 +283,7 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                                     {(() => { const found = TEMPLATES.find(tmpl => tmpl.id === selectedType); return found ? t(found.titleKey) : ''; })()}
                                 </h3>
                                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                    Provide a dataset matching the required schema to generate your intelligence dashboard instantly.
+                                    {t('bi.provideDataset')}
                                 </p>
                             </div>
 
@@ -293,7 +293,7 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                                 {files.length > 0 && (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginLeft: '4px' }}>
-                                            Select Workspace Dataset
+                                            {t('bi.selectDataset')}
                                         </label>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <div style={{ position: 'relative', flex: 1 }}>
@@ -354,7 +354,7 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-default)'; e.currentTarget.style.borderColor = 'var(--text-tertiary)'; }}
                                     onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--border-default)'; }}
                                 >
-                                    <Upload size={18} style={{ color: 'var(--text-tertiary)' }} /> Upload External CSV / JSON
+                                    <Upload size={18} style={{ color: 'var(--text-tertiary)' }} /> {t('bi.uploadExternal')}
                                 </motion.button>
                                 
                                 <button 
@@ -367,7 +367,7 @@ export const BiSelectionView = ({ files = [], onSelectExistingFile, onUploadFile
                                     onMouseEnter={e => e.currentTarget.style.color = 'var(--text-secondary)'}
                                     onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
                                 >
-                                    Cancel
+                                    {t('app.cancel')}
                                 </button>
                             </div>
                         </motion.div>

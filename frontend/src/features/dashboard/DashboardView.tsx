@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip, BarChart, Bar, XAxis, LineChart, Line } from 'recharts';
 import { calculatePulse } from './pulseEngine';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useArchitect } from '../../contexts/ArchitectContext';
@@ -41,6 +42,7 @@ const BENTO = {
 
 // --- Animated SVG Radial Gauge ---
 const RadialGauge = ({ value = 0, size = 120, label, color = '#6366f1' }: any) => {
+    const { t } = useLanguage();
     const r = (size - 12) / 2;
     const circ = 2 * Math.PI * r;
     const pct = Math.min(100, Math.max(0, value));
@@ -136,25 +138,26 @@ const BentoStat = ({ label, value, unit, icon: Icon, color = '#6366f1', sparkDat
 
 // --- AI-generated Contextual Summary ---
 const ContextualSummary = ({ metrics, fileCount, totalStorage }: any) => {
+    const { t } = useLanguage();
     const lines = useMemo(() => {
         const l: string[] = [];
         if (fileCount === 0) {
-            l.push('Upload your first dataset to start analyzing.');
+            l.push(t('dashboard.uploadFirst'));
             return l;
         }
         // composition insight
         const dominant = [{ n: 'CSV', c: metrics.csvCount }, { n: 'JSON', c: metrics.jsonCount }, { n: 'Excel', c: metrics.excelCount }].sort((a, b) => b.c - a.c)[0];
-        if (dominant.c > 0) l.push(`Your workspace is ${dominant.n}-heavy (${dominant.c} of ${fileCount} files).`);
+        if (dominant.c > 0) l.push(`${t('dashboard.workspaceDominant').replace('{type}', dominant.n).replace('{count}', String(dominant.c)).replace('{total}', String(fileCount))}`);
         // health insight
         const healthPct = fileCount > 0 ? Math.round((metrics.processedCount / fileCount) * 100) : 0;
-        if (healthPct === 100) l.push('All datasets are fully analyzed — ready for insights.');
-        else if (healthPct > 50) l.push(`${metrics.pendingCount} dataset${metrics.pendingCount > 1 ? 's' : ''} still awaiting analysis.`);
-        else if (fileCount > 0) l.push(`Most datasets need processing — run analysis to unlock insights.`);
+        if (healthPct === 100) l.push(t('dashboard.allAnalyzed'));
+        else if (healthPct > 50) l.push(`${metrics.pendingCount} ${t('dashboard.pendingAnalysis')}`);
+        else if (fileCount > 0) l.push(t('dashboard.needProcessing'));
         // recency insight
-        if (metrics.newestUpload) l.push(`Last activity: ${metrics.newestUpload}.`);
+        if (metrics.newestUpload) l.push(`${t('dashboard.lastActivity')}: ${metrics.newestUpload}.`);
         // storage insight
         const storNum = Number(totalStorage);
-        if (storNum > 50) l.push(`Storage usage is significant at ${totalStorage} MB.`);
+        if (storNum > 50) l.push(`${t('dashboard.storageUsage')} ${totalStorage} ${t('common.mb')}.`);
         return l;
     }, [metrics, fileCount, totalStorage]);
 
@@ -177,6 +180,7 @@ const ContextualSummary = ({ metrics, fileCount, totalStorage }: any) => {
 
 // --- File Type Donut with center label ---
 const TypeDonut = ({ csvCount, jsonCount, excelCount, otherCount }: any) => {
+    const { t } = useLanguage();
     const total = csvCount + jsonCount + excelCount + otherCount;
     const data = [
         { name: 'CSV', value: csvCount, color: '#10b981' },
@@ -184,7 +188,7 @@ const TypeDonut = ({ csvCount, jsonCount, excelCount, otherCount }: any) => {
         { name: 'Excel', value: excelCount, color: '#f59e0b' },
         { name: 'Other', value: otherCount, color: '#8b5cf6' },
     ].filter(d => d.value > 0);
-    if (total === 0) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No files</div>;
+    if (total === 0) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>{t('dashboard.noFiles')}</div>;
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', height: '100%' }}>
             <div style={{ width: 100, height: 100, position: 'relative' }}>
@@ -214,14 +218,15 @@ const TypeDonut = ({ csvCount, jsonCount, excelCount, otherCount }: any) => {
 
 // --- Upload Activity mini area chart ---
 const ActivityMini = ({ uploadsByDay }: { uploadsByDay: { day: string; count: number }[] }) => {
+    const { t } = useLanguage();
     const hasData = uploadsByDay.some(d => d.count > 0);
-    if (!hasData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>No activity yet</div>;
+    if (!hasData) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '13px' }}>{t('dashboard.noActivity')}</div>;
     const totalUploads = uploadsByDay.reduce((a, d) => a + d.count, 0);
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalUploads}</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)' }}>uploads / 14d</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)' }}>{t('dashboard.uploadsPer14d')}</span>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -298,7 +303,9 @@ const BentoCardHeader = ({ icon: Icon, title, badge }: any) => (
     </div>
 );
 
-const RecentActivityItem = ({ file, onClick }: any) => (
+const RecentActivityItem = ({ file, onClick }: any) => {
+    const { t } = useLanguage();
+    return (
     <div
         className="flex items-center justify-between p-3 hover:bg-[var(--bg-secondary)] rounded-lg cursor-pointer transition-colors group border-b border-[var(--border-subtle)] last:border-0"
         onClick={onClick}
@@ -311,9 +318,9 @@ const RecentActivityItem = ({ file, onClick }: any) => (
                 <h4 className="font-semibold text-sm text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors">{file.originalName || file.filename}</h4>
                 <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
                     <Clock size={12} />
-                    <span>Updated {new Date(file.createdAt).toLocaleDateString()}</span>
+                    <span>{t('dashboard.updated')} {new Date(file.createdAt).toLocaleDateString()}</span>
                     <span>•</span>
-                    <span>{(file.size / 1024).toFixed(0)} KB</span>
+                    <span>{(file.size / 1024).toFixed(0)} {t('common.kb')}</span>
                 </div>
             </div>
         </div>
@@ -321,9 +328,12 @@ const RecentActivityItem = ({ file, onClick }: any) => (
             <ArrowUpRight size={16} />
         </button>
     </div>
-);
+    );
+};
 
-const WatchlistItem = ({ insight, onRemove }: any) => (
+const WatchlistItem = ({ insight, onRemove }: any) => {
+    const { t, pluralize } = useLanguage();
+    return (
     <div className="p-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-primary/30 transition-all group">
         <div className="flex justify-between items-start gap-3">
             <div className="flex-1">
@@ -337,21 +347,23 @@ const WatchlistItem = ({ insight, onRemove }: any) => (
                 <p className="text-sm text-secondary line-clamp-2 leading-relaxed">{insight.summary}</p>
                 {insight.advice && insight.advice.length > 0 && (
                     <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-tertiary">{insight.advice.length} recommendations</span>
+                        <span className="text-xs text-tertiary">{pluralize(insight.advice.length, 'dashboard.recommendation', 'dashboard.recommendations')}</span>
                     </div>
                 )}
             </div>
             <button
                 onClick={onRemove}
                 className="btn btn-icon btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove from watchlist"
+                title={t('dashboard.removeFromWatchlist')}
             >
                 <X size={14} />
             </button>
         </div>
     </div>
-);
+    );
+};
 const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }: any) => {
+    const { t } = useLanguage();
     const isPro = userPlan === 'pro' || userPlan === 'enterprise';
     const fileLimit = 5;
     const isFileLimitReached = fileCount >= fileLimit && !isPro;
@@ -420,7 +432,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                                 </div>
                             )}
                             <span style={{ textShadow: `0 0 10px ${isFileLimitReached || isStorageLimitReached ? 'rgba(239,68,68,0.5)' : 'var(--primary)'}` }}>
-                                {isFileLimitReached || isStorageLimitReached ? 'SYSTEM QUOTA EXHAUSTED' : 'STORAGE QUOTA'}
+                                {isFileLimitReached || isStorageLimitReached ? t('dashboard.quotaExhausted') : t('dashboard.storageQuota')}
                             </span>
                         </div>
 
@@ -431,7 +443,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '6px 16px', borderRadius: '99px', border: '1px solid rgba(245, 158, 11, 0.3)', boxShadow: '0 0 15px rgba(245,158,11,0.2)' }}
                             >
                                 <Zap size={12} fill="currentColor" />
-                                <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Approaching Limit</span>
+                                <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{t('dashboard.approachingLimit')}</span>
                             </motion.div>
                         )}
                     </div>
@@ -446,8 +458,8 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             letterSpacing: '-0.02em',
                         }}>
                             {isFileLimitReached || isStorageLimitReached
-                                ? 'Storage Limit Reached'
-                                : 'Upgrade to Professional Tier'}
+                                ? t('dashboard.storageLimitReached')
+                                : t('dashboard.upgradeTier')}
                         </h2>
                         <p style={{
                             fontSize: 'clamp(15px, 1.5vw, 17px)',
@@ -458,8 +470,8 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             fontWeight: 500
                         }}>
                             {isFileLimitReached || isStorageLimitReached
-                                ? 'System resources have hit their tier limits. Upgrade to Professional for unlimited throughput and advanced data mapping.'
-                                : 'Unlock the full potential of your data. Upgrade to the Professional Tier to remove limits and enable advanced enterprise capabilities.'}
+                                ? t('dashboard.storageLimitReached') + '. ' + t('dashboard.upgradeDesc')
+                                : t('dashboard.upgradeDesc')}
                         </p>
                     </div>
                 </div>
@@ -482,7 +494,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Database size={14} style={{ color: 'var(--text-tertiary)' }} />
-                                    <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.15em', color: 'var(--text-secondary)' }}>Active Datasets</span>
+                                    <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.15em', color: 'var(--text-secondary)' }}>{t('dashboard.activeDatasets')}</span>
                                 </div>
                                 <span style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>
                                     <span style={{ color: isFileLimitReached ? '#ef4444' : 'var(--text-primary)', fontSize: '18px' }}>{fileCount}</span> / {fileLimit}
@@ -510,10 +522,10 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Layers size={14} style={{ color: 'var(--text-tertiary)' }} />
-                                    <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.15em', color: 'var(--text-secondary)' }}>Neural Storage</span>
+                                    <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.15em', color: 'var(--text-secondary)' }}>{t('dashboard.neuralStorage')}</span>
                                 </div>
                                 <span style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>
-                                    <span style={{ color: isStorageLimitReached ? '#ef4444' : 'var(--text-primary)', fontSize: '18px' }}>{storageUsed}</span><span style={{ fontSize: '11px', marginLeft: '2px' }}>MB</span> <span style={{ opacity: 0.5 }}>/</span> {maxStorage}<span style={{ fontSize: '11px', marginLeft: '2px' }}>MB</span>
+                                    <span style={{ color: isStorageLimitReached ? '#ef4444' : 'var(--text-primary)', fontSize: '18px' }}>{storageUsed}</span><span style={{ fontSize: '11px', marginLeft: '2px' }}>{t('common.mb')}</span> <span style={{ opacity: 0.5 }}>/</span> {maxStorage}<span style={{ fontSize: '11px', marginLeft: '2px' }}>{t('common.mb')}</span>
                                 </span>
                             </div>
                             <div style={{ height: '8px', width: '100%', borderRadius: '99px', background: 'var(--bg-main)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
@@ -569,7 +581,7 @@ const QuotaGuard = ({ fileCount, storageUsed, maxStorage, userPlan, onUpgrade }:
                             gap: '12px'
                         }}>
                             <Sparkles size={16} className="text-white/80" />
-                            Upgrade Now
+                            {t('dashboard.upgradeNow')}
                         </span>
                         <ArrowRight size={20} className="relative group-hover:translate-x-2 transition-transform duration-300" style={{ color: 'var(--text-primary)' }} />
                     </motion.button>
@@ -610,6 +622,7 @@ export const DashboardView = ({
 }: any) => {
     const { workspaces, setActiveWorkspace } = useWorkspace();
     const { user, token, refreshProfile, syncSubscription } = useAuth();
+    const { t, pluralize } = useLanguage();
     const { isArchitectMode, layoutMode, layoutState, updateLayoutSequence } = useArchitect();
     const maxStorageMB = userPlan === 'pro' ? 10240 : userPlan === 'enterprise' ? 1000000 : 100;
     const [searchTerm, setSearchTerm] = useState('');
@@ -704,7 +717,7 @@ export const DashboardView = ({
         }
     };
 
-    const getGroupName = (groupId: string) => groups.find((g: any) => g.id === groupId)?.name || 'Uncategorized';
+    const getGroupName = (groupId: string) => groups.find((g: any) => g.id === groupId)?.name || t('dashboard.uncategorized');
 
     // Load pinned insights from localStorage
     useEffect(() => {
@@ -852,7 +865,7 @@ export const DashboardView = ({
             revenue: pulseData.revenue || localMetrics.revenue,
             revenueGrowth: pulseData.revenueGrowth || localMetrics.revenueGrowth,
             anomalies: pulseData.anomalies ?? localMetrics.anomalies,
-            projects: pulseData.projects || localMetrics.projects,
+            findings: pulseData.findings || localMetrics.findings,
             systemHealth: liveHealth || pulseData.systemHealth || 100,
             telemetry: { ...pulseData.telemetry, ...telemetryData }
         };
@@ -895,7 +908,7 @@ export const DashboardView = ({
 
     const handleBulkDelete = () => {
         if (selectedFiles.size === 0) return;
-        if (confirm(`Delete ${selectedFiles.size} selected items?`)) {
+        if (confirm(t('dashboard.confirmDelete').replace('{count}', String(selectedFiles.size)))) {
             onDeleteMultiple(Array.from(selectedFiles));
             setSelectedFiles(new Set());
         }
@@ -907,7 +920,7 @@ export const DashboardView = ({
         const stagnantCount = safeFiles.filter((f: any) => !f.isProcessed && !f.groupId && new Date(f.createdAt).getTime() < Date.now() - 3600000).length;
         
         if (archivedCount + stagnantCount === 0) {
-            alert("System is optimized. No archived or stagnant files found.");
+            alert(t('dashboard.systemOptimized'));
             return;
         }
 
@@ -930,13 +943,13 @@ export const DashboardView = ({
                 const data = await res.json();
                 setShowCleanupModal(false);
                 onRefresh(); // Trigger a global refresh
-                alert(`Cleanup complete! Successfully purged ${data.purgedCount} items.`);
+                alert(`${t('dashboard.cleanupComplete')} ${data.purgedCount}`);
             } else {
-                alert("Failed to perform system cleanup. Please try again later.");
+                alert(t('dashboard.cleanupFailed'));
             }
         } catch (e) {
             console.error(e);
-            alert("Network error during cleanup.");
+            alert(t('dashboard.networkError'));
         } finally {
             setIsCleaningUp(false);
         }
@@ -999,26 +1012,26 @@ export const DashboardView = ({
                     const coreNodes = [
                         {
                             id: 'db-status-strip',
-                            label: 'Ambient Telemetry',
+                            label: t('dashboard.ambientTelemetry'),
                             isDraggable: false,
                             component: <AmbientStatusStrip fileCount={fileCount} storageUsed={totalStorage} />
                         },
                         {
                             id: 'db-hero',
-                            label: 'Dashboard Overview',
+                            label: t('dashboard.overviewLabel'),
                             component: (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
                                     {/* ── Hero Header ── */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <h1 style={{ fontSize: '28px', fontWeight: 800, margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
-                                                Welcome back, <span style={{ color: 'var(--primary)' }}>{firstName || userEmail?.split('@')[0] || 'User'}</span>
+                                                {t('header.welcome')}, <span style={{ color: 'var(--primary)' }}>{firstName || userEmail?.split('@')[0] || t('common.user')}</span>
                                             </h1>
                                             <ContextualSummary metrics={metrics} fileCount={fileCount} totalStorage={totalStorage} />
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                             <div style={{ cursor: 'pointer' }} onClick={() => setShowTelemetry(true)}>
-                                                <RadialGauge value={metrics.systemHealth} size={72} label="Health" color={metrics.systemHealth > 80 ? '#10b981' : metrics.systemHealth > 50 ? '#f59e0b' : '#ef4444'} />
+                                                <RadialGauge value={metrics.systemHealth} size={72} label={t('dashboard.systemHealth')} color={metrics.systemHealth > 80 ? '#10b981' : metrics.systemHealth > 50 ? '#f59e0b' : '#ef4444'} />
                                             </div>
                                             <LiveClock />
                                         </div>
@@ -1026,12 +1039,12 @@ export const DashboardView = ({
 
                                     {/* ── Live Data Ribbon ── */}
                                     <DataRibbon items={[
-                                        { label: 'Datasets', value: String(fileCount), color: '#6366f1' },
-                                        { label: 'Storage', value: `${totalStorage} MB`, color: '#3b82f6' },
-                                        { label: 'Analyzed', value: `${metrics.processedCount}/${fileCount}`, color: '#10b981' },
-                                        { label: 'Favorites', value: String(metrics.favoriteCount), color: '#f59e0b' },
-                                        { label: 'Archived', value: String(metrics.archivedCount), color: '#64748b' },
-                                        { label: 'Health', value: `${metrics.systemHealth}%`, color: metrics.systemHealth > 80 ? '#10b981' : '#f59e0b' },
+                                        { label: t('nav.workspace'), value: String(fileCount), color: '#6366f1' },
+                                        { label: t('dashboard.storageQuota'), value: `${totalStorage} ${t('common.mb')}`, color: '#3b82f6' },
+                                        { label: t('dashboard.analyzed'), value: `${metrics.processedCount}/${fileCount}`, color: '#10b981' },
+                                        { label: t('dashboard.favorites'), value: String(metrics.favoriteCount), color: '#f59e0b' },
+                                        { label: t('dashboard.archived'), value: String(metrics.archivedCount), color: '#64748b' },
+                                        { label: t('dashboard.systemHealth'), value: `${metrics.systemHealth}%`, color: metrics.systemHealth > 80 ? '#10b981' : '#f59e0b' },
                                     ]} />
 
                                     {/* ── Bento Grid ── */}
@@ -1044,22 +1057,22 @@ export const DashboardView = ({
                                     }}>
                                         {/* Row 1: 4 stat tiles */}
                                         <div className="bento-card-span-1">
-                                            <BentoStat label="Datasets" value={fileCount} icon={Database} color="#6366f1" sparkData={metrics.uploadsByDay?.map((d: any) => ({ v: d.count }))} />
+                                            <BentoStat label={t('nav.workspace')} value={fileCount} icon={Database} color="#6366f1" sparkData={metrics.uploadsByDay?.map((d: any) => ({ v: d.count }))} />
                                         </div>
                                         <div className="bento-card-span-1">
-                                            <BentoStat label="Storage" value={totalStorage} unit="MB" icon={HardDrive} color="#3b82f6" />
+                                            <BentoStat label={t('dashboard.storageQuota')} value={totalStorage} unit={t('common.mb')} icon={HardDrive} color="#3b82f6" />
                                         </div>
                                         <div className="bento-card-span-1">
-                                            <BentoStat label="Avg Size" value={metrics.avgFileSizeKB > 0 ? metrics.avgFileSizeKB.toFixed(0) : '—'} unit="KB" icon={Layers} color="#8b5cf6" />
+                                            <BentoStat label={t('dashboard.avgSize')} value={metrics.avgFileSizeKB > 0 ? metrics.avgFileSizeKB.toFixed(0) : '—'} unit={t('common.kb')} icon={Layers} color="#8b5cf6" />
                                         </div>
                                         <div className="bento-card-span-1">
-                                            <BentoStat label="Favorites" value={metrics.favoriteCount} icon={Star} color="#f59e0b" delta={0} />
+                                            <BentoStat label={t('dashboard.favorites')} value={metrics.favoriteCount} icon={Star} color="#f59e0b" delta={0} />
                                         </div>
 
                                         {/* Row 2: File Types (2 cols) + Upload Activity (2 cols) */}
                                         <div className="bento-card-span-2" style={{ display: 'flex' }}>
                                             <BentoCard span={1} style={{ flex: 1, minHeight: '200px' }}>
-                                                <BentoCardHeader icon={BarChart3} title="File Types" badge={`${metrics.csvCount + metrics.jsonCount + metrics.excelCount + metrics.otherCount} total`} />
+                                                <BentoCardHeader icon={BarChart3} title={t('dashboard.fileTypes')} badge={`${metrics.csvCount + metrics.jsonCount + metrics.excelCount + metrics.otherCount} ${t('dashboard.total')}`} />
                                                 <div style={{ flex: 1 }}>
                                                     <TypeDonut csvCount={metrics.csvCount} jsonCount={metrics.jsonCount} excelCount={metrics.excelCount} otherCount={metrics.otherCount} />
                                                 </div>
@@ -1067,7 +1080,7 @@ export const DashboardView = ({
                                         </div>
                                         <div className="bento-card-span-2" style={{ display: 'flex' }}>
                                             <BentoCard span={1} style={{ flex: 1, minHeight: '200px' }}>
-                                                <BentoCardHeader icon={TrendingUp} title="Upload Activity" badge="14 days" />
+                                                <BentoCardHeader icon={TrendingUp} title={t('dashboard.uploadActivity')} badge={`14 ${t('dashboard.daysAgo')}`} />
                                                 <div style={{ flex: 1, minHeight: 0 }}>
                                                     <ActivityMini uploadsByDay={metrics.uploadsByDay || []} />
                                                 </div>
@@ -1077,31 +1090,31 @@ export const DashboardView = ({
                                         {/* Row 3: Storage Quota (2 cols) + Data Health gauge (1 col) + Archived (1 col) */}
                                         <div className="bento-card-span-2" style={{ display: 'flex' }}>
                                             <BentoCard span={1} style={{ flex: 1 }}>
-                                                <BentoCardHeader icon={HardDrive} title="Storage Quota" />
+                                                <BentoCardHeader icon={HardDrive} title={t('dashboard.storageQuota')} />
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                                                        <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalStorage}<span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-tertiary)' }}> / {maxStorageMB} MB</span></span>
+                                                        <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalStorage}<span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-tertiary)' }}> / {maxStorageMB} {t('common.mb')}</span></span>
                                                         <span style={{ fontSize: '13px', fontWeight: 700, color: totalStorageNum > maxStorageMB * 0.9 ? '#ef4444' : 'var(--text-tertiary)' }}>{Math.round((totalStorageNum / maxStorageMB) * 100)}%</span>
                                                     </div>
                                                     <div style={{ height: 8, borderRadius: 99, background: 'var(--bg-surface-hover)', overflow: 'hidden' }}>
                                                         <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (totalStorageNum / maxStorageMB) * 100)}%` }} transition={{ duration: 1.4, ease: 'easeOut' }}
                                                             style={{ height: '100%', borderRadius: 99, background: totalStorageNum > maxStorageMB * 0.9 ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, #6366f1, #a78bfa)' }} />
                                                     </div>
-                                                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>{(maxStorageMB - totalStorageNum).toFixed(1)} MB remaining</span>
+                                                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>{(maxStorageMB - totalStorageNum).toFixed(1)} {t('common.mb')} {t('dashboard.active')}</span>
                                                 </div>
                                             </BentoCard>
                                         </div>
                                         <div className="bento-card-span-1" style={{ display: 'flex' }}>
                                             <BentoCard span={1} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <RadialGauge value={fileCount > 0 ? Math.round((metrics.processedCount / fileCount) * 100) : 0} size={100} label="Analyzed" color="#10b981" />
+                                                <RadialGauge value={fileCount > 0 ? Math.round((metrics.processedCount / fileCount) * 100) : 0} size={100} label={t('dashboard.analyzed')} color="#10b981" />
                                             </BentoCard>
                                         </div>
                                         <div className="bento-card-span-1" style={{ display: 'flex' }}>
                                             <BentoCard span={1} style={{ flex: 1 }}>
-                                                <BentoCardHeader icon={Archive} title="Archived" />
+                                                <BentoCardHeader icon={Archive} title={t('dashboard.archived')} />
                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '4px' }}>
                                                     <span style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{metrics.archivedCount}</span>
-                                                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)' }}>datasets shelved</span>
+                                                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)' }}>{t('dashboard.datasetsShelved')}</span>
                                                 </div>
                                             </BentoCard>
                                         </div>
@@ -1111,7 +1124,7 @@ export const DashboardView = ({
                         },
                         {
                             id: 'db-workspace',
-                            label: 'Dataset Workspace',
+                            label: t('dashboard.datasetWorkspace'),
                             component: (
                                 <section className="relative w-full" style={{ zIndex: 20 }}>
                                     <div style={{
@@ -1120,6 +1133,10 @@ export const DashboardView = ({
                                         border: '1px solid var(--border-subtle)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)',
                                         display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px'
                                     }}>
+                                        <div className="flex items-center gap-4 text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-[0.1em]">
+                                            <span>{t('dashboard.total')}: {pluralize(files.length, 'dashboard.file', 'dashboard.files')}</span>
+                                            <span>{t('dashboard.scoped')}: {pluralize(filteredFiles.length, 'dashboard.file', 'dashboard.files')}</span>
+                                        </div>
                                         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
                                             <div className="flex items-center gap-4">
                                                 <div style={{
@@ -1132,7 +1149,7 @@ export const DashboardView = ({
                                                 <div className="flex flex-col">
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                                                            {workspaceFilter === 'all' ? 'Universal Hub' : workspaceFilter === 'private' ? 'Private Space' : workspaces.find(w => w.id === workspaceFilter)?.name || 'Active Workspace'}
+                                                            {workspaceFilter === 'all' ? t('dashboard.universalHub') : workspaceFilter === 'private' ? t('dashboard.privateSpace') : workspaces.find(w => w.id === workspaceFilter)?.name || t('dashboard.activeWorkspace')}
                                                         </h3>
                                                         <div style={{ position: 'relative' }}>
                                                             <select 
@@ -1142,9 +1159,9 @@ export const DashboardView = ({
                                                                     opacity: 0, position: 'absolute', inset: 0, cursor: 'pointer', width: '100%'
                                                                 }}
                                                             >
-                                                                <option value="all">All Assets</option>
-                                                                <option value="private">Private Space</option>
-                                                                <optgroup label="Workspaces">
+                                                                <option value="all">{t('dashboard.allAssets')}</option>
+                                                                <option value="private">{t('dashboard.privateSpace')}</option>
+                                                                <optgroup label={t('dashboard.workspaces')}>
                                                                     {workspaces.map(w => (
                                                                         <option key={w.id} value={w.id}>{w.name}</option>
                                                                     ))}
@@ -1155,12 +1172,12 @@ export const DashboardView = ({
                                                                 color: 'var(--primary)', fontSize: '10px', fontWeight: 800, border: '1px solid var(--primary-glow)',
                                                                 display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
                                                             }}>
-                                                                SWITCH <ArrowRight size={10} />
+                                                                {t('dashboard.switch')} <ArrowRight size={10} />
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>
-                                                        {filteredFiles.length} {workspaceFilter === 'all' ? 'total' : 'scoped'} datasets loaded
+                                                        {filteredFiles.length} {workspaceFilter === 'all' ? t('dashboard.total') : t('dashboard.scoped')} {t('dashboard.datasetsLoaded')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -1168,19 +1185,19 @@ export const DashboardView = ({
                                             <div className="flex flex-wrap gap-4 items-center w-full xl:w-auto">
                                                 <div className="relative flex-1 xl:w-72 xl:flex-none">
                                                     <Search size={15} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                                                    <input type="text" placeholder="Search datasets..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', height: '42px', padding: '0 16px 0 40px', borderRadius: '12px', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: '13px' }} />
+                                                    <input type="text" placeholder={t('dashboard.searchDatasets')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', height: '42px', padding: '0 16px 0 40px', borderRadius: '12px', background: 'var(--bg-surface-hover)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: '13px' }} />
                                                 </div>
                                                 <div style={{ display: 'flex', padding: '4px', background: 'var(--bg-surface-hover)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
                                                     <button onClick={() => setViewMode('list')} style={{
                                                         padding: '7px 14px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: viewMode === 'list' ? 'var(--primary)' : 'transparent',
                                                         color: viewMode === 'list' ? '#fff' : 'var(--text-secondary)',
-                                                    }}>List</button>
+                                                    }}>{t('dashboard.list')}</button>
                                                     <button onClick={() => setViewMode('grid')} style={{
                                                         padding: '7px 14px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: viewMode === 'grid' ? 'var(--primary)' : 'transparent',
                                                         color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)',
-                                                    }}>Grid</button>
+                                                    }}>{t('dashboard.grid')}</button>
                                                 </div>
                                                 <div style={{ display: 'flex', padding: '4px', background: 'var(--bg-surface-hover)', borderRadius: '14px', border: '1px solid var(--border-subtle)', gap: '4px' }}>
                                                     <button onClick={() => setDatasetTab('active')} style={{
@@ -1188,33 +1205,33 @@ export const DashboardView = ({
                                                         background: datasetTab === 'active' ? 'var(--primary)' : 'transparent',
                                                         color: datasetTab === 'active' ? '#fff' : 'var(--text-secondary)',
                                                     }}>
-                                                        Active{activeFilesCount > 0 && <span style={{ marginLeft: '6px', opacity: 0.6 }}>({activeFilesCount})</span>}
+                                                        {t('dashboard.active')}{activeFilesCount > 0 && <span style={{ marginLeft: '6px', opacity: 0.6 }}>({activeFilesCount})</span>}
                                                     </button>
                                                     <button onClick={() => setDatasetTab('archived')} style={{
                                                         padding: '7px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         background: datasetTab === 'archived' ? 'var(--bg-elevated)' : 'transparent',
                                                         color: datasetTab === 'archived' ? '#fff' : 'var(--text-secondary)',
                                                     }}>
-                                                        Archived{archivedFilesCount > 0 && <span style={{ marginLeft: '6px', opacity: 0.6 }}>({archivedFilesCount})</span>}
+                                                        {t('dashboard.archived')}{archivedFilesCount > 0 && <span style={{ marginLeft: '6px', opacity: 0.6 }}>({archivedFilesCount})</span>}
                                                     </button>
                                                 </div>
 
                                                 {selectedFiles.size > 0 ? (
                                                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                                         <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', background: 'var(--primary-subtle)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--primary-glow)' }}>
-                                                            {selectedFiles.size} Selected
+                                                            {selectedFiles.size} {t('dashboard.analyzed')}
                                                         </span>
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleBulkDelete} style={{
                                                             background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                                                         }}>
-                                                            <Trash2 size={15} /> Delete Selected
+                                                            <Trash2 size={15} /> {t('dashboard.deleteSelected')}
                                                         </motion.button>
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setSelectedFiles(new Set())} style={{
                                                             background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                                                         }}>
-                                                            <X size={15} /> Clear
+                                                            <X size={15} /> {t('dashboard.clear')}
                                                         </motion.button>
                                                     </div>
                                                 ) : (
@@ -1227,13 +1244,13 @@ export const DashboardView = ({
                                                             background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                                                         }}>
-                                                            <CheckCircle2 size={15} /> Select All
+                                                            <CheckCircle2 size={15} /> {t('dashboard.selectAll')}
                                                         </motion.button>
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSystemCleanup} title="Delete all archived & old unprocessed items" style={{
                                                             background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                                                         }}>
-                                                            <Activity size={15} /> Clean Up
+                                                            <Activity size={15} /> {t('dashboard.cleanUp')}
                                                         </motion.button>
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => document.getElementById('file-input')?.click()} disabled={isOverLimit} style={{
                                                             background: 'var(--primary)',
@@ -1242,7 +1259,7 @@ export const DashboardView = ({
                                                             opacity: isOverLimit ? 0.5 : 1,
                                                             display: 'flex', alignItems: 'center', gap: '6px',
                                                         }}>
-                                                            <CloudUpload size={15} /> Upload
+                                                            <CloudUpload size={15} /> {t('dashboard.upload')}
                                                         </motion.button>
                                                     </div>
                                                 )}
@@ -1290,7 +1307,7 @@ export const DashboardView = ({
                         },
                         {
                             id: 'db-intelligence',
-                            label: 'Intelligence Stream',
+                            label: t('dashboard.intelligenceStream'),
                             component: <IntelligenceTimeline files={safeFiles} />
                         }
                     ];
@@ -1306,7 +1323,7 @@ export const DashboardView = ({
                                     border: '1px solid var(--border-subtle)', minHeight: '180px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%'
                                 }}>
-                                    {node.label} Stream Configured
+                                    {node.label} {t('dashboard.streamConfigured')}
                                 </div>
                             )
                         }));
@@ -1393,11 +1410,11 @@ export const DashboardView = ({
             {showCreateGroup && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
                     <div className="card w-96 p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-                        <h3 className="text-h3 mb-4">Create Dataset Group</h3>
-                        <input className="input w-full mb-4" placeholder="Group Name" autoFocus value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
+                        <h2 className="text-h3" style={{ fontSize: '18px' }}>{t('dashboard.createGroup')}</h2>
+                        <input className="input w-full mb-4" placeholder={t('dashboard.groupName')} autoFocus value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
                         <div className="flex justify-end gap-2">
-                            <button className="btn btn-ghost" onClick={() => setShowCreateGroup(false)}>Cancel</button>
-                            <button className="btn btn-primary" onClick={handleCreateGroup}>Create</button>
+                            <button className="btn btn-ghost" onClick={() => setShowCreateGroup(false)}>{t('app.cancel')}</button>
+                            <button className="btn btn-primary" onClick={handleCreateGroup}>{t('app.create')}</button>
                         </div>
                     </div>
                 </div>
@@ -1417,7 +1434,7 @@ export const DashboardView = ({
             {createPortal(
                 <AnimatePresence>
                     {viewingMeta && (() => {
-                        const fileExt = (viewingMeta.originalName || viewingMeta.filename || '').split('.').pop()?.toLowerCase() || 'dat';
+                        const fileExt = (viewingMeta.originalName || viewingMeta.filename || '').split('.').pop()?.toLowerCase() || t('dashboard.fileTypeFallback');
                         const isCsv = fileExt === 'csv';
                         const displayName = viewingMeta.originalName || viewingMeta.filename;
                         const sizeKB = (viewingMeta.size / 1024).toFixed(1);
@@ -1493,11 +1510,11 @@ export const DashboardView = ({
                                             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                                                     <span style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: accentColor, padding: '3px 10px', borderRadius: 6, background: `${accentColor}12`, border: `1px solid ${accentColor}20` }}>
-                                                        {fileExt.toUpperCase()} Dataset
+                                                        {fileExt.toUpperCase()} {t('dashboard.dataset')}
                                                     </span>
                                                     {viewingMeta.isProcessed && (
                                                         <span style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#10b981', padding: '3px 10px', borderRadius: 6, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                            <ShieldCheck size={10} /> Analyzed
+                                                            <ShieldCheck size={10} /> {t('dashboard.analyzedStatus')}
                                                         </span>
                                                     )}
                                                 </div>
@@ -1505,7 +1522,7 @@ export const DashboardView = ({
                                                     {displayName}
                                                 </h3>
                                                 <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginTop: 2, display: 'block' }}>
-                                                    Ingested {fileAge === 0 ? 'today' : fileAge === 1 ? 'yesterday' : `${fileAge} days ago`} · ID: {viewingMeta.id?.slice(0, 8)}…
+                                                    {t('dashboard.ingested')} {fileAge === 0 ? t('dashboard.today') : fileAge === 1 ? t('dashboard.yesterday') : `${fileAge} ${t('dashboard.daysAgoSuffix')}`} · {t('common.id')}: {viewingMeta.id?.slice(0, 8)}…
                                                 </span>
                                             </motion.div>
                                         </div>
@@ -1528,7 +1545,7 @@ export const DashboardView = ({
                                             }}
                                         >
                                             {tab === 'preview' && <Eye size={12} />}
-                                            {tab === 'properties' ? 'Properties' : 'Data Preview'}
+                                            {tab === 'properties' ? t('dashboard.properties') : t('dashboard.dataPreview')}
                                         </button>
                                     ))}
                                 </div>
@@ -1541,10 +1558,10 @@ export const DashboardView = ({
                                             {/* Stats Grid — 4 columns */}
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
                                                 {[
-                                                    { label: 'Volume', value: sizeKB, unit: 'KB', sub: `${sizeMB} MB`, color: '#10b981', icon: <Database size={16} /> },
-                                                    { label: 'Format', value: fileExt.toUpperCase(), unit: '', sub: 'Structured', color: '#6366f1', icon: <Layers size={16} /> },
-                                                    { label: 'Status', value: viewingMeta.isProcessed ? 'Ready' : 'Pending', unit: '', sub: viewingMeta.isProcessed ? 'Analysis cached' : 'Awaiting process', color: viewingMeta.isProcessed ? '#10b981' : '#f59e0b', icon: viewingMeta.isProcessed ? <ShieldCheck size={16} /> : <Activity size={16} /> },
-                                                    { label: 'Age', value: fileAge === 0 ? '<1' : String(fileAge), unit: fileAge <= 1 ? 'day' : 'days', sub: new Date(viewingMeta.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: '#c084fc', icon: <Clock size={16} /> },
+                                                    { label: t('dashboard.volume'), value: sizeKB, unit: t('common.kb'), sub: `${sizeMB} ${t('common.mb')}`, color: '#10b981', icon: <Database size={16} /> },
+                                                    { label: t('dashboard.format'), value: fileExt.toUpperCase(), unit: '', sub: t('dashboard.structured'), color: '#6366f1', icon: <Layers size={16} /> },
+                                                    { label: t('dashboard.status'), value: viewingMeta.isProcessed ? t('dashboard.ready') : t('dashboard.pending'), unit: '', sub: viewingMeta.isProcessed ? t('dashboard.analysisCached') : t('dashboard.awaitingProcess'), color: viewingMeta.isProcessed ? '#10b981' : '#f59e0b', icon: viewingMeta.isProcessed ? <ShieldCheck size={16} /> : <Activity size={16} /> },
+                                                    { label: t('dashboard.age'), value: fileAge === 0 ? '<1' : String(fileAge), unit: fileAge <= 1 ? t('dashboard.day') : t('dashboard.days'), sub: new Date(viewingMeta.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: '#c084fc', icon: <Clock size={16} /> },
                                                 ].map((stat, si) => (
                                                     <motion.div
                                                         key={stat.label}
@@ -1578,15 +1595,15 @@ export const DashboardView = ({
                                             {/* Metadata Rows */}
                                             <div style={{ borderRadius: 16, border: '1px solid var(--border-default)', overflow: 'hidden', background: 'var(--bg-surface-hover)' }}>
                                                 {[
-                                                    { label: 'Group', value: getGroupName(viewingMeta.groupId), icon: <Folder size={14} /> },
-                                                    { label: 'Created', value: new Date(viewingMeta.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), icon: <Clock size={14} /> },
-                                                    { label: 'Time', value: new Date(viewingMeta.createdAt).toLocaleTimeString(), icon: <Activity size={14} /> },
-                                                    { label: 'Node ID', value: viewingMeta.id || '—', icon: <Target size={14} /> },
+                                                    { label: t('dashboard.group'), value: getGroupName(viewingMeta.groupId), icon: <Folder size={14} /> },
+                                                    { label: t('dashboard.created'), value: new Date(viewingMeta.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), icon: <Clock size={14} /> },
+                                                    { label: t('dashboard.time'), value: new Date(viewingMeta.createdAt).toLocaleTimeString(), icon: <Activity size={14} /> },
+                                                    { label: t('dashboard.nodeId'), value: viewingMeta.id || '—', icon: <Target size={14} /> },
                                                 ].map((row, ri) => (
                                                     <div key={row.label} style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: ri < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none', gap: 14 }}>
                                                         <div style={{ color: 'var(--text-disabled)', flexShrink: 0 }}>{row.icon}</div>
                                                         <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', minWidth: 80 }}>{row.label}</span>
-                                                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: row.label === 'Node ID' ? 'var(--font-mono, monospace)' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
+                                                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: row.label === t('dashboard.nodeId') ? 'var(--font-mono, monospace)' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -1600,8 +1617,8 @@ export const DashboardView = ({
                                                         <Loader2 size={48} className="animate-spin absolute top-0 left-0" style={{ color: accentColor, animationDuration: '3s', animationDirection: 'reverse' }} />
                                                     </div>
                                                     <div className="text-center">
-                                                        <span style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: accentColor }} className="animate-pulse block mb-1">Analyzing Schema</span>
-                                                        <span style={{ fontSize: 9, color: 'var(--text-disabled)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Inference engine: ACTIVE</span>
+                                                        <span style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: accentColor }} className="animate-pulse block mb-1">{t('dashboard.analyzingSchema')}</span>
+                                                        <span style={{ fontSize: 9, color: 'var(--text-disabled)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{t('dashboard.inferenceEngine')}: {t('dashboard.activeStatus')}</span>
                                                     </div>
                                                 </div>
                                             ) : (previewData && previewData.rows && previewData.rows.length > 0) ? (
@@ -1609,10 +1626,10 @@ export const DashboardView = ({
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 4px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.12)' }}>
                                                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px rgba(16,185,129,0.5)' }} />
-                                                            <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#10b981' }}>{previewData.metadata.rowCount} Rows</span>
+                                                            <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#10b981' }}>{previewData.metadata.rowCount} {t('dashboard.rows')}</span>
                                                         </div>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)' }}>
-                                                            <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6366f1' }}>{previewData.columns.length} Fields</span>
+                                                            <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6366f1' }}>{previewData.columns.length} {t('dashboard.fields')}</span>
                                                         </div>
                                                         <div style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-disabled)' }}>{previewData.metadata.format}</div>
                                                     </div>
@@ -1665,7 +1682,7 @@ export const DashboardView = ({
                                             ) : (
                                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '60px 0', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.06)', background: 'var(--bg-surface)' }}>
                                                     <Table size={32} style={{ opacity: 0.12, color: 'var(--text-primary)' }} />
-                                                    <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-disabled)' }}>No readable sectors found</span>
+                                                    <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-disabled)' }}>{t('dashboard.noReadableSectors')}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -1693,7 +1710,7 @@ export const DashboardView = ({
                                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)', transform: 'skewX(-20deg) translateX(-100%)', animation: 'sweepShine 3s ease-in-out infinite' }} />
                                         <BrainCircuit size={16} />
                                         <span style={{ position: 'relative', zIndex: 1 }}>
-                                            {viewingMeta.isProcessed ? 'Open Analysis' : 'Launch Neural Analysis'}
+                                            {viewingMeta.isProcessed ? t('dashboard.openAnalysis') : t('dashboard.launchNeural')}
                                         </span>
                                         <Sparkles size={14} style={{ opacity: 0.7 }} />
                                     </motion.button>
@@ -1733,9 +1750,9 @@ export const DashboardView = ({
                                         <HardDrive size={32} />
                                     </div>
                                     <div>
-                                        <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>Robust System Purge</h2>
+                                        <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>{t('dashboard.robustSystemPurge')}</h2>
                                         <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                                            Are you sure you want to optimize your environment? The following items will be permanently removed:
+                                            {t('dashboard.optimizeEnv')}
                                         </p>
                                     </div>
 
@@ -1743,7 +1760,7 @@ export const DashboardView = ({
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <Archive size={14} style={{ color: 'var(--text-tertiary)' }} />
-                                                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Archived Files</span>
+                                                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('dashboard.archivedFiles')}</span>
                                             </div>
                                             <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{cleanupSummary.archived}</span>
                                         </div>
@@ -1751,7 +1768,7 @@ export const DashboardView = ({
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <Clock size={14} style={{ color: 'var(--text-tertiary)' }} />
-                                                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Stagnant Uploads (&gt;1h)</span>
+                                                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('dashboard.stagnantUploads')}</span>
                                             </div>
                                             <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{cleanupSummary.stagnant}</span>
                                         </div>
@@ -1767,7 +1784,7 @@ export const DashboardView = ({
                                                 fontSize: '13px', fontWeight: 700, cursor: 'pointer' 
                                             }}
                                         >
-                                            Cancel
+                                            {t('app.cancel')}
                                         </button>
                                         <button 
                                             disabled={isCleaningUp}
@@ -1780,7 +1797,7 @@ export const DashboardView = ({
                                             }}
                                         >
                                             {isCleaningUp ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                                            {isCleaningUp ? 'Purging...' : 'Confirm Purge'}
+                                            {isCleaningUp ? t('dashboard.purging') : t('dashboard.confirmPurge')}
                                         </button>
                                     </div>
                                 </div>
@@ -1826,6 +1843,7 @@ const TelemetryStat = ({ label, value, sub, icon, color, compact }: any) => (
 // --- UTILITY COMPONENTS (Unchanged logic, updated styling) ---
 
 const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDeleteFile, onToggleFavorite, onArchiveFile, onViewMeta }: any) => {
+    const { t } = useLanguage();
     if (files.length === 0) return null;
 
     return (
@@ -1899,7 +1917,7 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                         <div style={{ padding: '14px 18px 0', flex: 1 }}>
                             <h4 style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3, letterSpacing: '-0.01em' }} title={displayName}>{displayName}</h4>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'var(--font-mono, monospace)' }}>{(f.size / 1024).toFixed(1)} KB</span>
+                                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'var(--font-mono, monospace)' }}>{(f.size / 1024).toFixed(1)} {t('common.kb')}</span>
                                 <span style={{
                                     display: 'inline-flex', alignItems: 'center', gap: 4,
                                     fontSize: 8, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em',
@@ -1909,7 +1927,7 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                                     border: `1px solid ${f.isProcessed ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}`,
                                 }}>
                                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', boxShadow: f.isProcessed ? '0 0 6px rgba(16,185,129,0.5)' : '0 0 6px rgba(245,158,11,0.5)' }} />
-                                    {f.isProcessed ? 'Processed' : 'Pending'}
+                                    {f.isProcessed ? t('dashboard.processed') : t('dashboard.pendingStatus')}
                                 </span>
                             </div>
                         </div>
@@ -1935,7 +1953,7 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
                             >
                                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)', transform: 'skewX(-20deg) translateX(-100%)', animation: 'sweepShine 4s ease-in-out infinite' }} />
                                 <BrainCircuit size={13} />
-                                <span style={{ position: 'relative', zIndex: 1 }}>{f.isProcessed ? 'Open' : 'Process'}</span>
+                                <span style={{ position: 'relative', zIndex: 1 }}>{f.isProcessed ? t('dashboard.open') : t('dashboard.process')}</span>
                             </motion.button>
                             <motion.button
                                 whileHover={{ scale: 1.08 }}
@@ -1975,6 +1993,7 @@ const FileGrid = ({ files, selectedFiles, onToggleSelection, onFileSelect, onDel
 
 const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAll, onFileSelect, onToggleFavorite, onDeleteFile, onArchiveFile, onUpdateFileGroup, onUpdateFileWorkspace, onViewMeta }: any) => {
     const { workspaces } = useWorkspace();
+    const { t } = useLanguage();
     const allSelected = files.length > 0 && files.every((f: any) => selectedFiles.has(f.id));
     return (
         <div style={{ padding: '0 4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -1991,13 +2010,13 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                             />
                         </th>
                         <th style={{ padding: '0 16px', width: '50px', color: 'var(--text-tertiary)' }}><Star size={14} /></th>
-                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Dataset Node</th>
-                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Format</th>
-                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Volume</th>
-                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Timestamp</th>
-                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Topology Group</th>
-                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>Shared Workspace</th>
-                        <th style={{ padding: '0 24px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)', textAlign: 'right' }}>Directives</th>
+                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>{t('dashboard.datasetNode')}</th>
+                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>{t('dashboard.format')}</th>
+                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>{t('dashboard.volume')}</th>
+                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>{t('dashboard.timestamp')}</th>
+                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>{t('dashboard.topologyGroup')}</th>
+                        <th style={{ padding: '0 16px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)' }}>{t('dashboard.sharedWorkspace')}</th>
+                        <th style={{ padding: '0 24px', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--text-tertiary)', textAlign: 'right' }}>{t('dashboard.directives')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -2093,7 +2112,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                     border: `1px solid ${f.isProcessed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`
                                                 }}>
                                                     <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />
-                                                    {f.isProcessed ? 'Processed' : 'Awaiting Processing'}
+                                                    {f.isProcessed ? t('dashboard.processed') : t('dashboard.awaitingProcessing')}
                                                 </span>
                                             </div>
                                         </div>
@@ -2118,10 +2137,10 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                     <td style={{ padding: '16px 16px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                             <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 700 }}>
-                                                {(f.size / 1024).toFixed(1)} KB
+                                                {(f.size / 1024).toFixed(1)} {t('common.kb')}
                                             </span>
                                             <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                                                {(f.size / 1024 / 1024).toFixed(2)} MB
+                                                {(f.size / 1024 / 1024).toFixed(2)} {t('common.mb')}
                                             </span>
                                         </div>
                                     </td>
@@ -2161,7 +2180,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--text-tertiary)'; }}
                                                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
                                             >
-                                                <option value="">Ungrouped</option>
+                                                <option value="">{t('dashboard.ungrouped')}</option>
                                                 {groups.map((g: any) => (
                                                     <option key={g.id} value={g.id}>{g.name}</option>
                                                 ))}
@@ -2187,13 +2206,13 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                     <>
                                                         <Globe size={12} />
                                                         <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                            {workspaces.find(w => w.id === f.workspaceId)?.name || 'Shared'}
+                                                            {workspaces.find(w => w.id === f.workspaceId)?.name || t('dashboard.shared')}
                                                         </span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <Lock size={12} />
-                                                        <span>Private</span>
+                                                        <span>{t('dashboard.private')}</span>
                                                     </>
                                                 )}
                                                 <ArrowDown size={10} style={{ marginLeft: 'auto', opacity: 0.5 }} />
@@ -2205,7 +2224,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                 value={f.workspaceId || ''}
                                                 onChange={(e) => onUpdateFileWorkspace?.(f.id, e.target.value || null)}
                                             >
-                                                <option value="">Private (Me Only)</option>
+                                                <option value="">{t('dashboard.private')} ({t('dashboard.meOnly')})</option>
                                                 {workspaces?.map((w: any) => (
                                                     <option key={w.id} value={w.id}>{w.name}</option>
                                                 ))}
@@ -2237,7 +2256,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                 }}
                                                 title={f.isArchived ? "Restore dataset" : "Archive dataset"}
                                             >
-                                                {f.isArchived ? <RotateCcw size={14} /> : <Archive size={14} />} {f.isArchived ? 'Restore' : 'Archive'}
+                                                {f.isArchived ? <RotateCcw size={14} /> : <Archive size={14} />} {f.isArchived ? t('dashboard.restore') : t('dashboard.archive')}
                                             </motion.button>
 
                                             <motion.button
@@ -2262,7 +2281,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                 }}
                                                 title="View Topology Metadata"
                                             >
-                                                <Eye size={14} style={{ color: 'var(--primary)' }} /> Inspect
+                                                <Eye size={14} style={{ color: 'var(--primary)' }} /> {t('dashboard.inspect')}
                                             </motion.button>
 
                                             <motion.button
@@ -2292,7 +2311,7 @@ const FileTable = ({ files, groups, selectedFiles, onToggleSelection, onToggleAl
                                                 }}
                                                 title={f.isProcessed ? 'Open cached analysis' : 'Process this dataset'}
                                             >
-                                                <BrainCircuit size={14} /> {f.isProcessed ? 'Open' : 'Process'}
+                                                <BrainCircuit size={14} /> {f.isProcessed ? t('dashboard.open') : t('dashboard.process')}
                                             </motion.button>
 
                                             <motion.button

@@ -7,6 +7,7 @@ import {
     Target, Layers, Eye, EyeOff, SortAsc, SortDesc,
     Sparkles, Brain, Activity, CheckCircle2
 } from 'lucide-react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface InsightsDashboardProps {
     insights: any[];
@@ -17,72 +18,73 @@ interface InsightsDashboardProps {
 type InsightCategory = 'all' | 'anomaly' | 'trend' | 'quality' | 'segment' | 'correlation' | 'pattern';
 type SortMode = 'confidence' | 'type' | 'recent';
 
-const CATEGORY_CONFIG: Record<string, {
-    label: string;
-    color: string;
-    bgColor: string;
-    icon: any;
-    gradient: string;
-}> = {
-    anomaly: {
-        label: 'Anomaly',
-        color: '#ef4444',
-        bgColor: 'rgba(239, 68, 68, 0.08)',
-        icon: <AlertTriangle size={14} />,
-        gradient: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.02))'
-    },
-    trend: {
-        label: 'Trend',
-        color: '#f59e0b',
-        bgColor: 'rgba(245, 158, 11, 0.08)',
-        icon: <TrendingUp size={14} />,
-        gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.02))'
-    },
-    quality: {
-        label: 'Quality',
-        color: '#10b981',
-        bgColor: 'rgba(16, 185, 129, 0.08)',
-        icon: <Shield size={14} />,
-        gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.02))'
-    },
-    segment: {
-        label: 'Segment',
-        color: '#38bdf8',
-        bgColor: 'rgba(56, 189, 248, 0.08)',
-        icon: <Users size={14} />,
-        gradient: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.02))'
-    },
-    correlation: {
-        label: 'Correlation',
-        color: '#a78bfa',
-        bgColor: 'rgba(167, 139, 250, 0.08)',
-        icon: <Activity size={14} />,
-        gradient: 'linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.02))'
-    },
-    pattern: {
-        label: 'Pattern',
-        color: '#818cf8',
-        bgColor: 'rgba(129, 140, 248, 0.08)',
-        icon: <Sparkles size={14} />,
-        gradient: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(129, 140, 248, 0.02))'
-    }
-};
-
-const getConfig = (type: string) => CATEGORY_CONFIG[type] || {
-    label: type || 'Insight',
-    color: '#6366f1',
-    bgColor: 'rgba(99, 102, 241, 0.08)',
-    icon: <Lightbulb size={14} />,
-    gradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.02))'
-};
-
 export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] }: InsightsDashboardProps) => {
+    const { t } = useLanguage();
     const [activeCategory, setActiveCategory] = useState<InsightCategory>('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortMode, setSortMode] = useState<SortMode>('confidence');
     const [expandedInsight, setExpandedInsight] = useState<number | null>(null);
     const [showPinnedOnly, setShowPinnedOnly] = useState(false);
     const [minConfidence, setMinConfidence] = useState(0);
+
+    const CATEGORY_CONFIG: Record<string, {
+        label: string;
+        color: string;
+        bgColor: string;
+        icon: any;
+        gradient: string;
+    }> = useMemo(() => ({
+        anomaly: {
+            label: t('insights.cat.anomaly'),
+            color: '#ef4444',
+            bgColor: 'rgba(239, 68, 68, 0.08)',
+            icon: <AlertTriangle size={14} />,
+            gradient: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.02))'
+        },
+        trend: {
+            label: t('insights.cat.trend'),
+            color: '#f59e0b',
+            bgColor: 'rgba(245, 158, 11, 0.08)',
+            icon: <TrendingUp size={14} />,
+            gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.02))'
+        },
+        quality: {
+            label: t('insights.cat.quality'),
+            color: '#10b981',
+            bgColor: 'rgba(16, 185, 129, 0.08)',
+            icon: <Shield size={14} />,
+            gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.02))'
+        },
+        segment: {
+            label: t('insights.cat.segment'),
+            color: '#38bdf8',
+            bgColor: 'rgba(56, 189, 248, 0.08)',
+            icon: <Users size={14} />,
+            gradient: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.02))'
+        },
+        correlation: {
+            label: t('insights.cat.correlation'),
+            color: '#a78bfa',
+            bgColor: 'rgba(167, 139, 250, 0.08)',
+            icon: <Activity size={14} />,
+            gradient: 'linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.02))'
+        },
+        pattern: {
+            label: t('insights.cat.pattern'),
+            color: '#818cf8',
+            bgColor: 'rgba(129, 140, 248, 0.08)',
+            icon: <Sparkles size={14} />,
+            gradient: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(129, 140, 248, 0.02))'
+        }
+    }), [t]);
+
+    const getConfig = (type: string) => CATEGORY_CONFIG[type] || {
+        label: type || 'Insight',
+        color: '#6366f1',
+        bgColor: 'rgba(99, 102, 241, 0.08)',
+        icon: <Lightbulb size={14} />,
+        gradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.02))'
+    };
 
     // Category counts
     const categoryCounts = useMemo(() => {
@@ -158,9 +160,9 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                 padding: '80px 40px', gap: '16px', opacity: 0.4
             }}>
                 <Brain size={48} />
-                <h3 style={{ fontSize: '18px', fontWeight: 700 }}>No Insights Generated</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 700 }}>{t('insights.noInsights')}</h3>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                    The AI engine hasn't detected any notable insights in this dataset yet.
+                    {t('insights.noInsightsDesc')}
                 </p>
             </div>
         );
@@ -178,30 +180,30 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                 }}>
                     {[
                         {
-                            label: 'Total Insights',
+                            label: t('insights.totalInsights'),
                             value: summaryStats.total,
-                            sub: `across ${summaryStats.categories} categories`,
+                            sub: t('insights.acrossCategories').replace('{count}', summaryStats.categories.toString()),
                             color: '#6366f1',
                             icon: <Lightbulb size={16} />
                         },
                         {
-                            label: 'Avg Confidence',
+                            label: t('insights.avgConfidence'),
                             value: `${(summaryStats.avgConfidence * 100).toFixed(0)}%`,
-                            sub: `${summaryStats.highConfidence} high-confidence`,
+                            sub: t('insights.highConfidence').replace('{count}', summaryStats.highConfidence.toString()),
                             color: '#34d399',
                             icon: <Target size={16} />
                         },
                         {
-                            label: 'Anomalies Detected',
+                            label: t('insights.anomaliesDetected'),
                             value: summaryStats.anomalies,
-                            sub: summaryStats.anomalies > 0 ? 'requires attention' : 'no issues found',
+                            sub: summaryStats.anomalies > 0 ? t('insights.requiresAttention') : t('insights.noIssues'),
                             color: summaryStats.anomalies > 0 ? '#ef4444' : '#34d399',
                             icon: <AlertTriangle size={16} />
                         },
                         {
-                            label: 'Pinned Insights',
+                            label: t('insights.pinnedInsights'),
                             value: pinnedInsights.length,
-                            sub: 'saved for review',
+                            sub: t('insights.savedForReview'),
                             color: '#f59e0b',
                             icon: <Pin size={16} />
                         }
@@ -256,7 +258,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                     {(['all', ...Object.keys(CATEGORY_CONFIG)] as InsightCategory[]).map(cat => {
                         const count = categoryCounts[cat] || 0;
                         if (cat !== 'all' && count === 0) return null;
-                        const cfg = cat === 'all' ? { label: 'All', color: '#6366f1', icon: <Layers size={12} /> } : getConfig(cat);
+                        const cfg = cat === 'all' ? { label: t('insights.cat.all'), color: '#6366f1', icon: <Layers size={12} /> } : getConfig(cat);
                         const isActive = activeCategory === cat;
 
                         return (
@@ -300,7 +302,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                     <Search size={12} style={{ color: 'var(--text-disabled)' }} />
                     <input
                         type="text"
-                        placeholder="Search insights..."
+                        placeholder={t('insights.searchPlaceholder')}
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         style={{
@@ -313,7 +315,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                 {/* Confidence slider */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
-                        Min {minConfidence}%
+                        {t('insights.minConfidence').replace('{count}', minConfidence.toString())}
                     </span>
                     <input
                         type="range"
@@ -339,7 +341,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                     }}
                 >
                     <SortDesc size={11} />
-                    {sortMode === 'confidence' ? 'Confidence' : 'Type'}
+                    {sortMode === 'confidence' ? t('insights.sortConfidence') : t('insights.sortType')}
                 </button>
 
                 {/* Pin toggle */}
@@ -355,7 +357,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                     }}
                 >
                     {showPinnedOnly ? <Eye size={11} /> : <EyeOff size={11} />}
-                    Pinned
+                    {t('insights.pinnedOnly')}
                 </button>
             </div>
 
@@ -371,7 +373,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                 color: 'var(--text-muted)', fontSize: '13px'
                             }}
                         >
-                            No insights match your current filters. Try adjusting the criteria.
+                            {t('insights.noMatches')}
                         </motion.div>
                     ) : (
                         filteredInsights.map((insight, i) => {
@@ -379,9 +381,9 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                             const isExpanded = expandedInsight === i;
                             const pinned = isPinned(insight);
                             const confidence = (insight.confidence || 0);
-                            const confidenceLabel = confidence >= 0.9 ? 'Very High' :
-                                confidence >= 0.75 ? 'High' :
-                                    confidence >= 0.5 ? 'Medium' : 'Low';
+                            const confidenceLabel = confidence >= 0.9 ? t('insights.confidenceVeryHigh') :
+                                confidence >= 0.75 ? t('insights.confidenceHigh') :
+                                    confidence >= 0.5 ? t('insights.confidenceMedium') : t('insights.confidenceLow');
 
                             return (
                                 <motion.div
@@ -490,7 +492,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                                         cursor: 'pointer', display: 'flex',
                                                         transition: 'all 0.2s'
                                                     }}
-                                                    title={pinned ? 'Unpin' : 'Pin insight'}
+                                                    title={pinned ? t('insights.unpin') : t('insights.pin')}
                                                 >
                                                     {pinned ? <PinOff size={12} /> : <Pin size={12} />}
                                                 </button>
@@ -555,7 +557,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                                                 border: '1px solid rgba(239, 68, 68, 0.15)',
                                                                 fontWeight: 700
                                                             }}>
-                                                                Impact: {insight.impact}
+                                                                {t('insights.impact').replace('{label}', insight.impact)}
                                                             </span>
                                                         )}
                                                         {insight.column && (
@@ -566,7 +568,7 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                                                                 border: '1px solid rgba(56, 189, 248, 0.15)',
                                                                 fontWeight: 700, fontFamily: 'monospace'
                                                             }}>
-                                                                Column: {insight.column}
+                                                                {t('insights.column').replace('{label}', insight.column)}
                                                             </span>
                                                         )}
                                                     </div>
@@ -587,9 +589,9 @@ export const InsightsDashboard = ({ insights, onPinInsight, pinnedInsights = [] 
                 color: 'var(--text-disabled)', fontFamily: 'monospace',
                 padding: '8px'
             }}>
-                Showing {filteredInsights.length} of {insights.length} insights
-                {minConfidence > 0 && ` · Min confidence: ${minConfidence}%`}
-                {activeCategory !== 'all' && ` · Category: ${getConfig(activeCategory).label}`}
+                {t('insights.showingCount').replace('{count}', filteredInsights.length.toString()).replace('{total}', insights.length.toString())}
+                {minConfidence > 0 && ` · ${t('insights.minConfidenceFilter').replace('{count}', minConfidence.toString())}`}
+                {activeCategory !== 'all' && ` · ${t('insights.categoryFilter').replace('{label}', getConfig(activeCategory).label)}`}
             </div>
         </div>
     );

@@ -16,7 +16,7 @@ interface PulseMetrics {
     revenueGrowth: string;
     anomalies: number;
     roi: string;
-    projects: number;
+    findings: number;
     revenueLabel?: string;
 }
 
@@ -106,7 +106,7 @@ export const EnterprisePulse = ({ onNexusRequest }: { onNexusRequest?: () => voi
     const displayGrowth = metrics?.revenueGrowth || '0%';
     const displayAnomalies = metrics?.anomalies ?? 0;
     const displayROI = metrics?.roi || '$0.00';
-    const displayFindings = metrics?.projects ?? 0;
+    const displayFindings = metrics?.findings ?? 0;
     const revenueLabel = metrics?.revenueLabel || 'Revenue Velocity';
 
     return (
