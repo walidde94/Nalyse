@@ -8,7 +8,7 @@ import { parse } from 'csv-parse/sync';
 
 export const runKMeansHandler = async (req: AuthRequest, res: Response) => {
     // ml-kmeans is an ESM-only module, so we must use dynamic import in this CJS project
-    const { kmeans } = await (eval('import("ml-kmeans")') as Promise<typeof import('ml-kmeans')>);
+    const { kmeans } = await (eval('import("ml-kmeans")') as Promise<any>);
     const { id } = req.params;
     const { featureX, featureY, clusters } = req.body;
     const userId = req.user?.userId;
