@@ -1203,7 +1203,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             <YAxis
                                 type="number"
                                 dataKey="y"
-                                name={builderConfig.yAxis}
+                                name={builderConfig.yAxes.join(', ')}
                                 stroke="var(--text-muted)"
                                 strokeOpacity={0.3}
                                 tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}
