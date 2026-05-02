@@ -108,8 +108,8 @@ interface LoginLog {
     lastName: string;
   } | null;
 }
-// Use a stable, non-pre-projected topology file
-const geoUrl = "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
+// Use a highly available CDN for the topology
+const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 
 const getCoordinates = (locationStr?: string, ipStr?: string, ipCoords?: Record<string, [number, number]>): [number, number] | null => {
   if (ipStr && ipCoords && ipCoords[ipStr]) {
@@ -579,8 +579,8 @@ export const AdminControlCenter: React.FC = () => {
          </h3>
          <div style={{ flex: 1, background: 'rgba(0,0,0,0.1)', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
              <ComposableMap projectionConfig={{ scale: 140 }} style={{ width: '100%', height: '100%' }}>
-               <ZoomableGroup center={[0, 10]} zoom={1} disablePanning>
-                 <Geographies geography="https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json">
+               <ZoomableGroup center={[0, 0]} zoom={1} disablePanning>
+                 <Geographies geography={geoUrl}>
                    {({ geographies }) =>
                      geographies.map((geo) => (
                        <Geography
