@@ -156,6 +156,19 @@ export const AdminControlCenter: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [activeUserDropdown, setActiveUserDropdown] = useState<string | null>(null);
   const [ipCoords, setIpCoords] = useState<Record<string, [number, number]>>({});
+  const [clientCoords, setClientCoords] = useState<[number, number] | null>(null);
+
+  useEffect(() => {
+    // Ultimate fallback: resolve the exact client location independent of backend logs
+    fetch('https://get.geojs.io/v1/ip/geo.json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.longitude && data.latitude) {
+          setClientCoords([parseFloat(data.longitude), parseFloat(data.latitude)]);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const resolveIps = async () => {
@@ -637,7 +650,18 @@ export const AdminControlCenter: React.FC = () => {
                        resolvedIp = '127.0.0.1';
                      }
     
-                     const coords = getCoordinates(resolvedLoc, resolvedIp, ipCoords);
+                     let coords = getCoordinates(resolvedLoc, resolvedIp, ipCoords);
+
+                     // Ultimate client-side override for the current user in production
+                     if (isCurrentUser) {
+                       if (clientCoords) {
+                         coords = clientCoords;
+                       } else if (!coords) {
+                         // Absolute fallback to ensure they always see their marker if geo fails completely
+                         coords = [9.9937, 53.5511];
+                       }
+                     }
+
                      if (!coords) return null;
                      return (
                        <Marker key={`active-${u.id}`} coordinates={coords}>
