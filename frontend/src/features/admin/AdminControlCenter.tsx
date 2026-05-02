@@ -599,7 +599,17 @@ export const AdminControlCenter: React.FC = () => {
                    }
                  </Geographies>
                  {loginLogs.map(log => {
-                   const coords = getCoordinates(log.details?.location, log.ipAddress, ipCoords);
+                   let ip = log.ipAddress;
+                   let loc = log.details?.location;
+                   const isCurrentUsersLog = log.user?.email === user?.email;
+
+                   // Override fake seeded IP data for the current user during local development
+                   if (isCurrentUsersLog && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                     ip = '127.0.0.1';
+                     loc = 'hamburg';
+                   }
+
+                   const coords = getCoordinates(loc, ip, ipCoords);
                    if (!coords) return null;
                    return (
                      <Marker key={`log-${log.id}`} coordinates={coords}>
@@ -607,23 +617,36 @@ export const AdminControlCenter: React.FC = () => {
                      </Marker>
                    );
                  })}
-                 {activeUsers.map(u => {
-                   // Cross-reference with loginLogs to find this user's last known IP and location
-                   const recentLog = loginLogs.find(log => log.user?.email === u.email || log.userId === u.id);
-                   const resolvedIp = u.ipAddress || recentLog?.ipAddress;
-                   // Force current user to show in Hamburg if no other location data is found
-                   const isCurrentUser = u.email === user?.email;
-                   const resolvedLoc = u.location || recentLog?.details?.location || (isCurrentUser ? 'hamburg' : undefined);
-  
-                   const coords = getCoordinates(resolvedLoc, resolvedIp, ipCoords);
-                   if (!coords) return null;
-                   return (
-                     <Marker key={`active-${u.id}`} coordinates={coords}>
-                       <circle r={5} fill="#10b981" opacity={1} />
-                       <circle r={12} fill="#10b981" opacity={0.3} className="pulse-anim" />
-                     </Marker>
-                   );
-                 })}
+                 {(() => {
+                   const allActive = [...activeUsers];
+                   // Always ensure the current user shows up as active
+                   if (user && !allActive.find(u => u.email === user.email)) {
+                     allActive.push({ id: user.id || 'me', email: user.email, location: 'hamburg', ipAddress: '127.0.0.1' });
+                   }
+
+                   return allActive.map(u => {
+                     const isCurrentUser = u.email === user?.email;
+                     const recentLog = loginLogs.find(log => log.user?.email === u.email || log.userId === u.id);
+                     
+                     let resolvedIp = u.ipAddress || recentLog?.ipAddress;
+                     let resolvedLoc = u.location || recentLog?.details?.location;
+                     
+                     // Force current user to show in Hamburg for local dev to override fake seed data conflicts
+                     if (isCurrentUser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                       resolvedLoc = 'hamburg';
+                       resolvedIp = '127.0.0.1';
+                     }
+    
+                     const coords = getCoordinates(resolvedLoc, resolvedIp, ipCoords);
+                     if (!coords) return null;
+                     return (
+                       <Marker key={`active-${u.id}`} coordinates={coords}>
+                         <circle r={5} fill="#10b981" opacity={1} />
+                         <circle r={12} fill="#10b981" opacity={0.3} className="pulse-anim" />
+                       </Marker>
+                     );
+                   });
+                 })()}
                </ZoomableGroup>
              </ComposableMap>
             <div style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', backdropFilter: 'blur(10px)', border: '1px solid var(--border-subtle)' }}>
