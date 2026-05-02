@@ -607,7 +607,12 @@ export const AdminControlCenter: React.FC = () => {
                  );
                })}
                {activeUsers.map(u => {
-                 const coords = getCoordinates(u.location, u.ipAddress || u.email, ipCoords);
+                 // Cross-reference with loginLogs to find this user's last known IP and location
+                 const recentLog = loginLogs.find(log => log.user?.email === u.email || log.userId === u.id);
+                 const resolvedIp = u.ipAddress || recentLog?.ipAddress;
+                 const resolvedLoc = u.location || recentLog?.details?.location;
+
+                 const coords = getCoordinates(resolvedLoc, resolvedIp, ipCoords);
                  if (!coords) return null;
                  return (
                    <Marker key={`active-${u.id}`} coordinates={coords}>
