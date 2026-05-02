@@ -2832,6 +2832,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                             </motion.div>
                                         )}
                                     </div>
+                                    </div>
 
                                     <AnimatePresence>
                                         {(builderData.length > 0 && showRawData) && (
