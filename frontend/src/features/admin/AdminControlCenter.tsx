@@ -25,6 +25,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
 import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../config';
 import { useToast } from '../../components/ui/Toast';
@@ -108,6 +109,26 @@ interface LoginLog {
   } | null;
 }
 
+const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
+
+const getCoordinates = (locationStr?: string, ipStr?: string, ipCoords?: Record<string, [number, number]>): [number, number] | null => {
+  if (ipStr && ipCoords && ipCoords[ipStr]) {
+    return ipCoords[ipStr];
+  }
+  if (locationStr?.toLowerCase().includes('berlin')) return [13.4050, 52.5200];
+  if (locationStr?.toLowerCase().includes('new york')) return [-74.0060, 40.7128];
+  if (locationStr?.toLowerCase().includes('london')) return [-0.1276, 51.5072];
+  if (locationStr?.toLowerCase().includes('paris')) return [2.3522, 48.8566];
+  if (locationStr?.toLowerCase().includes('tokyo')) return [139.6917, 35.6895];
+  if (locationStr?.toLowerCase().includes('sydney')) return [151.2093, -33.8688];
+  if (locationStr?.toLowerCase().includes('san francisco')) return [-122.4194, 37.7749];
+  if (locationStr?.toLowerCase().includes('singapore')) return [103.8198, 1.3521];
+  
+  // If we can't determine the location and haven't resolved the IP yet,
+  // we do not show a marker rather than rendering it in the ocean.
+  return null;
+};
+
 export const AdminControlCenter: React.FC = () => {
   const { t } = useLanguage();
   const { token, user } = useAuth();
@@ -127,6 +148,43 @@ export const AdminControlCenter: React.FC = () => {
   const [tierFilter, setTierFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [activeUserDropdown, setActiveUserDropdown] = useState<string | null>(null);
+  const [ipCoords, setIpCoords] = useState<Record<string, [number, number]>>({});
+
+  useEffect(() => {
+    const resolveIps = async () => {
+      const newCoords = { ...ipCoords };
+      let changed = false;
+
+      const ipsToResolve = new Set<string>();
+      loginLogs.forEach(l => { if (l.ipAddress && !newCoords[l.ipAddress]) ipsToResolve.add(l.ipAddress); });
+      activeUsers.forEach(u => { if (u.ipAddress && !newCoords[u.ipAddress]) ipsToResolve.add(u.ipAddress); });
+
+      const fetchPromises = Array.from(ipsToResolve).map(async (ip) => {
+        try {
+          const res = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.longitude && data.latitude) {
+              newCoords[ip] = [parseFloat(data.longitude), parseFloat(data.latitude)];
+              changed = true;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to resolve IP", ip, e);
+        }
+      });
+      
+      await Promise.all(fetchPromises);
+
+      if (changed) {
+        setIpCoords(newCoords);
+      }
+    };
+
+    if (loginLogs.length > 0 || activeUsers.length > 0) {
+      resolveIps();
+    }
+  }, [loginLogs, activeUsers]);
 
   const fetchStats = async () => {
     try {
@@ -233,7 +291,7 @@ export const AdminControlCenter: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
-      await Promise.all([fetchStats(), fetchOrganizations(), fetchUsers(), fetchWorkspaces(), fetchAuditLogs(), fetchLoginLogs()]);
+      await Promise.all([fetchStats(), fetchOrganizations(), fetchUsers(), fetchWorkspaces(), fetchAuditLogs(), fetchLoginLogs(), fetchActiveUsers()]);
       setIsLoading(false);
     };
     if (token) init();
@@ -506,6 +564,64 @@ export const AdminControlCenter: React.FC = () => {
           <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>{stat.label}</div>
         </motion.div>
       ))}
+
+      <div className="admin-card glass-panel" style={{ gridColumn: '1 / -1', height: '500px', display: 'flex', flexDirection: 'column', padding: '24px' }}>
+         <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)' }}>
+           <MapPin size={20} color="#10b981" />
+           {t('admin.map.title') || 'Global User Distribution'}
+         </h3>
+         <div style={{ flex: 1, background: 'rgba(0,0,0,0.1)', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
+            <ComposableMap projectionConfig={{ scale: 140 }} style={{ width: '100%', height: '100%' }}>
+               <Geographies geography={geoUrl}>
+                 {({ geographies }) =>
+                   geographies.map((geo) => (
+                     <Geography
+                       key={geo.rsmKey}
+                       geography={geo}
+                       fill="rgba(255,255,255,0.05)"
+                       stroke="var(--border-subtle)"
+                       strokeWidth={0.5}
+                       style={{
+                         default: { outline: "none" },
+                         hover: { fill: "rgba(255,255,255,0.1)", outline: "none" },
+                         pressed: { fill: "rgba(255,255,255,0.15)", outline: "none" },
+                       }}
+                     />
+                   ))
+                 }
+               </Geographies>
+               {loginLogs.map(log => {
+                 const coords = getCoordinates(log.details?.location, log.ipAddress, ipCoords);
+                 if (!coords) return null;
+                 return (
+                   <Marker key={`log-${log.id}`} coordinates={coords}>
+                     <circle r={3} fill="#6366f1" opacity={0.6} />
+                   </Marker>
+                 );
+               })}
+               {activeUsers.map(u => {
+                 const coords = getCoordinates(u.location, u.ipAddress || u.email, ipCoords);
+                 if (!coords) return null;
+                 return (
+                   <Marker key={`active-${u.id}`} coordinates={coords}>
+                     <circle r={5} fill="#10b981" opacity={1} />
+                     <circle r={12} fill="#10b981" opacity={0.3} className="pulse-anim" />
+                   </Marker>
+                 );
+               })}
+            </ComposableMap>
+            <div style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', backdropFilter: 'blur(10px)', border: '1px solid var(--border-subtle)' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }}></div>
+                  Active Now
+               </div>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366f1', opacity: 0.6 }}></div>
+                  Recent Login
+               </div>
+            </div>
+         </div>
+      </div>
 
       <div style={{ gridColumn: '1 / -1', marginTop: '40px' }}>
         <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)' }}>
