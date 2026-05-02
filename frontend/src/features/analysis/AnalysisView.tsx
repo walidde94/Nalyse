@@ -2730,7 +2730,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 <div className="flex-1 min-h-[650px] flex flex-col gap-6">
                                     <div 
                                         className="flex-1 backdrop-blur-3xl rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col inner-bevel shadow-2xl transition-all duration-500"
-                                        style={{ 
+                                    >
                                         <div className="absolute inset-0 glass-noise opacity-10 pointer-events-none" />
 
                                         <div className="flex-1 flex flex-col relative w-full h-full">
