@@ -25,7 +25,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import { useAuth } from '../../contexts/AuthContext';
 import { API_URL } from '../../config';
 import { useToast } from '../../components/ui/Toast';
@@ -108,8 +108,8 @@ interface LoginLog {
     lastName: string;
   } | null;
 }
-
-const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
+// Use a stable, non-pre-projected topology file
+const geoUrl = "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
 
 const getCoordinates = (locationStr?: string, ipStr?: string, ipCoords?: Record<string, [number, number]>): [number, number] | null => {
   if (ipStr && ipCoords && ipCoords[ipStr]) {
@@ -578,50 +578,54 @@ export const AdminControlCenter: React.FC = () => {
            {t('admin.map.title') || 'Global User Distribution'}
          </h3>
          <div style={{ flex: 1, background: 'rgba(0,0,0,0.1)', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
-            <ComposableMap projectionConfig={{ scale: 140 }} style={{ width: '100%', height: '100%' }}>
-               <Geographies geography={geoUrl}>
-                 {({ geographies }) =>
-                   geographies.map((geo) => (
-                     <Geography
-                       key={geo.rsmKey}
-                       geography={geo}
-                       fill="rgba(255,255,255,0.05)"
-                       stroke="var(--border-subtle)"
-                       strokeWidth={0.5}
-                       style={{
-                         default: { outline: "none" },
-                         hover: { fill: "rgba(255,255,255,0.1)", outline: "none" },
-                         pressed: { fill: "rgba(255,255,255,0.15)", outline: "none" },
-                       }}
-                     />
-                   ))
-                 }
-               </Geographies>
-               {loginLogs.map(log => {
-                 const coords = getCoordinates(log.details?.location, log.ipAddress, ipCoords);
-                 if (!coords) return null;
-                 return (
-                   <Marker key={`log-${log.id}`} coordinates={coords}>
-                     <circle r={3} fill="#6366f1" opacity={0.6} />
-                   </Marker>
-                 );
-               })}
-               {activeUsers.map(u => {
-                 // Cross-reference with loginLogs to find this user's last known IP and location
-                 const recentLog = loginLogs.find(log => log.user?.email === u.email || log.userId === u.id);
-                 const resolvedIp = u.ipAddress || recentLog?.ipAddress;
-                 const resolvedLoc = u.location || recentLog?.details?.location;
-
-                 const coords = getCoordinates(resolvedLoc, resolvedIp, ipCoords);
-                 if (!coords) return null;
-                 return (
-                   <Marker key={`active-${u.id}`} coordinates={coords}>
-                     <circle r={5} fill="#10b981" opacity={1} />
-                     <circle r={12} fill="#10b981" opacity={0.3} className="pulse-anim" />
-                   </Marker>
-                 );
-               })}
-            </ComposableMap>
+             <ComposableMap projectionConfig={{ scale: 140 }} style={{ width: '100%', height: '100%' }}>
+               <ZoomableGroup center={[0, 10]} zoom={1} disablePanning>
+                 <Geographies geography="https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json">
+                   {({ geographies }) =>
+                     geographies.map((geo) => (
+                       <Geography
+                         key={geo.rsmKey || geo.properties.name}
+                         geography={geo}
+                         fill="rgba(255,255,255,0.05)"
+                         stroke="var(--border-subtle)"
+                         strokeWidth={0.5}
+                         style={{
+                           default: { outline: "none" },
+                           hover: { fill: "rgba(255,255,255,0.1)", outline: "none" },
+                           pressed: { fill: "rgba(255,255,255,0.15)", outline: "none" },
+                         }}
+                       />
+                     ))
+                   }
+                 </Geographies>
+                 {loginLogs.map(log => {
+                   const coords = getCoordinates(log.details?.location, log.ipAddress, ipCoords);
+                   if (!coords) return null;
+                   return (
+                     <Marker key={`log-${log.id}`} coordinates={coords}>
+                       <circle r={3} fill="#6366f1" opacity={0.6} />
+                     </Marker>
+                   );
+                 })}
+                 {activeUsers.map(u => {
+                   // Cross-reference with loginLogs to find this user's last known IP and location
+                   const recentLog = loginLogs.find(log => log.user?.email === u.email || log.userId === u.id);
+                   const resolvedIp = u.ipAddress || recentLog?.ipAddress;
+                   // Force current user to show in Hamburg if no other location data is found
+                   const isCurrentUser = u.email === user?.email;
+                   const resolvedLoc = u.location || recentLog?.details?.location || (isCurrentUser ? 'hamburg' : undefined);
+  
+                   const coords = getCoordinates(resolvedLoc, resolvedIp, ipCoords);
+                   if (!coords) return null;
+                   return (
+                     <Marker key={`active-${u.id}`} coordinates={coords}>
+                       <circle r={5} fill="#10b981" opacity={1} />
+                       <circle r={12} fill="#10b981" opacity={0.3} className="pulse-anim" />
+                     </Marker>
+                   );
+                 })}
+               </ZoomableGroup>
+             </ComposableMap>
             <div style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', backdropFilter: 'blur(10px)', border: '1px solid var(--border-subtle)' }}>
                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                   <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }}></div>
