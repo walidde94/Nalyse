@@ -115,6 +115,13 @@ const getCoordinates = (locationStr?: string, ipStr?: string, ipCoords?: Record<
   if (ipStr && ipCoords && ipCoords[ipStr]) {
     return ipCoords[ipStr];
   }
+  
+  // Default localhost to Hamburg for local development accurate mapping
+  if (ipStr === '127.0.0.1' || ipStr === '::1' || ipStr === 'localhost') {
+    return [9.9937, 53.5511]; // Hamburg, Germany
+  }
+
+  if (locationStr?.toLowerCase().includes('hamburg')) return [9.9937, 53.5511];
   if (locationStr?.toLowerCase().includes('berlin')) return [13.4050, 52.5200];
   if (locationStr?.toLowerCase().includes('new york')) return [-74.0060, 40.7128];
   if (locationStr?.toLowerCase().includes('london')) return [-0.1276, 51.5072];
