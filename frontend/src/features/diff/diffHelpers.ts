@@ -1,4 +1,4 @@
-// ─── Diff Engine Helpers ─────────────────────────────────────
+// ─── Diff Engine Helpers — Revolutionary Edition ─────────────
 
 export interface DiffMetric {
     label: string;
@@ -36,8 +36,15 @@ export interface DiffSummary {
     unchanged: number;
     maxChange: DiffMetric;
     total: number;
-    overallScore: number; // 0-100
+    overallScore: number;
     narrative: string;
+    riskLevel: 'low' | 'moderate' | 'high' | 'critical';
+    topMovers: DiffMetric[];
+    waterfallData: { name: string; value: number; cumulative: number; color: string }[];
+    distributionShifts: { column: string; baselineBuckets: number[]; comparisonBuckets: number[]; shiftMagnitude: number }[];
+    volatilityIndex: number;
+    dataGrowthRate: number;
+    schemaStability: number;
 }
 
 // ─── Formatters ──────────────────────────────────────────────
@@ -59,17 +66,19 @@ export const NEUTRAL_COLOR = '#94a3b8';
 export const computeStats = (data: any[]) => {
     if (!data?.length) return {};
     const cols = Object.keys(data[0]);
-    const stats: Record<string, { sum: number; avg: number; min: number; max: number; count: number; distinct: number; values: number[] }> = {};
+    const stats: Record<string, { sum: number; avg: number; min: number; max: number; count: number; distinct: number; values: number[]; stdDev: number; median: number }> = {};
     cols.forEach(col => {
         const nums = data.map(r => parseFloat(r[col])).filter(n => !isNaN(n));
         if (nums.length > 0) {
             const sum = nums.reduce((a, b) => a + b, 0);
+            const avg = sum / nums.length;
+            const sorted = [...nums].sort((a, b) => a - b);
+            const median = sorted.length % 2 === 0 ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2 : sorted[Math.floor(sorted.length / 2)];
+            const variance = nums.reduce((acc, v) => acc + (v - avg) ** 2, 0) / nums.length;
             stats[col] = {
-                sum, avg: sum / nums.length,
-                min: Math.min(...nums), max: Math.max(...nums),
-                count: nums.length,
-                distinct: new Set(data.map(r => r[col])).size,
-                values: nums.slice(0, 20) // for sparklines
+                sum, avg, min: Math.min(...nums), max: Math.max(...nums),
+                count: nums.length, distinct: new Set(data.map(r => r[col])).size,
+                values: nums.slice(0, 30), stdDev: Math.sqrt(variance), median
             };
         }
     });
@@ -88,13 +97,26 @@ export const generateSparkline = (values: number[], buckets = 8): number[] => {
     return result;
 };
 
+// ─── Distribution Buckets ────────────────────────────────────
+const buildDistribution = (values: number[], buckets = 10): number[] => {
+    if (!values.length) return Array(buckets).fill(0);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const bins = Array(buckets).fill(0);
+    values.forEach(v => {
+        const idx = Math.min(buckets - 1, Math.floor(((v - min) / range) * buckets));
+        bins[idx]++;
+    });
+    return bins.map(b => b / values.length); // normalize to proportions
+};
+
 // ─── Build Diff Metrics ──────────────────────────────────────
 export const buildDiffMetrics = (baseData: any[], compData: any[]): DiffMetric[] => {
     const baseStats = computeStats(baseData);
     const compStats = computeStats(compData);
     const metrics: DiffMetric[] = [];
 
-    // Row count
     const rowChange = compData.length - baseData.length;
     const rowChangePct = baseData.length > 0 ? (rowChange / baseData.length) * 100 : 0;
     metrics.push({
@@ -143,16 +165,11 @@ export const buildColumnDiffs = (baseData: any[], compData: any[]): ColumnDiff[]
         const bType = inB ? (baseData.some(r => !isNaN(parseFloat(r[col]))) ? 'numeric' : 'string') : '-';
         const cType = inC ? (compData.some(r => !isNaN(parseFloat(r[col]))) ? 'numeric' : 'string') : '-';
 
-        // Determine status: added/removed/modified/unchanged
         let status: ColumnDiff['status'] = 'unchanged';
-        if (!inB) {
-            status = 'added';
-        } else if (!inC) {
-            status = 'removed';
-        } else if (bType !== cType) {
-            status = 'modified';
-        } else {
-            // Check if values actually changed: distinct counts, null counts, or value sets
+        if (!inB) { status = 'added'; }
+        else if (!inC) { status = 'removed'; }
+        else if (bType !== cType) { status = 'modified'; }
+        else {
             const bValues = new Set(baseData.map(r => String(r[col] ?? '')));
             const cValues = new Set(compData.map(r => String(r[col] ?? '')));
             const hasNewValues = [...cValues].some(v => !bValues.has(v));
@@ -161,14 +178,7 @@ export const buildColumnDiffs = (baseData: any[], compData: any[]): ColumnDiff[]
                 status = 'modified';
             }
         }
-
-        diffs.push({
-            column: col,
-            baselineType: bType, comparisonType: cType,
-            status,
-            baselineDistinct: bDistinct, comparisonDistinct: cDistinct,
-            baselineNulls: bNulls, comparisonNulls: cNulls
-        });
+        diffs.push({ column: col, baselineType: bType, comparisonType: cType, status, baselineDistinct: bDistinct, comparisonDistinct: cDistinct, baselineNulls: bNulls, comparisonNulls: cNulls });
     });
     return diffs;
 };
@@ -206,8 +216,8 @@ export const buildChartDiffs = (baseAnalysis: any, compAnalysis: any): ChartDiff
     return diffs;
 };
 
-// ─── Build Summary ───────────────────────────────────────────
-export const buildSummary = (metrics: DiffMetric[]): DiffSummary | null => {
+// ─── Build Summary (Revolutionary) ───────────────────────────
+export const buildSummary = (metrics: DiffMetric[], baseData?: any[], compData?: any[]): DiffSummary | null => {
     if (!metrics.length) return null;
     const improved = metrics.filter(m => m.direction === 'up').length;
     const declined = metrics.filter(m => m.direction === 'down').length;
@@ -215,11 +225,58 @@ export const buildSummary = (metrics: DiffMetric[]): DiffSummary | null => {
     const maxChange = metrics.reduce((max, m) => Math.abs(m.changePercent) > Math.abs(max.changePercent) ? m : max, metrics[0]);
     const overallScore = Math.round((improved / metrics.length) * 100);
 
-    const narrativeParts: string[] = [];
-    if (improved > declined) narrativeParts.push(`Overall positive trajectory with ${improved} metrics improving.`);
-    else if (declined > improved) narrativeParts.push(`Caution: ${declined} metrics declined vs ${improved} improved.`);
-    else narrativeParts.push(`Mixed results: ${improved} improved, ${declined} declined.`);
-    narrativeParts.push(`Largest shift: ${maxChange.label} at ${pct(maxChange.changePercent)}.`);
+    // Top movers (sorted by absolute change %)
+    const topMovers = [...metrics].sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent)).slice(0, 5);
 
-    return { improved, declined, unchanged, maxChange, total: metrics.length, overallScore, narrative: narrativeParts.join(' ') };
+    // Risk level
+    const highSigCount = metrics.filter(m => m.significance === 'high').length;
+    const riskLevel: DiffSummary['riskLevel'] = highSigCount >= 3 ? 'critical' : highSigCount >= 2 ? 'high' : highSigCount >= 1 ? 'moderate' : 'low';
+
+    // Waterfall data
+    let cumulative = 0;
+    const waterfallData = topMovers.map(m => {
+        cumulative += m.change;
+        return { name: m.label, value: m.change, cumulative, color: m.direction === 'up' ? COMPARISON_COLOR : m.direction === 'down' ? NEGATIVE_COLOR : NEUTRAL_COLOR };
+    });
+
+    // Volatility index (avg absolute change %)
+    const volatilityIndex = metrics.reduce((sum, m) => sum + Math.abs(m.changePercent), 0) / metrics.length;
+
+    // Data growth rate
+    const recordMetric = metrics.find(m => m.label === 'Total Records');
+    const dataGrowthRate = recordMetric?.changePercent || 0;
+
+    // Schema stability
+    const bData = baseData || [];
+    const cData = compData || [];
+    const bCols = bData.length ? Object.keys(bData[0]).length : 0;
+    const cCols = cData.length ? Object.keys(cData[0]).length : 0;
+    const schemaStability = bCols > 0 ? Math.round((Math.min(bCols, cCols) / Math.max(bCols, cCols)) * 100) : 100;
+
+    // Distribution shifts
+    const baseStats = computeStats(bData);
+    const compStats = computeStats(cData);
+    const distributionShifts: DiffSummary['distributionShifts'] = [];
+    Object.keys(baseStats).forEach(col => {
+        if (compStats[col]) {
+            const bBuckets = buildDistribution(baseStats[col].values);
+            const cBuckets = buildDistribution(compStats[col].values);
+            const shiftMagnitude = bBuckets.reduce((sum, v, i) => sum + Math.abs(v - (cBuckets[i] || 0)), 0);
+            if (shiftMagnitude > 0.1) {
+                distributionShifts.push({ column: col.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), baselineBuckets: bBuckets, comparisonBuckets: cBuckets, shiftMagnitude });
+            }
+        }
+    });
+    distributionShifts.sort((a, b) => b.shiftMagnitude - a.shiftMagnitude);
+
+    // Narrative
+    const parts: string[] = [];
+    if (improved > declined) parts.push(`Overall positive trajectory with ${improved} metrics improving.`);
+    else if (declined > improved) parts.push(`Caution: ${declined} metrics declined vs ${improved} improved.`);
+    else parts.push(`Mixed results: ${improved} improved, ${declined} declined.`);
+    parts.push(`Largest shift: ${maxChange.label} at ${pct(maxChange.changePercent)}.`);
+    if (riskLevel === 'critical') parts.push('⚠️ Multiple high-significance changes detected — immediate review recommended.');
+    else if (riskLevel === 'high') parts.push('Notable volatility detected across key metrics.');
+
+    return { improved, declined, unchanged, maxChange, total: metrics.length, overallScore, narrative: parts.join(' '), riskLevel, topMovers, waterfallData, distributionShifts, volatilityIndex, dataGrowthRate, schemaStability };
 };

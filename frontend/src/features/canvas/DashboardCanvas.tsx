@@ -7,7 +7,8 @@ import {
     FileText, AreaChart, RefreshCw, Settings, GripVertical,
     X, Copy, Edit3, ChevronDown, Lock, Unlock, Grid3X3,
     Download, Upload, Eye, EyeOff, Layers, Layout as LayoutIcon, Clock,
-    Check, Sparkles, AlertCircle, Loader2
+    Check, Sparkles, AlertCircle, Loader2, Search, Command, Palette,
+    Sliders, ChevronRight, Paintbrush, Database, CloudOff, Cloud
 } from 'lucide-react';
 import { API_URL } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
@@ -339,6 +340,20 @@ export const DashboardCanvas: React.FC = () => {
     const [showLoadMenu, setShowLoadMenu] = useState(false);
     const [autoRefresh, setAutoRefresh] = useState(0); // seconds, 0 = off
     const [lastRefresh, setLastRefresh] = useState(Date.now());
+
+    // ─── Pro Layout Editor State ───
+    const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
+    const [showCommandPalette, setShowCommandPalette] = useState(false);
+    const [commandSearch, setCommandSearch] = useState('');
+    const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
+    const [editingTitleValue, setEditingTitleValue] = useState('');
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; panelId: string } | null>(null);
+    const [showConfigDrawer, setShowConfigDrawer] = useState(false);
+    const [configTarget, setConfigTarget] = useState<string | null>(null);
+    const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'idle'>('idle');
+    const [isDirty, setIsDirty] = useState(false);
+    const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const commandInputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const loadMenuRef = useRef<HTMLDivElement>(null);
     /** Only replace local panels/grid when switching dashboards — not when the list refreshes from polling */
@@ -518,13 +533,18 @@ export const DashboardCanvas: React.FC = () => {
         setPanels(prev => [...prev, newPanel]);
         setGridLayout(prev => [...prev, newLayoutItem]);
         setShowAddPanel(false);
-    }, []);
+        setSelectedPanelId(id);
+        setIsDirty(true);
+        addToast(`${tpl?.label || 'Panel'} added`, 'success');
+    }, [addToast]);
 
     // Remove Panel
     const removePanel = useCallback((id: string) => {
         setPanels(prev => prev.filter(p => p.id !== id));
         setGridLayout(prev => prev.filter(l => l.i !== id));
-    }, []);
+        if (selectedPanelId === id) setSelectedPanelId(null);
+        setIsDirty(true);
+    }, [selectedPanelId]);
 
     // Duplicate Panel
     const duplicatePanel = useCallback((id: string) => {
@@ -534,13 +554,50 @@ export const DashboardCanvas: React.FC = () => {
         const newId = `panel_${Date.now()}`;
         setPanels(prev => [...prev, { ...panel, id: newId, title: panel.title + t('canvas.copySuffix') }]);
         setGridLayout(prev => [...prev, { ...layout, i: newId, x: 0, y: Infinity }]);
-    }, [panels, gridLayout]);
+        setSelectedPanelId(newId);
+        setIsDirty(true);
+        addToast('Panel duplicated', 'success');
+    }, [panels, gridLayout, addToast]);
 
     // Toggle Lock
     const toggleLock = useCallback((id: string) => {
         setPanels(prev => prev.map(p => p.id === id ? { ...p, locked: !p.locked } : p));
         setGridLayout(prev => prev.map(l => l.i === id ? { ...l, static: !l.static } : l));
+        setIsDirty(true);
     }, []);
+
+    // Rename panel inline
+    const commitRename = useCallback((id: string, newTitle: string) => {
+        const trimmed = newTitle.trim();
+        if (trimmed) {
+            setPanels(prev => prev.map(p => p.id === id ? { ...p, title: trimmed } : p));
+            setIsDirty(true);
+        }
+        setEditingTitleId(null);
+        setEditingTitleValue('');
+    }, []);
+
+    // Update panel config property
+    const updatePanelConfig = useCallback((id: string, key: string, value: any) => {
+        setPanels(prev => prev.map(p => p.id === id ? { ...p, config: { ...p.config, [key]: value } } : p));
+        setIsDirty(true);
+    }, []);
+
+    // Open config drawer
+    const openConfigDrawer = useCallback((id: string) => {
+        setConfigTarget(id);
+        setShowConfigDrawer(true);
+        setContextMenu(null);
+    }, []);
+
+    // Context menu handler
+    const handleContextMenu = useCallback((e: React.MouseEvent, panelId: string) => {
+        if (!editMode) return;
+        e.preventDefault();
+        e.stopPropagation();
+        setContextMenu({ x: e.clientX, y: e.clientY, panelId });
+        setSelectedPanelId(panelId);
+    }, [editMode]);
 
     const commitDashboardSave = useCallback(
         async (nameOverride?: string) => {
@@ -727,7 +784,132 @@ export const DashboardCanvas: React.FC = () => {
     // Grid layout change
     const onLayoutChange = useCallback((layout: RGLLayout) => {
         setGridLayout([...layout]);
+        setIsDirty(true);
     }, []);
+
+    // ─── Auto-Save with Debounce ───
+    useEffect(() => {
+        if (!isDirty || panels.length === 0) return;
+        if (!activeDashboardId || !dashboards.some(d => d.id === activeDashboardId)) return;
+        setAutoSaveStatus('unsaved');
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = setTimeout(() => {
+            const ex = dashboards.find(d => d.id === activeDashboardId);
+            if (ex?.name?.trim()) {
+                setAutoSaveStatus('saving');
+                void commitDashboardSave(ex.name).then(() => {
+                    setAutoSaveStatus('saved');
+                    setIsDirty(false);
+                    setTimeout(() => setAutoSaveStatus('idle'), 2000);
+                });
+            }
+        }, 3000);
+        return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
+    }, [isDirty, panels, gridLayout, activeDashboardId, dashboards, commitDashboardSave]);
+
+    // ─── Keyboard Shortcuts ───
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            const isMod = e.metaKey || e.ctrlKey;
+            const target = e.target as HTMLElement;
+            const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+            // ⌘K — Command palette
+            if (isMod && e.key === 'k') {
+                e.preventDefault();
+                setShowCommandPalette(prev => !prev);
+                setCommandSearch('');
+                return;
+            }
+
+            // Don't intercept when typing in inputs
+            if (isInput) return;
+
+            // ⌘S — Save
+            if (isMod && e.key === 's') {
+                e.preventDefault();
+                requestSave();
+                return;
+            }
+
+            // Delete / Backspace — Remove selected panel
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedPanelId && editMode) {
+                e.preventDefault();
+                removePanel(selectedPanelId);
+                addToast('Panel removed', 'info');
+                return;
+            }
+
+            // ⌘D — Duplicate selected panel
+            if (isMod && e.key === 'd' && selectedPanelId && editMode) {
+                e.preventDefault();
+                duplicatePanel(selectedPanelId);
+                return;
+            }
+
+            // ⌘L — Toggle lock on selected panel
+            if (isMod && e.key === 'l' && selectedPanelId && editMode) {
+                e.preventDefault();
+                toggleLock(selectedPanelId);
+                return;
+            }
+
+            // Tab — Cycle through panels
+            if (e.key === 'Tab' && panels.length > 0 && editMode) {
+                e.preventDefault();
+                const currentIdx = panels.findIndex(p => p.id === selectedPanelId);
+                const nextIdx = e.shiftKey
+                    ? (currentIdx <= 0 ? panels.length - 1 : currentIdx - 1)
+                    : (currentIdx + 1) % panels.length;
+                setSelectedPanelId(panels[nextIdx].id);
+                return;
+            }
+
+            // Escape — Deselect / close overlays
+            if (e.key === 'Escape') {
+                if (showCommandPalette) { setShowCommandPalette(false); return; }
+                if (contextMenu) { setContextMenu(null); return; }
+                if (showConfigDrawer) { setShowConfigDrawer(false); return; }
+                if (selectedPanelId) { setSelectedPanelId(null); return; }
+            }
+
+            // F2 — Rename selected panel
+            if (e.key === 'F2' && selectedPanelId && editMode) {
+                e.preventDefault();
+                const panel = panels.find(p => p.id === selectedPanelId);
+                if (panel) {
+                    setEditingTitleId(selectedPanelId);
+                    setEditingTitleValue(panel.title);
+                }
+                return;
+            }
+
+            // E — Open config for selected panel
+            if (e.key === 'e' && selectedPanelId && editMode) {
+                openConfigDrawer(selectedPanelId);
+                return;
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [selectedPanelId, panels, editMode, showCommandPalette, contextMenu, showConfigDrawer,
+        requestSave, removePanel, duplicatePanel, toggleLock, openConfigDrawer, addToast]);
+
+    // Close context menu on outside click
+    useEffect(() => {
+        if (!contextMenu) return;
+        const close = () => setContextMenu(null);
+        window.addEventListener('click', close);
+        return () => window.removeEventListener('click', close);
+    }, [contextMenu]);
+
+    // Focus command palette input on show
+    useEffect(() => {
+        if (showCommandPalette) {
+            setTimeout(() => commandInputRef.current?.focus(), 50);
+        }
+    }, [showCommandPalette]);
+
 
     // Export JSON
     const exportDashboard = useCallback(() => {
@@ -762,6 +944,29 @@ export const DashboardCanvas: React.FC = () => {
     }, [dashboards.length, addToast]);
 
     const triggerImport = useCallback(() => importFileRef.current?.click(), []);
+
+    // Command palette filtered items
+    const commandItems = useMemo(() => {
+        const q = commandSearch.toLowerCase();
+        const panelActions = PANEL_TEMPLATES_LOCALIZED.map(tpl => ({
+            id: `add-${tpl.type}`, label: `Add ${tpl.label}`, desc: tpl.desc, icon: tpl.icon,
+            action: () => { addPanel(tpl.type); setShowCommandPalette(false); },
+            category: 'Add Panel',
+        }));
+        const shortcuts = [
+            { id: 'cmd-save', label: 'Save Dashboard', desc: '⌘S', icon: <Save size={18} />, action: () => { requestSave(); setShowCommandPalette(false); }, category: 'Actions' },
+            { id: 'cmd-new', label: 'New Dashboard', desc: '⌘N', icon: <Grid3X3 size={18} />, action: () => { newDashboard(); setShowCommandPalette(false); }, category: 'Actions' },
+            { id: 'cmd-export', label: 'Export Dashboard', desc: '', icon: <Download size={18} />, action: () => { exportDashboard(); setShowCommandPalette(false); }, category: 'Actions' },
+            { id: 'cmd-import', label: 'Import Dashboard', desc: '', icon: <Upload size={18} />, action: () => { triggerImport(); setShowCommandPalette(false); }, category: 'Actions' },
+            { id: 'cmd-fullscreen', label: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen', desc: '', icon: isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />, action: () => { toggleFullscreen(); setShowCommandPalette(false); }, category: 'Actions' },
+            { id: 'cmd-edit', label: editMode ? 'Switch to View Mode' : 'Switch to Edit Mode', desc: '', icon: editMode ? <Eye size={18} /> : <Edit3 size={18} />, action: () => { setEditMode(!editMode); setShowCommandPalette(false); }, category: 'Actions' },
+        ];
+        const all = [...panelActions, ...shortcuts];
+        if (!q) return all;
+        return all.filter(i => i.label.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q) || i.category.toLowerCase().includes(q));
+    }, [commandSearch, PANEL_TEMPLATES_LOCALIZED, editMode, isFullscreen, addPanel, requestSave, newDashboard, exportDashboard, triggerImport, toggleFullscreen]);
+
+    const configPanel = configTarget ? panels.find(p => p.id === configTarget) : null;
 
     const importDashboard = useCallback(
         (file: File) => {
@@ -930,8 +1135,20 @@ export const DashboardCanvas: React.FC = () => {
                 panelCount={panels.length}
             />
 
+            {/* Animated Blueprint Grid Overlay */}
+            <AnimatePresence>
+                {editMode && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="canvas-edit-overlay"
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Grid */}
-            <div ref={gridContainerRef} style={{ flex: 1, overflow: 'auto', padding: '0 16px 16px' }}>
+            <div ref={gridContainerRef} style={{ flex: 1, overflow: 'auto', padding: '0 16px 16px', position: 'relative', zIndex: 1 }}>
                 {gridMounted && <ResponsiveGridLayout
                     className="dashboard-canvas-grid"
                     width={gridWidth}
@@ -948,40 +1165,79 @@ export const DashboardCanvas: React.FC = () => {
                     margin={[12, 12] as const}
                     containerPadding={[0, 0] as const}
                 >
-                    {panels.map(panel => (
-                        <div key={panel.id} style={{
-                            background: 'var(--bg-elevated)',
-                            border: '1px solid var(--border-subtle)',
-                            borderRadius: '14px',
-                            overflow: 'hidden',
-                            display: 'flex', flexDirection: 'column',
-                            boxShadow: '0 2px 12px -4px rgba(0,0,0,0.15)',
-                            transition: 'box-shadow 0.2s',
-                        }}>
+                    {panels.map(panel => {
+                        const isSelected = selectedPanelId === panel.id;
+                        const isRenaming = editingTitleId === panel.id;
+                        return (
+                        <div key={panel.id}
+                            className={`dashboard-panel ${editMode ? 'pro-panel-card' : ''} ${isSelected && editMode ? 'pro-panel-selected' : ''}`}
+                            onClick={() => editMode && setSelectedPanelId(panel.id)}
+                            onContextMenu={(e) => handleContextMenu(e, panel.id)}
+                            style={{
+                                background: 'var(--bg-elevated)',
+                                border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
+                                borderRadius: '14px',
+                                overflow: 'hidden',
+                                display: 'flex', flexDirection: 'column',
+                                boxShadow: isSelected
+                                    ? '0 0 0 3px rgba(99,102,241,0.15), 0 4px 20px -4px rgba(99,102,241,0.25)'
+                                    : '0 2px 12px -4px rgba(0,0,0,0.15)',
+                                transition: 'box-shadow 0.25s ease, border-color 0.25s ease',
+                            }}
+                        >
                             {/* Panel Header */}
                             <div className="panel-drag-handle" style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
                                 padding: '8px 12px',
                                 borderBottom: '1px solid var(--border-subtle)',
                                 cursor: editMode ? 'grab' : 'default',
-                                background: 'var(--bg-surface)',
+                                background: isSelected ? 'var(--primary-subtle)' : 'var(--bg-surface)',
                                 minHeight: '36px',
+                                transition: 'background 0.2s',
                             }}>
                                 {editMode && <GripVertical size={14} style={{ color: 'var(--text-muted)', opacity: 0.4 }} />}
                                 <span style={{ color: 'var(--primary)', opacity: 0.7 }}>{panelIcon(panel.type)}</span>
-                                <span style={{
-                                    fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)',
-                                    flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                }}>{panel.title}</span>
+                                {isRenaming ? (
+                                    <input
+                                        autoFocus
+                                        value={editingTitleValue}
+                                        onChange={e => setEditingTitleValue(e.target.value)}
+                                        onBlur={() => commitRename(panel.id, editingTitleValue)}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter') commitRename(panel.id, editingTitleValue);
+                                            if (e.key === 'Escape') { setEditingTitleId(null); setEditingTitleValue(''); }
+                                            e.stopPropagation();
+                                        }}
+                                        onMouseDown={e => e.stopPropagation()}
+                                        style={{
+                                            fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)',
+                                            flex: 1, background: 'var(--bg-main)', border: '1px solid var(--primary)',
+                                            borderRadius: '6px', padding: '2px 6px', outline: 'none',
+                                        }}
+                                    />
+                                ) : (
+                                    <span
+                                        onDoubleClick={() => { if (editMode) { setEditingTitleId(panel.id); setEditingTitleValue(panel.title); } }}
+                                        style={{
+                                            fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)',
+                                            flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                            cursor: editMode ? 'text' : 'default',
+                                        }}
+                                        title={editMode ? 'Double-click to rename' : panel.title}
+                                    >{panel.title}</span>
+                                )}
                                 {editMode && (
                                     <div style={{ display: 'flex', gap: '4px' }}>
-                                        <button type="button" onClick={() => toggleLock(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: panel.locked ? 'var(--warning)' : 'var(--text-muted)', opacity: panel.locked ? 1 : 0.4 }}>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); openConfigDrawer(panel.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-muted)', opacity: 0.4 }} title="Configure panel (E)">
+                                            <Sliders size={12} />
+                                        </button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); toggleLock(panel.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: panel.locked ? 'var(--warning)' : 'var(--text-muted)', opacity: panel.locked ? 1 : 0.4 }}>
                                             {panel.locked ? <Lock size={12} /> : <Unlock size={12} />}
                                         </button>
-                                        <button type="button" onClick={() => duplicatePanel(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-muted)', opacity: 0.4 }}>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); duplicatePanel(panel.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-muted)', opacity: 0.4 }}>
                                             <Copy size={12} />
                                         </button>
-                                        <button type="button" onClick={() => removePanel(panel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--danger)', opacity: 0.6 }}>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); removePanel(panel.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--danger)', opacity: 0.6 }}>
                                             <X size={12} />
                                         </button>
                                     </div>
@@ -995,7 +1251,8 @@ export const DashboardCanvas: React.FC = () => {
                                 {renderPanel(panel, t)}
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </ResponsiveGridLayout>}
             </div>
 
@@ -1067,11 +1324,339 @@ export const DashboardCanvas: React.FC = () => {
             {/* Save Dialog */}
             <SaveDialog show={showSaveDialog} name={saveName} setName={setSaveName}
                 onSave={() => void commitDashboardSave()} onClose={() => setShowSaveDialog(false)} isSaving={isSaving} />
+
+            {/* ═══ Auto-Save Status Pill ═══ */}
+            <AnimatePresence>
+                {autoSaveStatus !== 'idle' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                        style={{
+                            position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            padding: '6px 16px', borderRadius: '99px', zIndex: 9999,
+                            background: autoSaveStatus === 'saved' ? 'rgba(16, 185, 129, 0.15)' : autoSaveStatus === 'saving' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                            border: `1px solid ${autoSaveStatus === 'saved' ? 'rgba(16,185,129,0.3)' : autoSaveStatus === 'saving' ? 'rgba(99,102,241,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                            backdropFilter: 'blur(12px)',
+                            fontSize: '11px', fontWeight: 700,
+                            color: autoSaveStatus === 'saved' ? '#10b981' : autoSaveStatus === 'saving' ? 'var(--primary)' : '#f59e0b',
+                        }}
+                    >
+                        {autoSaveStatus === 'saving' && <Loader2 size={12} className="animate-spin" />}
+                        {autoSaveStatus === 'saved' && <Check size={12} />}
+                        {autoSaveStatus === 'unsaved' && <Cloud size={12} />}
+                        {autoSaveStatus === 'saving' ? 'Auto-saving…' : autoSaveStatus === 'saved' ? 'Saved' : 'Unsaved changes'}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ═══ Right-Click Context Menu ═══ */}
+            <AnimatePresence>
+                {contextMenu && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.92 }}
+                        transition={{ duration: 0.12 }}
+                        style={{
+                            position: 'fixed', left: contextMenu.x, top: contextMenu.y, zIndex: 50000,
+                            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+                            borderRadius: '12px', padding: '6px', minWidth: '180px',
+                            boxShadow: '0 12px 40px -8px rgba(0,0,0,0.5)',
+                            backdropFilter: 'blur(16px)',
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {[
+                            { label: 'Rename', icon: <Edit3 size={14} />, shortcut: 'F2', action: () => { const p = panels.find(x => x.id === contextMenu.panelId); if (p) { setEditingTitleId(p.id); setEditingTitleValue(p.title); } setContextMenu(null); } },
+                            { label: 'Configure', icon: <Sliders size={14} />, shortcut: 'E', action: () => { openConfigDrawer(contextMenu.panelId); } },
+                            { label: 'Duplicate', icon: <Copy size={14} />, shortcut: '⌘D', action: () => { duplicatePanel(contextMenu.panelId); setContextMenu(null); } },
+                            { label: panels.find(p => p.id === contextMenu.panelId)?.locked ? 'Unlock' : 'Lock', icon: panels.find(p => p.id === contextMenu.panelId)?.locked ? <Unlock size={14} /> : <Lock size={14} />, shortcut: '⌘L', action: () => { toggleLock(contextMenu.panelId); setContextMenu(null); } },
+                            { label: 'Delete', icon: <Trash2 size={14} />, shortcut: '⌫', danger: true, action: () => { removePanel(contextMenu.panelId); setContextMenu(null); } },
+                        ].map(item => (
+                            <button
+                                key={item.label}
+                                onClick={item.action}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                                    padding: '8px 10px', border: 'none', borderRadius: '8px',
+                                    background: 'transparent', cursor: 'pointer', transition: 'background 0.1s',
+                                    color: (item as any).danger ? 'var(--danger, #ef4444)' : 'var(--text-secondary)',
+                                    fontSize: '12px', fontWeight: 600, textAlign: 'left',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = (item as any).danger ? 'rgba(239,68,68,0.1)' : 'var(--primary-subtle)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                            >
+                                {item.icon}
+                                <span style={{ flex: 1 }}>{item.label}</span>
+                                {item.shortcut && <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', opacity: 0.5 }}>{item.shortcut}</span>}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ═══ Command Palette (⌘K) ═══ */}
+            {showCommandPalette && createPortal(
+                <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                        backdropFilter: 'blur(4px)', zIndex: 100001,
+                        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+                        paddingTop: '15vh',
+                    }}
+                    onClick={() => setShowCommandPalette(false)}
+                >
+                    <motion.div
+                        initial={{ scale: 0.95, y: -10 }} animate={{ scale: 1, y: 0 }}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+                            borderRadius: '16px', width: '480px', maxWidth: '92vw',
+                            boxShadow: '0 24px 80px -16px rgba(0,0,0,0.6)',
+                            overflow: 'hidden',
+                        }}
+                    >
+                        {/* Search Input */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
+                            <Command size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                            <input
+                                ref={commandInputRef}
+                                value={commandSearch}
+                                onChange={e => setCommandSearch(e.target.value)}
+                                placeholder="Type a command…"
+                                onKeyDown={e => {
+                                    if (e.key === 'Escape') setShowCommandPalette(false);
+                                    if (e.key === 'Enter' && commandItems.length > 0) commandItems[0].action();
+                                }}
+                                style={{
+                                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                                    color: 'var(--text-primary)', fontSize: '14px', fontWeight: 500,
+                                }}
+                            />
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '4px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', fontWeight: 700 }}>ESC</span>
+                        </div>
+                        {/* Results */}
+                        <div style={{ maxHeight: '340px', overflowY: 'auto', padding: '6px' }}>
+                            {commandItems.length === 0 && (
+                                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>No results found</div>
+                            )}
+                            {(() => {
+                                let lastCategory = '';
+                                return commandItems.map(item => {
+                                    const showCat = item.category !== lastCategory;
+                                    lastCategory = item.category;
+                                    return (
+                                        <React.Fragment key={item.id}>
+                                            {showCat && <div style={{ fontSize: '9px', fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '10px 10px 4px' }}>{item.category}</div>}
+                                            <button
+                                                onClick={item.action}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
+                                                    padding: '10px 10px', border: 'none', borderRadius: '8px',
+                                                    background: 'transparent', cursor: 'pointer', transition: 'background 0.1s',
+                                                    color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 600, textAlign: 'left',
+                                                }}
+                                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-subtle)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                                            >
+                                                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>{item.icon}</div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 700 }}>{item.label}</div>
+                                                    {item.desc && <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '1px' }}>{item.desc}</div>}
+                                                </div>
+                                                <ChevronRight size={14} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+                                            </button>
+                                        </React.Fragment>
+                                    );
+                                });
+                            })()}
+                        </div>
+                        {/* Footer hint */}
+                        <div style={{ padding: '8px 16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '12px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            <span>↵ Select</span>
+                            <span>ESC Close</span>
+                            <span style={{ marginLeft: 'auto' }}>⌘K Toggle</span>
+                        </div>
+                    </motion.div>
+                </motion.div>,
+                document.body
+            )}
+
+            {/* ═══ Panel Config Drawer ═══ */}
+            <AnimatePresence>
+                {showConfigDrawer && configPanel && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 50001, backdropFilter: 'blur(2px)' }}
+                        onClick={() => setShowConfigDrawer(false)}
+                    >
+                        <motion.div
+                            initial={{ x: 320 }} animate={{ x: 0 }} exit={{ x: 320 }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                position: 'absolute', right: 0, top: 0, bottom: 0, width: '320px',
+                                background: 'var(--bg-elevated)', borderLeft: '1px solid var(--border-subtle)',
+                                display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                                boxShadow: '-8px 0 40px rgba(0,0,0,0.3)',
+                            }}
+                        >
+                            {/* Drawer Header */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '16px', borderBottom: '1px solid var(--border-subtle)' }}>
+                                <Sliders size={16} style={{ color: 'var(--primary)' }} />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Panel Configuration</div>
+                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{configPanel.title} · {configPanel.type}</div>
+                                </div>
+                                <button onClick={() => setShowConfigDrawer(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px' }}><X size={16} /></button>
+                            </div>
+                            {/* Drawer Body */}
+                            <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {/* Title */}
+                                <ConfigField label="Title">
+                                    <input value={configPanel.title} onChange={e => { setPanels(prev => prev.map(p => p.id === configPanel.id ? { ...p, title: e.target.value } : p)); setIsDirty(true); }} style={configInputStyle} />
+                                </ConfigField>
+
+                                {/* Chart-specific configs */}
+                                {['bar', 'line', 'area', 'scatter'].includes(configPanel.type) && (
+                                    <>
+                                        <ConfigField label="X-Axis Key">
+                                            <input value={configPanel.config.xAxisKey || ''} onChange={e => updatePanelConfig(configPanel.id, 'xAxisKey', e.target.value)} placeholder="e.g. month" style={configInputStyle} />
+                                        </ConfigField>
+                                        <ConfigField label="Y-Axis / Data Key">
+                                            <input value={configPanel.config.dataKey || configPanel.config.yAxisKey || ''} onChange={e => { updatePanelConfig(configPanel.id, 'dataKey', e.target.value); updatePanelConfig(configPanel.id, 'yAxisKey', e.target.value); }} placeholder="e.g. revenue" style={configInputStyle} />
+                                        </ConfigField>
+                                        <ConfigField label="Color">
+                                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                <input type="color" value={configPanel.config.color || '#6366f1'} onChange={e => updatePanelConfig(configPanel.id, 'color', e.target.value)} style={{ width: '32px', height: '32px', border: 'none', borderRadius: '8px', cursor: 'pointer', background: 'none' }} />
+                                                <input value={configPanel.config.color || '#6366f1'} onChange={e => updatePanelConfig(configPanel.id, 'color', e.target.value)} style={{ ...configInputStyle, flex: 1, fontFamily: 'var(--font-mono)' }} />
+                                            </div>
+                                        </ConfigField>
+                                        <ConfigField label="Quick Colors">
+                                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                                {CHART_COLORS.map(c => (
+                                                    <button key={c} onClick={() => updatePanelConfig(configPanel.id, 'color', c)} style={{
+                                                        width: '24px', height: '24px', borderRadius: '6px', border: configPanel.config.color === c ? '2px solid var(--text-primary)' : '1px solid var(--border-subtle)',
+                                                        background: c, cursor: 'pointer', transition: 'transform 0.15s',
+                                                    }} onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.15)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }} />
+                                                ))}
+                                            </div>
+                                        </ConfigField>
+                                    </>
+                                )}
+
+                                {configPanel.type === 'pie' && (
+                                    <>
+                                        <ConfigField label="Name Key">
+                                            <input value={configPanel.config.xAxisKey || 'name'} onChange={e => updatePanelConfig(configPanel.id, 'xAxisKey', e.target.value)} style={configInputStyle} />
+                                        </ConfigField>
+                                        <ConfigField label="Value Key">
+                                            <input value={configPanel.config.yAxisKey || 'value'} onChange={e => updatePanelConfig(configPanel.id, 'yAxisKey', e.target.value)} style={configInputStyle} />
+                                        </ConfigField>
+                                    </>
+                                )}
+
+                                {configPanel.type === 'metric' && (
+                                    <>
+                                        <ConfigField label="Label">
+                                            <input value={configPanel.config.label || ''} onChange={e => updatePanelConfig(configPanel.id, 'label', e.target.value)} style={configInputStyle} />
+                                        </ConfigField>
+                                        <ConfigField label="Value">
+                                            <input value={configPanel.config.value || ''} onChange={e => updatePanelConfig(configPanel.id, 'value', e.target.value)} style={configInputStyle} />
+                                        </ConfigField>
+                                        <ConfigField label="Change">
+                                            <input value={configPanel.config.change || ''} onChange={e => updatePanelConfig(configPanel.id, 'change', e.target.value)} style={configInputStyle} />
+                                        </ConfigField>
+                                        <ConfigField label="Direction">
+                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                <button onClick={() => updatePanelConfig(configPanel.id, 'positive', true)} style={{ ...configBtnStyle, background: configPanel.config.positive ? 'rgba(16,185,129,0.15)' : 'var(--bg-surface)', color: configPanel.config.positive ? '#10b981' : 'var(--text-muted)', borderColor: configPanel.config.positive ? 'rgba(16,185,129,0.3)' : 'var(--border-subtle)' }}>↑ Positive</button>
+                                                <button onClick={() => updatePanelConfig(configPanel.id, 'positive', false)} style={{ ...configBtnStyle, background: !configPanel.config.positive ? 'rgba(239,68,68,0.15)' : 'var(--bg-surface)', color: !configPanel.config.positive ? '#ef4444' : 'var(--text-muted)', borderColor: !configPanel.config.positive ? 'rgba(239,68,68,0.3)' : 'var(--border-subtle)' }}>↓ Negative</button>
+                                            </div>
+                                        </ConfigField>
+                                    </>
+                                )}
+
+                                {configPanel.type === 'markdown' && (
+                                    <ConfigField label="Content">
+                                        <textarea value={configPanel.config.content || ''} onChange={e => updatePanelConfig(configPanel.id, 'content', e.target.value)} rows={8} style={{ ...configInputStyle, resize: 'vertical', fontFamily: 'var(--font-mono)', lineHeight: 1.5 }} />
+                                    </ConfigField>
+                                )}
+                            </div>
+                            {/* Drawer Footer */}
+                            <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '8px' }}>
+                                <button onClick={() => setShowConfigDrawer(false)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: 'var(--primary)', color: '#fff', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>Done</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
         {importInput}
+        {importInput}
+        
+        {/* ═══ Pro-grade Visual Styles ═══ */}
+        <style>{`
+            .canvas-edit-overlay {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                z-index: 0;
+                background-size: 40px 40px;
+                background-image: 
+                    linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+                animation: gridFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            .canvas-edit-overlay::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            }
+            @keyframes gridFadeIn {
+                from { opacity: 0; background-position: 0 20px; }
+                to { opacity: 1; background-position: 0 0; }
+            }
+            
+            /* Panel Glassmorphic Polish */
+            .pro-panel-card {
+                background: rgba(15, 15, 20, 0.65) !important;
+                backdrop-filter: blur(16px) saturate(180%);
+                -webkit-backdrop-filter: blur(16px) saturate(180%);
+                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            }
+            .pro-panel-card:hover {
+                box-shadow: 0 12px 32px -8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+            }
+            .pro-panel-selected {
+                border-color: rgba(99, 102, 241, 0.6) !important;
+                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2), 0 20px 40px -10px rgba(99, 102, 241, 0.15) !important;
+                transform: translateZ(10px) scale(1.01);
+                z-index: 50;
+            }
+        `}</style>
         </>
     );
 };
+/* ═══ Config Drawer Helpers ═══ */
+const configInputStyle: React.CSSProperties = {
+    width: '100%', background: 'var(--bg-main)', border: '1px solid var(--border-subtle)',
+    padding: '8px 10px', borderRadius: '8px', color: 'var(--text-primary)',
+    fontSize: '12px', outline: 'none', boxSizing: 'border-box',
+    transition: 'border-color 0.15s',
+};
+const configBtnStyle: React.CSSProperties = {
+    flex: 1, padding: '8px 12px', borderRadius: '8px',
+    border: '1px solid var(--border-subtle)', cursor: 'pointer',
+    fontSize: '11px', fontWeight: 700, transition: 'all 0.15s',
+    textAlign: 'center',
+};
+const ConfigField: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <label style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</label>
+        {children}
+    </div>
+);
 
 /* ═══ Toolbar ═══ */
 interface ToolbarProps {
@@ -1115,21 +1700,27 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <div style={{ flex: 1 }} />
 
         {/* Edit Mode Toggle */}
-        <button
+        <motion.button
             type="button"
             onClick={() => setEditMode(!editMode)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            animate={editMode ? {
+                boxShadow: ['0 0 0 0px rgba(99, 102, 241, 0)', '0 0 0 4px rgba(99, 102, 241, 0.3)', '0 0 0 0px rgba(99, 102, 241, 0)'],
+            } : {}}
+            transition={{ duration: 1.5, repeat: editMode ? Infinity : 0 }}
             style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 background: editMode ? 'var(--primary-subtle)' : 'var(--bg-main)',
                 border: `1px solid ${editMode ? 'var(--primary)' : 'var(--border-subtle)'}`,
                 borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
                 color: editMode ? 'var(--primary)' : 'var(--text-muted)',
-                fontSize: '11px', fontWeight: 700, transition: 'all 0.2s',
+                fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
             }}
         >
             {editMode ? <Edit3 size={13} /> : <Eye size={13} />}
             {editMode ? t('canvas.editing') : t('canvas.viewing')}
-        </button>
+        </motion.button>
 
         {/* Auto Refresh */}
         <div style={{ position: 'relative' }} onMouseDown={e => e.stopPropagation()}>

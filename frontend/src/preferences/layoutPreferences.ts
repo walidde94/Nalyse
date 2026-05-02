@@ -73,6 +73,8 @@ export type LayoutPreferencesV1 = {
     tabBarDensity: TabBarDensity;
     blur: number;
     opacity: number;
+    workspacePreset?: 'default' | 'analyst' | 'executive' | 'developer';
+    sidebarPosition?: 'left' | 'right' | 'top' | 'bottom';
 };
 
 const DEFAULT_PREFS: LayoutPreferencesV1 = {
@@ -86,7 +88,47 @@ const DEFAULT_PREFS: LayoutPreferencesV1 = {
     tabBarDensity: 'comfortable',
     blur: 16,
     opacity: 0.85,
+    workspacePreset: 'default',
+    sidebarPosition: 'left',
 };
+
+export function applyWorkspacePreset(preset: 'default' | 'analyst' | 'executive' | 'developer'): Partial<LayoutPreferencesV1> {
+    switch (preset) {
+        case 'analyst':
+            return {
+                workspacePreset: 'analyst',
+                groupOrder: ['analytics', 'predictive', 'bi', 'decision', 'social', 'selfservice'],
+                hiddenNavIds: ['developer', 'webhooks', 'embed', 'migration'],
+                sidebarCollapsedDefault: false,
+                tabBarDensity: 'compact'
+            };
+        case 'executive':
+            return {
+                workspacePreset: 'executive',
+                groupOrder: ['bi', 'decision', 'analytics', 'social', 'predictive', 'selfservice'],
+                hiddenNavIds: ['developer', 'webhooks', 'embed', 'automl', 'spatial', 'migration'],
+                sidebarCollapsedDefault: true,
+                tabBarDensity: 'comfortable'
+            };
+        case 'developer':
+            return {
+                workspacePreset: 'developer',
+                groupOrder: ['predictive', 'selfservice', 'analytics', 'decision', 'bi', 'social'],
+                hiddenNavIds: ['private-chat', 'democracy'],
+                sidebarCollapsedDefault: false,
+                tabBarDensity: 'compact'
+            };
+        case 'default':
+        default:
+            return {
+                workspacePreset: 'default',
+                groupOrder: [...DEFAULT_GROUP_ORDER],
+                hiddenNavIds: [],
+                sidebarCollapsedDefault: false,
+                tabBarDensity: 'comfortable'
+            };
+    }
+}
 
 function normalizeGroupOrder(raw: unknown): string[] {
     const valid = new Set<string>(DEFAULT_GROUP_ORDER);
@@ -161,6 +203,8 @@ export function loadLayoutPreferences(userId?: string): LayoutPreferencesV1 {
             compactTabBar: tabBarDensity === 'compact' || tabBarDensity === 'minimal',
             blur: typeof parsed.blur === 'number' ? parsed.blur : 16,
             opacity: typeof parsed.opacity === 'number' ? parsed.opacity : 0.85,
+            workspacePreset: parsed.workspacePreset || 'default',
+            sidebarPosition: parsed.sidebarPosition || 'left',
         };
     } catch {
         return { ...DEFAULT_PREFS };

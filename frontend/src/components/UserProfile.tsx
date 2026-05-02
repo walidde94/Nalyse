@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { User, LogOut, Settings, Bell, Shield, Camera, X } from 'lucide-react';
 import { API_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
+import { loadLayoutPreferences, saveLayoutPreferences } from '../preferences/layoutPreferences';
 
 interface UserProfileProps {
     onClose: () => void;
@@ -19,8 +20,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
     });
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState('');
+    const [prefs, setPrefs] = useState(() => loadLayoutPreferences(user?.id));
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleSidebarDock = (pos: 'left' | 'right' | 'top' | 'bottom') => {
+        const p = { ...prefs, sidebarPosition: pos };
+        setPrefs(p);
+        saveLayoutPreferences(p, user?.id);
+    };
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -302,6 +310,34 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                                 </span>
                             )}
                         </div>
+                    </div>
+                </div>
+
+                {/* Layout Preferences */}
+                <div style={{ marginBottom: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
+                    <h3 className="text-sm" style={{ marginBottom: '12px', fontWeight: 600 }}>Sidebar Docking</h3>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        {(['left', 'right', 'top', 'bottom'] as const).map(pos => (
+                            <button
+                                key={pos}
+                                onClick={() => handleSidebarDock(pos)}
+                                style={{
+                                    flex: 1,
+                                    padding: '6px',
+                                    borderRadius: '6px',
+                                    border: `1px solid ${prefs.sidebarPosition === pos ? 'var(--primary)' : 'var(--border-subtle)'}`,
+                                    background: prefs.sidebarPosition === pos ? 'var(--primary-subtle)' : 'var(--bg-main)',
+                                    color: prefs.sidebarPosition === pos ? 'var(--primary)' : 'var(--text-secondary)',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    textTransform: 'capitalize',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                {pos}
+                            </button>
+                        ))}
                     </div>
                 </div>
 

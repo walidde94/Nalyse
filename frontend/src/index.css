@@ -538,8 +538,6 @@
 [data-theme='midnight'] .ppb-border-glow {
   background: conic-gradient(from 0deg, var(--primary), var(--accent), var(--primary-light, var(--primary)), var(--primary));
 }
-
-
 /* ===========================================
    2. RESET & BASE
    =========================================== */
@@ -5512,5 +5510,87 @@ input:-webkit-autofill:focus {
     .bento-card-span-2, .bento-card-span-1 {
         grid-column: span 1 !important;
     }
+}
+
+/* ===========================================
+   36. LAYOUT EDITOR PRO STYLES
+   =========================================== */
+
+/* Spin Animation */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* React Grid Layout Customizations */
+.react-grid-layout {
+  position: relative;
+  transition: height 0.2s ease;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, transform;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.react-grid-item.resizing {
+  z-index: 100;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 100;
+  will-change: transform;
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5) !important;
+  transform: scale(1.02) !important;
+  opacity: 0.9;
+}
+
+/* The drop placeholder (ghost element) */
+.react-grid-placeholder {
+  background: var(--primary) !important;
+  opacity: 0.1 !important;
+  border-radius: 14px;
+  border: 2px dashed var(--primary);
+  transition-duration: 100ms;
+  z-index: 2;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+/* Resize handle polish */
+.react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.react-grid-item:hover .react-resizable-handle {
+  opacity: 1;
+}
+
+.react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  border-radius: 2px;
 }
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../components/ui/Toast';
+import { loadLayoutPreferences, saveLayoutPreferences } from '../../preferences/layoutPreferences';
 import { PricingView } from '../subscription/PricingView';
 import { PremiumGate } from '../../components/subscription/PremiumGate';
 import { ThemeStudio } from './ThemeStudio';
@@ -39,6 +40,13 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
     });
 
     const [isSaving, setIsSaving] = useState(false);
+    const [prefs, setPrefs] = useState(() => loadLayoutPreferences(user?.id));
+
+    const handleSidebarDock = (pos: 'left' | 'right' | 'top' | 'bottom') => {
+        const p = { ...prefs, sidebarPosition: pos };
+        setPrefs(p);
+        saveLayoutPreferences(p, user?.id);
+    };
 
     // Form State
     const [displayName, setDisplayName] = useState('');
@@ -392,6 +400,33 @@ export const SettingsView = ({ onClose, onLogout, initialTab }: any) => {
                                     ))}
                                 </div>
                             </div>
+                            
+                            {/* Workspace Layout */}
+                            <div className="card" style={{ padding: '24px', height: 'fit-content' }}>
+                                <h3 className="text-h3" style={{ marginBottom: '8px' }}>Workspace Layout</h3>
+                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>Dock the navigation sidebar to any edge of the screen.</p>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    {(['left', 'right', 'top', 'bottom'] as const).map(pos => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => handleSidebarDock(pos)}
+                                            className="btn btn-secondary"
+                                            style={{
+                                                justifyContent: 'center',
+                                                padding: '14px 16px',
+                                                borderColor: prefs.sidebarPosition === pos ? 'var(--primary)' : 'var(--border-default)',
+                                                background: prefs.sidebarPosition === pos ? 'var(--primary-subtle)' : 'transparent',
+                                                color: prefs.sidebarPosition === pos ? 'var(--primary)' : 'var(--text-secondary)',
+                                                textTransform: 'capitalize',
+                                                fontWeight: prefs.sidebarPosition === pos ? 700 : 500,
+                                            }}
+                                        >
+                                            {pos}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                         </div>
                     )}
 

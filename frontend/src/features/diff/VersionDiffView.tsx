@@ -1,15 +1,16 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell,
-    LineChart, Line
+    LineChart, Line, PieChart, Pie
 } from 'recharts';
 import {
     GitCompareArrows, ArrowUpRight, ArrowDownRight, Minus, BarChart3, Activity, Layers,
     ArrowRight, CheckCircle2, XCircle, Filter, RefreshCw, Database, Zap, Target,
     Maximize2, ChevronRight, ArrowLeftRight, Columns, Table2, Brain, TrendingUp, TrendingDown,
-    Shield, AlertTriangle, Download, Sparkles, Hash, Type, Calendar
+    Shield, AlertTriangle, Download, Sparkles, Hash, Type, Calendar, Flame, Crown, Eye,
+    BarChart2, Waves
 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -79,13 +80,14 @@ const ScoreRing = ({ value, size = 80, stroke = 6 }: { value: number; size?: num
 const LOAD_STEPS = ['Fetching baseline…', 'Fetching comparison…', 'Computing deltas…', 'Building charts…', 'Generating insights…'];
 
 // ═══════════════════════════════════════════════════════════════
-interface Props { files: { id: string; filename: string; size: number; createdAt: string }[]; token: string; }
+interface Props { files: { id: string; filename: string; size: number; createdAt: string }[]; token: string; initialBaselineId?: string; initialComparisonId?: string; }
 
-export const VersionDiffView = ({ files, token }: Props) => {
+export const VersionDiffView = ({ files, token, initialBaselineId, initialComparisonId }: Props) => {
     const { addToast } = useToast();
     const { t } = useLanguage();
-    const [baselineId, setBaselineId] = useState('');
-    const [comparisonId, setComparisonId] = useState('');
+    const [baselineId, setBaselineId] = useState(initialBaselineId || '');
+    const [comparisonId, setComparisonId] = useState(initialComparisonId || '');
+    const hasAutoRun = useRef(false);
     const [loading, setLoading] = useState(false);
     const [loadStep, setLoadStep] = useState(0);
     const [baselineAnalysis, setBaselineAnalysis] = useState<any>(null);
@@ -97,7 +99,7 @@ export const VersionDiffView = ({ files, token }: Props) => {
     const [activeChartView, setActiveChartView] = useState<'overlay' | 'side-by-side' | 'delta'>('overlay');
     const [expandedChart, setExpandedChart] = useState<number | null>(null);
     const [showOnlyChanged, setShowOnlyChanged] = useState(false);
-    const [activeSection, setActiveSection] = useState<'kpi' | 'charts' | 'schema' | 'radar'>('kpi');
+    const [activeSection, setActiveSection] = useState<'kpi' | 'charts' | 'schema' | 'radar' | 'waterfall' | 'distributions' | 'movers'>('kpi');
 
     const fetchAnalysis = useCallback(async (fileId: string) => {
         const res = await fetch(`${API_URL}/api/files/${fileId}/analyze`, { headers: { Authorization: `Bearer ${token}` } });
@@ -131,11 +133,19 @@ export const VersionDiffView = ({ files, token }: Props) => {
             setChartDiffs(buildChartDiffs(bAnalysis, cAnalysis));
             setColumnDiffs(buildColumnDiffs(bData, cData));
             setLoadStep(4);
-            setSummary(buildSummary(metrics));
+            setSummary(buildSummary(metrics, bData, cData));
             addToast('Version comparison complete', 'success');
         } catch (e: any) { addToast(e.message || 'Comparison failed', 'error'); }
         finally { setLoading(false); }
     }, [baselineId, comparisonId, fetchAnalysis, addToast]);
+
+    // Auto-run comparison when opened from Dashboard with pre-selected files
+    useEffect(() => {
+        if (initialBaselineId && initialComparisonId && !hasAutoRun.current && files.length > 0) {
+            hasAutoRun.current = true;
+            runComparison();
+        }
+    }, [initialBaselineId, initialComparisonId, files]);
 
     const visibleCharts = useMemo(() => showOnlyChanged ? chartDiffs.filter(c => c.mergedData.some(d => Math.abs(d.deltaPct) > 1)) : chartDiffs, [chartDiffs, showOnlyChanged]);
 
@@ -246,46 +256,87 @@ export const VersionDiffView = ({ files, token }: Props) => {
             {hasResults && (
                 <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
 
-                    {/* ─── Executive Summary ──────────────────────────── */}
+                    {/* ═══ REVOLUTIONARY EXECUTIVE COMMAND CENTER ═══════ */}
                     {summary && (
-                        <div style={{ padding: '20px 24px', borderRadius: '16px', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(129,140,248,0.06), rgba(52,211,153,0.06))', border: '1px solid rgba(129,140,248,0.12)', display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-                            <ScoreRing value={summary.overallScore} />
-                            <div style={{ flex: 1, minWidth: '250px' }}>
-                                <div className="flex items-center gap-2" style={{ marginBottom: '6px' }}>
-                                    <Brain size={16} style={{ color: '#818cf8' }} />
-                                    <span style={{ fontSize: '13px', fontWeight: 700 }}>Executive Insight</span>
+                        <div style={{ borderRadius: '20px', marginBottom: '28px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', overflow: 'hidden', position: 'relative' }}>
+                            {/* Animated top gradient bar */}
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #818cf8, #34d399, #fbbf24, #f87171, #818cf8)', backgroundSize: '200% 100%', animation: 'shimmer 3s linear infinite' }} />
+                            <style>{`@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+                                @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+                                @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 8px rgba(129,140,248,0.2); } 50% { box-shadow: 0 0 20px rgba(129,140,248,0.4); } }
+                                @keyframes countUp { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+                            `}</style>
+
+                            {/* Row 1: Score + Narrative + Counters */}
+                            <div style={{ padding: '24px 28px', display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
+                                <div style={{ position: 'relative', animation: 'pulseGlow 3s ease-in-out infinite', borderRadius: '50%' }}>
+                                    <ScoreRing value={summary.overallScore} size={90} stroke={7} />
                                 </div>
-                                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>{summary.narrative}</p>
-                            </div>
-                            <div style={{ display: 'flex', gap: '16px', flexShrink: 0 }}>
-                                {[
-                                    { label: 'Improved', val: summary.improved, icon: <TrendingUp size={14} />, color: 'var(--success)' },
-                                    { label: 'Declined', val: summary.declined, icon: <TrendingDown size={14} />, color: 'var(--danger)' },
-                                    { label: 'Stable', val: summary.unchanged, icon: <Shield size={14} />, color: NEUTRAL_COLOR }
-                                ].map((s, i) => (
-                                    <div key={i} style={{ textAlign: 'center' }}>
-                                        <div style={{ color: s.color, marginBottom: '2px', display: 'flex', justifyContent: 'center' }}>{s.icon}</div>
-                                        <div style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: s.color }}>{s.val}</div>
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</div>
+                                <div style={{ flex: 1, minWidth: '250px' }}>
+                                    <div className="flex items-center gap-2" style={{ marginBottom: '8px' }}>
+                                        <Brain size={16} style={{ color: '#818cf8' }} />
+                                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>Neural Diff Intelligence</span>
+                                        <span style={{ fontSize: '9px', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', background: summary.riskLevel === 'critical' ? 'rgba(248,113,113,0.15)' : summary.riskLevel === 'high' ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)', color: summary.riskLevel === 'critical' ? '#f87171' : summary.riskLevel === 'high' ? '#fbbf24' : '#34d399', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                                            {summary.riskLevel} risk
+                                        </span>
                                     </div>
+                                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.8 }}>{summary.narrative}</p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '20px', flexShrink: 0 }}>
+                                    {[
+                                        { label: 'Improved', val: summary.improved, icon: <TrendingUp size={14} />, color: '#34d399' },
+                                        { label: 'Declined', val: summary.declined, icon: <TrendingDown size={14} />, color: '#f87171' },
+                                        { label: 'Stable', val: summary.unchanged, icon: <Shield size={14} />, color: NEUTRAL_COLOR }
+                                    ].map((s, i) => (
+                                        <motion.div key={i} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 + i * 0.1, type: 'spring' }} style={{ textAlign: 'center', padding: '12px 16px', borderRadius: '14px', background: 'var(--bg-main)', border: '1px solid var(--border-subtle)', minWidth: '70px' }}>
+                                            <div style={{ color: s.color, marginBottom: '4px', display: 'flex', justifyContent: 'center' }}>{s.icon}</div>
+                                            <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: s.color, animation: 'countUp 0.6s ease-out' }}>{s.val}</div>
+                                            <div style={{ fontSize: '8px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s.label}</div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Row 2: Live Gauges Strip */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid var(--border-subtle)' }}>
+                                {[
+                                    { label: 'Volatility', value: Math.min(100, Math.round(summary.volatilityIndex)), unit: '%', icon: <Flame size={13} />, color: summary.volatilityIndex > 30 ? '#f87171' : summary.volatilityIndex > 15 ? '#fbbf24' : '#34d399' },
+                                    { label: 'Growth Rate', value: summary.dataGrowthRate, unit: '%', icon: <TrendingUp size={13} />, color: summary.dataGrowthRate >= 0 ? '#34d399' : '#f87171', fmt: true },
+                                    { label: 'Schema Match', value: summary.schemaStability, unit: '%', icon: <Columns size={13} />, color: summary.schemaStability >= 90 ? '#34d399' : summary.schemaStability >= 70 ? '#fbbf24' : '#f87171' },
+                                    { label: 'Drift Signals', value: summary.distributionShifts.length, unit: '', icon: <Waves size={13} />, color: summary.distributionShifts.length > 3 ? '#f87171' : summary.distributionShifts.length > 1 ? '#fbbf24' : '#34d399' }
+                                ].map((g, i) => (
+                                    <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.08 }}
+                                        style={{ padding: '16px 20px', borderRight: i < 3 ? '1px solid var(--border-subtle)' : 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ color: g.color, opacity: 0.8 }}>{g.icon}</div>
+                                        <div>
+                                            <div style={{ fontSize: '18px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: g.color }}>
+                                                {g.fmt ? pct(g.value) : `${g.value}${g.unit}`}
+                                            </div>
+                                            <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{g.label}</div>
+                                        </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
                     )}
 
                     {/* ─── Section Tabs ───────────────────────────────── */}
-                    <div className="flex items-center gap-2" style={{ marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px' }}>
+                    {/* ─── Enhanced Section Navigation ───────────────── */}
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px', background: 'var(--bg-secondary)', padding: '6px', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
                         {([
-                            { id: 'kpi' as const, label: 'KPI Deltas', icon: <Target size={14} />, count: diffMetrics.length },
-                            { id: 'charts' as const, label: 'Chart Overlays', icon: <BarChart3 size={14} />, count: chartDiffs.length },
-                            { id: 'schema' as const, label: 'Schema Diff', icon: <Columns size={14} />, count: columnDiffs.length },
-                            { id: 'radar' as const, label: 'Radar Analysis', icon: <Activity size={14} /> }
+                            { id: 'kpi' as const, label: 'KPI Deltas', icon: <Target size={13} />, count: diffMetrics.length },
+                            { id: 'waterfall' as const, label: 'Delta Waterfall', icon: <BarChart2 size={13} /> },
+                            { id: 'movers' as const, label: 'Top Movers', icon: <Crown size={13} />, count: summary?.topMovers.length },
+                            { id: 'charts' as const, label: 'Chart Overlays', icon: <BarChart3 size={13} />, count: chartDiffs.length },
+                            { id: 'distributions' as const, label: 'Distribution Shifts', icon: <Waves size={13} />, count: summary?.distributionShifts.length },
+                            { id: 'schema' as const, label: 'Schema Diff', icon: <Columns size={13} />, count: columnDiffs.length },
+                            { id: 'radar' as const, label: 'Radar Analysis', icon: <Activity size={13} /> }
                         ]).map(tab => (
-                            <button key={tab.id} onClick={() => setActiveSection(tab.id)}
-                                style={{ padding: '8px 16px', borderRadius: '10px', border: activeSection === tab.id ? '1px solid var(--primary)' : '1px solid var(--border-default)', background: activeSection === tab.id ? 'var(--primary-subtle)' : 'var(--bg-secondary)', color: activeSection === tab.id ? 'var(--primary)' : 'var(--text-secondary)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
+                            <motion.button key={tab.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setActiveSection(tab.id)}
+                                style={{ padding: '9px 16px', borderRadius: '10px', border: 'none', background: activeSection === tab.id ? 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(52,211,153,0.2))' : 'transparent', color: activeSection === tab.id ? 'var(--text-primary)' : 'var(--text-tertiary)', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', transition: 'all 0.25s', boxShadow: activeSection === tab.id ? '0 2px 8px rgba(129,140,248,0.15)' : 'none' }}>
                                 {tab.icon} {tab.label}
-                                {tab.count !== undefined && <span style={{ fontSize: '10px', opacity: 0.7, fontFamily: 'var(--font-mono)' }}>{tab.count}</span>}
-                            </button>
+                                {tab.count !== undefined && tab.count > 0 && <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '6px', background: activeSection === tab.id ? 'rgba(129,140,248,0.2)' : 'var(--bg-main)', fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{tab.count}</span>}
+                            </motion.button>
                         ))}
                     </div>
 
@@ -483,6 +534,107 @@ export const VersionDiffView = ({ files, token }: Props) => {
                             )}
                         </motion.div>
                     )}
+                    {/* ═══ WATERFALL DELTA CHART ═══════════════════════ */}
+                    {activeSection === 'waterfall' && summary && summary.waterfallData.length > 0 && (
+                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+                            <div style={{ borderRadius: '18px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', overflow: 'hidden' }}>
+                                <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div className="flex items-center gap-3">
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(129,140,248,0.15), rgba(52,211,153,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <BarChart2 size={18} style={{ color: '#818cf8' }} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '14px', fontWeight: 800 }}>Cascading Impact Waterfall</div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>How each metric contributes to the cumulative delta</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ padding: '20px', height: '420px' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={summary.waterfallData} margin={{ top: 20, right: 20, left: 20, bottom: 60 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke='var(--border-subtle)' vertical={false} />
+                                            <XAxis dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }} angle={-30} textAnchor="end" height={60} axisLine={false} tickLine={false} />
+                                            <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmt(v)} />
+                                            <Tooltip content={<DiffTooltip />} />
+                                            <Bar dataKey="value" name="Delta" radius={[6, 6, 0, 0]}>
+                                                {summary.waterfallData.map((d, i) => <Cell key={i} fill={d.color} fillOpacity={0.85} />)}
+                                            </Bar>
+                                            <Line type="monotone" dataKey="cumulative" stroke="#818cf8" strokeWidth={2} strokeDasharray="5 5" dot={{ fill: '#818cf8', r: 4 }} name="Cumulative" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* ═══ TOP MOVERS LEADERBOARD ═══════════════════════ */}
+                    {activeSection === 'movers' && summary && summary.topMovers.length > 0 && (
+                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {summary.topMovers.map((m, i) => {
+                                const barWidth = Math.min(100, Math.abs(m.changePercent));
+                                const isPositive = m.direction === 'up';
+                                return (
+                                    <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
+                                        style={{ padding: '20px 24px', borderRadius: '16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', position: 'relative', overflow: 'hidden' }}>
+                                        {/* Rank badge */}
+                                        <div style={{ position: 'absolute', top: '12px', right: '16px', width: '32px', height: '32px', borderRadius: '10px', background: i === 0 ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : i === 1 ? 'linear-gradient(135deg, #94a3b8, #64748b)' : 'var(--bg-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 900, color: i <= 1 ? '#000' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                            {i === 0 ? <Crown size={14} /> : `#${i + 1}`}
+                                        </div>
+                                        <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>{m.label}</div>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', marginBottom: '14px' }}>
+                                            <span style={{ fontSize: '28px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: isPositive ? '#34d399' : '#f87171' }}>{pct(m.changePercent)}</span>
+                                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{fmt(m.baselineValue)} → {fmt(m.comparisonValue)}</span>
+                                        </div>
+                                        {/* Animated delta bar */}
+                                        <div style={{ height: '6px', borderRadius: '3px', background: 'var(--bg-main)', overflow: 'hidden' }}>
+                                            <motion.div initial={{ width: 0 }} animate={{ width: `${barWidth}%` }} transition={{ duration: 1, delay: i * 0.1, ease: 'easeOut' }}
+                                                style={{ height: '100%', borderRadius: '3px', background: isPositive ? 'linear-gradient(90deg, #34d399, #10b981)' : 'linear-gradient(90deg, #f87171, #ef4444)' }} />
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </motion.div>
+                    )}
+
+                    {/* ═══ DISTRIBUTION SHIFTS ═══════════════════════════ */}
+                    {activeSection === 'distributions' && summary && summary.distributionShifts.length > 0 && (
+                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '16px' }}>
+                            {summary.distributionShifts.slice(0, 8).map((shift, i) => (
+                                <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }}
+                                    style={{ borderRadius: '16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', overflow: 'hidden' }}>
+                                    <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div className="flex items-center gap-2">
+                                            <Waves size={14} style={{ color: '#818cf8' }} />
+                                            <span style={{ fontSize: '13px', fontWeight: 700 }}>{shift.column}</span>
+                                        </div>
+                                        <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', fontFamily: 'var(--font-mono)', background: shift.shiftMagnitude > 0.5 ? 'rgba(248,113,113,0.12)' : 'rgba(251,191,36,0.12)', color: shift.shiftMagnitude > 0.5 ? '#f87171' : '#fbbf24' }}>
+                                            Δ {(shift.shiftMagnitude * 100).toFixed(0)}% shift
+                                        </span>
+                                    </div>
+                                    <div style={{ padding: '16px 18px', height: '180px' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={shift.baselineBuckets.map((v, idx) => ({ bucket: `B${idx + 1}`, baseline: +(v * 100).toFixed(1), comparison: +((shift.comparisonBuckets[idx] || 0) * 100).toFixed(1) }))} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke='var(--border-subtle)' vertical={false} />
+                                                <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: 'var(--text-disabled)' }} axisLine={false} tickLine={false} />
+                                                <YAxis tick={{ fontSize: 9, fill: 'var(--text-disabled)' }} axisLine={false} tickLine={false} />
+                                                <Tooltip content={<DiffTooltip />} />
+                                                <Area type="monotone" dataKey="baseline" stroke={BASELINE_COLOR} fill={BASELINE_COLOR} fillOpacity={0.15} strokeWidth={2} name="Baseline" />
+                                                <Area type="monotone" dataKey="comparison" stroke={COMPARISON_COLOR} fill={COMPARISON_COLOR} fillOpacity={0.15} strokeWidth={2} name="Comparison" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    )}
+                    {activeSection === 'distributions' && summary && summary.distributionShifts.length === 0 && (
+                        <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                            <Waves size={32} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+                            <div style={{ fontSize: '14px', fontWeight: 600 }}>No significant distribution shifts detected</div>
+                            <div style={{ fontSize: '12px', marginTop: '4px' }}>Both datasets share similar data distributions across all numeric columns</div>
+                        </div>
+                    )}
+
                 </motion.div>
             )}
 

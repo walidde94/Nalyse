@@ -3,6 +3,9 @@ import { Sidebar } from './Sidebar';
 import { ArchitectNode } from './ArchitectNode';
 import { ArchitectPanel } from './ArchitectPanel';
 import { useArchitect } from '../../contexts/ArchitectContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { loadLayoutPreferences, LAYOUT_PREFS_EVENT } from '../../preferences/layoutPreferences';
+import { useState, useEffect } from 'react';
 
 interface RootLayoutProps {
     children: React.ReactNode;
@@ -24,17 +27,38 @@ export const RootLayout: React.FC<RootLayoutProps> = ({
     openedViews
 }) => {
     const { isArchitectMode } = useArchitect();
+    const { user } = useAuth();
+    const userId = user?.id;
+    const [prefs, setPrefs] = useState(() => loadLayoutPreferences(userId));
+
+    useEffect(() => {
+        const sync = () => setPrefs(loadLayoutPreferences(userId));
+        sync();
+        window.addEventListener(LAYOUT_PREFS_EVENT, sync);
+        return () => window.removeEventListener(LAYOUT_PREFS_EVENT, sync);
+    }, [userId]);
+
+    const pos = prefs.sidebarPosition || 'left';
+    let flexDirection: any = 'row';
+    if (pos === 'right') flexDirection = 'row-reverse';
+    else if (pos === 'top') flexDirection = 'column';
+    else if (pos === 'bottom') flexDirection = 'column-reverse';
 
     return (
-        <div className="flex w-full" style={{
+        <div className={`flex w-full sidebar-pos-${pos}`} style={{
             height: 'calc(100vh - 52px)',
             background: 'var(--bg-main)',
             color: 'var(--text-primary)',
             overflow: 'hidden',
             position: 'relative',
+            flexDirection
         }}>
             {/* Desktop Sidebar */}
-            <div className={isMobileMenuOpen ? 'mobile-sidebar-open' : 'sidebar-mobile-hidden desktop-visible'} style={{ height: '100%', zIndex: 1000 }}>
+            <div className={isMobileMenuOpen ? 'mobile-sidebar-open' : 'sidebar-mobile-hidden desktop-visible'} style={{ 
+                height: pos === 'top' || pos === 'bottom' ? 'auto' : '100%', 
+                width: pos === 'top' || pos === 'bottom' ? '100%' : 'auto',
+                zIndex: 1000 
+            }}>
                 <Sidebar
                     currentView={currentView}
                     openedViews={openedViews}

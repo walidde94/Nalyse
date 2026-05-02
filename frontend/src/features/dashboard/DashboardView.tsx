@@ -8,7 +8,7 @@ import {
     AlertTriangle, Activity, Clock, Sparkles, ArrowUpRight, ArrowDownRight,
     Search, ArrowRight, X, Lightbulb, Database, Table, Eye, Loader2,
     Layers, Target, Cpu, Archive, RotateCcw, HardDrive, CheckCircle2, FileJson,
-    FilePlus, Gauge, Info, ArrowUp, ArrowDown, Wifi, Globe, Lock
+    FilePlus, Gauge, Info, ArrowUp, ArrowDown, Wifi, Globe, Lock, GitCompareArrows
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, Tooltip, BarChart, Bar, XAxis, LineChart, Line } from 'recharts';
 import { calculatePulse } from './pulseEngine';
@@ -619,6 +619,7 @@ export const DashboardView = ({
     onViewReport,
     onArchiveFile,
     onRefresh,
+    onCompareFiles,
 }: any) => {
     const { workspaces, setActiveWorkspace } = useWorkspace();
     const { user, token, refreshProfile, syncSubscription } = useAuth();
@@ -1221,6 +1222,20 @@ export const DashboardView = ({
                                                         <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', background: 'var(--primary-subtle)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--primary-glow)' }}>
                                                             {selectedFiles.size} {t('dashboard.analyzed')}
                                                         </span>
+                                                        {selectedFiles.size === 2 && onCompareFiles && (
+                                                            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => {
+                                                                const ids = Array.from(selectedFiles);
+                                                                onCompareFiles(ids[0], ids[1]);
+                                                                setSelectedFiles(new Set());
+                                                            }} style={{
+                                                                background: 'linear-gradient(135deg, rgba(129,140,248,0.15), rgba(52,211,153,0.15))', color: '#818cf8',
+                                                                border: '1px solid rgba(129,140,248,0.3)', padding: '10px 16px', borderRadius: '10px',
+                                                                fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                                                                boxShadow: '0 2px 12px rgba(129,140,248,0.15)'
+                                                            }}>
+                                                                <GitCompareArrows size={15} /> {t('dashboard.compareFiles') || 'Compare'}
+                                                            </motion.button>
+                                                        )}
                                                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleBulkDelete} style={{
                                                             background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', padding: '10px 16px', borderRadius: '10px',
                                                             fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'

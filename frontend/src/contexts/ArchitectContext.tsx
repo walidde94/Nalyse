@@ -15,6 +15,13 @@ export interface NodeConfig {
     customProps?: Record<string, any>;
 }
 
+export interface LayoutSnapshot {
+    id: string;
+    name: string;
+    timestamp: number;
+    state: Record<string, NodeConfig>;
+}
+
 interface ArchitectContextType {
     isArchitectMode: boolean;
     setArchitectMode: (mode: boolean) => void;
@@ -48,6 +55,13 @@ interface ArchitectContextType {
     redo: () => void;
     canUndo: boolean;
     canRedo: boolean;
+    // Snapshots
+    snapshots: LayoutSnapshot[];
+    saveSnapshot: (name: string) => void;
+    loadSnapshot: (id: string) => void;
+    deleteSnapshot: (id: string) => void;
+    // Advanced
+    compactLayout: () => void;
     // Status
     lastAction: string | null;
 }
@@ -137,6 +151,14 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setActiveNodeId(null);
         setUndoStack([]);
         setRedoStack([]);
+        
+        // Load snapshots
+        try {
+            const savedSnapshots = localStorage.getItem(`nalyse-snapshots${k.mode.replace('nalyse-architect-mode', '')}`);
+            if (savedSnapshots) setSnapshots(JSON.parse(savedSnapshots));
+        } catch {
+            setSnapshots([]);
+        }
     }, [userId]);
 
     // --- UNDO/REDO (reactive state for canUndo/canRedo) ---
@@ -184,6 +206,59 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             return remaining;
         });
     }, []);
+
+    // --- SNAPSHOTS ---
+    const [snapshots, setSnapshots] = useState<LayoutSnapshot[]>([]);
+    
+    useEffect(() => {
+        const k = storageKeys(userId);
+        const suffix = k.mode.replace('nalyse-architect-mode', '');
+        localStorage.setItem(`nalyse-snapshots${suffix}`, JSON.stringify(snapshots));
+    }, [snapshots, userId]);
+
+    const saveSnapshot = useCallback((name: string) => {
+        setSnapshots(prev => [
+            { id: `snap-${Date.now()}`, name, timestamp: Date.now(), state: layoutState },
+            ...prev.slice(0, 9) // keep last 10
+        ]);
+        setLastAction(`Snapshot '${name}' saved`);
+    }, [layoutState]);
+
+    const loadSnapshot = useCallback((id: string) => {
+        const snap = snapshots.find(s => s.id === id);
+        if (snap) {
+            setLayoutState(prev => {
+                pushHistory(prev);
+                return snap.state;
+            });
+            setLastAction(`Snapshot '${snap.name}' loaded`);
+        }
+    }, [snapshots, pushHistory]);
+
+    const deleteSnapshot = useCallback((id: string) => {
+        setSnapshots(prev => prev.filter(s => s.id !== id));
+    }, []);
+
+    const compactLayout = useCallback(() => {
+        setLayoutState(prev => {
+            pushHistory(prev);
+            const next = { ...prev };
+            // Simple sort by y then x, then pack tightly
+            const nodes = Object.values(next).sort((a, b) => (a.y || 0) - (b.y || 0) || (a.x || 0) - (b.x || 0));
+            let currentY = 0;
+            let currentX = 0;
+            nodes.forEach(node => {
+                if (currentX + (node.w || 1) > 12) {
+                    currentY++;
+                    currentX = 0;
+                }
+                next[node.id] = { ...node, x: currentX, y: currentY };
+                currentX += (node.w || 1);
+            });
+            return next;
+        });
+        setLastAction('Layout compacted');
+    }, [pushHistory]);
 
     // Keyboard shortcuts (architect mode only)
     useEffect(() => {
@@ -380,6 +455,7 @@ export const ArchitectProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             undo, redo,
             canUndo,
             canRedo,
+            snapshots, saveSnapshot, loadSnapshot, deleteSnapshot, compactLayout,
             lastAction
         }}>
             {children}

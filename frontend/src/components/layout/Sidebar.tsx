@@ -246,11 +246,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
 
     const handleHideGroup = useCallback((groupKey: SidebarGroupKey) => {
         const p = loadLayoutPreferences(userId);
-        // For simplicity, we'll just remove it from groupOrder for now since that's what we map over
         const newOrder = p.groupOrder.filter(g => g !== groupKey);
         saveLayoutPreferences({ ...p, groupOrder: newOrder }, userId);
     }, [userId]);
 
+    const pos = prefs.sidebarPosition || 'left';
+    const isHorizontal = pos === 'top' || pos === 'bottom';
+    
+    // Force collapse on horizontal to save vertical space if desired, but we can let it expand.
+    // For now, we adapt width/height based on orientation.
     const expandedWidth = 240;
     const collapsedWidth = 64;
 
@@ -258,19 +262,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
         <aside
             className={`sidebar-responsive sidebar-neural-rail ${collapsed ? 'sidebar-neural-rail--collapsed' : ''} ${isPro ? 'pro-sidebar-glow' : ''}`}
             style={{
-                width: collapsed ? collapsedWidth : expandedWidth,
-                height: '100%',
-                transition: 'width 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
+                width: isHorizontal ? '100%' : (collapsed ? collapsedWidth : expandedWidth),
+                height: isHorizontal ? (collapsed ? collapsedWidth : 'auto') : '100%',
+                minHeight: isHorizontal ? collapsedWidth : undefined,
+                transition: 'all 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
                 display: 'flex',
-                flexDirection: 'column',
+                flexDirection: isHorizontal ? 'row' : 'column',
                 zIndex: 20,
                 position: 'relative',
-                overflowX: 'visible',
-                overflowY: 'hidden',
+                overflowX: isHorizontal ? 'auto' : 'visible',
+                overflowY: isHorizontal ? 'hidden' : 'hidden',
                 background: 'var(--bento-glass)',
                 backdropFilter: 'var(--bento-blur)',
                 WebkitBackdropFilter: 'var(--bento-blur)',
-                borderRight: '1px solid var(--bento-border)',
+                borderRight: pos === 'left' ? '1px solid var(--bento-border)' : 'none',
+                borderLeft: pos === 'right' ? '1px solid var(--bento-border)' : 'none',
+                borderBottom: pos === 'top' ? '1px solid var(--bento-border)' : 'none',
+                borderTop: pos === 'bottom' ? '1px solid var(--bento-border)' : 'none',
             }}
         >
             {/* Brand + collapse */}
@@ -278,10 +286,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : 'space-between',
+                    justifyContent: isHorizontal ? 'center' : (collapsed ? 'center' : 'space-between'),
                     padding: collapsed ? '12px 8px' : '12px 14px',
-                    borderBottom: '1px solid var(--border-subtle)',
+                    borderBottom: isHorizontal ? 'none' : '1px solid var(--border-subtle)',
+                    borderRight: isHorizontal ? '1px solid var(--border-subtle)' : 'none',
                     minHeight: '48px',
+                    height: isHorizontal ? '100%' : 'auto',
                 }}>
                     {!collapsed ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -343,23 +353,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
             <nav
                 className="custom-scrollbar"
                 style={{
-                    padding: '6px 8px 10px',
+                    padding: isHorizontal ? '0 10px' : '6px 8px 10px',
                     flex: 1,
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1,
-                    overflowY: 'auto',
-                    overflowX: 'hidden',
+                    flexDirection: isHorizontal ? 'row' : 'column',
+                    alignItems: isHorizontal ? 'center' : 'stretch',
+                    gap: isHorizontal ? 8 : 1,
+                    overflowY: isHorizontal ? 'hidden' : 'auto',
+                    overflowX: isHorizontal ? 'auto' : 'hidden',
                     position: 'relative',
                     zIndex: 2,
                 }}
             >
                 {/* Navigation Groups */}
                 <Reorder.Group
-                    axis="y"
+                    axis={isHorizontal ? "x" : "y"}
                     values={groupKeys}
                     onReorder={handleReorderGroups}
-                    style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
+                    style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', gap: isHorizontal ? 8 : 1 }}
                 >
                     {groupKeys.map((groupKey) => {
                         const themeIdx = GROUP_THEME_INDEX[groupKey];
@@ -382,7 +393,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                     label={`${t(`nav.group.${groupKey}`)} Sector`}
                                     onRemove={() => handleHideGroup(groupKey)}
                                 >
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <div style={{ display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', alignItems: isHorizontal ? 'center' : 'stretch', gap: 1 }}>
                                         {/* Group Header — clickable to toggle */}
                                         {!collapsed ? (
                                             <button
@@ -430,9 +441,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                             </button>
                                         ) : (
                                             <div style={{
-                                                margin: '6px auto 4px',
-                                                width: 16,
-                                                height: 2,
+                                                margin: isHorizontal ? '0 4px' : '6px auto 4px',
+                                                width: isHorizontal ? 2 : 16,
+                                                height: isHorizontal ? 16 : 2,
                                                 borderRadius: 1,
                                                 background: theme.accent,
                                                 opacity: 0.25,
@@ -440,6 +451,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                         )}
 
                                         {/* Items — show if not collapsed, or if has active item */}
+                                        <div style={{ display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', gap: 1 }}>
                                         {(!isGroupCollapsed || hasActiveItem || collapsed) && itemIds.map((itemId) => (
                                             <NavItem
                                                 key={itemId}
@@ -457,6 +469,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                                                 tourId={TOUR_ID_MAP[itemId]}
                                             />
                                         ))}
+                                        </div>
                                     </div>
                                 </ArchitectNode>
                             </Reorder.Item>
@@ -464,17 +477,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                     })}
                 </Reorder.Group>
 
-                <div style={{ flex: 1, minHeight: 8 }} />
+                <div style={{ flex: 1, minHeight: isHorizontal ? undefined : 8, minWidth: isHorizontal ? 8 : undefined }} />
 
                 {/* Footer separator */}
                 <div style={{
-                    height: 1,
+                    height: isHorizontal ? '60%' : 1,
+                    width: isHorizontal ? 1 : 'auto',
                     background: 'var(--border-subtle)',
-                    margin: '4px 8px',
+                    margin: isHorizontal ? '0 8px' : '4px 8px',
                     opacity: 0.5,
                 }} />
 
                 {/* Footer nav items */}
+                <div style={{ display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', gap: 1 }}>
                 {prefs.footerOrder
                     .filter((fid) => !prefs.hiddenNavIds.includes(fid))
                     .map((fid) => {
@@ -508,10 +523,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, openedViews = [],
                             />
                         );
                     })}
+                </div>
             </nav>
 
             {/* Upgrade CTA (non-pro users only) */}
-            {!isPro && (
+            {!isPro && !isHorizontal && (
                 <ArchitectNode id="sb-upgrade" label={t('nav.upgradePro')}>
                     <div style={{ padding: '8px', position: 'relative', zIndex: 2 }}>
                         <div

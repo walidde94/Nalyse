@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     X, Layout, Grid, Undo2, Redo2, Eye, EyeOff, 
     Sparkles, Plus, Activity, PieChart, ShieldAlert, RotateCcw,
-    Maximize2, Command, ChevronUp, ChevronDown, AlertTriangle, Check
+    Maximize2, Command, ChevronUp, ChevronDown, AlertTriangle, Check,
+    Save, Download, AlignStartVertical, ArrowDownToLine
 } from 'lucide-react';
 import { useArchitect } from '../../contexts/ArchitectContext';
 
@@ -12,11 +13,13 @@ export const ArchitectPanel: React.FC = () => {
         isArchitectMode, activeNodeId, setActiveNodeId, layoutState, 
         updateNodeProperty, removeNode, restoreNode, addNode,
         layoutMode, setLayoutMode, toggleArchitectMode, resetLayout,
-        undo, redo, canUndo, canRedo, lastAction
+        undo, redo, canUndo, canRedo, lastAction,
+        snapshots, saveSnapshot, loadSnapshot, deleteSnapshot, compactLayout
     } = useArchitect();
 
     const [showLibrary, setShowLibrary] = useState(false);
     const [showHidden, setShowHidden] = useState(false);
+    const [showSnapshots, setShowSnapshots] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [contentOffset, setContentOffset] = useState(0);
@@ -182,7 +185,9 @@ export const ArchitectPanel: React.FC = () => {
                             >
                                 <Command size={13} style={{ opacity: 0.4 }} />
                                 <span>{isCanvasMode ? 'Drag to reposition • Resize from corner' : 'Click any section to edit'}</span>
-                                <span className="acb-hint">Esc to exit</span>
+                                <span className="acb-hint">⌘Z Undo</span>
+                                <span className="acb-hint">⌘⇧Z Redo</span>
+                                <span className="acb-hint">Esc Exit</span>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -199,7 +204,19 @@ export const ArchitectPanel: React.FC = () => {
                             <div className="acb-divider" />
                         </>
                     )}
-                    <button onClick={() => { setShowLibrary(!showLibrary); setShowHidden(false); setShowResetConfirm(false); }} className="acb-btn" title="Add section">
+                    {isCanvasMode && (
+                        <>
+                            <button onClick={compactLayout} className="acb-btn" title="Smart Align (Compact tightly)">
+                                <AlignStartVertical size={15} />
+                            </button>
+                            <div className="acb-divider" />
+                        </>
+                    )}
+                    <button onClick={() => { setShowSnapshots(!showSnapshots); setShowLibrary(false); setShowHidden(false); setShowResetConfirm(false); }} className="acb-btn" title="Layout Snapshots">
+                        <Save size={15} />
+                        {snapshots.length > 0 && <span className="acb-badge">{snapshots.length}</span>}
+                    </button>
+                    <button onClick={() => { setShowLibrary(!showLibrary); setShowHidden(false); setShowSnapshots(false); setShowResetConfirm(false); }} className="acb-btn" title="Add section">
                         <Plus size={15} />
                     </button>
                     <button 
@@ -245,6 +262,57 @@ export const ArchitectPanel: React.FC = () => {
                                 <span>{item.name}</span>
                             </button>
                         ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── SNAPSHOTS POPUP ── */}
+            <AnimatePresence>
+                {showSnapshots && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        className="acb-popup"
+                        style={{ bottom: 80, minWidth: '240px' }}
+                    >
+                        <div className="acb-popup-header">
+                            <span>Layout Snapshots</span>
+                            <button onClick={() => setShowSnapshots(false)} className="acb-btn"><X size={14} /></button>
+                        </div>
+                        <div style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
+                            <button 
+                                onClick={() => { saveSnapshot(`Snapshot ${new Date().toLocaleTimeString()}`); setShowSnapshots(false); }} 
+                                className="acb-btn" style={{ width: '100%', justifyContent: 'center', background: 'var(--primary-subtle)', color: 'var(--primary)', fontWeight: 800 }}
+                            >
+                                <ArrowDownToLine size={14} />
+                                Save Current Layout
+                            </button>
+                        </div>
+                        {snapshots.length === 0 && (
+                            <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>
+                                No snapshots saved yet.<br/>Save a layout to instantly switch between setups.
+                            </div>
+                        )}
+                        <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            {snapshots.map(snap => (
+                                <div key={snap.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px' }}>
+                                    <button 
+                                        className="acb-popup-item" style={{ flex: 1, padding: '6px 8px' }}
+                                        onClick={() => { loadSnapshot(snap.id); setShowSnapshots(false); }}
+                                    >
+                                        <Grid size={14} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 700 }}>{snap.name}</span>
+                                            <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{new Date(snap.timestamp).toLocaleDateString()}</span>
+                                        </div>
+                                    </button>
+                                    <button onClick={() => deleteSnapshot(snap.id)} className="acb-btn acb-btn-danger-subtle" style={{ padding: '6px' }} title="Delete snapshot">
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
