@@ -236,7 +236,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
     // Visual Builder State
     const [builderConfig, setBuilderConfig] = useState({
         xAxis: '',
-        yAxis: '',
+        yAxes: [] as string[],
         aggregation: 'SUM', // SUM, AVG, COUNT, MAX, MIN
         chartType: 'bar',
         sortBy: 'valueDesc',
@@ -774,84 +774,86 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
     }, [localData]);
 
     useEffect(() => {
-        if (activeTab === 'builder' && builderConfig.xAxis && builderConfig.yAxis) {
+        if (activeTab === 'builder' && builderConfig.xAxis && builderConfig.yAxes && builderConfig.yAxes.length > 0) {
             try {
-                // Handle non-numeric sum attempts by forcing count if needed
                 let agg = builderConfig.aggregation;
-                const isNumeric = measures.includes(builderConfig.yAxis);
-
-                if (!isNumeric && (agg === 'SUM' || agg === 'AVG')) {
-                    agg = 'COUNT';
-                    // NOTE: avoiding setBuilderConfig here to prevent loop. Using local var 'agg' in query.
-                }
-
-                // Clean column names for SQL - escape single quotes and validate against known columns
+                
                 const validX = dimensions.includes(builderConfig.xAxis) || measures.includes(builderConfig.xAxis) ? builderConfig.xAxis : dimensions[0];
-                const validY = dimensions.includes(builderConfig.yAxis) || measures.includes(builderConfig.yAxis) ? builderConfig.yAxis : measures[0];
-
                 const xCol = validX.replace(/'/g, "''");
-                const yCol = validY.replace(/'/g, "''");
-
-                // Auto-detect if we should use COUNT for non-numeric columns
-                const isNumericY = measures.includes(validY);
-                const actualAgg = (!isNumericY && agg !== 'COUNT') ? 'COUNT' : agg;
-
-                if (actualAgg !== agg) {
-                    setDebugMsg(`Switched to COUNT because ${validY} is non-numeric`);
+                
+                // For simplicity in UI logic: check if ANY selected measure is non-numeric
+                const hasNonNumeric = builderConfig.yAxes.some(y => !measures.includes(y));
+                if (hasNonNumeric && (agg === 'SUM' || agg === 'AVG')) {
+                    agg = 'COUNT';
+                    setDebugMsg(`Switched to COUNT because some measures are non-numeric`);
+                } else {
+                    setDebugMsg('');
                 }
 
                 const isScatter = builderConfig.chartType === 'scatter';
                 const isXNumeric = measures.includes(builderConfig.xAxis);
-                const isYNumeric = measures.includes(builderConfig.yAxis);
+                const firstY = builderConfig.yAxes[0];
+                const isFirstYNumeric = measures.includes(firstY);
 
-                // Dynamic Aggregation Query with strict numeric conversion
                 let query = '';
-                // Scatter Mode: If both are numeric, show raw correlations. 
-                // If X is categorical, show aggregated distribution (Dot Plot).
-                if (isScatter && isXNumeric && isYNumeric) {
+                if (isScatter && isXNumeric && isFirstYNumeric && builderConfig.yAxes.length === 1) {
+                    const yCol = firstY.replace(/'/g, "''");
                     query = `SELECT [${xCol}] AS [x], [${yCol}] AS [y] FROM ? LIMIT 1000`;
                 } else {
-                    query = actualAgg === 'COUNT'
-                        ? `SELECT [${xCol}] AS [name], COUNT(*) AS [value] FROM ? GROUP BY [${xCol}]`
-                        : `SELECT [${xCol}] AS [name], ${actualAgg}(CAST([${yCol}] AS FLOAT)) AS [value] FROM ? GROUP BY [${xCol}]`;
+                    if (agg === 'COUNT') {
+                        // For count, we just count records
+                        query = `SELECT [${xCol}] AS [name], COUNT(*) AS [${firstY}] FROM ? GROUP BY [${xCol}]`;
+                    } else {
+                        const selects = builderConfig.yAxes.map(y => {
+                            const yCol = y.replace(/'/g, "''");
+                            return `${agg}(CAST([${yCol}] AS FLOAT)) AS [${yCol}]`;
+                        }).join(', ');
+                        query = `SELECT [${xCol}] AS [name], ${selects} FROM ? GROUP BY [${xCol}]`;
+                    }
                 }
 
                 const res = alasql(query, [filteredData]) as any[];
 
                 if (!res || res.length === 0) {
-                    setDebugMsg(`Zero records returned for ${isScatter ? 'Scatter' : actualAgg} of ${yCol}`);
+                    setDebugMsg(`Zero records returned`);
                     setBuilderData([]);
                 } else {
-                    setDebugMsg('');
                     let cleaned = [];
 
-                    if (isScatter && isXNumeric && isYNumeric) {
+                    if (isScatter && isXNumeric && isFirstYNumeric && builderConfig.yAxes.length === 1) {
                         cleaned = res.map((r: any) => ({
                             x: isNaN(Number(r.x)) ? 0 : Number(r.x),
                             y: isNaN(Number(r.y)) ? 0 : Number(r.y),
                             name: `Entry`
                         }));
                     } else if (isScatter) {
-                        // Dot Plot (Categorical X)
                         cleaned = res.map((r: any) => ({
                             x: String(r.name || 'N/A'),
-                            y: isNaN(Number(r.value)) ? 0 : Number(r.value),
+                            y: isNaN(Number(r[firstY])) ? 0 : Number(r[firstY]),
                             name: String(r.name || 'N/A')
                         }));
                     } else {
-                        cleaned = res.map((r: any) => ({
-                            name: String(r.name || 'N/A'),
-                            value: isNaN(Number(r.value)) ? 0 : Number(r.value)
-                        }));
+                        cleaned = res.map((r: any) => {
+                            const obj: any = { name: String(r.name || 'N/A') };
+                            if (agg === 'COUNT') {
+                                obj[firstY] = isNaN(Number(r[firstY])) ? 0 : Number(r[firstY]);
+                            } else {
+                                builderConfig.yAxes.forEach(y => {
+                                    obj[y] = isNaN(Number(r[y])) ? 0 : Number(r[y]);
+                                });
+                            }
+                            return obj;
+                        });
 
+                        const sortKey = firstY;
                         if (builderConfig.sortBy === 'valueAsc') {
-                            cleaned.sort((a, b) => a.value - b.value);
+                            cleaned.sort((a, b) => (a[sortKey] || 0) - (b[sortKey] || 0));
                         } else if (builderConfig.sortBy === 'labelAsc') {
                             cleaned.sort((a, b) => a.name.localeCompare(b.name));
                         } else if (builderConfig.sortBy === 'labelDesc') {
                             cleaned.sort((a, b) => b.name.localeCompare(a.name));
                         } else {
-                            cleaned.sort((a, b) => b.value - a.value); // default valueDesc
+                            cleaned.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0)); // default valueDesc
                         }
 
                         cleaned = cleaned.slice(0, builderConfig.topN || 30);
@@ -864,7 +866,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                 setDebugMsg(`Error: ${e.message}`);
             }
         }
-    }, [builderConfig, activeTab, filteredData, measures]);
+    }, [builderConfig, activeTab, filteredData, measures, dimensions]);
 
     // ===== NEW: Filter Computation Logic =====
     useEffect(() => {
@@ -1068,6 +1070,9 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
         const colorAlt = '#34d399'; // Emerald (Dimension-based)
         const finalColor = builderConfig.aggregation === 'COUNT' ? colorAlt : colorMain;
 
+        const dataKeys = (data && data.length > 0) ? Object.keys(data[0]).filter(k => k !== 'name' && k !== 'x' && k !== 'y') : ['value'];
+        if (dataKeys.length === 0) dataKeys.push('value');
+
         if (type === 'worldmap') {
             return (
                 <div className="w-full h-full" style={{ height: '500px', width: '100%', display: 'block' }}>
@@ -1082,10 +1087,15 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     {type === 'bar' ? (
                         <BarChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 80 }}>
                             <defs>
-                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={finalColor} stopOpacity={1} />
-                                    <stop offset="100%" stopColor={finalColor} stopOpacity={0.4} />
-                                </linearGradient>
+                                {dataKeys.map((k, i) => {
+                                    const c = dataKeys.length > 1 ? COLORS[i % COLORS.length] : finalColor;
+                                    return (
+                                        <linearGradient key={`grad-${i}`} id={`barGradient-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor={c} stopOpacity={1} />
+                                            <stop offset="100%" stopColor={c} stopOpacity={0.4} />
+                                        </linearGradient>
+                                    );
+                                })}
                                 <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
                                     <feGaussianBlur stdDeviation="3" result="coloredBlur" />
                                     <feMerge>
@@ -1127,11 +1137,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 itemStyle={{ color: finalColor, fontWeight: 'bold' }}
                                 content={<CustomTooltip />}
                             />
-                            <Bar dataKey="value" fill="url(#barGradient)" radius={[8, 8, 0, 0]} style={{ filter: 'url(#glow)' }} barSize={38}>
-                                {data.map((_, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Bar>
+                            {dataKeys.length > 1 && <Legend wrapperStyle={{ paddingTop: '20px' }} />}
+                            {dataKeys.map((k, i) => (
+                                <Bar key={k} dataKey={k} fill={`url(#barGradient-${i})`} radius={[8, 8, 0, 0]} style={{ filter: 'url(#glow)' }} barSize={dataKeys.length > 1 ? undefined : 38} />
+                            ))}
                         </BarChart>
                     ) : (type === 'pie' || type === 'donut') ? (
                         <PieChart>
@@ -1221,10 +1230,15 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                     ) : (
                         <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
                             <defs>
-                                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={finalColor} stopOpacity={0.7} />
-                                    <stop offset="95%" stopColor={finalColor} stopOpacity={0} />
-                                </linearGradient>
+                                {dataKeys.map((k, i) => {
+                                    const c = dataKeys.length > 1 ? COLORS[i % COLORS.length] : finalColor;
+                                    return (
+                                        <linearGradient key={`grad-${i}`} id={`areaGrad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor={c} stopOpacity={0.7} />
+                                            <stop offset="95%" stopColor={c} stopOpacity={0} />
+                                        </linearGradient>
+                                    );
+                                })}
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" strokeOpacity={0.1} vertical={false} />
                             <XAxis
@@ -1245,15 +1259,22 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                 tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
                             />
                             <Tooltip content={<CustomTooltip />} />
-                            <Area
-                                type="monotone"
-                                dataKey="value"
-                                stroke={finalColor}
-                                strokeWidth={5}
-                                fill={type === 'line' ? 'none' : "url(#areaGrad)"}
-                                dot={{ fill: finalColor, r: 5, strokeWidth: 2, stroke: 'var(--bg-main)' }}
-                                activeDot={{ r: 8, stroke: 'var(--primary)', strokeWidth: 2 }}
-                            />
+                            {dataKeys.length > 1 && <Legend wrapperStyle={{ paddingTop: '20px' }} />}
+                            {dataKeys.map((k, i) => {
+                                const c = dataKeys.length > 1 ? COLORS[i % COLORS.length] : finalColor;
+                                return (
+                                    <Area
+                                        key={k}
+                                        type="monotone"
+                                        dataKey={k}
+                                        stroke={c}
+                                        strokeWidth={5}
+                                        fill={type === 'line' ? 'none' : `url(#areaGrad-${i})`}
+                                        dot={{ fill: c, r: 5, strokeWidth: 2, stroke: 'var(--bg-main)' }}
+                                        activeDot={{ r: 8, stroke: 'var(--primary)', strokeWidth: 2 }}
+                                    />
+                                );
+                            })}
                         </AreaChart>
                     )}
                 </ResponsiveContainer>
@@ -1266,6 +1287,9 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
         const displayData = forcedData || getFilteredChartData(opt);
         const color = COLORS[index % COLORS.length];
         const currentType = opt.isStatic ? opt.chartType : (chartConfig[index] || opt.chartType);
+        
+        const dataKeys = (displayData && displayData.length > 0) ? Object.keys(displayData[0]).filter(k => k !== 'name' && k !== 'x' && k !== 'y') : ['value'];
+        if (dataKeys.length === 0) dataKeys.push('value');
 
         const downloadChart = (id: string) => {
             // ... (rest of downloadChart is fine)
@@ -1284,16 +1308,24 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                             {currentType === 'area' || currentType === 'line' ? (
                                 <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
-                                        <linearGradient id={`gradStatic`} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor={color} stopOpacity={0} />
-                                        </linearGradient>
+                                        {dataKeys.map((k, i) => {
+                                            const c = dataKeys.length > 1 ? COLORS[(index + i) % COLORS.length] : color;
+                                            return (
+                                                <linearGradient key={`grad-${i}`} id={`gradStatic-${index}-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={c} stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor={c} stopOpacity={0} />
+                                                </linearGradient>
+                                            );
+                                        })}
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke='var(--bg-surface-hover)' vertical={false} />
                                     <XAxis dataKey="name" stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} dy={10} />
                                     <YAxis stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Area type="monotone" dataKey="value" stroke={color} strokeWidth={3} fill={currentType === 'line' ? 'none' : `url(#gradStatic)`} />
+                                    {dataKeys.map((k, i) => {
+                                        const c = dataKeys.length > 1 ? COLORS[(index + i) % COLORS.length] : color;
+                                        return <Area key={k} type="monotone" dataKey={k} stroke={c} strokeWidth={3} fill={currentType === 'line' ? 'none' : `url(#gradStatic-${index}-${i})`} />
+                                    })}
                                 </AreaChart>
                             ) : currentType === 'pie' ? (
                                 <PieChart>
@@ -1316,7 +1348,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     <XAxis dataKey="name" stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} dy={10} />
                                     <YAxis stroke="transparent" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} />
+                                    {dataKeys.map((k, i) => {
+                                        const c = dataKeys.length > 1 ? COLORS[(index + i) % COLORS.length] : color;
+                                        return <Bar key={k} dataKey={k} fill={c} radius={[4, 4, 0, 0]} />
+                                    })}
                                 </BarChart>
                             )}
                             </ResponsiveContainer>
@@ -1415,10 +1450,15 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                         {currentType === 'area' || currentType === 'line' ? (
                             <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id={`grad${index}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor={color} stopOpacity={0} />
-                                    </linearGradient>
+                                    {dataKeys.map((k, i) => {
+                                        const c = dataKeys.length > 1 ? COLORS[(index + i) % COLORS.length] : color;
+                                        return (
+                                            <linearGradient key={`grad-${i}`} id={`grad${index}-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor={c} stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor={c} stopOpacity={0} />
+                                            </linearGradient>
+                                        );
+                                    })}
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
                                 <XAxis
@@ -1432,28 +1472,23 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                                 />
                                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border-default)', strokeWidth: 1 }} />
-                                {currentType === 'line' ?
-                                    <Area
-                                        type="monotone"
-                                        dataKey="value"
-                                        stroke={color}
-                                        strokeWidth={3}
-                                        fill="none"
-                                        dot={{ r: 4, cursor: 'pointer' }}
-                                        activeDot={{ r: 6, cursor: 'pointer', onClick: ((e: any, payload: any) => handleChartClick(payload.payload, opt, index, e)) as any }}
-                                        onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
-                                    /> :
-                                    <Area
-                                        type="monotone"
-                                        dataKey="value"
-                                        stroke={color}
-                                        strokeWidth={3}
-                                        fill={`url(#grad${index})`}
-                                        dot={{ r: 4, cursor: 'pointer' }}
-                                        activeDot={{ r: 6, cursor: 'pointer', onClick: ((e: any, payload: any) => handleChartClick(payload.payload, opt, index, e)) as any }}
-                                        onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
-                                    />
-                                }
+                                {dataKeys.length > 1 && <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />}
+                                {dataKeys.map((k, i) => {
+                                    const c = dataKeys.length > 1 ? COLORS[(index + i) % COLORS.length] : color;
+                                    return (
+                                        <Area
+                                            key={k}
+                                            type="monotone"
+                                            dataKey={k}
+                                            stroke={c}
+                                            strokeWidth={3}
+                                            fill={currentType === 'line' ? 'none' : `url(#grad${index}-${i})`}
+                                            dot={{ r: 4, cursor: 'pointer' }}
+                                            activeDot={{ r: 6, cursor: 'pointer', onClick: ((e: any, payload: any) => handleChartClick(payload.payload, opt, index, e)) as any }}
+                                            onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
+                                        />
+                                    );
+                                })}
                             </AreaChart>
                         ) : currentType === 'pie' ? (
                             <PieChart>
@@ -1508,10 +1543,15 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                         ) : (
                             <BarChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id={`gradBar${index}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor={color} stopOpacity={0.9} />
-                                        <stop offset="100%" stopColor={color} stopOpacity={0.4} />
-                                    </linearGradient>
+                                    {dataKeys.map((k, i) => {
+                                        const c = dataKeys.length > 1 ? COLORS[(index + i) % COLORS.length] : color;
+                                        return (
+                                            <linearGradient key={`gradBar-${i}`} id={`gradBar${index}-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor={c} stopOpacity={0.9} />
+                                                <stop offset="100%" stopColor={c} stopOpacity={0.4} />
+                                            </linearGradient>
+                                        );
+                                    })}
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} strokeOpacity={0.3} />
                                 <XAxis
@@ -1534,15 +1574,18 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     content={<CustomTooltip />}
                                     cursor={{ fill: 'var(--bg-surface)', opacity: 0.4 }}
                                 />
-                                <Bar
-                                    dataKey="value"
-                                    fill={`url(#gradBar${index})`}
-                                    radius={[6, 6, 0, 0]}
-                                    maxBarSize={60}
-                                    onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
-                                    cursor="pointer"
-                                />
-                                {/* Removed per-cell coloring to enforce Elastic-style single-color series */}
+                                {dataKeys.length > 1 && <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />}
+                                {dataKeys.map((k, i) => (
+                                    <Bar
+                                        key={k}
+                                        dataKey={k}
+                                        fill={`url(#gradBar${index}-${i})`}
+                                        radius={[6, 6, 0, 0]}
+                                        maxBarSize={dataKeys.length > 1 ? undefined : 60}
+                                        onClick={((...args: any[]) => handleChartClick(args[0], opt, index, args.find(a => a && a.nativeEvent))) as any}
+                                        cursor="pointer"
+                                    />
+                                ))}
                             </BarChart>
                         )}
                         </ResponsiveContainer>
@@ -2586,15 +2629,18 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                         {/* Measure */}
                                         <div style={{ flex: 1, minWidth: '220px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: `0 0 8px #34d399` }} /> {t('analysis.measureLabel')}
+                                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34d399', boxShadow: `0 0 8px #34d399` }} /> {t('analysis.measureLabel')} (Multi)
                                             </label>
                                             <select
                                                 id="va-meas-select"
-                                                style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${builderConfig.yAxis ? '#34d39944' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500, transition: 'border-color 0.2s', outline: 'none', cursor: 'pointer' }}
-                                                value={builderConfig.yAxis}
-                                                onChange={e => setBuilderConfig(prev => ({ ...prev, yAxis: e.target.value }))}
+                                                multiple
+                                                style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-main)', border: `1px solid ${builderConfig.yAxes.length > 0 ? '#34d39944' : 'var(--border-default)'}`, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 500, transition: 'border-color 0.2s', outline: 'none', cursor: 'pointer', minHeight: '80px' }}
+                                                value={builderConfig.yAxes}
+                                                onChange={e => {
+                                                    const options = Array.from(e.target.selectedOptions, option => option.value);
+                                                    setBuilderConfig(prev => ({ ...prev, yAxes: options }));
+                                                }}
                                             >
-                                                <option value="">{t('analysis.chooseMeasure')}</option>
                                                 <optgroup label={t('analysis.quantitative')}>
                                                     {measures.map(c => <option key={c} value={c}>{c}</option>)}
                                                 </optgroup>
@@ -2685,14 +2731,10 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                     <div 
                                         className="flex-1 backdrop-blur-3xl rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col inner-bevel shadow-2xl transition-all duration-500"
                                         style={{ 
-                                            background: 'var(--bg-card)', 
-                                            border: '1px solid var(--border-default)',
-                                            boxShadow: 'var(--shadow-xl), inset 0 0 0 1px var(--glass-border)' 
-                                        }}
-                                    >
                                         <div className="absolute inset-0 glass-noise opacity-10 pointer-events-none" />
 
-                                        {builderConfig.xAxis && builderConfig.yAxis ? (
+                                        <div className="flex-1 flex flex-col relative w-full h-full">
+                                        {builderConfig.xAxis && builderConfig.yAxes && builderConfig.yAxes.length > 0 ? (
                                             <div className="flex-1 flex flex-col fade-in relative gap-8">
                                                 <div className="flex justify-between items-start">
                                                     <div className="flex flex-col gap-3">
@@ -2705,8 +2747,8 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                                 <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Dimension</div>
                                                             </div>
                                                         </div>
-                                                        <h4 className="text-4xl font-data tracking-tighter group cursor-default leading-none">
-                                                            {builderConfig.aggregation} <span className="text-primary group-hover:text-purple-400 transition-colors">{t('analysis.builder.of')}</span> {builderConfig.yAxis} <span className="opacity-20 mx-3">/</span> <span className="text-tertiary">{t('analysis.builder.by')} {builderConfig.xAxis}</span>
+                                                        <h4 className="text-h4 text-white">
+                                                            {builderConfig.aggregation} <span className="text-primary group-hover:text-purple-400 transition-colors">{t('analysis.builder.of')}</span> {builderConfig.yAxes.join(', ')} <span className="opacity-20 mx-3">/</span> <span className="text-tertiary">{t('analysis.builder.by')} {builderConfig.xAxis}</span>
                                                         </h4>
                                                     </div>
                                                     <div className="flex gap-3">
@@ -2722,7 +2764,7 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                             className="btn btn-icon btn-primary !w-10 !h-10 shadow-glow-primary hover:scale-110"
                                                             onClick={() => {
                                                                 const newOpt = {
-                                                                    title: `${builderConfig.aggregation} of ${builderConfig.yAxis} by ${builderConfig.xAxis}`,
+                                                                    title: `${builderConfig.aggregation} of ${builderConfig.yAxes.join(', ')} by ${builderConfig.xAxis}`,
                                                                     chartType: builderConfig.chartType,
                                                                     data: builderData,
                                                                     isStatic: true
@@ -2813,14 +2855,18 @@ export const AnalysisView = ({ analysis, onClose, onShare, onUpgradeRequested, o
                                                         <thead>
                                                             <tr>
                                                                 <th className="label-premium !text-[10px]">{builderConfig.xAxis}</th>
-                                                                <th className="label-premium !text-[10px]">{builderConfig.aggregation} ({builderConfig.yAxis})</th>
+                                                                {builderConfig.yAxes.map(y => (
+                                                                    <th key={y} className="label-premium !text-[10px]">{builderConfig.aggregation} ({y})</th>
+                                                                ))}
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {builderData.slice(0, 50).map((r, i) => (
                                                                 <tr key={i} className="hover:bg-white/[0.02] transition-colors">
                                                                     <td className="font-medium">{r.name}</td>
-                                                                    <td className="font-data text-primary">{r.value?.toLocaleString()}</td>
+                                                                    {builderConfig.yAxes.map(y => (
+                                                                        <td key={y} className="font-data text-primary">{r[y]?.toLocaleString()}</td>
+                                                                    ))}
                                                                 </tr>
                                                             ))}
                                                         </tbody>
